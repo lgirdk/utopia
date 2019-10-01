@@ -8948,12 +8948,12 @@ static int prepare_multinet_filter_forward_v6(FILE *fp) {
       fprintf(fp, "-A INPUT -s fe80::/64 -d ff02::1/128 ! -i %s -p icmpv6 -m icmp6 --icmpv6-type 134 -m limit --limit 10/sec -j ACCEPT\n", multinet_ifname);
       fprintf(fp, "-A INPUT -s fe80::/64 -d fe80::/64 ! -i %s -p icmpv6 -m icmp6 --icmpv6-type 134 -m limit --limit 10/sec -j ACCEPT\n", multinet_ifname);
       fprintf(fp, "-A INPUT -s fe80::/64 -i %s -p icmpv6 -m icmp6 --icmpv6-type 133 -m limit --limit 100/sec -j ACCEPT\n", multinet_ifname);
-
+#if !defined(_PLATFORM_RASPBERRYPI_)
       // Block unicast WAN to LAN traffic from going to this bridge if the destination address is not within this bridge's allocated prefix
       fprintf(fp, "-A FORWARD -i %s -o %s -m pkttype --pkt-type unicast ! -d %s -j LOG_FORWARD_DROP\n", wan6_ifname, multinet_ifname, lan_prefix);
       // Block unicast LAN to WAN traffic from being sent from this bridge if the source address is not within this bridge's allocated prefix
       fprintf(fp, "-A FORWARD -i %s -o %s -m pkttype --pkt-type unicast ! -s %s -j LOG_FORWARD_DROP\n", multinet_ifname, wan6_ifname, lan_prefix);
-
+#endif
       // Allow lan2wan and wan2lan traffic
       fprintf(fp, "-A FORWARD -i %s -o %s -j wan2lan\n", wan6_ifname, multinet_ifname);
       fprintf(fp, "-A FORWARD -i %s -o %s -j lan2wan\n", multinet_ifname, wan6_ifname);
@@ -11682,12 +11682,12 @@ v6GPFirewallRuleNext:
 
       snprintf(sysevent_query, sizeof(sysevent_query), "ipv6_%s-prefix", lan_ifname);
       sysevent_get(sysevent_fd, sysevent_token, sysevent_query, lan_prefix, sizeof(lan_prefix));
-
+#if !defined(_PLATFORM_RASPBERRYPI_)
       // Block unicast WAN to LAN traffic from going to this bridge if the destination address is not within this bridge's allocated prefix
       fprintf(fp, "-A FORWARD -i %s -o %s -m pkttype --pkt-type unicast ! -d %s -j LOG_FORWARD_DROP\n", wan6_ifname, lan_ifname, lan_prefix);
       // Block unicast LAN to WAN traffic from being sent from this bridge if the source address is not within this bridge's allocated prefix
       fprintf(fp, "-A FORWARD -i %s -o %s -m pkttype --pkt-type unicast ! -s %s -j LOG_FORWARD_DROP\n", lan_ifname, wan6_ifname, lan_prefix);
-
+#endif
 
       fprintf(fp, "-A FORWARD -i %s -o %s -j lan2wan\n", lan_ifname, wan6_ifname);
       fprintf(fp, "-A FORWARD -i %s -o %s -j lan2wan\n", lan_ifname, ecm_wan_ifname);
