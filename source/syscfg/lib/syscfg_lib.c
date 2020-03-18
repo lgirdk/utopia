@@ -138,25 +138,27 @@ int syscfg_set (const char *ns, const char *name, const char *value)
  */
 int syscfg_get_encrypt (const char *ns, const char *name, char *out_val, int outbufsz)
 {
+    char *val;
+    char *val_decrypt;
+    size_t len;
+
     if (0 == syscfg_initialized || NULL == name || NULL == out_val) {
         return -1;
     }
 
-    /*
-    ** RDKB-7135, CID-32913, length of the string should be at least 2
-    ** strlen replaced with safer strnlen to limit the memory allocated.
-    ** strnlen value incremented by 1 to append string termination.
-    */
     if(outbufsz > 1)
     {
-        char *val = _syscfg_get(ns, name);
+        val = _syscfg_get(ns, name);
         if (val) {
-            char *val_decrypt = malloc(strnlen( val, MAX_NAME_LEN)+1); 
+	    len = strlen(val);
+            if (len > MAX_NAME_LEN)
+                len = MAX_NAME_LEN;
+
+            val_decrypt = malloc(len+1);
             if (NULL == val_decrypt) {
                 return ERR_MEM_ALLOC;
             }
-            memset(val_decrypt, 0, strnlen( val, MAX_NAME_LEN)+1);
-            encrypt_str(val, val_decrypt);
+            encrypt_str((const char *) val, val_decrypt, len);
             strncpy(out_val, val_decrypt, outbufsz-1);
             out_val[outbufsz-1] = '\0';
             free(val_decrypt);/*RDKB-7135, CID-33450, free unused resources before exit */
@@ -185,6 +187,8 @@ int syscfg_get_encrypt (const char *ns, const char *name, char *out_val, int out
 int syscfg_set_encrypt (const char *ns, const char *name, const char *value)
 {
     int rc = 0;
+    char *value_encrypt;
+    size_t len;
 
     if (0 == syscfg_initialized || NULL == syscfg_ctx) {
         return ERR_NOT_INITIALIZED;
@@ -193,18 +197,16 @@ int syscfg_set_encrypt (const char *ns, const char *name, const char *value)
         return ERR_INVALID_PARAM;
     }
 
-    /*
-    ** RDKB-7135, CID-32978,
-    ** strlen replaced with safer strnlen to limit the memory allocated.
-    ** strnlen value incremented by 1 to append string termination.
-    */
-    char *value_encrypt = malloc(strnlen(value, MAX_NAME_LEN)+1);
+    len = strlen(value);
+    if (len > MAX_NAME_LEN)
+        len = MAX_NAME_LEN;
+
+    value_encrypt = malloc(len+1);
     if (NULL == value_encrypt) {
         return ERR_MEM_ALLOC;
     }
-    memset(value_encrypt, 0, strnlen(value, MAX_NAME_LEN)+1);
 
-    encrypt_str(value, value_encrypt);
+    encrypt_str(value, value_encrypt, len);
 
     rc = _syscfg_set( ns, name, value_encrypt, 0);
 
@@ -609,14 +611,21 @@ static unsigned int hash (const char *str)
  * A simple XOR encryption using a key
  * Assumption: outstr buffer size equal to instr
  */
-static void encrypt_str (const char *instr, char *outstr)
-{ 
-    unsigned int key = 5381;
+static void encrypt_str (const char *instr, char *outstr, size_t len)
+{
+    int i;
+    unsigned int key = 5381; /* Fixme: 5381 dec (== 0x1505 hex) is more than 8 bits, so doesn't make sense to xor'ing with byte values ?!? (it's the same as xor'ing with 0x05) */
 
-    for(;*instr;instr++,outstr++) {
-        *outstr = (char) ((*instr) ^ key);
+    for (i = 0; i < len; i++) {
+
+        /*
+           Warning: xor'ing arbitrary data could result in a false nul being inserted into the output string.
+           However, since we xor with the fixed value 0x05 (see above) only an input char of 0x05 (an ASCII control character?) would be affected...
+        */
+        outstr[i] = instr[i] ^ key;
     }
-    *outstr = '\0';
+
+    outstr[len] = 0;
 }
 
 /******************************************************************************
@@ -976,7 +985,7 @@ static char* _syscfg_get (const char *ns, const char *name)
     if (ns) {
         snprintf(name_p, sizeof(name_p), "%s%s%s", ns, NS_SEP, name);
     } else {
-        strncpy(name_p, name, sizeof(name_p));
+        snprintf(name_p, sizeof(name_p), "%s", name);
     }
 
     int index = hash(name_p) % SYSCFG_HASH_TABLE_SZ;
@@ -987,12 +996,12 @@ static char* _syscfg_get (const char *ns, const char *name)
         entryoffset = HT_ENTRY_NEXT(ctx,entryoffset);
     }
 
+    rw_unlock(ctx);
+
     if (entryoffset) {
-        rw_unlock(ctx);
         return HT_ENTRY_VALUE(ctx,entryoffset);
     }
 
-    rw_unlock(ctx);
     return NULL;
 }
 
