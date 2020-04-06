@@ -27,7 +27,7 @@
 #include "util.h"
 #include <sys/time.h>
 #ifdef FEATURE_SUPPORT_ONBOARD_LOGGING
-#include "cimplog.h"
+#include <cimplog/cimplog.h>
 #define LOGGING_MODULE "Utopia"
 #define OnboardLog(...)                 onboarding_log(LOGGING_MODULE, __VA_ARGS__)
 #else
