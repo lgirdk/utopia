@@ -31,7 +31,7 @@ macclone_CPPFLAGS = -I$(top_srcdir)/source/pal/upnp/include \
                     -I$(top_srcdir)/source/pal/kernel/include \
                     -I$(top_srcdir)/source/pal/include \
                     -I$(top_srcdir)/source/pal/log/include \
-                    $(DBUS_CFLAGS) 
+                    $(DBUS_CFLAGS)
 
 macclone_LDFLAGS = $(DBUS_LIBS)
 
