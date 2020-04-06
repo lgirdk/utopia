@@ -16,17 +16,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ##########################################################################
-AM_CFLAGS = -fno-exceptions
-AM_CFLAGS = -Os 
-AM_CFLAGS = -Wall -Wextra
 
-lib_LTLIBRARIES=libprint_uptime.la
-libprint_uptime_la_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/source/include
-libprint_uptime_la_LDFLAGS = -shared -fPIC
+AM_CFLAGS = -fno-exceptions -Wall -Wextra
+
+lib_LTLIBRARIES = libprint_uptime.la
+
+libprint_uptime_la_CPPFLAGS = -I$(top_srcdir)/source/include
 libprint_uptime_la_SOURCES = print_uptime.c
 
 bin_PROGRAMS = print_uptime
-print_uptime_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/source/include -I$(top_srcdir)/source/util/print_uptime
+
+print_uptime_CPPFLAGS = -I$(top_srcdir)/source/include -I$(top_srcdir)/source/util/print_uptime
 print_uptime_SOURCES = main.c
 print_uptime_LDADD = libprint_uptime.la
-
