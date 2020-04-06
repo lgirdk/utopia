@@ -34,9 +34,9 @@ newhost_CPPFLAGS = -I$(top_srcdir)/source/pal/upnp/include \
                    -I$(top_srcdir)/source/include \
                    $(DBUS_CFLAGS)
 
+newhost_LDFLAGS = $(DBUS_LIBS)
+
 newhost_LDADD = $(top_builddir)/source/syscfg/lib/libsyscfg.la \
                 $(top_builddir)/source/sysevent/lib/libsysevent.la \
                 $(top_builddir)/source/ulog/libulog.la \
                 $(top_builddir)/source/services/lib/libsrvmgr.la
-
-newhost_LDFLAGS = $(DBUS_LIBS)

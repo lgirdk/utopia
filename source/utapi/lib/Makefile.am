@@ -31,6 +31,6 @@ libutapi_la_CPPFLAGS = -I$(top_srcdir)/source/include -I$(top_srcdir)/source/uta
                        -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/dbus-1.0 \
                        -I${PKG_CONFIG_SYSROOT_DIR}$(libdir)/dbus-1.0/include
 
-libutapi_la_LIBADD = $(top_builddir)/source/ulog/libulog.la
-
 libutapi_la_LDFLAGS = -lsecure_wrapper -ltelemetry_msgsender
+
+libutapi_la_LIBADD = $(top_builddir)/source/ulog/libulog.la
