@@ -68,7 +68,7 @@ int configVlan_ESW(PSWFabHALArg args, int numArgs, BOOL up)
 {
     int i;
     PSwPortState portState;
-    char cmdBuff[128];
+    char cmdBuff[180];
     char ifname[80];
     char temp_ifname[80];
     memset(ifname, 0, 80);
@@ -171,7 +171,7 @@ int configVlan_ISW(PSWFabHALArg args, int numArgs, BOOL up)
 {
     int i;
     PSwPortState portState;
-    char cmdBuff[128];
+    char cmdBuff[180];
     char ifname[80];
     
     for (i = 0; i < numArgs; ++i ) 
