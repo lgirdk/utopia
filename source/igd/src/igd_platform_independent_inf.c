@@ -200,7 +200,7 @@ INT32 IGD_pii_get_uuid(INOUT CHAR *uuid)
 			printf("PII get MAC fail\n");
 			return -1;
 		}
-		snprintf(base_uuid,UPNP_UUID_LEN_BY_VENDER,"uuid:ebf5a0a0-1dd1-11b2-a90f-%02x%02x%02x%02x%02x%02x",
+		snprintf(base_uuid, sizeof(base_uuid), "uuid:ebf5a0a0-1dd1-11b2-a90f-%02x%02x%02x%02x%02x%02x",
 								(UINT8)uuid_mac_part[0],(UINT8)uuid_mac_part[1],
 								(UINT8)uuid_mac_part[2],(UINT8)uuid_mac_part[3],
 								(UINT8)uuid_mac_part[4],(UINT8)uuid_mac_part[5]);
@@ -212,7 +212,7 @@ INT32 IGD_pii_get_uuid(INOUT CHAR *uuid)
 		if(base_uuid[WAN_UUID_INDEX_NUM]>'f')
 			base_uuid[WAN_UUID_INDEX_NUM]='1';
 	}
-	strncpy(uuid,base_uuid, UPNP_UUID_LEN_BY_VENDER);
+	strncpy(uuid, base_uuid, sizeof(base_uuid));
 	return 0;
 }
 
