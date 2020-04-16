@@ -136,31 +136,67 @@ struct upnp_device IGD_device =
  *  Return Values: INT32
  *      0 if successful ,-1 for error
  ************************************************************/ 
-LOCAL INT32 _igd_root_device_desc_file(INOUT FILE *fp,IN const CHAR *uuid)
+
+LOCAL void _igd_root_device_desc_file(INOUT FILE *fp,IN const CHAR *uuid)
 {
-	if(fp==NULL)
-		return -1;
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD", "<?xml version=\"1.0\"?>\n");
 	fprintf(fp, "<?xml version=\"1.0\"?>\n");
+
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD", "<root xmlns=\"urn:schemas-upnp-org:device-1-0\">\n");
 	fprintf(fp, "<root xmlns=\"urn:schemas-upnp-org:device-1-0\">\n");
-		fprintf(fp, "<specVersion>\n");
-			fprintf(fp, "<major>%d</major>\n",VERSION_MAJOR);
-			fprintf(fp, "<minor>%d</minor>\n",VERSION_MINOR);
-		fprintf(fp, "</specVersion>\n");
-		fprintf(fp, "<device>\n");
-			fprintf(fp, "<deviceType>urn:schemas-upnp-org:device:InternetGatewayDevice:1</deviceType>\n");
-			fprintf(fp, "<friendlyName>%s</friendlyName>\n",(char *)ROOT_FRIENDLY_NAME);
-			fprintf(fp, "<manufacturer>%s</manufacturer>\n",MANUFACTURER);
-			fprintf(fp, "<manufacturerURL>%s</manufacturerURL>\n",MANUFACTURER_URL);
-			fprintf(fp, "<modelDescription>%s</modelDescription>\n",(char *)MODULE_DESCRIPTION);
-			fprintf(fp, "<modelName>%s</modelName>\n",(char *)MODULE_NAME);
-			fprintf(fp, "<modelNumber>%s</modelNumber>\n",(char *)MODULE_NUMBER);
-			fprintf(fp, "<modelURL>%s</modelURL>\n",MODULE_URL);
-			fprintf(fp, "<serialNumber>%s</serialNumber>\n",IGD_pii_get_serial_number());
-			fprintf(fp, "<UDN>%s</UDN>\n", uuid);
-			fprintf(fp, "<UPC>%s</UPC>\n",(char *)UPC);
-			fprintf(fp, "<serviceList>\n");
-	return 0;
+
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD", "<specVersion>\n");
+	fprintf(fp, "<specVersion>\n");
+
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD", "<major>%d</major>\n",VERSION_MAJOR);
+	fprintf(fp, "<major>%d</major>\n",VERSION_MAJOR);
+
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD", "<minor>%d</minor>\n",VERSION_MINOR);
+	fprintf(fp, "<minor>%d</minor>\n",VERSION_MINOR);
+
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD", "</specVersion>\n");
+	fprintf(fp, "</specVersion>\n");
+
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD", "<device>\n");
+	fprintf(fp, "<device>\n");
+
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD", "<deviceType>urn:schemas-upnp-org:device:InternetGatewayDevice:1</deviceType>\n");
+	fprintf(fp, "<deviceType>urn:schemas-upnp-org:device:InternetGatewayDevice:1</deviceType>\n");
+
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD", "<friendlyName>%s</friendlyName>\n",ROOT_FRIENDLY_NAME);
+	fprintf(fp, "<friendlyName>%s</friendlyName>\n",ROOT_FRIENDLY_NAME);
+
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD", "<manufacturer>%s</manufacturer>\n",MANUFACTURER);
+	fprintf(fp, "<manufacturer>%s</manufacturer>\n",MANUFACTURER);
+
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD", "<manufacturerURL>%s</manufacturerURL>\n",MANUFACTURER_URL);
+	fprintf(fp, "<manufacturerURL>%s</manufacturerURL>\n",MANUFACTURER_URL);
+
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD", "<modelDescription>%s</modelDescription>\n",MODULE_DESCRIPTION);
+	fprintf(fp, "<modelDescription>%s</modelDescription>\n",MODULE_DESCRIPTION);
+
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD", "<modelName>%s</modelName>\n",MODULE_NAME);
+	fprintf(fp, "<modelName>%s</modelName>\n",MODULE_NAME);
+
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD", "<modelNumber>%s</modelNumber>\n",MODULE_NUMBER);
+	fprintf(fp, "<modelNumber>%s</modelNumber>\n",MODULE_NUMBER);
+
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD", "<modelURL>%s</modelURL>\n",MODULE_URL);
+	fprintf(fp, "<modelURL>%s</modelURL>\n",MODULE_URL);
+
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD", "<serialNumber>%s</serialNumber>\n",IGD_pii_get_serial_number());
+	fprintf(fp, "<serialNumber>%s</serialNumber>\n",IGD_pii_get_serial_number());
+
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD", "<UDN>%s</UDN>\n", uuid);
+	fprintf(fp, "<UDN>%s</UDN>\n", uuid);
+
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD", "<UPC>%s</UPC>\n",UPC);
+	fprintf(fp, "<UPC>%s</UPC>\n",UPC);
+
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD", "<serviceList>\n");
+	fprintf(fp, "<serviceList>\n");
 }
+
 /************************************************************
  * Function: _igd_root_device_init 
  *
@@ -212,14 +248,11 @@ LOCAL INT32 _igd_root_device_init(VOID)
 		RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","Create %s fail, %s",DESC_DOC_PATH,strerror(errno));
 		return -1;
 	}
+
 	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","\n\nCreate description file\n");
-	if(_igd_root_device_desc_file(fp,IGD_device.udn))
-	{
-		RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","create IGD description file fail!\n");
-		fclose(fp);
-		return -1;
-	}
-		
+
+	_igd_root_device_desc_file(fp,IGD_device.udn);
+
 	if(IGD_service_Layer3ForwardingInit(NULL,fp))
 	{
 		RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","layer3forwarding init fail!\n");
