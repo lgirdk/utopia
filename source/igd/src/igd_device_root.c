@@ -127,31 +127,67 @@ struct upnp_device IGD_device =
  *  Return Values: INT32
  *      0 if successful ,-1 for error
  ************************************************************/ 
-LOCAL INT32 _igd_root_device_desc_file(INOUT FILE *fp,IN const CHAR *uuid)
+
+/*LOCAL*/ void _igd_root_device_desc_file(INOUT FILE *fp,IN const CHAR *uuid)
 {
-	if(fp==NULL)
-		return -1;
+	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO, "<?xml version=\"1.0\"?>\n");
 	fprintf(fp, "<?xml version=\"1.0\"?>\n");
+
+	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO, "<root xmlns=\"urn:schemas-upnp-org:device-1-0\">\n");
 	fprintf(fp, "<root xmlns=\"urn:schemas-upnp-org:device-1-0\">\n");
-		fprintf(fp, "<specVersion>\n");
-			fprintf(fp, "<major>%d</major>\n",VERSION_MAJOR);
-			fprintf(fp, "<minor>%d</minor>\n",VERSION_MINOR);
-		fprintf(fp, "</specVersion>\n");
-		fprintf(fp, "<device>\n");
-			fprintf(fp, "<deviceType>urn:schemas-upnp-org:device:InternetGatewayDevice:1</deviceType>\n");
-			fprintf(fp, "<friendlyName>%s</friendlyName>\n",ROOT_FRIENDLY_NAME);
-			fprintf(fp, "<manufacturer>%s</manufacturer>\n",MANUFACTURER);
-			fprintf(fp, "<manufacturerURL>%s</manufacturerURL>\n",MANUFACTURER_URL);
-			fprintf(fp, "<modelDescription>%s</modelDescription>\n",MODULE_DESCRIPTION);
-			fprintf(fp, "<modelName>%s</modelName>\n",MODULE_NAME);
-			fprintf(fp, "<modelNumber>%s</modelNumber>\n",MODULE_NUMBER);
-			fprintf(fp, "<modelURL>%s</modelURL>\n",MODULE_URL);
-			fprintf(fp, "<serialNumber>%s</serialNumber>\n",IGD_pii_get_serial_number());
-			fprintf(fp, "<UDN>%s</UDN>\n", uuid);
-			fprintf(fp, "<UPC>%s</UPC>\n",UPC);
-			fprintf(fp, "<serviceList>\n");
-	return 0;
+
+	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO, "<specVersion>\n");
+	fprintf(fp, "<specVersion>\n");
+
+	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO, "<major>%d</major>\n",VERSION_MAJOR);
+	fprintf(fp, "<major>%d</major>\n",VERSION_MAJOR);
+
+	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO, "<minor>%d</minor>\n",VERSION_MINOR);
+	fprintf(fp, "<minor>%d</minor>\n",VERSION_MINOR);
+
+	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO, "</specVersion>\n");
+	fprintf(fp, "</specVersion>\n");
+
+	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO, "<device>\n");
+	fprintf(fp, "<device>\n");
+
+	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO, "<deviceType>urn:schemas-upnp-org:device:InternetGatewayDevice:1</deviceType>\n");
+	fprintf(fp, "<deviceType>urn:schemas-upnp-org:device:InternetGatewayDevice:1</deviceType>\n");
+
+	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO, "<friendlyName>%s</friendlyName>\n",ROOT_FRIENDLY_NAME);
+	fprintf(fp, "<friendlyName>%s</friendlyName>\n",ROOT_FRIENDLY_NAME);
+
+	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO, "<manufacturer>%s</manufacturer>\n",MANUFACTURER);
+	fprintf(fp, "<manufacturer>%s</manufacturer>\n",MANUFACTURER);
+
+	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO, "<manufacturerURL>%s</manufacturerURL>\n",MANUFACTURER_URL);
+	fprintf(fp, "<manufacturerURL>%s</manufacturerURL>\n",MANUFACTURER_URL);
+
+	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO, "<modelDescription>%s</modelDescription>\n",MODULE_DESCRIPTION);
+	fprintf(fp, "<modelDescription>%s</modelDescription>\n",MODULE_DESCRIPTION);
+
+	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO, "<modelName>%s</modelName>\n",MODULE_NAME);
+	fprintf(fp, "<modelName>%s</modelName>\n",MODULE_NAME);
+
+	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO, "<modelNumber>%s</modelNumber>\n",MODULE_NUMBER);
+	fprintf(fp, "<modelNumber>%s</modelNumber>\n",MODULE_NUMBER);
+
+	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO, "<modelURL>%s</modelURL>\n",MODULE_URL);
+	fprintf(fp, "<modelURL>%s</modelURL>\n",MODULE_URL);
+
+	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO, "<serialNumber>%s</serialNumber>\n",IGD_pii_get_serial_number());
+	fprintf(fp, "<serialNumber>%s</serialNumber>\n",IGD_pii_get_serial_number());
+
+	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO, "<UDN>%s</UDN>\n", uuid);
+	fprintf(fp, "<UDN>%s</UDN>\n", uuid);
+
+	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO, "<UPC>%s</UPC>\n",UPC);
+	fprintf(fp, "<UPC>%s</UPC>\n",UPC);
+
+	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO, "<serviceList>\n");
+	fprintf(fp, "<serviceList>\n");
 }
+
 /************************************************************
  * Function: _igd_root_device_init 
  *
@@ -200,12 +236,11 @@ LOCAL INT32 _igd_root_device_init(VOID)
         return -1;
     }
 	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"\n\nCreate description file\n");
-	if(_igd_root_device_desc_file(fp,IGD_device.udn))
-	{
-		PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"create IGD description file fail!\n");
-		fclose(fp);
-		return -1;
-	}
+
+	_igd_root_device_desc_file(fp,IGD_device.udn);
+
+	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"\n\nCreate description file - done\n");
+
 		
 	if(IGD_service_Layer3ForwardingInit(NULL,fp))
     {
