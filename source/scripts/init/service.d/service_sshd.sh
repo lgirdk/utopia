@@ -117,15 +117,38 @@ do_start() {
       #wan0 should be in v4
       CM_IP=`ifconfig ${CMINTERFACE} | grep "inet addr" | awk '/inet/{print $2}'  | cut -f2 -d:`
    fi
-   DROPBEAR_PARAMS_1="/tmp/.dropbear/dropcfg1$$"
-   DROPBEAR_PARAMS_2="/tmp/.dropbear/dropcfg2$$"
-   getConfigFile $DROPBEAR_PARAMS_1
-   getConfigFile $DROPBEAR_PARAMS_2
 
-   if ([ "$BOX_TYPE" = "XB6" -a "$MANUFACTURE" = "Arris" ] || [ "$MODEL_NUM" = "INTEL_PUMA" ]) ;then
-   	dropbear -E -s -b /etc/sshbanner.txt -a -r $DROPBEAR_PARAMS_1 -r $DROPBEAR_PARAMS_2 $LISTEN_PARAMS 2>/dev/null -P $PID_FILE
+   if [ -f /etc/mount-utils/getConfigFile.sh ]; then
+
+      DROPBEAR_PARAMS_1="/tmp/.dropbear/dropcfg1$$"
+      DROPBEAR_PARAMS_2="/tmp/.dropbear/dropcfg2$$"
+      getConfigFile $DROPBEAR_PARAMS_1
+      getConfigFile $DROPBEAR_PARAMS_2
+
+      if ([ "$BOX_TYPE" = "XB6" -a "$MANUFACTURE" = "Arris" ] || [ "$MODEL_NUM" = "INTEL_PUMA" ]) ;then
+   	   dropbear -E -s -b /etc/sshbanner.txt -a -r $DROPBEAR_PARAMS_1 -r $DROPBEAR_PARAMS_2 $LISTEN_PARAMS 2>/dev/null -P $PID_FILE
+      else
+   	   dropbear -E -s -b /etc/sshbanner.txt -a -r $DROPBEAR_PARAMS_1 -r $DROPBEAR_PARAMS_2 -p [$CM_IP]:22 -P $PID_FILE
+      fi
+
    else
-   	dropbear -E -s -b /etc/sshbanner.txt -a -r $DROPBEAR_PARAMS_1 -r $DROPBEAR_PARAMS_2 -p [$CM_IP]:22 -P $PID_FILE
+      # ----------------------------------------------------------------------
+      # WARNING: removing -s (ie Disable password logins) and adding -B (ie Allow blank password logins)
+      # Temporary options for development only!
+      # For reference:
+      #
+      #   -E                : Log to stderr rather than syslog
+      #   -s                : Disable password logins
+      #   -b bannerfile     : Display the contents of bannerfile
+      #   -a                : Allow connections to forwarded ports from any host
+      #   -r keyfile        : Specify hostkeys (repeatable)
+      #   -p [address:]port : Listen on specified tcp port (and optionally address)
+      #   -P PidFile        : Create pid file PidFile
+      #
+      #   -B                : Allow blank password logins
+      #
+      # ----------------------------------------------------------------------
+      dropbear -E -a -r /etc/dropbear/dropbear_rsa_host_key -p [$CM_IP]:22 -P $PID_FILE -B
    fi
 
    # The PID_FILE created after demonize the process. So added delay for 1 sec.
