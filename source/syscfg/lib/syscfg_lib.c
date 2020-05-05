@@ -1514,6 +1514,7 @@ static void _syscfg_file_unlock (int fd)
 int load_from_file (const char *fname)
 {
     int fd;
+    ssize_t count;
     char *inbuf = NULL, *buf = NULL;
     char *name = NULL, *value = NULL;
 
@@ -1526,12 +1527,15 @@ int load_from_file (const char *fname)
         close(fd); /*RDKB-7135, CID-33110, free unused resources before exit*/
         return ERR_MEM_ALLOC;
     }
-    int count = read(fd, inbuf, SYSCFG_SZ);
+
+    count = read(fd, inbuf, SYSCFG_SZ);
+    close(fd);
+
     if (count <= 0) {
         free(inbuf);
-        close(fd);
         return 1;
     }
+
     buf = inbuf;
     do {
         buf = syscfg_parse(buf, &name, &value);
@@ -1550,7 +1554,6 @@ int load_from_file (const char *fname)
     } while (buf);
 
     free(inbuf);
-    close(fd);
 
     return 0;
 }
