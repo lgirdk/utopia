@@ -468,7 +468,32 @@ NOT_DEF:
 
 #define PORT_SCAN_CHECK_CHAIN "PORT_SCAN_CHK"
 #define PORT_SCAN_DROP_CHAIN  "PORT_SCAN_DROP"
+// LGI ADD START
+#define ACTION_ALLOW            1
+#define ACTION_DENY             2
+#define PROTOCOL_TCP            1
+#define PROTOCOL_UDP            2
+#define PROTOCOL_BOTH           3
+#define PROTOCOL_ALL            4
+#define PROTOCOL_UNDEFINED      0
+#define BUFF_STR_LEN            16
+#define BT_MASK_LEN             45
+#define SWAP(a,b,type)          {type tmp=a;a=b;b=tmp;}
+#define BTMASK_ALWAYS           0
+#define BTMASK_BYHOUR           1
+#define BTMASK_BYDAYHOUR        2
+#define DAYOFWEEK_BITMASK_LEN   256
 
+static unsigned long v4_dayofweek_block_time_bit_mask_type;
+static unsigned long v6_dayofweek_block_time_bit_mask_type;
+static unsigned long mac_dayofweek_block_time_bit_mask_type;
+char v4DayOfWeekBlockTimeBitMask[DAYOFWEEK_BITMASK_LEN];
+char v6DayOfWeekBlockTimeBitMask[DAYOFWEEK_BITMASK_LEN];
+char macDayOfWeekBlockTimeBitMask[DAYOFWEEK_BITMASK_LEN];
+static int do_ip_filter_IpV6_service(FILE *fp);
+static int do_ip_filter_IpV4_service(FILE *fp);
+static int do_mac_filter(FILE *fp);
+// LGI ADD END
 static int do_blockfragippktsv4(FILE *fp);
 static int do_ipflooddetectv4(FILE *fp);
 static int do_portscanprotectv4(FILE *fp);
@@ -980,6 +1005,134 @@ static int privateIpCheck(char *ip_to_check)
           return 1;
     }
 }
+
+// LGI ADD START
+/*
+ * Procedure     : GetTimeOfDayMasks
+ * Purpose       : Parses the string mask to pick every hours mask value
+ * Parameters    :
+ *    in         : pointer to ulong array[7] to hold per day mask value.
+ * Return Value  : None.
+ * Note          : None.
+*/
+static void GetTimeOfDayMasks(unsigned long *pMaskDayOfWeek, char* pMask)
+{
+  char *p = pMask;
+  char tmpBuf[24];
+  int i = 0;
+  for(i = 0; i < 7; i++)
+  {
+    strncpy(tmpBuf, p, 24);
+    pMaskDayOfWeek[i] = strtoul(tmpBuf, NULL, 2);
+    p += 24;  // Point to the next day
+  }
+}
+
+/*
+ * Procedure     : GetBlockTimeBitMaskForWeek
+ * Purpose       : To get the mask value of complete 7 days in an array from syscfg db.
+ * Parameters    :
+ *    in         : char* pMaskValue to hold the mask value for 7 days.
+ * Return Value  : None.
+ * Note          : None.
+*/
+static void GetBlockTimeBitMaskForWeek(char* namespace, char* pMask, char* pMaskValue)
+{
+  char query[64];
+  int idx = 0;
+  char buf[64];
+
+  for (idx = 1; idx <= 7; idx++)
+  {
+    snprintf(query, sizeof(query), "%s_%d", namespace, idx);
+    syscfg_get(query, pMask, buf, sizeof(buf));
+    strcat(pMaskValue,buf);
+  }
+}
+
+/*
+ * Procedure     : BlockTimeBitMask_AddToCron
+ * Purpose       : Updates CRONTAB with the passed per day mask values.
+ * Parameters    :
+ *    in         : pointer to ulong array[7] to hold per day mask value.
+ * Return Value  : None.
+ * Note          : Status 0 : success, -1 : failue.
+ */
+static int BlockTimeBitMask_AddToCron(unsigned long *pMaskDayOfWeek,
+                                      char *pCronStartStr,
+                                      char *pCronStopStr,
+                                      char *pCronTag,
+                                      unsigned long ulMaskType) {
+
+    int i = 0, j = 0;
+    FILE *cron_fp = fopen("/var/spool/cron/crontabs/root", "a+");
+    if(!cron_fp) return -1;
+
+    // Go to the end of the CRONTAB and add a new line
+    fseek(cron_fp, 0, SEEK_END);
+    fprintf(cron_fp, "\n");
+
+    for(i = 0; i < 7; i++) {
+        BOOL bFindStopTime = FALSE;
+        if(pMaskDayOfWeek[i]) {
+            // Update CRON for the day of week - Find the hours set
+            for(j = 0; j < 24; j++) {
+                if(pMaskDayOfWeek[i] & (1 << j)) {
+                    if(!bFindStopTime) {
+                        // Add Start Time in the CRONTAB.  Keep the weekday as *(all) for ByHour.
+                        if(BTMASK_BYHOUR == ulMaskType) {
+                            fprintf(cron_fp, "0 %d * * * sysevent set firewall-restart %s %s CRON Start Entry\n", j, pCronStartStr, pCronTag);
+                        }
+                        else {
+                            fprintf(cron_fp, "0 %d * * %d sysevent set firewall-restart %s %s CRON Start Entry\n", j, i, pCronStartStr, pCronTag);
+                        }
+                        bFindStopTime = TRUE;
+                    }
+                }
+                else {
+                    if(TRUE == bFindStopTime) {
+                        // Add Stop Time in the CRONTAB.  Keep the weekday as *(all) for ByHour.
+                        if(BTMASK_BYHOUR == ulMaskType) {
+                            fprintf(cron_fp, "0 %d * * * sysevent set firewall-restart %s %s CRON Stop Entry\n", j, pCronStopStr, pCronTag);
+                        }
+                        else {
+                            fprintf(cron_fp, "0 %d * * %d sysevent set firewall-restart %s %s CRON Stop Entry\n", j, i, pCronStopStr, pCronTag);
+                        }
+                        bFindStopTime = FALSE;
+                    }
+                }
+            }
+
+            if(TRUE == bFindStopTime) {
+                // Out of the loop and we are still searching the stop time. This can only happen if the last bit (23 Hrs) is turned ON.
+                if(BTMASK_BYHOUR == ulMaskType) {
+                    if(!(pMaskDayOfWeek[i] & 1)) {
+                        // Set stop time to 0 hours if Bit 0 is not already ON.
+                        fprintf(cron_fp, "0 0 * * * sysevent set firewall-restart %s %s CRON Stop Entry\n", pCronStopStr, pCronTag);
+                    }
+                }
+                else {
+                    // Increment the weekday as we have reached 00:00 Hours.
+                    int wday = i + 1;
+                    if(wday > 6) wday = 0;
+                    if(!(pMaskDayOfWeek[wday] & 1)) {
+                        // Set stop time to 0 hours if Bit 0 is not already ON.
+                        fprintf(cron_fp, "0 0 * * %d sysevent set firewall-restart %s %s CRON Stop Entry\n", wday, pCronStopStr, pCronTag);
+                    }
+                }
+            }
+        }
+
+        if(BTMASK_BYHOUR == ulMaskType) {
+            // Break the loop.  ByHour Mask bits are all in SUNDAY which is processed.
+            break;
+        }
+    }
+    fprintf(cron_fp, "\n");
+    fclose(cron_fp);
+    return 0;
+}
+// LGI ADD END
 
 /*
  * Procedure     : trim
@@ -11317,7 +11470,7 @@ int rc = 0;
  *   nat_fp         : an open file for writing nat statements
  *   filter_fp      : an open file for writing filter statements
  */
-static int prepare_enabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *filter_fp)
+static int prepare_enabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *filter_fp, char* strBlockTimeCmd)
 {
    FIREWALL_DEBUG("Entering prepare_enabled_ipv4_firewall \n"); 
    /*
@@ -11391,7 +11544,93 @@ static int prepare_enabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *na
 #if defined(MOCA_HOME_ISOLATION)
    prepare_MoCA_bridge_firewall(raw_fp, mangle_fp, nat_fp, filter_fp);
 #endif
+// LGI ADD START
+   if(BTMASK_ALWAYS == v4_dayofweek_block_time_bit_mask_type) {
+       do_ip_filter_IpV4_service(filter_fp);
+   }
+   else if( (!strBlockTimeCmd) ||
+            ((strcmp(strBlockTimeCmd, "cron_block_time_start")) &&
+             (strcmp(strBlockTimeCmd, "cron_block_time_stop")) )) {
+       time_t ttime = 0;
+       struct tm *ptm = NULL;
+       unsigned long ulMaskDayOfWeek[7];
+       unsigned long ulMaskToday = 0;
 
+       // We reached here fron a NON-CRON invocation (system reboot or normal firewall restart).
+       // Check the times and re-apply the filters as applicable.
+       GetTimeOfDayMasks(ulMaskDayOfWeek, v4DayOfWeekBlockTimeBitMask);
+       time(&ttime);
+       ptm = localtime(&ttime);
+
+       if(BTMASK_BYHOUR == v4_dayofweek_block_time_bit_mask_type) {
+           ulMaskToday = ulMaskDayOfWeek[0]; // Use only SUNDAY bits.
+       }
+       else if (BTMASK_BYDAYHOUR == v4_dayofweek_block_time_bit_mask_type) {
+           ulMaskToday = ulMaskDayOfWeek[ptm->tm_wday];
+       }
+
+       // Check if any time is scheduled for today
+       if(ulMaskToday) {
+           // Find if the current hour has been scheduled
+           if(ulMaskToday & (1 << ptm->tm_hour)) {
+               // The CRON will fire at 0th minute of the scheduled hour.
+               // See if we have passed the 0th minute already.  If yes, apply the filter here.
+               if(ptm->tm_min >= 0) {
+                   do_ip_filter_IpV4_service(filter_fp);
+               }
+           }
+       }
+   }
+   else {
+       // This is CRON Start - Apply the filters
+       if(!strcmp(strBlockTimeCmd, "cron_block_time_start")) {
+           do_ip_filter_IpV4_service(filter_fp);
+       }
+   }
+
+   if(BTMASK_ALWAYS == mac_dayofweek_block_time_bit_mask_type) {
+       do_mac_filter(filter_fp);
+   }
+   else if( (!strBlockTimeCmd) ||
+            ((strcmp(strBlockTimeCmd, "mac_cron_block_time_start")) &&
+             (strcmp(strBlockTimeCmd, "mac_cron_block_time_stop")) )) {
+       time_t ttime = 0;
+       struct tm *ptm = NULL;
+       unsigned long ulMaskDayOfWeek[7];
+       unsigned long ulMaskToday = 0;
+
+       // We reached here fron a NON-CRON invocation (system reboot or normal firewall restart).
+       // Check the times and re-apply the filters as applicable.
+       GetTimeOfDayMasks(ulMaskDayOfWeek, macDayOfWeekBlockTimeBitMask);
+       time(&ttime);
+       ptm = localtime(&ttime);
+
+       if(BTMASK_BYHOUR == mac_dayofweek_block_time_bit_mask_type) {
+           ulMaskToday = ulMaskDayOfWeek[0]; // Use only SUNDAY bits.
+       }
+       else if (BTMASK_BYDAYHOUR == mac_dayofweek_block_time_bit_mask_type) {
+           ulMaskToday = ulMaskDayOfWeek[ptm->tm_wday];
+       }
+
+       // Check if any time is scheduled for today
+       if(ulMaskToday) {
+           // Find if the current hour has been scheduled
+           if(ulMaskToday & (1 << ptm->tm_hour)) {
+               // The CRON will fire at 0th minute of the scheduled hour.
+               // See if we have passed the 0th minute already.  If yes, apply the filter here.
+               if(ptm->tm_min >= 0) {
+                   do_mac_filter(filter_fp);
+               }
+           }
+       }
+   }
+   else {
+       // This is CRON Start - Apply the filters
+       if(!strcmp(strBlockTimeCmd, "mac_cron_block_time_start")) {
+           do_mac_filter(filter_fp);
+       }
+   }
+// LGI ADD END
    do_blockfragippktsv4(filter_fp);
    do_portscanprotectv4(filter_fp);
    do_ipflooddetectv4(filter_fp);
@@ -11615,7 +11854,7 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
  *   The syscfg subsystem must be initialized prior to calling this function
  *   The sysevent subsytem must be initializaed prior to calling this function
  */
-int prepare_ipv4_firewall(const char *fw_file)
+int prepare_ipv4_firewall(const char *fw_file, char* strBlockTimeCmd)
 {
  FIREWALL_DEBUG("Inside prepare_ipv4_firewall \n"); 
    /*
@@ -11672,7 +11911,7 @@ int prepare_ipv4_firewall(const char *fw_file)
   
    // TODO: possibly remove bridge mode
    if (isFirewallEnabled && !isBridgeMode ) { fprintf(stderr, "-- prepare_enabled_ipv4_firewall isWanServiceReady=%d\n", isWanServiceReady); //&& isWanServiceReady) {
-      prepare_enabled_ipv4_firewall(raw_fp, mangle_fp, nat_fp, filter_fp);
+      prepare_enabled_ipv4_firewall(raw_fp, mangle_fp, nat_fp, filter_fp, strBlockTimeCmd);
    } else {
       prepare_disabled_ipv4_firewall(raw_fp, mangle_fp, nat_fp, filter_fp);
    }
@@ -11995,7 +12234,7 @@ int i =0, ret;
  *   The syscfg subsystem must be initialized prior to calling this function
  *   The sysevent subsytem must be initializaed prior to calling this function
  */
-int prepare_ipv6_firewall(const char *fw_file)
+int prepare_ipv6_firewall(const char *fw_file, char* strBlockTimeCmd)
 {
  FIREWALL_DEBUG("Inside prepare_ipv6_firewall \n");
    if (NULL == fw_file) {
@@ -12067,7 +12306,50 @@ int prepare_ipv6_firewall(const char *fw_file)
         if (isContainerEnabled) {
             do_container_allow(filter_fp, mangle_fp, nat_fp, AF_INET6);
         }
+// LGI ADD START
+      if(BTMASK_ALWAYS == v6_dayofweek_block_time_bit_mask_type) {
+         do_ip_filter_IpV6_service(filter_fp);
+      }
+      else if( (!strBlockTimeCmd) ||
+               ((strcmp(strBlockTimeCmd, "v6cron_block_time_start")) &&
+               (strcmp(strBlockTimeCmd, "v6cron_block_time_stop")) )) {
+          time_t ttime = 0;
+          struct tm *ptm = NULL;
+          unsigned long ulMaskDayOfWeek[7];
+          unsigned long ulMaskToday;
 
+          // We reached here fron a NON-CRON invocation (system reboot or normal firewall restart).
+          // Check the times and re-apply the filters as applicable.
+          GetTimeOfDayMasks(ulMaskDayOfWeek, v6DayOfWeekBlockTimeBitMask);
+          time(&ttime);
+          ptm = localtime(&ttime);
+
+          if(BTMASK_BYHOUR == v6_dayofweek_block_time_bit_mask_type) {
+              ulMaskToday = ulMaskDayOfWeek[0]; // Use only SUNDAY bits.
+          }
+          else if (BTMASK_BYDAYHOUR == v6_dayofweek_block_time_bit_mask_type) {
+              ulMaskToday = ulMaskDayOfWeek[ptm->tm_wday];
+          }
+
+          // Check if any time is scheduled for today
+          if(ulMaskToday) {
+              // Find if the current hour has been scheduled
+              if(ulMaskToday & (1 << ptm->tm_hour)) {
+                  // The CRON will fire at 0th minute of the scheduled hour.
+                  // See if we have passed the 0th minute already.  If yes, apply the filter here.
+                  if(ptm->tm_min >= 0) {
+                      do_ip_filter_IpV6_service(filter_fp);
+                  }
+              }
+          }
+      }
+      else {
+          if(!strcmp(strBlockTimeCmd, "v6cron_block_time_start")) {
+              // This is CRON Start - Apply the filters
+              do_ip_filter_IpV6_service(filter_fp);
+          }
+      }
+// LGI ADD END
        do_blockfragippktsv6(filter_fp);
        do_portscanprotectv6(filter_fp);
        do_ipflooddetectv6(filter_fp);
@@ -13580,10 +13862,12 @@ FIREWALL_DEBUG("exiting firewall service_close()\n");
  *    0              : Success
  *    < 0            : Error code
  */
-static int service_start ()
+static int service_start (char* strBlockTimeCmd)
 {
    char *filename1 = "/tmp/.ipt";
    char *filename2 = "/tmp/.ipt_v6";
+   char type[BUFF_STR_LEN] = {0};
+   char buf[64] = {0};
    BOOL needs_flush = FALSE;
    char temp[20];
    //int res_rfcfile = -1, res_rfclock = -1;
@@ -13611,8 +13895,56 @@ static int service_start ()
    sysevent_set(sysevent_fd, sysevent_token, "firewall-status", "starting", 0);
    ulogf(ULOG_FIREWALL, UL_INFO, "starting %s service", service_name);
       	FIREWALL_DEBUG("starting %s service\n" COMMA service_name);
+
+   // LGI ADD START
+   // Retrieve the IPv4, IPv6 and MAC Filter Block Time Bit Mask Type.
+   syscfg_get(NULL, "v4_dayofweek_block_time_bitmask_type", type, sizeof(type));
+   v4_dayofweek_block_time_bit_mask_type = atoi(type);
+
+   syscfg_get(NULL, "v6_dayofweek_block_time_bitmask_type", type, sizeof(type));
+   v6_dayofweek_block_time_bit_mask_type = atoi(type);
+
+   syscfg_get(NULL, "mac_dayofweek_block_time_bitmask_type", type, sizeof(type));
+   mac_dayofweek_block_time_bit_mask_type = atoi(type);
+
+   memset(v4DayOfWeekBlockTimeBitMask, '\0', sizeof(v4DayOfWeekBlockTimeBitMask));
+   memset(v6DayOfWeekBlockTimeBitMask, '\0', sizeof(v6DayOfWeekBlockTimeBitMask));
+   memset(macDayOfWeekBlockTimeBitMask, '\0', sizeof(macDayOfWeekBlockTimeBitMask));
+
+   // Retrieve the IPv4, IPv6 and MAC Filter Block Time Bit Mask.
+   GetBlockTimeBitMaskForWeek("lgfwv4dayofweek", "v4_dayofweek_block_time_bitmask", &v4DayOfWeekBlockTimeBitMask);
+   GetBlockTimeBitMaskForWeek("lgfwv6dayofweek", "v6_dayofweek_block_time_bitmask", &v6DayOfWeekBlockTimeBitMask);
+   GetBlockTimeBitMaskForWeek("lgfwmacdayofweek", "mac_dayofweek_block_time_bitmask", &macDayOfWeekBlockTimeBitMask);
+   if( (!strBlockTimeCmd) ||
+       ( (strcmp(strBlockTimeCmd, "cron_block_time_start")) &&
+         (strcmp(strBlockTimeCmd, "cron_block_time_stop")) &&
+         (strcmp(strBlockTimeCmd, "v6cron_block_time_start")) &&
+         (strcmp(strBlockTimeCmd, "v6cron_block_time_stop")) &&
+         (strcmp(strBlockTimeCmd, "mac_cron_block_time_start")) &&
+         (strcmp(strBlockTimeCmd, "mac_cron_block_time_stop")) )) {
+            system("sed -i '/#V4DayOfWeekBlockTimeBitMask/d' /var/spool/cron/crontabs/root");
+            if(BTMASK_ALWAYS != v4_dayofweek_block_time_bit_mask_type) {
+              unsigned long ulMaskDayOfWeek[7];
+              GetTimeOfDayMasks(ulMaskDayOfWeek, v4DayOfWeekBlockTimeBitMask);
+              BlockTimeBitMask_AddToCron(&ulMaskDayOfWeek[0], "cron_block_time_start", "cron_block_time_stop", "#V4DayOfWeekBlockTimeBitMask", v4_dayofweek_block_time_bit_mask_type);
+            }
+            system("sed -i '/#MacDayOfWeekBlockTimeBitMask/d' /var/spool/cron/crontabs/root");
+            if(BTMASK_ALWAYS != mac_dayofweek_block_time_bit_mask_type) {
+               unsigned long ulMaskDayOfWeek[7];
+               GetTimeOfDayMasks(ulMaskDayOfWeek, macDayOfWeekBlockTimeBitMask);
+               BlockTimeBitMask_AddToCron(&ulMaskDayOfWeek[0], "mac_cron_block_time_start", "mac_cron_block_time_stop", "#MacDayOfWeekBlockTimeBitMask", mac_dayofweek_block_time_bit_mask_type);
+            }
+
+            system("sed -i '/#V6DayOfWeekBlockTimeBitMask/d' /var/spool/cron/crontabs/root");
+            if(BTMASK_ALWAYS != v6_dayofweek_block_time_bit_mask_type) {
+              unsigned long ulMaskDayOfWeek[7];
+              GetTimeOfDayMasks(ulMaskDayOfWeek, v6DayOfWeekBlockTimeBitMask);
+              BlockTimeBitMask_AddToCron(&ulMaskDayOfWeek[0], "v6cron_block_time_start", "v6cron_block_time_stop", "#V6DayOfWeekBlockTimeBitMask", v6_dayofweek_block_time_bit_mask_type);
+            }
+   }
+   // LGI ADD END
    /*  ipv4 */
-   prepare_ipv4_firewall(filename1);
+   prepare_ipv4_firewall(filename1, strBlockTimeCmd);
    system("iptables-restore -c  < /tmp/.ipt 2> /tmp/.ipv4table_error");
 
    //if (!isFirewallEnabled) {
@@ -13620,7 +13952,7 @@ static int service_start ()
    //}
 
    /* ipv6 */
-   prepare_ipv6_firewall(filename2);
+   prepare_ipv6_firewall(filename2, strBlockTimeCmd);
    system("ip6tables-restore < /tmp/.ipt_v6 2> /tmp/.ipv6table_error");
 
    #ifdef _PLATFORM_RASPBERRYPI_
@@ -13736,13 +14068,13 @@ static int service_stop ()
  *    0              : Success
  *    < 0            : Error code
  */
-static int service_restart ()
+static int service_restart (char* strBlockTimeCmd)
 {
 // dont tear down firewall and put it into completly open and unnatted state
 // just recalculate the rules - service start does that
 //    (void) service_stop();
 	FIREWALL_DEBUG("Inside Firewall service_restart () \n");
-	return service_start();
+    return service_start(strBlockTimeCmd);
 }
 
 fw_shm_mutex fw_shm_mutex_init(char *mutexName) {
@@ -13942,13 +14274,13 @@ int error;
 
    switch (event) {
    case SERVICE_EV_START:
-       service_start();
+       service_start(NULL);
        break;
    case SERVICE_EV_STOP:
        service_stop();
        break;
    case SERVICE_EV_RESTART:
-       service_restart();
+       service_restart(argv[1]);
        break;
    /*
     * Handle custom events below here
@@ -13958,7 +14290,7 @@ int error;
        ulogf(ULOG_FIREWALL, UL_INFO, "%s handling syslog-status=%s", service_name, syslog_status);
        FIREWALL_DEBUG("%s handling syslog-status=%s\n" COMMA service_name COMMA syslog_status);
        if (0 == strcmp(syslog_status, "started")) {
-           service_restart();
+           service_restart(NULL);
        }
        break;
    default:
@@ -14010,3 +14342,579 @@ static void add_dslite_mss_clamping(FILE *fp)
     FIREWALL_DEBUG("Exiting add_dslite_mss_clamping\n");
 }
 #endif
+
+// LGI ADD START
+/*
+ * Add Ip filter rules
+ */
+static int do_ip_filter_IpV6_service(FILE *fp)
+{
+   int rc;
+   char query[MAX_QUERY];
+   int count=0, idx;
+   char namespace[MAX_QUERY];
+   char params[MAX_QUERY];
+   char iptableRule[MAX_QUERY];
+   char srcstartip[MAX_QUERY];
+   char srcstartipaddress[MAX_QUERY];
+   char srcendip[MAX_QUERY];
+   char dststartip[MAX_QUERY];
+   char dststartipaddress[MAX_QUERY];
+   char srcstartport[10];
+   char srcendport[10];
+   char dststartport[10];
+   char dstendport[10];
+   char IPv6SrcPrefixLen[10];
+   char IPv6DstPrefixLen[10];
+   char action[10];
+   char direction[32];
+   unsigned int  proto = 0;
+
+   query[0] = '\0';
+
+   char *cron_file = crontab_dir"/"crontab_filename;
+   FILE *cron_fp = NULL; // the crontab file we use to set wakeups for timed firewall events
+   cron_fp = fopen(cron_file, "a+");
+
+   rc = syscfg_get(NULL, "lgFwV6IpFilterCount", query, sizeof(query));
+   if (rc == 0 && query[0] != '\0')
+   {
+       count = atoi(query);
+   }
+   if (count < 0) count = 0;
+   if (count > MAX_SYSCFG_ENTRIES) count = MAX_SYSCFG_ENTRIES;
+   for (idx = 1; idx <= count; idx++)
+   {
+        snprintf(query, sizeof(query), "lgFwV6IpFilter_%d", idx);
+        namespace[0] = '\0';
+        rc = syscfg_get(NULL, query, namespace, sizeof(namespace));
+        if (0 != rc || '\0' == namespace[0])
+        {
+            continue;
+        }
+
+        rc = syscfg_get(namespace, "enable", params, sizeof(params));
+        if (0 != rc || '\0' == params[0])
+        {
+            continue;
+        }
+        else
+        {
+            if (0 == atoi(params))
+            {
+                continue;
+            }
+        }
+
+        rc = syscfg_get(namespace, "srcStartIp", srcstartip, sizeof(srcstartip));
+        if (0 != rc || '\0' == srcstartip[0])
+        {
+           continue;
+        }
+
+        rc = syscfg_get(namespace, "dstStartIp", dststartip, sizeof(dststartip));
+        if (0 != rc || '\0' == dststartip[0])
+        {
+           continue;
+        }
+
+        rc = syscfg_get(namespace, "srcStartPort", srcstartport, sizeof(srcstartport));
+        if (0 != rc || '\0' == srcstartport[0])
+        {
+           continue;
+        }
+
+        rc = syscfg_get(namespace, "srcEndPort", srcendport, sizeof(srcendport));
+        if (0 != rc || '\0' == srcendport[0])
+        {
+           continue;
+        }
+
+        rc = syscfg_get(namespace, "dstStartPort", dststartport, sizeof(dststartport));
+        if (0 != rc || '\0' == dststartport[0])
+        {
+           continue;
+        }
+
+        rc = syscfg_get(namespace, "dstEndPort", dstendport, sizeof(dstendport));
+        if (0 != rc || '\0' == dstendport[0])
+        {
+           continue;
+        }
+
+        rc = syscfg_get(namespace, "IPv6SrcPrefixLen", IPv6SrcPrefixLen, sizeof(IPv6SrcPrefixLen));
+        if (0 != rc || '\0' == IPv6SrcPrefixLen[0])
+        {
+           continue;
+        }
+
+        rc = syscfg_get(namespace, "IPv6DstPrefixLen", IPv6DstPrefixLen, sizeof(IPv6DstPrefixLen));
+        if (0 != rc || '\0' == IPv6DstPrefixLen[0])
+        {
+           continue;
+        }
+
+        rc = syscfg_get(namespace, "protoType", params, sizeof(params));
+        if (0 != rc || '\0' == params[0])
+        {
+           proto = 0;
+        } else
+        {
+           if (0 == strcasecmp("tcp", params))
+           {
+               proto = 1;
+           }
+           else if (0 == strcasecmp("udp", params))
+           {
+               proto = 2;
+           }
+           else if (0 == strcasecmp("both", params))
+           {
+               proto = 3;
+           }
+           else if (0 == strcasecmp("all", params))
+           {
+               proto = 4;
+           }
+           else if (0 == strcasecmp("icmpv6", params))
+           {
+               proto = 5;
+           }
+           else if (0 == strcasecmp("gre", params))
+           {
+               proto = 6;
+           }
+           else if (0 == strcasecmp("esp", params))
+           {
+               proto = 7;
+           }
+           else if (0 == strcasecmp("ah", params))
+           {
+               proto = 8;
+           }
+           else
+           {
+               proto = 0;
+           }
+        }
+
+        rc = syscfg_get(namespace, "filterAction", params, sizeof(params));
+        if (0 != rc || '\0' == params[0])
+        {
+           continue;
+        }
+        else
+        {
+           if (0 == strcasecmp("DENY", params))
+           {
+               strcpy(action,"DROP");
+           }
+           else if (0 == strcasecmp("ALLOW", params))
+           {
+               strcpy(action,"ACCEPT");
+           }
+        }
+
+        rc = syscfg_get(namespace, "filterDirec", direction, sizeof(direction));
+        if (0 != rc || '\0' == direction[0])
+        {
+           continue;
+        }
+        if (strcmp(IPv6SrcPrefixLen, "0") == 0)
+        {
+            /* When source IP is "All" from GUI the back-end parameter value is stored as "::".
+               Below strlen check will omit specific source IP flag in this case, which defaults
+               to ::/0 when not specified." */
+            if ( strlen(srcstartip) > 5 )
+            {
+                snprintf(srcstartipaddress, sizeof(srcstartipaddress), "-s %s",srcstartip);
+            }
+            else
+            {
+                srcstartipaddress[0] = 0;
+            }
+        }
+        else
+        {
+           snprintf(srcstartipaddress, sizeof(srcstartipaddress), "-s %s/%s",srcstartip ,IPv6SrcPrefixLen);
+        }
+
+        if (strcmp(IPv6DstPrefixLen, "0") == 0)
+        {
+            /* When dest IP is "All" from GUI the back-end parameter value is stored as "::".
+               Below strlen check will omit specific dest IP flag in this case, which defaults
+               to ::/0 when not specified." */
+            if ( strlen(dststartip) > 5 )
+            {
+                snprintf(dststartipaddress, sizeof(dststartipaddress), "-d %s",dststartip);
+            }
+            else
+            {
+                dststartipaddress[0] = 0;
+            }
+        }
+        else
+        {
+           snprintf(dststartipaddress, sizeof(dststartipaddress), "-d %s/%s",dststartip ,IPv6DstPrefixLen);
+        }
+        if(0 == strcasecmp("OUTGOING", direction))
+        {
+            if (4 == proto || 3 == proto || 1 ==  proto)
+            {
+                fprintf(fp, "-I FORWARD -p tcp %s %s --sport %s:%s --dport %s:%s -j %s\n", srcstartipaddress, dststartipaddress, srcstartport, srcendport, dststartport, dstendport, action);
+            }
+            if (4 == proto || 3 == proto || 2 ==  proto)
+            {
+                fprintf(fp, "-I FORWARD -p udp %s %s --sport %s:%s --dport %s:%s -j %s\n", srcstartipaddress, dststartipaddress, srcstartport, srcendport, dststartport, dstendport, action);
+            }
+            if (4 == proto || 5 ==  proto)
+            {
+                fprintf(fp, "-I FORWARD -p ipv6-icmp %s %s -j %s\n", srcstartipaddress, dststartipaddress, action);
+            }
+            if (4 == proto || 6 ==  proto)
+            {
+                fprintf(fp, "-I FORWARD -p gre %s %s -j %s\n", srcstartipaddress, dststartipaddress, action);
+            }
+            if (4 == proto || 7 ==  proto)
+            {
+                fprintf(fp, "-I FORWARD -p esp %s %s -j %s\n", srcstartipaddress, dststartipaddress, action);
+            }
+            if (4 == proto || 8 ==  proto)
+            {
+                fprintf(fp, "-I FORWARD -m ah %s %s -j %s\n", srcstartipaddress, dststartipaddress, action);
+            }
+
+        }
+        if(0 == strncasecmp("INCOMING", direction, 8))
+        {
+            if (4 == proto || 3 == proto || 1 ==  proto)
+            {
+                fprintf(fp, "-I FORWARD -p tcp %s %s --sport %s:%s --dport %s:%s -j %s\n", srcstartipaddress, dststartipaddress, srcstartport, srcendport, dststartport, dstendport, action);
+            }
+            if (4 == proto || 3 == proto || 2 ==  proto)
+            {
+                fprintf(fp, "-I FORWARD -p udp %s %s --sport %s:%s --dport %s:%s -j %s\n", srcstartipaddress, dststartipaddress, srcstartport, srcendport, dststartport, dstendport, action);
+            }
+            if (4 == proto || 5 ==  proto)
+            {
+                fprintf(fp, "-I FORWARD -p ipv6-icmp %s %s -j %s\n", srcstartipaddress, dststartipaddress, action);
+            }
+            if (4 == proto || 6 ==  proto)
+            {
+                fprintf(fp, "-I FORWARD -p gre %s %s -j %s\n", srcstartipaddress, dststartipaddress, action);
+            }
+            if (4 == proto || 7 ==  proto)
+            {
+                fprintf(fp, "-I FORWARD -p esp %s %s -j %s\n", srcstartipaddress, dststartipaddress, action);
+            }
+            if (4 == proto || 8 ==  proto)
+            {
+                fprintf(fp, "-I FORWARD -m ah %s %s -j %s\n", srcstartipaddress, dststartipaddress, action);
+            }
+        }
+   }
+
+   if(cron_fp)
+   {
+       fclose(cron_fp);
+   }
+   return(0);
+}
+
+static int do_ip_filter_IpV4_service(FILE *fp)
+{
+    int rc;
+    char query[MAX_QUERY];
+    int count=0, idx;
+    char namespace[MAX_QUERY];
+    char params[MAX_QUERY];
+    char iptableRule[MAX_QUERY];
+
+    char srcstartip[MAX_QUERY];
+    char srcendip[MAX_QUERY];
+    char srcstartport[10];
+    char srcendport[10];
+    char dststartip[MAX_QUERY];
+    char dstendip[MAX_QUERY];
+    char dststartport[10];
+    char dstendport[10];
+    unsigned int  proto = 0;
+    char action_str[MAX_QUERY];
+    unsigned int action = 0;
+
+    query[0] = '\0';
+
+    char *cron_file = crontab_dir"/"crontab_filename;
+    FILE *cron_fp = NULL; // the crontab file we use to set wakeups for timed firewall events
+    cron_fp = fopen(cron_file, "a+");
+
+    rc = syscfg_get(NULL, "lgFwV4IpFilterCount", query, sizeof(query));
+    if (rc == 0 && query[0] != '\0')
+    {
+        count = atoi(query);
+    }
+    if (count < 0) count = 0;
+    if (count > MAX_SYSCFG_ENTRIES) count = MAX_SYSCFG_ENTRIES;
+
+    for (idx = 1; idx <= count; idx++)
+    {
+        snprintf(query, sizeof(query), "lgFwV4IpFilter_%d", idx);
+        namespace[0] = '\0';
+        rc = syscfg_get(NULL, query, namespace, sizeof(namespace));
+        if (0 != rc || '\0' == namespace[0])
+        {
+            continue;
+        }
+
+        rc = syscfg_get(namespace, "enable", params, sizeof(params));
+        if (0 != rc || '\0' == params[0])
+        {
+            continue;
+        }
+        else
+        {
+            if (0 == atoi(params))
+            {
+                continue;
+            }
+        }
+
+        rc = syscfg_get(namespace, "srcStartIp", srcstartip, sizeof(srcstartip));
+        if (0 != rc || '\0' == srcstartip[0])
+        {
+            continue;
+        }
+
+        rc = syscfg_get(namespace, "srcEndIp", srcendip, sizeof(srcendip));
+        if (0 != rc || '\0' == srcendip[0])
+        {
+            continue;
+        }
+
+        rc = syscfg_get(namespace, "dstStartIp", dststartip, sizeof(dststartip));
+        if (0 != rc || '\0' == dststartip[0])
+        {
+            continue;
+        }
+
+        rc = syscfg_get(namespace, "dstEndIp", dstendip, sizeof(dstendip));
+        if (0 != rc || '\0' == dstendip[0])
+        {
+            continue;
+        }
+
+        rc = syscfg_get(namespace, "srcStartPort", srcstartport, sizeof(srcstartport));
+        if (0 != rc || '\0' == srcstartport[0])
+        {
+            continue;
+        }
+
+        rc = syscfg_get(namespace, "srcEndPort", srcendport, sizeof(srcendport));
+        if (0 != rc || '\0' == srcendport[0])
+        {
+            continue;
+        }
+
+        rc = syscfg_get(namespace, "dstStartPort", dststartport, sizeof(dststartport));
+        if (0 != rc || '\0' == dststartport[0])
+        {
+            continue;
+        }
+
+        rc = syscfg_get(namespace, "dstEndPort", dstendport, sizeof(dstendport));
+        if (0 != rc || '\0' == dstendport[0])
+        {
+            continue;
+        }
+
+        rc = syscfg_get(namespace, "protoType", params, sizeof(params));
+        if (0 != rc || '\0' == params[0])
+        {
+            proto = PROTOCOL_UNDEFINED;
+        }
+        else
+        {
+            if (0 == strcasecmp("tcp", params))
+            {
+                proto = PROTOCOL_TCP;
+            }
+            else if (0 == strcasecmp("udp", params))
+            {
+                proto = PROTOCOL_UDP;
+            }
+            else if (0 == strcasecmp("both", params))
+            {
+                proto = PROTOCOL_BOTH;
+            }
+            else if (0 == strcasecmp("all", params))
+            {
+                proto = PROTOCOL_ALL;
+            }
+            else
+            {
+                proto = PROTOCOL_UNDEFINED;
+            }
+        }
+
+        rc = syscfg_get(namespace, "action", action_str, sizeof(action_str));
+        if (0 != rc || '\0' == action_str[0])
+        {
+            action = ACTION_DENY;
+        }
+        else
+        {
+            if (0 == strcasecmp("ALLOW", action_str))
+            {
+                action = ACTION_ALLOW;
+            }
+            else
+            {
+                action = ACTION_DENY;
+            }
+        }
+
+        if ((0 == strcmp("0.0.0.0", srcendip)) && (0 == strcmp("0.0.0.0", dstendip)))
+        {
+            if ((0 == strcmp("0.0.0.0", srcstartip)) && (0 == strcmp("0.0.0.0", dststartip)))
+            {
+                //ALL Source IP to ALL Destination IP
+                snprintf(iptableRule, sizeof(iptableRule), " ");
+            }
+            else if (0 == strcmp("0.0.0.0", srcstartip))
+            {
+                //ALL Source IP to Single Destination IP
+                snprintf(iptableRule, sizeof(iptableRule), " -d %s ", dststartip);
+            }
+            else if (0 == strcmp("0.0.0.0", dststartip))
+            {
+                //Single Source IP to ALL Destination IP
+                snprintf(iptableRule, sizeof(iptableRule), "-s %s ", srcstartip);
+            }
+            else
+            {
+                //Single Source IP to Single Destination IP
+                snprintf(iptableRule, sizeof(iptableRule), "-s %s -d %s ", srcstartip, dststartip);
+            }
+        }
+        else if (0 == strcmp("0.0.0.0", srcendip))
+        {
+            if (0 == strcmp("0.0.0.0", srcstartip))
+            {
+                //ALL Source IP to Range Destination IP
+                snprintf(iptableRule, sizeof(iptableRule), "-m iprange --dst-range %s-%s ", dststartip, dstendip);
+            }
+            else
+            {
+                //Single Source IP to Range Destination IP
+                snprintf(iptableRule, sizeof(iptableRule), "-m iprange -s %s --dst-range %s-%s ", srcstartip, dststartip, dstendip);
+            }
+        }
+        else if (0 == strcmp("0.0.0.0", dstendip))
+        {
+            if (0 == strcmp("0.0.0.0", dststartip))
+            {
+                //Range Source IP to All Destination IP
+                snprintf(iptableRule, sizeof(iptableRule), "-m iprange --src-range %s-%s ", srcstartip, srcendip);
+            }
+            else
+            {
+                //Range Source IP to Single Destination IP
+                snprintf(iptableRule, sizeof(iptableRule), "-m iprange --src-range %s-%s -d %s ", srcstartip, srcendip, dststartip);
+            }
+        }
+        else
+        {
+            //Range Source IP to Range Destination IP
+            snprintf(iptableRule, sizeof(iptableRule), "-m iprange --src-range %s-%s --dst-range %s-%s ", srcstartip, srcendip, dststartip, dstendip);
+        }
+
+        if (action == ACTION_DENY )                               //Action DROP
+        {
+            strcat(iptableRule, " -I FORWARD -j DROP ");
+        }
+        if (action == ACTION_ALLOW)                                //Action ALLOW
+        {
+            strcat(iptableRule, " -I FORWARD -j ACCEPT ");
+        }
+
+        if (PROTOCOL_BOTH == proto || PROTOCOL_TCP ==  proto)
+        {
+            //Inserting IP Table rule for protocol TCP
+            fprintf(fp, " %s -p tcp --sport %s:%s --dport %s:%s \n", iptableRule, srcstartport, srcendport, dststartport, dstendport);
+        }
+        if (PROTOCOL_BOTH == proto || PROTOCOL_UDP ==  proto)
+        {
+            //Inserting IP Table rule for protocol UDP
+            fprintf(fp, " %s -p udp --sport %s:%s --dport %s:%s \n", iptableRule, srcstartport, srcendport, dststartport, dstendport);
+        }
+        if (PROTOCOL_ALL == proto )
+        {
+            //Inserting IP Table rule for protocol ALL
+            fprintf(fp, "%s\n", iptableRule);
+        }
+}
+
+    if(cron_fp)
+    {
+        fclose(cron_fp);
+    }
+    return(0);
+}
+
+static int do_mac_filter(FILE *fp)
+{
+    int rc;
+    char query[MAX_QUERY];
+    int count=0, idx;
+    char namespace[MAX_QUERY];
+    char params[MAX_QUERY];
+
+    int enable=0;
+    char MACAddress[64];
+    query[0]='\0';
+    rc = syscfg_get(NULL, "lgFWMACFilterCount", query, sizeof(query));
+    if (rc == 0 && query[0] != '\0')
+    {
+        count = atoi(query);
+    }
+    if (count < 0)
+    {
+        count = 0;
+    }
+    if (count > MAX_SYSCFG_ENTRIES)
+    {
+        count = MAX_SYSCFG_ENTRIES;
+    }
+
+    for (idx=1; idx<=count; idx++)
+    {
+        snprintf(query, sizeof(query), "lgFWMACFilter_%d", idx);
+        namespace[0] = '\0';
+        rc = syscfg_get(NULL, query, namespace, sizeof(namespace));
+        if ( (rc != 0) || ('\0' == namespace[0]) )
+        {
+            continue;
+        }
+
+        rc = syscfg_get(namespace, "enable", params, sizeof(params));
+        if ( (rc != 0) || ('\0' != params[0]) )
+        {
+            enable = atoi(params);
+            if (enable)
+            {
+                rc = syscfg_get(namespace, "mac", MACAddress, sizeof(MACAddress));
+                if ( (rc != 0) || ('\0' != MACAddress[0]) )
+                {
+                    fprintf(fp, "-I INPUT -m mac --mac-source %s -j DROP\n", MACAddress);
+                    fprintf(fp, "-I FORWARD -m mac --mac-source %s -j DROP\n", MACAddress);
+
+                }
+            }
+            else
+            {
+                continue;
+            }
+        }
+    }
+}
+// LGI ADD END
