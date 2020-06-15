@@ -758,6 +758,9 @@ static struct
     { Utopia_Type_IndexedConfig, Utopia_Event_Firewall_Restart,	Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "prev_rule_enabled_state",			UtopiaValue_SinglePortForward },	/* UtopiaValue_SPF_PrevRuleEnabledState */	  
     { Utopia_Type_IndexedConfig, Utopia_Event_Firewall_Restart,   Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "prev_rule_enabled_state",          UtopiaValue_PortRangeForward },     /* UtopiaValue_PFR_PrevRuleEnabledState */        
     { Utopia_Type_IndexedConfig, Utopia_Event_Firewall_Restart,   Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "prev_rule_enabled_state",          UtopiaValue_PortRangeTrigger },     /* UtopiaValue_PRT_PrevRuleEnabledState */
+#if !defined(_PLATFORM_RASPBERRYPI_) && !defined(INTEL_PUMA7) && !defined (INTEL_MV1)
+	 { Utopia_Type_Event, Utopia_Event__NONE__,           Utopia_Static__NONE__, Utopia_For__NONE__, 0, "bring-lan",    		UtopiaValue__UNKNOWN__ }, /* UtopiaValue_IPv6_Prefix */
+#endif
     	{ Utopia_Type_IndexedConfig, Utopia_Event__NONE__, Utopia_Static__NONE__, Utopia_Index_For_Key, 1, "hash_password_%d", UtopiaValue__UNKNOWN__ },  /* UtopiaValue_HashPassword */
 #if defined(_WAN_MANAGER_ENABLED_)
       { Utopia_Type_Config, Utopia_Event__NONE__, Utopia_Static__NONE__, Utopia_For__NONE__, 1, "wan_mode",  UtopiaValue__UNKNOWN__ }, /* UtopiaValue_WanMode */
@@ -782,6 +785,64 @@ static struct
     { Utopia_Type_IndexedConfig, Utopia_Event_DSLite_Restart,       Utopia_Static__NONE__, Utopia_Index_For_Key, 1, "dslite_tcpmss_%d",          UtopiaValue__UNKNOWN__ },          /* UtopiaValue_Dslite_Tcpmss */
     { Utopia_Type_IndexedConfig, Utopia_Event_DSLite_Restart,       Utopia_Static__NONE__, Utopia_Index_For_Key, 1, "dslite_ipv6_frag_enable_%d", UtopiaValue__UNKNOWN__ },         /* UtopiaValue_Dslite_IPv6_Frag_Enable */
 #endif
+    // LGI ADD START
+    { Utopia_Type_Config,        Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_For__NONE__,   1, "lgFwV4IpFilterCount",    UtopiaValue__UNKNOWN__ },          /* UtopiaValue_LGFW_V4IpFilterCount */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_Key, 1, "lgFwV4IpFilter_%d",      UtopiaValue__UNKNOWN__ },          /* UtopiaValue_LGFW_V4IpFilter */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "ins_num",                   UtopiaValue_LGFW_V4IpFilter },  /* UtopiaValue_LGFW_V4IpFilter_InsNum */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "alias",                     UtopiaValue_LGFW_V4IpFilter },  /* UtopiaValue_LGFW_V4IpFilter_Alias */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "desc",                      UtopiaValue_LGFW_V4IpFilter },  /* UtopiaValue_LGFW_V4IpFilter_Desc */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "enable",                    UtopiaValue_LGFW_V4IpFilter },  /* UtopiaValue_LGFW_V4IpFilter_Enable */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "srcStartIp",                UtopiaValue_LGFW_V4IpFilter },  /* UtopiaValue_LGFW_V4IpFilter_SrcStartIp */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "srcEndIp",                  UtopiaValue_LGFW_V4IpFilter },  /* UtopiaValue_LGFW_V4IpFilter_SrcEndIp */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "dstStartIp",                UtopiaValue_LGFW_V4IpFilter },  /* UtopiaValue_LGFW_V4IpFilter_DstStartIp */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "dstEndIp",                  UtopiaValue_LGFW_V4IpFilter },  /* UtopiaValue_LGFW_V4IpFilter_DstEndIp */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "srcStartPort",              UtopiaValue_LGFW_V4IpFilter },  /* UtopiaValue_LGFW_V4IpFilter_SrcStartPort */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "srcEndPort",                UtopiaValue_LGFW_V4IpFilter },  /* UtopiaValue_LGFW_V4IpFilter_SrcEndPort */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "dstStartPort",              UtopiaValue_LGFW_V4IpFilter },  /* UtopiaValue_LGFW_V4IpFilter_DstStartPort */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "dstEndPort",                UtopiaValue_LGFW_V4IpFilter },  /* UtopiaValue_LGFW_V4IpFilter_DstEndPort */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "protoType",                 UtopiaValue_LGFW_V4IpFilter },  /* UtopiaValue_LGFW_V4IpFilter_ProtoType */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "action",                    UtopiaValue_LGFW_V4IpFilter },  /* UtopiaValue_LGFW_V4IpFilter_Action */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "direction",                 UtopiaValue_LGFW_V4IpFilter },  /* UtopiaValue_LGFW_V4IpFilter_Direc */
+    { Utopia_Type_Config,        Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_For__NONE__,   1, "lgFwV6IpFilterCount",    UtopiaValue__UNKNOWN__ },          /* UtopiaValue_LGFW_V6IpFilterCount */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_Key, 1, "lgFwV6IpFilter_%d",      UtopiaValue__UNKNOWN__ },          /* UtopiaValue_LGFW_V6IpFilter */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "ins_num",                   UtopiaValue_LGFW_V6IpFilter },  /* UtopiaValue_LGFW_V6IpFilter_InsNum */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "alias",                     UtopiaValue_LGFW_V6IpFilter },  /* UtopiaValue_LGFW_V6IpFilter_Alias */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "desc",                      UtopiaValue_LGFW_V6IpFilter },  /* UtopiaValue_LGFW_V6IpFilter_Desc */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "srcStartIp",                UtopiaValue_LGFW_V6IpFilter },  /* UtopiaValue_LGFW_V6IpFilter_SrcStartIp */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "srcStartPort",              UtopiaValue_LGFW_V6IpFilter },  /* UtopiaValue_LGFW_V6IpFilter_SrcStartPort */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "srcEndPort",                UtopiaValue_LGFW_V6IpFilter },  /* UtopiaValue_LGFW_V6IpFilter_SrcEndPort */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "protoType",                 UtopiaValue_LGFW_V6IpFilter },  /* UtopiaValue_LGFW_V6IpFilter_ProtoType */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "filterAction",              UtopiaValue_LGFW_V6IpFilter },  /* UtopiaValue_LGFW_V6IpFilter_Action */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "dstStartIp",                UtopiaValue_LGFW_V6IpFilter },  /* UtopiaValue_LGFW_V6IpFilter_DstStartIp */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "dstStartPort",              UtopiaValue_LGFW_V6IpFilter },  /* UtopiaValue_LGFW_V6IpFilter_DstStartPort */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "dstEndPort",                UtopiaValue_LGFW_V6IpFilter },  /* UtopiaValue_LGFW_V6IpFilter_DstEndPort */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "IPv6SrcPrefixLen",          UtopiaValue_LGFW_V6IpFilter },  /* UtopiaValue_LGFW_V6IpFilter_IPv6SrcPrefixLen */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "IPv6DstPrefixLen",          UtopiaValue_LGFW_V6IpFilter },  /* UtopiaValue_LGFW_V6IpFilter_IPv6DstPrefixLen */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "enable",                    UtopiaValue_LGFW_V6IpFilter },  /* UtopiaValue_LGFW_V6IpFilter_Enable */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "filterDirec",               UtopiaValue_LGFW_V6IpFilter },  /* UtopiaValue_LGFW_V6IpFilter_FilterDirec */
+    { Utopia_Type_Config,        Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_For__NONE__,   1, "lgFWMACFilterCount",     UtopiaValue__UNKNOWN__ },          /* UtopiaValue_LGFW_MACFilterCount */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_Key, 1, "lgFWMACFilter_%d",       UtopiaValue__UNKNOWN__ },          /* UtopiaValue_LGFW_MACFilter */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "ins_num",                   UtopiaValue_LGFW_MACFilter },   /* UtopiaValue_LGFW_MACFilter_InsNum */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "alias",                     UtopiaValue_LGFW_MACFilter },   /* UtopiaValue_LGFW_MACFilter_Alias */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "enable",                    UtopiaValue_LGFW_MACFilter },   /* UtopiaValue_LGFW_MACFilter_Enable */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "hostName",                  UtopiaValue_LGFW_MACFilter },   /* UtopiaValue_LGFW_MACFilter_Hostname */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "mac",                       UtopiaValue_LGFW_MACFilter },   /* UtopiaValue_LGFW_MACFilter_MACAddress */
+    { Utopia_Type_Config,        Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_For__NONE__,   1, "lgFWV4DayOfWeekCount",          UtopiaValue__UNKNOWN__ },           /* UtopiaValue_LGFW_V4DayOfWeekCount */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_Key, 1, "lgFWV4DayOfWeek_%d",            UtopiaValue__UNKNOWN__ },           /* UtopiaValue_LGFW_V4DayOfWeek */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "ins_num",                          UtopiaValue_LGFW_V4DayOfWeek },  /* UtopiaValue_LGFW_V4DayOfWeek_InsNum */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "alias",                            UtopiaValue_LGFW_V4DayOfWeek },  /* UtopiaValue_LGFW_V4DayOfWeek_Alias */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "v4_dayofweek_block_time_bitmask",  UtopiaValue_LGFW_V4DayOfWeek },  /* UtopiaValue_LGFW_V4DayOfWeek_BlockTimeBitMask */
+    { Utopia_Type_Config,        Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_For__NONE__,   1, "lgFWV6DayOfWeekCount",          UtopiaValue__UNKNOWN__ },           /* UtopiaValue_LGFW_V6DayOfWeekCount */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_Key, 1, "lgFWV6DayOfWeek_%d",            UtopiaValue__UNKNOWN__ },           /* UtopiaValue_LGFW_V6DayOfWeek */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "ins_num",                          UtopiaValue_LGFW_V6DayOfWeek },  /* UtopiaValue_LGFW_V6DayOfWeek_InsNum */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "alias",                            UtopiaValue_LGFW_V6DayOfWeek },  /* UtopiaValue_LGFW_V6DayOfWeek_Alias */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "v6_dayofweek_block_time_bitmask",  UtopiaValue_LGFW_V6DayOfWeek },  /* UtopiaValue_LGFW_V6DayOfWeek_BlockTimeBitMask */
+    { Utopia_Type_Config,        Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_For__NONE__,   1, "lgFWMacDayOfWeekCount",         UtopiaValue__UNKNOWN__ },           /* UtopiaValue_LGFW_MacDayOfWeekCount */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_Key, 1, "lgFWMacDayOfWeek_%d",           UtopiaValue__UNKNOWN__ },           /* UtopiaValue_LGFW_MacDayOfWeek */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "ins_num",                          UtopiaValue_LGFW_MacDayOfWeek }, /* UtopiaValue_LGFW_MacDayOfWeek_InsNum */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "alias",                            UtopiaValue_LGFW_MacDayOfWeek }, /* UtopiaValue_LGFW_MacDayOfWeek_Alias */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "mac_dayofweek_block_time_bitmask", UtopiaValue_LGFW_MacDayOfWeek }, /* UtopiaValue_LGFW_MacDayOfWeek_BlockTimeBitMask */
+    // LGI ADD END
     { Utopia_Type__UNKNOWN__, Utopia_Event__NONE__, Utopia_Static__NONE__, Utopia_For__NONE__, 0, 0, UtopiaValue__UNKNOWN__ }, /* UtopiaValue__LAST__ */
 };
 
