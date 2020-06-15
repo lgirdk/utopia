@@ -67,7 +67,10 @@
 #define POLYNOMIAL 0xEDB88320L
 
 #define CALCULATE_CRC32_TABLE_ENTRY(X) (((X) & 1) ? (POLYNOMIAL^ ((X) >> 1)) : ((X) >> 1))
-
+// LGI ADD START
+#define MAX_DAYOFWEEK_COUNT              7
+#define DAYOFWEEK_BT_MASK_STR_ALWAYS     "111111111111111111111111"
+// LGI ADD END
 /*
  * utapi.c - 
  */
@@ -7554,3 +7557,585 @@ int Utopia_IPRule_ephemeral_port_forwarding( portMapDyn_t *pmap, boolean_t isCal
  
   return SUCCESS;
 }
+
+// LGI ADD START
+// V4 IP Filter----------------------------------------------------------------
+
+int Utopia_GetV4IpFilterInsNumByIndex(UtopiaContext *ctx, unsigned long uIndex, int *ins)
+{
+    return Utopia_GetIndexedInt(ctx, UtopiaValue_LGFW_V4IpFilter_InsNum, uIndex+1, ins);
+}
+
+static int g_fw_V4IpfilterCount = 0;
+
+int Utopia_GetNumberOfV4IpFilter(UtopiaContext *ctx, int *num)
+{
+    int rc = SUCCESS;
+
+    if(g_fw_V4IpfilterCount == 0)
+        Utopia_GetInt(ctx, UtopiaValue_LGFW_V4IpFilterCount, &g_fw_V4IpfilterCount);
+
+    *num = g_fw_V4IpfilterCount;
+    return rc;
+}
+
+int Utopia_GetV4IpFilterByIndex(UtopiaContext *ctx, unsigned long ulIndex, fwipfilter_t *IpFilter)
+{
+    int index = ulIndex+1;
+    Utopia_GetIndexedInt(ctx, UtopiaValue_LGFW_V4IpFilter_InsNum, index, &IpFilter->InstanceNumber);
+    Utopia_GetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_Alias, index, IpFilter->Alias, sizeof(IpFilter->Alias));
+    Utopia_GetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_Desc, index, IpFilter->Description, sizeof(IpFilter->Description));
+    Utopia_GetIndexedBool(ctx, UtopiaValue_LGFW_V4IpFilter_Enable, index, &IpFilter->Enable);
+    Utopia_GetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_SrcStartIp, index, IpFilter->SrcStartIPAddress, sizeof(IpFilter->SrcStartIPAddress));
+    Utopia_GetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_SrcEndIp, index, IpFilter->SrcEndIPAddress, sizeof(IpFilter->SrcEndIPAddress));
+    Utopia_GetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_DstStartIp, index, IpFilter->DstStartIPAddress, sizeof(IpFilter->DstStartIPAddress));
+    Utopia_GetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_DstEndIp, index, IpFilter->DstEndIPAddress, sizeof(IpFilter->DstEndIPAddress));
+    Utopia_GetIndexedInt(ctx, UtopiaValue_LGFW_V4IpFilter_SrcStartPort, index, &IpFilter->SrcStartPort);
+    Utopia_GetIndexedInt(ctx, UtopiaValue_LGFW_V4IpFilter_SrcEndPort, index, &IpFilter->SrcEndPort);
+    Utopia_GetIndexedInt(ctx, UtopiaValue_LGFW_V4IpFilter_DstStartPort, index, &IpFilter->DstStartPort);
+    Utopia_GetIndexedInt(ctx, UtopiaValue_LGFW_V4IpFilter_DstEndPort, index, &IpFilter->DstEndPort);
+    Utopia_GetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_ProtoType, index, IpFilter->ProtocolType, sizeof(IpFilter->ProtocolType));
+    Utopia_GetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_Action, index, IpFilter->FilterAction, sizeof(IpFilter->FilterAction));
+    Utopia_GetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_Direction, index, IpFilter->FilterDirec, sizeof(IpFilter->FilterDirec));
+
+    return 0;
+}
+
+int Utopia_SetV4IpFilterByIndex(UtopiaContext *ctx, unsigned long ulIndex, const fwipfilter_t *ipFilter)
+{
+    int index = ulIndex+1;
+    snprintf(s_tokenbuf, sizeof(s_tokenbuf), "lgfwv4if_%d", index);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter, index, s_tokenbuf);
+
+
+    Utopia_SetIndexedInt(ctx, UtopiaValue_LGFW_V4IpFilter_InsNum, index, ipFilter->InstanceNumber);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_Alias, index, (char*)ipFilter->Alias);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_Desc, index, (char*)ipFilter->Description);
+    Utopia_SetIndexedBool(ctx, UtopiaValue_LGFW_V4IpFilter_Enable, index, ipFilter->Enable);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_SrcStartIp, index, (char*)ipFilter->SrcStartIPAddress);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_SrcEndIp, index, (char*)ipFilter->SrcEndIPAddress);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_DstStartIp, index, (char*)ipFilter->DstStartIPAddress);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_DstEndIp, index, (char*)ipFilter->DstEndIPAddress);
+    Utopia_SetIndexedInt(ctx, UtopiaValue_LGFW_V4IpFilter_SrcStartPort, index, ipFilter->SrcStartPort);
+    Utopia_SetIndexedInt(ctx, UtopiaValue_LGFW_V4IpFilter_SrcEndPort, index, ipFilter->SrcEndPort);
+    Utopia_SetIndexedInt(ctx, UtopiaValue_LGFW_V4IpFilter_DstStartPort, index, ipFilter->DstStartPort);
+    Utopia_SetIndexedInt(ctx, UtopiaValue_LGFW_V4IpFilter_DstEndPort, index, ipFilter->DstEndPort);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_ProtoType, index, (char*)ipFilter->ProtocolType);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_Action, index, (char*)ipFilter->FilterAction);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_Direction, index, (char*)ipFilter->FilterDirec);
+
+    return 0;
+}
+
+/*
+ * Set instance number and alias to specific entry by index
+ */
+int Utopia_SetV4IpFilterInsAndAliasByIndex(UtopiaContext *ctx, unsigned long ulIndex, unsigned long ins, const char *alias)
+{
+    int index = ulIndex+1;
+    Utopia_SetIndexedInt(ctx, UtopiaValue_LGFW_V4IpFilter_InsNum, index, ins);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_Alias, index, (char*)alias);
+    return 0;
+}
+
+int Utopia_AddV4IpFilter(UtopiaContext *ctx, const fwipfilter_t *ipFilter)
+{
+    int index;
+
+    Utopia_GetNumberOfV4IpFilter(ctx, &index);
+
+    g_fw_V4IpfilterCount++;
+    Utopia_SetInt(ctx, UtopiaValue_LGFW_V4IpFilterCount, g_fw_V4IpfilterCount);
+
+    Utopia_SetV4IpFilterByIndex(ctx, index, ipFilter);
+
+    return 0;
+}
+
+int Utopia_DelV4IpFilter(UtopiaContext *ctx, unsigned long ins)
+{
+    int count, index = 0;
+
+    Utopia_GetNumberOfV4IpFilter(ctx, &count);
+    for (index = 0; index < count; index++)
+    {
+        int ins_num;
+        Utopia_GetV4IpFilterInsNumByIndex(ctx, index, &ins_num);
+        if (ins_num == (int)ins) break;
+    }
+
+    if (index >= count)
+    {
+        return -1;
+    }
+
+    if (index < count-1)
+    {
+        for (;index < count-1; index++)
+        {
+            fwipfilter_t ipfilter;
+            Utopia_GetV4IpFilterByIndex(ctx, index+1, &ipfilter);
+            Utopia_SetV4IpFilterByIndex(ctx, index, &ipfilter);
+        }
+    }
+
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_InsNum, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_Alias, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_Desc, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_Enable, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_SrcStartIp, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_SrcEndIp, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_DstStartIp, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_DstEndIp, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_SrcStartPort, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_SrcEndPort, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_DstStartPort, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_DstEndPort, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_ProtoType, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_Action, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_Direction, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter, count);
+
+    g_fw_V4IpfilterCount--;
+    Utopia_SetInt(ctx, UtopiaValue_LGFW_V4IpFilterCount, g_fw_V4IpfilterCount);
+
+    return 0;
+}
+
+// V6 IP Filter----------------------------------------------------------------
+
+int Utopia_GetV6IpFilterInsNumByIndex(UtopiaContext *ctx, unsigned long uIndex, int *ins)
+{
+    return Utopia_GetIndexedInt(ctx, UtopiaValue_LGFW_V6IpFilter_InsNum, uIndex+1, ins);
+}
+
+static int g_fw_V6IpfilterCount = 0;
+
+int Utopia_GetNumberOfV6IpFilter(UtopiaContext *ctx, int *num)
+{
+    int rc = SUCCESS;
+
+    if(g_fw_V6IpfilterCount == 0)
+        Utopia_GetInt(ctx, UtopiaValue_LGFW_V6IpFilterCount, &g_fw_V6IpfilterCount);
+
+    *num = g_fw_V6IpfilterCount;
+    return rc;
+}
+
+int Utopia_GetV6IpFilterByIndex(UtopiaContext *ctx, unsigned long ulIndex, fwipfilter_t *IpFilter)
+{
+    int ins_num,startP,endP;
+    int index = ulIndex+1;
+    Utopia_GetIndexedInt(ctx, UtopiaValue_LGFW_V6IpFilter_InsNum, index, &ins_num); IpFilter->InstanceNumber = ins_num;
+    Utopia_GetIndexed(ctx, UtopiaValue_LGFW_V6IpFilter_Alias, index, IpFilter->Alias, sizeof(IpFilter->Alias));
+    Utopia_GetIndexed(ctx, UtopiaValue_LGFW_V6IpFilter_Desc, index, IpFilter->Description, sizeof(IpFilter->Description));
+    Utopia_GetIndexed(ctx, UtopiaValue_LGFW_V6IpFilter_SrcStartIp, index, IpFilter->SrcStartIPAddress, sizeof(IpFilter->SrcStartIPAddress));
+    Utopia_GetIndexedInt(ctx, UtopiaValue_LGFW_V6IpFilter_SrcStartPort, index, &startP); IpFilter->SrcStartPort = startP;
+    Utopia_GetIndexedInt(ctx, UtopiaValue_LGFW_V6IpFilter_SrcEndPort, index, &endP); IpFilter->SrcEndPort = endP;
+    Utopia_GetIndexed(ctx, UtopiaValue_LGFW_V6IpFilter_ProtoType, index, IpFilter->ProtocolType, sizeof(IpFilter->ProtocolType));
+    Utopia_GetIndexed(ctx, UtopiaValue_LGFW_V6IpFilter_Action, index, IpFilter->FilterAction, sizeof(IpFilter->FilterAction));
+    Utopia_GetIndexed(ctx, UtopiaValue_LGFW_V6IpFilter_DstStartIp, index, IpFilter->DstStartIPAddress, sizeof(IpFilter->DstStartIPAddress));
+    Utopia_GetIndexedInt(ctx, UtopiaValue_LGFW_V6IpFilter_DstStartPort, index, &startP); IpFilter->DstStartPort = startP;
+    Utopia_GetIndexedInt(ctx, UtopiaValue_LGFW_V6IpFilter_DstEndPort, index, &endP); IpFilter->DstEndPort = endP;
+    Utopia_GetIndexedInt(ctx, UtopiaValue_LGFW_V6IpFilter_IPv6SrcPrefixLen, index, &endP); IpFilter->IPv6SrcPrefixLen = endP;
+    Utopia_GetIndexedInt(ctx, UtopiaValue_LGFW_V6IpFilter_IPv6DstPrefixLen, index, &endP); IpFilter->IPv6DstPrefixLen = endP;
+    Utopia_GetIndexedBool(ctx, UtopiaValue_LGFW_V6IpFilter_Enable, index, &IpFilter->Enable);
+    Utopia_GetIndexed(ctx, UtopiaValue_LGFW_V6IpFilter_FilterDirec, index, IpFilter->FilterDirec, sizeof(IpFilter->FilterDirec));
+
+    return 0;
+}
+
+int Utopia_SetV6IpFilterByIndex(UtopiaContext *ctx, unsigned long ulIndex, const fwipfilter_t *ipFilter)
+{
+    int index = ulIndex+1;
+    snprintf(s_tokenbuf, sizeof(s_tokenbuf), "lgfwv6if_%d", index);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_V6IpFilter, index, s_tokenbuf);
+
+    Utopia_SetIndexedInt(ctx, UtopiaValue_LGFW_V6IpFilter_InsNum, index, ipFilter->InstanceNumber);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_V6IpFilter_Alias, index, (char*)ipFilter->Alias);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_V6IpFilter_Desc, index, (char*)ipFilter->Description);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_V6IpFilter_SrcStartIp, index, (char*)ipFilter->SrcStartIPAddress);
+    Utopia_SetIndexedInt(ctx, UtopiaValue_LGFW_V6IpFilter_SrcStartPort, index, ipFilter->SrcStartPort);
+    Utopia_SetIndexedInt(ctx, UtopiaValue_LGFW_V6IpFilter_SrcEndPort, index, ipFilter->SrcEndPort);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_V6IpFilter_ProtoType, index, (char*)ipFilter->ProtocolType);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_V6IpFilter_Action, index, (char*)ipFilter->FilterAction);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_V6IpFilter_DstStartIp, index, (char*)ipFilter->DstStartIPAddress);
+    Utopia_SetIndexedInt(ctx, UtopiaValue_LGFW_V6IpFilter_DstStartPort, index, ipFilter->DstStartPort);
+    Utopia_SetIndexedInt(ctx, UtopiaValue_LGFW_V6IpFilter_DstEndPort, index, ipFilter->DstEndPort);
+    Utopia_SetIndexedInt(ctx, UtopiaValue_LGFW_V6IpFilter_IPv6SrcPrefixLen, index, ipFilter->IPv6SrcPrefixLen);
+    Utopia_SetIndexedInt(ctx, UtopiaValue_LGFW_V6IpFilter_IPv6DstPrefixLen, index, ipFilter->IPv6DstPrefixLen);
+    Utopia_SetIndexedBool(ctx, UtopiaValue_LGFW_V6IpFilter_Enable, index, ipFilter->Enable);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_V6IpFilter_FilterDirec, index, (char*)ipFilter->FilterDirec);
+
+    return 0;
+}
+
+/*
+ * Set instance number and alias to specific entry by index
+ */
+int Utopia_SetV6IpFilterInsAndAliasByIndex(UtopiaContext *ctx, unsigned long ulIndex, unsigned long ins, const char *alias)
+{
+    int index = ulIndex+1;
+    Utopia_SetIndexedInt(ctx, UtopiaValue_LGFW_V6IpFilter_InsNum, index, ins);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_V6IpFilter_Alias, index, (char*)alias);
+    return 0;
+}
+
+int Utopia_AddV6IpFilter(UtopiaContext *ctx, const fwipfilter_t *ipFilter)
+{
+    int index;
+
+    Utopia_GetNumberOfV6IpFilter(ctx, &index);
+
+    g_fw_V6IpfilterCount++;
+    Utopia_SetInt(ctx, UtopiaValue_LGFW_V6IpFilterCount, g_fw_V6IpfilterCount);
+
+    Utopia_SetV6IpFilterByIndex(ctx, index, ipFilter);
+
+    return 0;
+}
+
+int Utopia_DelV6IpFilter(UtopiaContext *ctx, unsigned long ins)
+{
+    int count, index = 0;
+
+    Utopia_GetNumberOfV6IpFilter(ctx, &count);
+    for (index = 0; index < count; index++)
+    {
+        int ins_num;
+        Utopia_GetV6IpFilterInsNumByIndex(ctx, index, &ins_num);
+        if (ins_num == (int)ins) break;
+    }
+
+    if (index >= count)
+    {
+        return -1;
+    }
+
+    if (index < count-1)
+    {
+        for (;index < count-1; index++)
+        {
+            fwipfilter_t ipfilter;
+            Utopia_GetV6IpFilterByIndex(ctx, index+1, &ipfilter);
+            Utopia_SetV6IpFilterByIndex(ctx, index, &ipfilter);
+        }
+    }
+
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_V6IpFilter_InsNum, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_V6IpFilter_Alias, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_V6IpFilter_Desc, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_V6IpFilter_SrcStartIp, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_V6IpFilter_SrcStartPort, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_V6IpFilter_SrcEndPort, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_V6IpFilter_ProtoType, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_V6IpFilter_Action, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_V6IpFilter_DstStartIp, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_V6IpFilter_DstStartPort, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_V6IpFilter_DstEndPort, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_V6IpFilter_IPv6SrcPrefixLen, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_V6IpFilter_IPv6DstPrefixLen, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_V6IpFilter_Enable, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_V6IpFilter_FilterDirec, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_V6IpFilter, count);
+
+    g_fw_V6IpfilterCount--;
+    Utopia_SetInt(ctx, UtopiaValue_LGFW_V6IpFilterCount, g_fw_V6IpfilterCount);
+
+    return 0;
+}
+
+// MAC Filter
+int Utopia_GetMACFilterInsNumByIndex(UtopiaContext *ctx, unsigned long uIndex, int *ins)
+{
+    return Utopia_GetIndexedInt(ctx, UtopiaValue_LGFW_MACFilter_InsNum, uIndex+1, ins);
+}
+
+static int g_fw_MACfilterCount = 0;
+
+int Utopia_GetNumberOfMACFilter(UtopiaContext *ctx, int *num)
+{
+    int rc = SUCCESS;
+
+    if(g_fw_MACfilterCount == 0)
+    {
+        Utopia_GetInt(ctx, UtopiaValue_LGFW_MACFilterCount, &g_fw_MACfilterCount);
+    }
+
+    *num = g_fw_MACfilterCount;
+    return rc;
+}
+
+int Utopia_GetMACFilterByIndex(UtopiaContext *ctx, unsigned long ulIndex, fwmacfilter_t *MACFilter)
+{
+    int index = ulIndex + 1;
+    int ins_num = 0;
+
+    Utopia_GetIndexedInt(ctx, UtopiaValue_LGFW_MACFilter_InsNum, index, &ins_num); MACFilter->InstanceNumber = ins_num;
+    Utopia_GetIndexedBool(ctx, UtopiaValue_LGFW_MACFilter_Enable, index, &MACFilter->Enable);
+    Utopia_GetIndexed(ctx, UtopiaValue_LGFW_MACFilter_Alias, index, MACFilter->Alias, sizeof(MACFilter->Alias));
+    Utopia_GetIndexed(ctx, UtopiaValue_LGFW_MACFilter_Hostname, index, MACFilter->Hostname, sizeof(MACFilter->Hostname));
+    Utopia_GetIndexed(ctx, UtopiaValue_LGFW_MACFilter_MACAddress, index, MACFilter->MACAddress, sizeof(MACFilter->MACAddress));
+
+    return 0;
+}
+
+int Utopia_SetMACFilterByIndex(UtopiaContext *ctx, unsigned long ulIndex, const fwmacfilter_t *MACFilter)
+{
+    int index = ulIndex + 1;
+    snprintf(s_tokenbuf, sizeof(s_tokenbuf), "lgfwmac_%d", index);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_MACFilter, index, s_tokenbuf);
+
+    Utopia_SetIndexedInt(ctx, UtopiaValue_LGFW_MACFilter_InsNum, index, MACFilter->InstanceNumber);
+    Utopia_SetIndexedBool(ctx, UtopiaValue_LGFW_MACFilter_Enable, index, MACFilter->Enable);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_MACFilter_Alias, index, (char*)MACFilter->Alias);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_MACFilter_Hostname, index, (char *)MACFilter->Hostname);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_MACFilter_MACAddress, index, (char *)MACFilter->MACAddress);
+
+    return 0;
+}
+
+int Utopia_SetMACFilterInsAndAliasByIndex(UtopiaContext *ctx, unsigned long ulIndex, unsigned long ins, const char *alias)
+{
+    int index = ulIndex+1;
+    Utopia_SetIndexedInt(ctx, UtopiaValue_LGFW_MACFilter_InsNum, index, ins);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_MACFilter_Alias, index, (char*)alias);
+    return 0;
+}
+
+int Utopia_AddMACFilter(UtopiaContext *ctx, const fwmacfilter_t *MACFilter)
+{
+    int index;
+
+    Utopia_GetNumberOfMACFilter(ctx, &index);
+
+    g_fw_MACfilterCount++;
+    Utopia_SetInt(ctx, UtopiaValue_LGFW_MACFilterCount, g_fw_MACfilterCount);
+
+    Utopia_SetMACFilterByIndex(ctx, index, MACFilter);
+
+    return 0;
+}
+
+int Utopia_DelMACFilter(UtopiaContext *ctx, unsigned long ins)
+{
+    int count, index;
+
+    Utopia_GetNumberOfMACFilter(ctx, &count);
+    for (index = 0; index < count; index++)
+    {
+        int ins_num;
+        Utopia_GetMACFilterInsNumByIndex(ctx, index, &ins_num);
+        if (ins_num == (int)ins)
+        {
+            break;
+        }
+    }
+
+    if (index >= count)
+    {
+        return -1;
+    }
+
+    if (index < count-1)
+    {
+        for (;index < count-1; index++)
+        {
+            fwmacfilter_t macfilter;
+            Utopia_GetMACFilterByIndex(ctx, index+1, &macfilter);
+            Utopia_SetMACFilterByIndex(ctx, index, &macfilter);
+        }
+    }
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_MACFilter_InsNum, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_MACFilter_Enable, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_MACFilter_Alias, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_MACFilter_Hostname, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_MACFilter_MACAddress, count);
+
+    g_fw_MACfilterCount--;
+    Utopia_SetInt(ctx, UtopiaValue_LGFW_MACFilterCount, g_fw_MACfilterCount);
+    return 0;
+}
+
+static int g_fw_V4DayOfWeekCount = 0;
+
+int Utopia_GetNumberOfV4DayOfWeek(UtopiaContext *ctx, int *num)
+{
+    int rc = SUCCESS;
+
+    g_fw_V4DayOfWeekCount = MAX_DAYOFWEEK_COUNT;
+    *num = g_fw_V4DayOfWeekCount;
+
+    return rc;
+}
+
+int Utopia_GetV4DayOfWeekByIndex(UtopiaContext *ctx, unsigned long ulIndex, fwv4dayofweek_t *V4DayOfWeek)
+{
+    int index = ulIndex + 1;
+    char buf[16] = {0};
+    int i = 0;
+    char query[64] = {0};
+
+    V4DayOfWeek->InstanceNumber = index;
+    Utopia_GetIndexed(ctx, UtopiaValue_LGFW_V4DayOfWeek_Alias, index, V4DayOfWeek->Alias, sizeof(V4DayOfWeek->Alias));
+    Utopia_GetIndexed(ctx, UtopiaValue_LGFW_V4DayOfWeek_BlockTimeBitMask, index, V4DayOfWeek->V4DayOfWeek_BlockTimeBitMask, sizeof(V4DayOfWeek->V4DayOfWeek_BlockTimeBitMask));
+
+    if (syscfg_init() == 0)
+    {
+        syscfg_get(NULL, "v4_dayofweek_block_time_bitmask_type", buf, sizeof(buf));
+    }
+
+    if (atoi(buf) == 0)
+    {
+        strncpy(V4DayOfWeek->V4DayOfWeek_BlockTimeBitMask, DAYOFWEEK_BT_MASK_STR_ALWAYS, sizeof(V4DayOfWeek->V4DayOfWeek_BlockTimeBitMask));
+    }
+
+    return 0;
+}
+
+int Utopia_SetV4DayOfWeekByIndex(UtopiaContext *ctx, unsigned long ulIndex, const fwv4dayofweek_t *V4DayOfWeek)
+{
+    snprintf(s_tokenbuf, sizeof(s_tokenbuf), "lgfwv4dayofweek_%d", ulIndex);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_V4DayOfWeek, ulIndex, s_tokenbuf);
+
+    Utopia_SetIndexedInt(ctx, UtopiaValue_LGFW_V4DayOfWeek_InsNum, ulIndex, V4DayOfWeek->InstanceNumber);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_V4DayOfWeek_Alias, ulIndex, (char*)V4DayOfWeek->Alias);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_V4DayOfWeek_BlockTimeBitMask, ulIndex, (char*)V4DayOfWeek->V4DayOfWeek_BlockTimeBitMask);
+
+    return 0;
+}
+
+int Utopia_SetV4DayOfWeekInsAndAliasByIndex(UtopiaContext *ctx, unsigned long ulIndex, unsigned long ins, const char *alias, char* bitmask)
+{
+    int index = ulIndex+1;
+
+    Utopia_SetIndexedInt(ctx, UtopiaValue_LGFW_V4DayOfWeek_InsNum, index, ins);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_V4DayOfWeek_Alias, index, (char*)alias);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_V4DayOfWeek_BlockTimeBitMask, index, (char*)bitmask);
+
+    return 0;
+}
+
+static int g_fw_V6DayOfWeekCount = 0;
+
+int Utopia_GetNumberOfV6DayOfWeek(UtopiaContext *ctx, int *num)
+{
+    int rc = SUCCESS;
+
+    g_fw_V6DayOfWeekCount = MAX_DAYOFWEEK_COUNT;
+    *num = g_fw_V6DayOfWeekCount;
+
+    return rc;
+}
+
+int Utopia_GetV6DayOfWeekByIndex(UtopiaContext *ctx, unsigned long ulIndex, fwv6dayofweek_t *V6DayOfWeek)
+{
+    int index = ulIndex + 1;
+    char buf[16] = {0};
+    int i = 0;
+    char query[64] = {0};
+
+    V6DayOfWeek->InstanceNumber = index;
+    Utopia_GetIndexed(ctx, UtopiaValue_LGFW_V6DayOfWeek_Alias, index, V6DayOfWeek->Alias, sizeof(V6DayOfWeek->Alias));
+
+    Utopia_GetIndexed(ctx, UtopiaValue_LGFW_V6DayOfWeek_BlockTimeBitMask, index, V6DayOfWeek->V6DayOfWeek_BlockTimeBitMask, sizeof(V6DayOfWeek->V6DayOfWeek_BlockTimeBitMask));
+
+    if (syscfg_init() == 0)
+    {
+        syscfg_get(NULL, "v6_dayofweek_block_time_bitmask_type", buf, sizeof(buf));
+    }
+
+    if (atoi(buf) == 0)
+    {
+        strncpy(V6DayOfWeek->V6DayOfWeek_BlockTimeBitMask, DAYOFWEEK_BT_MASK_STR_ALWAYS, sizeof(V6DayOfWeek->V6DayOfWeek_BlockTimeBitMask));
+    }
+    return 0;
+}
+
+int Utopia_SetV6DayOfWeekByIndex(UtopiaContext *ctx, unsigned long ulIndex, const fwv6dayofweek_t *V6DayOfWeek)
+{
+    int index = ulIndex + 1;
+
+    snprintf(s_tokenbuf, sizeof(s_tokenbuf), "lgfwv6dayofweek_%d", ulIndex);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_V6DayOfWeek, ulIndex, s_tokenbuf);
+
+    Utopia_SetIndexedInt(ctx, UtopiaValue_LGFW_V6DayOfWeek_InsNum, ulIndex, V6DayOfWeek->InstanceNumber);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_V6DayOfWeek_Alias, ulIndex, (char*)V6DayOfWeek->Alias);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_V6DayOfWeek_BlockTimeBitMask, ulIndex, (char*)V6DayOfWeek->V6DayOfWeek_BlockTimeBitMask);
+
+    return 0;
+}
+
+int Utopia_SetV6DayOfWeekInsAndAliasByIndex(UtopiaContext *ctx, unsigned long ulIndex, unsigned long ins, const char *alias, char* bitmask)
+{
+    int index = ulIndex+1;
+
+    Utopia_SetIndexedInt(ctx, UtopiaValue_LGFW_V6DayOfWeek_InsNum, index, ins);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_V6DayOfWeek_Alias, index, (char*)alias);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_V6DayOfWeek_BlockTimeBitMask, index, (char*)bitmask);
+
+    return 0;
+}
+
+static int g_fw_MacDayOfWeekCount = 0;
+
+int Utopia_GetNumberOfMacDayOfWeek(UtopiaContext *ctx, int *num)
+{
+    int rc = SUCCESS;
+
+    g_fw_MacDayOfWeekCount = MAX_DAYOFWEEK_COUNT;
+    *num = g_fw_MacDayOfWeekCount;
+
+    return rc;
+}
+
+int Utopia_GetMacDayOfWeekByIndex(UtopiaContext *ctx, unsigned long ulIndex, fwmacdayofweek_t *MacDayOfWeek)
+{
+    int index = ulIndex + 1;
+    char buf[16] = {0};
+    int i = 0;
+    char query[64] = {0};
+
+    MacDayOfWeek->InstanceNumber = index;
+
+    Utopia_GetIndexed(ctx, UtopiaValue_LGFW_MacDayOfWeek_Alias, index, MacDayOfWeek->Alias, sizeof(MacDayOfWeek->Alias));
+    Utopia_GetIndexed(ctx, UtopiaValue_LGFW_MacDayOfWeek_BlockTimeBitMask, index, MacDayOfWeek->MacDayOfWeek_BlockTimeBitMask, sizeof(MacDayOfWeek->MacDayOfWeek_BlockTimeBitMask));
+
+    if (syscfg_init() == 0)
+    {
+        syscfg_get(NULL, "mac_dayofweek_block_time_bitmask_type", buf, sizeof(buf));
+    }
+
+    if (atoi(buf) == 0)
+    {
+        strncpy(MacDayOfWeek->MacDayOfWeek_BlockTimeBitMask, DAYOFWEEK_BT_MASK_STR_ALWAYS, sizeof(MacDayOfWeek->MacDayOfWeek_BlockTimeBitMask));
+    }
+
+    return 0;
+}
+
+int Utopia_SetMacDayOfWeekByIndex(UtopiaContext *ctx, unsigned long ulIndex, const fwmacdayofweek_t *MacDayOfWeek)
+{
+    int index = ulIndex + 1;
+
+    snprintf(s_tokenbuf, sizeof(s_tokenbuf), "lgfwmacdayofweek_%d", ulIndex);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_MacDayOfWeek, ulIndex, s_tokenbuf);
+
+    Utopia_SetIndexedInt(ctx, UtopiaValue_LGFW_MacDayOfWeek_InsNum, ulIndex, MacDayOfWeek->InstanceNumber);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_MacDayOfWeek_Alias, ulIndex, (char*)MacDayOfWeek->Alias);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_MacDayOfWeek_BlockTimeBitMask, ulIndex, (char*)MacDayOfWeek->MacDayOfWeek_BlockTimeBitMask);
+
+    return 0;
+}
+
+int Utopia_SetMacDayOfWeekInsAndAliasByIndex(UtopiaContext *ctx, unsigned long ulIndex, unsigned long ins, const char *alias, char* bitmask)
+{
+    int index = ulIndex+1;
+
+    Utopia_SetIndexedInt(ctx, UtopiaValue_LGFW_MacDayOfWeek_InsNum, index, ins);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_MacDayOfWeek_Alias, index, (char*)alias);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_MacDayOfWeek_BlockTimeBitMask, index, (char*)bitmask);
+
+    return 0;
+}
+// LGI ADD END

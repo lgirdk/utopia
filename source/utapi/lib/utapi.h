@@ -1181,4 +1181,104 @@ int Utopia_GetDNSServer(UtopiaContext *ctx, DNS_Client_t * dns);
 int Utopia_IPRule_ephemeral_port_forwarding( portMapDyn_t *pmap, boolean_t isCallForAdd );
 int Utopia_privateIpCheck(char *ip_to_check);
 
+// LGI ADD START
+// IP Filter
+typedef struct fwipfilter
+{
+    unsigned long   InstanceNumber;
+    boolean_t       Enable;
+    char            Alias[256];
+    char            Description[64];
+    char            SrcStartIPAddress[64];
+    char            SrcEndIPAddress[64];
+    char            DstStartIPAddress[64];
+    char            DstEndIPAddress[64];
+    unsigned long   SrcStartPort;
+    unsigned long   SrcEndPort;
+    unsigned long   DstStartPort;
+    unsigned long   DstEndPort;
+    unsigned long   IPv6SrcPrefixLen;
+    unsigned long   IPv6DstPrefixLen;
+    char            ProtocolType[8]; //TCP or UDP or BOTH
+    char            FilterAction[8]; //allow or deny
+    char            FilterDirec[32]; //incoming or outgoing
+}fwipfilter_t;
+
+// MAC Filter
+typedef struct fwmacfilter
+{
+   unsigned long  InstanceNumber;
+   char           Alias[256];
+   char           Hostname[64];
+   char           MACAddress[64];
+   boolean_t      Enable;
+}fwmacfilter_t;
+
+// DayOfWeek
+typedef struct fwv4dayofweek
+{
+   unsigned long  InstanceNumber;
+   char           Alias[256];
+   char           V4DayOfWeek_BlockTimeBitMask[32];
+}fwv4dayofweek_t;
+
+typedef struct fwv6dayofweek
+{
+   unsigned long  InstanceNumber;
+   char           Alias[256];
+   char           V6DayOfWeek_BlockTimeBitMask[32];
+}fwv6dayofweek_t;
+
+typedef struct fwmacdayofweek
+{
+   unsigned long  InstanceNumber;
+   char           Alias[256];
+   char           MacDayOfWeek_BlockTimeBitMask[32];
+}fwmacdayofweek_t;
+
+// V4 IP Filter----------------------------------------------------------------
+int Utopia_GetV4IpFilterInsNumByIndex(UtopiaContext *ctx, unsigned long uIndex, int *ins);
+int Utopia_GetNumberOfV4IpFilter(UtopiaContext *ctx, int *num);
+int Utopia_GetV4IpFilterByIndex(UtopiaContext *ctx, unsigned long ulIndex, fwipfilter_t *ipfilter);
+int Utopia_SetV4IpFilterByIndex(UtopiaContext *ctx, unsigned long ulIndex, const fwipfilter_t *ipfilter);
+int Utopia_SetV4IpFilterInsAndAliasByIndex(UtopiaContext *ctx, unsigned long ulIndex, unsigned long ins, const char *alias);
+int Utopia_AddV4IpFilter(UtopiaContext *ctx, const fwipfilter_t *ipfilter);
+int Utopia_DelV4IpFilter(UtopiaContext *ctx, unsigned long ins);
+
+// V6 IP Filter----------------------------------------------------------------
+int Utopia_GetV6IpFilterInsNumByIndex(UtopiaContext *ctx, unsigned long uIndex, int *ins);
+int Utopia_GetNumberOfV6IpFilter(UtopiaContext *ctx, int *num);
+int Utopia_GetV6IpFilterByIndex(UtopiaContext *ctx, unsigned long ulIndex, fwipfilter_t *ipfilter);
+int Utopia_SetV6IpFilterByIndex(UtopiaContext *ctx, unsigned long ulIndex, const fwipfilter_t *ipfilter);
+int Utopia_SetV6IpFilterInsAndAliasByIndex(UtopiaContext *ctx, unsigned long ulIndex, unsigned long ins, const char *alias);
+int Utopia_AddV6IpFilter(UtopiaContext *ctx, const fwipfilter_t *ipfilter);
+int Utopia_DelV6IpFilter(UtopiaContext *ctx, unsigned long ins);
+
+// MAC Filter----------------------------------------------------------------
+int Utopia_GetMACFilterInsNumByIndex(UtopiaContext *ctx, unsigned long uIndex, int *ins);
+int Utopia_GetNumberOfMACFilter(UtopiaContext *ctx, int *num);
+int Utopia_GetMACFilterByIndex(UtopiaContext *ctx, unsigned long ulIndex, fwmacfilter_t *macfilter);
+int Utopia_SetMACFilterByIndex(UtopiaContext *ctx, unsigned long ulIndex, const fwmacfilter_t *macfilter);
+int Utopia_SetMACFilterInsAndAliasByIndex(UtopiaContext *ctx, unsigned long ulIndex, unsigned long ins, const char *alias);
+int Utopia_AddMACFilter(UtopiaContext *ctx, const fwmacfilter_t *macfilter);
+int Utopia_DelMACFilter(UtopiaContext *ctx, unsigned long ins);
+
+int Utopia_GetV4DayOfWeekInsNumByIndex(UtopiaContext *ctx, unsigned long uIndex, int *ins);
+int Utopia_GetNumberOfV4DayOfWeek(UtopiaContext *ctx, int *num);
+int Utopia_GetV4DayOfWeekByIndex(UtopiaContext *ctx, unsigned long ulIndex, fwv4dayofweek_t *v4dayofweek);
+int Utopia_SetV4DayOfWeekByIndex(UtopiaContext *ctx, unsigned long ulIndex, const fwv4dayofweek_t *v4dayofweek);
+int Utopia_SetV4DayOfWeekInsAndAliasByIndex(UtopiaContext *ctx, unsigned long ulIndex, unsigned long ins, const char *alias, char* bitmask);
+
+int Utopia_GetV6DayOfWeekInsNumByIndex(UtopiaContext *ctx, unsigned long uIndex, int *ins);
+int Utopia_GetNumberOfV6DayOfWeek(UtopiaContext *ctx, int *num);
+int Utopia_GetV6DayOfWeekByIndex(UtopiaContext *ctx, unsigned long ulIndex, fwv6dayofweek_t *v6dayofweek);
+int Utopia_SetV6DayOfWeekByIndex(UtopiaContext *ctx, unsigned long ulIndex, const fwv6dayofweek_t *v6dayofweek);
+int Utopia_SetV6DayOfWeekInsAndAliasByIndex(UtopiaContext *ctx, unsigned long ulIndex, unsigned long ins, const char *alias, char* bitmask);
+
+int Utopia_GetMacDayOfWeekInsNumByIndex(UtopiaContext *ctx, unsigned long uIndex, int *ins);
+int Utopia_GetNumberOfMacDayOfWeek(UtopiaContext *ctx, int *num);
+int Utopia_GetMacDayOfWeekByIndex(UtopiaContext *ctx, unsigned long ulIndex, fwmacdayofweek_t *macdayofweek);
+int Utopia_SetMacDayOfWeekByIndex(UtopiaContext *ctx, unsigned long ulIndex, const fwmacdayofweek_t *macdayofweek);
+int Utopia_SetMacDayOfWeekInsAndAliasByIndex(UtopiaContext *ctx, unsigned long ulIndex, unsigned long ins, const char *alias, char* bitmask);
+//LGI ADD END
 #endif // _UTAPI_H_
