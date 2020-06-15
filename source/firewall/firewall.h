@@ -63,8 +63,8 @@
 
 int do_logs(FILE *fp);
 int do_wan2self_attack(FILE *fp,char* wan_ip);
-int prepare_ipv4_firewall(const char *fw_file);
-int prepare_ipv6_firewall(const char *fw_file);
+int prepare_ipv4_firewall(const char *fw_file, char* strBlockTimeCmd);
+int prepare_ipv6_firewall(const char *fw_file, char *strBlockTimeCmd);
 
 #define CCSP_SUBSYS "eRT."
 
