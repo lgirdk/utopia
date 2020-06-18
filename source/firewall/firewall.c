@@ -12677,16 +12677,17 @@ static void do_ipv6_filter_table(FILE *fp){
 		}
 	  }
 
-      if ( (isPingBlockedV6 && strncasecmp(firewall_levelv6, "Custom", strlen("Custom")) == 0)
+      /*Make PING requests indepenedent of firewall setting */
+      if (/* (isPingBlockedV6 && strncasecmp(firewall_levelv6, "Custom", strlen("Custom")) == 0)
               || strncasecmp(firewall_levelv6, "High", strlen("High")) == 0
               || strncasecmp(firewall_levelv6, "Medium", strlen("Medium")) == 0 
-              || (isWanPingDisableV6 == 1) )
+              ||*/ (isWanPingDisableV6 == 1) )
       {
           fprintf(fp, "-A INPUT -i %s -p icmpv6 -m icmp6 --icmpv6-type 128 -j DROP\n", current_wan_ifname); // Echo request
           fprintf(fp, "-A INPUT -i %s -p icmpv6 -m icmp6 --icmpv6-type 129 -m state --state NEW,INVALID,RELATED -j DROP\n", current_wan_ifname); // Echo reply
 
       }
-      else if(strncasecmp(firewall_levelv6, "Low", strlen("Low")) == 0 || (isWanPingDisableV6 == 0)) 
+      else if( /*strncasecmp(firewall_levelv6, "Low", strlen("Low")) == 0 ||*/ (isWanPingDisableV6 == 0)) 
       {
       #if defined(CONFIG_CCSP_DROP_ICMP_PING)
           fprintf(fp, "-A INPUT -i %s -p icmpv6 -m icmp6 --icmpv6-type 128 -j DROP\n", current_wan_ifname); // Echo request
@@ -12696,12 +12697,12 @@ static void do_ipv6_filter_table(FILE *fp){
           fprintf(fp, "-A INPUT -i %s -p icmpv6 -m icmp6 --icmpv6-type 129 -m limit --limit 10/sec -j ACCEPT\n", current_wan_ifname); // Echo reply
       #endif
       }
-      else
+      /*else
       {
           //fprintf(fp, "-A INPUT -p icmpv6 -m icmp6 --icmpv6-type 128 -m limit --limit 10/sec -j ACCEPT\n"); // Echo request
           fprintf(fp, "-A INPUT -i %s -p icmpv6 -m icmp6 --icmpv6-type 128 -j PING_FLOOD\n", current_wan_ifname); // Echo request
           fprintf(fp, "-A INPUT -i %s -p icmpv6 -m icmp6 --icmpv6-type 129 -m limit --limit 10/sec -j ACCEPT\n", current_wan_ifname); // Echo reply
-      }
+      }*/
 
       // Should only come from LINK LOCAL addresses, rate limited except 100/second for NA/NS and RS
       fprintf(fp, "-A INPUT -p icmpv6 -m icmp6 --icmpv6-type 135 -m limit --limit 100/sec -j ACCEPT\n"); // Allow NS from any type source address
