@@ -615,6 +615,10 @@ $block_activex=0
 $block_cookies=0
 $portscan_enabled=0
 
+$block_pingv6=0
+$firewall_disable_wan_ping=0
+$firewall_disable_wan_pingv6=0
+
 $IPSecPassthrough=1
 $PPTPPassthrough=1
 $SinglePortForwardCount=0
