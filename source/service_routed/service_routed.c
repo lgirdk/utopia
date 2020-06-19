@@ -582,9 +582,6 @@ static int gen_zebra_conf(int sefd, token_t setok)
     unsigned int dnssllft = 0;
     char prefix[64], orig_prefix[64], lan_addr[64];
     char preferred_lft[16], valid_lft[16];
-#ifndef _HUB4_PRODUCT_REQ_
-    unsigned int rdnsslft = 0;
-#endif    
 #if defined(MULTILAN_FEATURE)
     char orig_lan_prefix[64];
 #endif
@@ -1040,18 +1037,6 @@ static int gen_zebra_conf(int sefd, token_t setok)
 			StaticDNSServersEnabled = 1;
 		}
 
-// Modifying rdnss value to fix the zebra config.
-	if( ( inCaptivePortal != 1 )  && \
-		( StaticDNSServersEnabled != 1 )
-	  )
-	{
-#ifndef _HUB4_PRODUCT_REQ_
-		if (strlen(lan_addr))
-#else
-                if (strlen(lan_addr) && ula_enable)
-#endif
-            			fprintf(fp, "   ipv6 nd rdnss %s 86400\n", lan_addr);
-	}
         /* static IPv6 DNS */
 #ifdef CISCO_CONFIG_DHCPV6_PREFIX_DELEGATION          
             snprintf(rec, sizeof(rec), "dhcpv6spool%d0::optionnumber", i);
@@ -1134,20 +1119,6 @@ static int gen_zebra_conf(int sefd, token_t setok)
                     #endif
 				}
 			}
-
-			for (start = name_servs; (tok = strtok_r(start, " ", &sp)); start = NULL)
-			{
-			// Modifying rdnss value to fix the zebra config.
-#ifdef _HUB4_PRODUCT_REQ_
-                        if (0 == strncmp(lan_addr, tok, strlen(lan_addr)))
-                        {
-                            fprintf(fp, "   ipv6 nd rdnss %s 86400\n", tok);
-                        }
-#else
-                        rdnsslft = 3 * RA_INTERVAL;
-                        fprintf(fp, "   ipv6 nd rdnss %s %d\n", tok, rdnsslft);
-#endif
-                }
 
                 if (atoi(valid_lft) <= 3*atoi(ra_interval))
                 {
@@ -1343,12 +1314,6 @@ if(!strncmp(out,"true",strlen(out)))
                                     }
                                     #endif
                                 }
-                        }
-
-                        for (start = name_servs; (tok = strtok_r(start, " ", &sp)); start = NULL)
-                        {
-                        // Modifying rdnss value to fix the zebra config.
-                        fprintf(fp, "   ipv6 nd rdnss %s 86400\n", tok);
                         }
          }
 
