@@ -101,14 +101,6 @@ void do_snmp_IpAccessTable(FILE *filt_fp, int family)
     FIREWALL_DEBUG("Exiting do_snmp_IpAccessTable\n");
 }
 
-__attribute__((weak))
-void do_tr69_whitelistTable(FILE *filt_fp, int family)
-{
-    FIREWALL_DEBUG("Entering do_tr69_whitelistTable\n");
-    FIREWALL_DEBUG("Exiting do_tr69_whitelistTable\n");
-}
-
-
 /*              
  ==========================================================================
                 Xconf Markings
