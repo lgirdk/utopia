@@ -838,6 +838,8 @@ static inline int SET_IPT_PRI_MODULD(char *s){
 
 #define PSM_NAME_SPEEDTEST_SERVER_CAPABILITY "eRT.com.cisco.spvtg.ccsp.tr181pa.Device.IP.Diagnostics.X_RDKCENTRAL-COM_SpeedTest.Server.Capability"
 
+#define PSM_CWMP_ENABLE_VALUE "eRT.com.cisco.spvtg.ccsp.tr069pa.Device.ManagementServer.EnableCWMP.Value"
+
 /* 
  */
 #define REMOTE_ACCESS_IP_RANGE_MAX_RULE 20
@@ -10411,6 +10413,37 @@ static int prepare_multinet_disabled_ipv4_firewall(FILE *filter_fp) {
 }
 #endif
 
+static void do_tr69_whitelistTable (FILE *filter_fp, FILE *nat_fp, int family, char *current_wan_ifname, void *bus_handle)
+{
+    int retCwmpEnabled;
+    char *pCwmpEnabled = NULL;
+
+    FIREWALL_DEBUG("Entering do_tr69_whitelistTable (%s)\n" COMMA ((family == AF_INET) ? "IPv4" : "IPv6") );
+
+    retCwmpEnabled = PSM_VALUE_GET_STRING(PSM_CWMP_ENABLE_VALUE, pCwmpEnabled);
+    if ((retCwmpEnabled == CCSP_SUCCESS) && (strcmp(pCwmpEnabled, "1") == 0))
+    {
+        FIREWALL_DEBUG("CWMP is enabled. ACCEPT TR069 port 7547\n");
+
+        if(filter_fp)
+        {
+            fprintf(filter_fp, "-A tr69_filter -i %s -p tcp --dport 7547 -j ACCEPT\n", current_wan_ifname);
+            fprintf(filter_fp, "-A tr69_filter -p tcp --dport 7547 -j DROP\n");
+        }
+
+        if(nat_fp)
+        {
+            fprintf(nat_fp, "-I PREROUTING -i erouter0 -p tcp --dport 7547 -j RETURN\n");
+        }
+    }
+    else
+    {
+        FIREWALL_DEBUG("CWMP is disabled. DROP TR069 port 7547 for IPv4\n");
+    }
+
+    FIREWALL_DEBUG("Exiting do_tr69_whitelistTable (%s)\n" COMMA ((family == AF_INET) ? "IPv4" : "IPv6"));
+}
+
 /*
  *  Procedure     : prepare_subtables
  *  Purpose       : prepare the iptables-restore file that establishes all
@@ -10866,7 +10899,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
 
    if(isComcastImage)
    {
-      do_tr69_whitelistTable(filter_fp, AF_INET);
+      do_tr69_whitelistTable(filter_fp, nat_fp, AF_INET, current_wan_ifname, bus_handle);
    }
   
    if (isContainerEnabled) {
@@ -11806,7 +11839,6 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
 #ifdef INTEL_PUMA7
    do_raw_table_puma7(raw_fp);
 #endif
-   fprintf(raw_fp, "%s\n", "COMMIT");
 
    /*
     * mangle
@@ -11850,7 +11882,6 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    fprintf(mangle_fp, "-A PREROUTING -i %s -p udp -m conntrack --ctstate NEW -m limit --limit 200/sec --limit-burst 100 -j ACCEPT\n",ecm_wan_ifname);
    fprintf(mangle_fp, "-A PREROUTING -i %s -p udp -m conntrack --ctstate NEW -m limit --limit 200/sec --limit-burst 100 -j ACCEPT\n",emta_wan_ifname);
 #endif
-   fprintf(mangle_fp, "%s\n", "COMMIT");
 
    /*
     * nat
@@ -11869,7 +11900,6 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    do_port_forwarding(nat_fp, NULL);
    do_nat_ephemeral(nat_fp);
    do_wan_nat_lan_clients(nat_fp);
-   fprintf(nat_fp, "%s\n", "COMMIT");
 
    /*
     * filter
@@ -11950,7 +11980,7 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
        fprintf(filter_fp, "-A INPUT -p tcp -m tcp --dport 7547 -j tr69_filter\n");
        fprintf(filter_fp, "-A LOG_TR69_DROP -m limit --limit 1/minute -j LOG --log-level %d --log-prefix \"TR-069 ACS Server Blocked:\"\n",syslog_level);
        fprintf(filter_fp, "-A LOG_TR69_DROP -j DROP\n");
-       do_tr69_whitelistTable(filter_fp, AF_INET);
+       do_tr69_whitelistTable(filter_fp, nat_fp, AF_INET, current_wan_ifname, bus_handle);
    }
 
    if(!isBridgeMode) //brlan0 exists
@@ -11974,6 +12004,10 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
 #endif
    fprintf(filter_fp, "%s\n", ":FORWARD ACCEPT [0:0]");
    fprintf(filter_fp, "%s\n", ":OUTPUT ACCEPT [0:0]");
+
+   fprintf(raw_fp, "%s\n", "COMMIT");
+   fprintf(mangle_fp, "%s\n", "COMMIT");
+   fprintf(nat_fp, "%s\n", "COMMIT");
    fprintf(filter_fp, "%s\n", "COMMIT");
  FIREWALL_DEBUG("Exiting prepare_disabled_ipv4_firewall \n"); 
    return(0);
@@ -12647,6 +12681,7 @@ static void do_ipv6_filter_table(FILE *fp){
        fprintf(fp, "-A INPUT -p tcp -m tcp --dport 7547 -j tr69_filter\n");
        fprintf(fp, "-A LOG_TR69_DROP -m limit --limit 1/minute -j LOG --log-level %d --log-prefix \"TR-069 ACS Server Blocked:\"\n",syslog_level);
        fprintf(fp, "-A LOG_TR69_DROP -j DROP\n");
+       do_tr69_whitelistTable(fp, NULL, AF_INET6, current_wan_ifname, bus_handle);
    }
 
 #ifdef _COSA_INTEL_XB3_ARM_
@@ -12694,7 +12729,7 @@ static void do_ipv6_filter_table(FILE *fp){
        do_ssh_IpAccessTable(fp, "22", AF_INET6, ecm_wan_ifname);
        do_snmp_IpAccessTable(fp, AF_INET6);
        if(isComcastImage) {
-          do_tr69_whitelistTable(fp, AF_INET6);
+          do_tr69_whitelistTable(fp, NULL, AF_INET6, current_wan_ifname, bus_handle);
        }
        goto end_of_ipv6_firewall;
    }
@@ -12779,10 +12814,6 @@ static void do_ipv6_filter_table(FILE *fp){
       fprintf(fp, "-A INPUT -m rt --rt-type 0 -j DROP\n");
 #endif
       fprintf(fp, "-A INPUT -m state --state INVALID -j LOG_INPUT_DROP\n");
-
-      if(isComcastImage) {
-          do_tr69_whitelistTable(fp, AF_INET6);
-      }
 
 #if defined(_COSA_BCM_MIPS_)
       fprintf(fp, "-A INPUT -m physdev --physdev-in %s -j ACCEPT\n", emta_wan_ifname);
