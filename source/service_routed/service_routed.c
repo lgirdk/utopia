@@ -1268,19 +1268,6 @@ static int gen_zebra_conf(int sefd, token_t setok)
 			StaticDNSServersEnabled = 1;
 		}
 
-// Modifying rdnss value to fix the zebra config.
-	if( ( inCaptivePortal != 1 )  && \
-		( StaticDNSServersEnabled != 1 )
-	  )
-	{
-#if !defined (_HUB4_PRODUCT_REQ_) || defined (_WNXL11BWL_PRODUCT_REQ_)
-		if (strlen(lan_addr))
-#else
-                if (strlen(lan_addr) && ula_enable)
-#endif
-                    fprintf(fp, "   ipv6 nd rdnss %s %d\n", lan_addr, rdnsslft);
-	}
-
 #if defined (SPEED_BOOST_SUPPORTED)
 
     	if( ( inCaptivePortal != 1 ) &&  (strcmp(wan_st, "started") == 0) )
@@ -1417,19 +1404,6 @@ static int gen_zebra_conf(int sefd, token_t setok)
                     #endif
 				}
 			}
-
-			for (start = name_servs; (tok = strtok_r(start, " ", &sp)); start = NULL)
-			{
-			// Modifying rdnss value to fix the zebra config.
-#if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_))
-                        if (0 == strncmp(lan_addr, tok, strlen(lan_addr)))
-                        {
-                            fprintf(fp, "   ipv6 nd rdnss %s %d\n", tok, rdnsslft);
-                        }
-#else
-                        fprintf(fp, "   ipv6 nd rdnss %s %d\n", tok, rdnsslft);
-#endif
-                }
 
                 if (atoi(valid_lft) <= 3*atoi(ra_interval))
                 {
@@ -1648,12 +1622,6 @@ if(!strncmp(out,"true",strlen(out)))
                                     }
                                     #endif
                                 }
-                        }
-
-                        for (start = name_servs; (tok = strtok_r(start, " ", &sp)); start = NULL)
-                        {
-                            // Modifying rdnss value to fix the zebra config.
-                            fprintf(fp, "   ipv6 nd rdnss %s %d\n", tok, rdnsslft);
                         }
          }
 
