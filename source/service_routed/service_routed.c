@@ -871,18 +871,6 @@ static int gen_zebra_conf(int sefd, token_t setok)
 			StaticDNSServersEnabled = 1;
 		}
 
-// Modifying rdnss value to fix the zebra config.
-	if( ( inCaptivePortal != 1 )  && \
-		( StaticDNSServersEnabled != 1 )
-	  )
-	{
-#ifndef _HUB4_PRODUCT_REQ_
-		if (strlen(lan_addr))
-#else
-                if (strlen(lan_addr) && ula_enable)
-#endif
-            			fprintf(fp, "   ipv6 nd rdnss %s 86400\n", lan_addr);
-	}
         /* static IPv6 DNS */
 #ifdef CISCO_CONFIG_DHCPV6_PREFIX_DELEGATION          
             snprintf(rec, sizeof(rec), "dhcpv6spool%d0::optionnumber", i);
@@ -952,19 +940,6 @@ static int gen_zebra_conf(int sefd, token_t setok)
 						sizeof(name_servs) - strlen(name_servs));
 				}
 			}
-
-			for (start = name_servs; (tok = strtok_r(start, " ", &sp)); start = NULL)
-			{
-			// Modifying rdnss value to fix the zebra config.
-#ifdef _HUB4_PRODUCT_REQ_
-                        if (0 == strncmp(lan_addr, tok, strlen(lan_addr)))
-                        {
-                            fprintf(fp, "   ipv6 nd rdnss %s 86400\n", tok);
-                        }
-#else
-        		fprintf(fp, "   ipv6 nd rdnss %s 86400\n", tok);
-#endif
-                }
 
                 if (atoi(valid_lft) <= 3*atoi(ra_interval))
                 {
@@ -1104,12 +1079,6 @@ if(!strncmp(out,"true",strlen(out)))
                                         sysevent_get(sefd, setok, "ipv6_nameserver", name_servs + strlen(name_servs),
                                                 sizeof(name_servs) - strlen(name_servs));
                                 }
-                        }
-
-                        for (start = name_servs; (tok = strtok_r(start, " ", &sp)); start = NULL)
-                        {
-                        // Modifying rdnss value to fix the zebra config.
-                        fprintf(fp, "   ipv6 nd rdnss %s 86400\n", tok);
                         }
          }
 
