@@ -56,7 +56,6 @@ void update_rabid_features_status();
 void do_forwardPorts(FILE *filter_fp);
 void do_snmp_IpAccessTable(FILE *filt_fp, int family);
 void do_ssh_IpAccessTable(FILE *filt_fp, const char *port, int family, const char *interface);
-void do_tr69_whitelistTable(FILE *filt_fp, int family);
 void filterPortMap(FILE *filt_fp);
 void do_openPorts(FILE *filter_fp);
 int prepare_xconf_rules(FILE *mangle_fp);
