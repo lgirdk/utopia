@@ -42,13 +42,14 @@ INIT_DIR=/etc/utopia/registration.d
 BINPATH="/usr/bin"
 CCSPPATH="/usr/ccsp"
 
+source $UTOPIA_PATH/log_capture_path.sh
+
 echo_t "*******************************************************************"
 echo_t "*                                                                  "
 echo_t "* Copyright 2014 Cisco Systems, Inc.                               "
 echo_t "* Licensed under the Apache License, Version 2.0                   "
 echo_t "*******************************************************************"
 
-source $UTOPIA_PATH/log_capture_path.sh
 if [ -f /etc/device.properties ]
 then
     source /etc/device.properties
