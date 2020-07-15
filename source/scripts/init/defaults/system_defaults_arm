@@ -1304,6 +1304,10 @@ $dslite_ipv6_frag_enable_1=0
 $CredDwnld_Enable=false
 $CredDwnld_Use=false
 
+#Wake-On-Lan defaults
+$wol_interval=500
+$wol_retries=3
+
 #ocsp staple support
 $EnableOCSPStapling=false
 $EnableOCSPCA=false
