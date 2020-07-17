@@ -483,6 +483,20 @@ then
 	echo "interface listen $ARM_INTERFACE_IP" >> $NTP_CONF_TMP
 	ntpd -c $NTP_CONF_TMP 
 fi
+
+# ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+
+# Temp disable radius vlan for Mv1
+
+if [ "$BOX_TYPE" != "MV1" ]
+then
+
+# ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+
 #--------Set up Radius vlan -------------------
 vconfig add l2sd0 4090
 if [ "$BOX_TYPE" = "XB3" ];then
@@ -528,6 +542,18 @@ ifconfig br106 192.168.106.1 netmask 255.255.255.0 up
 brctl addif br106 l2sd0.106
 ip rule add from all iif l2sd0.106 lookup erouter
 ip rule add from all iif br106 lookup erouter
+
+# ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+
+# Temp disable radius vlan for Mv1
+
+fi
+
+# ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 # Check and set factory-reset as reboot reason 
 if [ "$FACTORY_RESET_REASON" = "true" ]; then
@@ -614,7 +640,7 @@ else
 		         /usr/bin/onboarding_log "[utopia][init] Last reboot reason set as $Punit_status"
 		     fi
 		fi
-	         if [ "$BOX_TYPE" = "XB3" ];then
+	         if [ "$BOX_TYPE" = "XB3" ] || [ "$BOX_TYPE" = "MV1" ];then
 	             Punit_Reset_Reason=`grep -i "Last reset reason" /proc/P-UNIT/status | awk '{print $9}'`
 	             if [ "$Punit_Reset_Reason" = "RESET_WARM" ] && [ "$Punit_status" = "RESET_ORIGIN_DOCSIS" ];then
 	                   syscfg set X_RDKCENTRAL-COM_LastRebootReason "HOST-OOPS-REBOOT"
@@ -626,7 +652,7 @@ else
       fi
 fi
 
-if [ "$MODEL_NUM" = "DPC3939B" ] || [ "$MODEL_NUM" = "DPC3941B" ]; then
+if [ "$MODEL_NUM" = "DPC3939B" ] || [ "$MODEL_NUM" = "DPC3941B" ] || [ "$BOX_TYPE" = "MV1" ]; then
     if [ -f /nvram/restore_reboot ];then
 	syscfg set X_RDKCENTRAL-COM_LastRebootReason "restore-reboot"
 	syscfg set X_RDKCENTRAL-COM_LastRebootCounter "1"
