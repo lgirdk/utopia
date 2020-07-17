@@ -165,8 +165,6 @@ echo_t "Starting log module.."
 #echo -n > /tmp/ripd.conf
 #echo -n > /tmp/dhcp6c.conf
 
-mkdir -p /tmp/cron
-
 BUTTON_THRESHOLD=15
 FACTORY_RESET_KEY=factory_reset
 FACTORY_RESET_RGWIFI=y
