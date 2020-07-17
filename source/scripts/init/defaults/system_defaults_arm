@@ -561,6 +561,11 @@ $mgmt_mta_sshaccess=0
 # NAT can be explicitly turned off by setting nat_enabled 0
 $nat_enabled=1
 
+#NAT timeout defaults LG
+$nat_udp_timeout=90
+$nat_icmp_timeout=30
+$nat_tcp_timeout=1800
+
 # Firewall
 #---------
 # $firewall_enabled= 0|1   1 is enabled, 0 is disabled
