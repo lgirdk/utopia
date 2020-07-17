@@ -70,29 +70,15 @@ echo_t "*******************************************************************"
 
 echo "[utopia][init] Tweaking network parameters" > /dev/console
 
-KERNEL_VERSION=`uname -r | cut -c 1`
-
-if [ $KERNEL_VERSION -lt 4 ] ; then
-	echo "60" > /proc/sys/net/ipv4/netfilter/ip_conntrack_udp_timeout_stream
-	echo "60" > /proc/sys/net/ipv4/netfilter/ip_conntrack_tcp_timeout_syn_sent
-	echo "60" > /proc/sys/net/ipv4/netfilter/ip_conntrack_generic_timeout
-	echo "10" > /proc/sys/net/ipv4/netfilter/ip_conntrack_tcp_timeout_time_wait
-	echo "10" > /proc/sys/net/ipv4/netfilter/ip_conntrack_tcp_timeout_close
-	echo "20" > /proc/sys/net/ipv4/netfilter/ip_conntrack_tcp_timeout_close_wait
-	echo "7440" > /proc/sys/net/ipv4/netfilter/ip_conntrack_tcp_timeout_established
-	echo "8192" > /proc/sys/net/ipv4/netfilter/ip_conntrack_max
-else
-	echo "60" > /proc/sys/net/netfilter/nf_conntrack_udp_timeout_stream
-	echo "60" > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_syn_sent
-	echo "60" > /proc/sys/net/netfilter/nf_conntrack_generic_timeout
-	echo "10" > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_time_wait
-	echo "10" > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_close
-	echo "20" > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_close_wait
-	echo "7440" > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_established
-	echo "8192" > /proc/sys/net/netfilter/nf_conntrack_max
-fi
-
-echo "400" > /proc/sys/net/netfilter/nf_conntrack_expect_max
+echo 60 > /proc/sys/net/netfilter/nf_conntrack_udp_timeout_stream
+echo 60 > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_syn_sent
+echo 60 > /proc/sys/net/netfilter/nf_conntrack_generic_timeout
+echo 10 > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_time_wait
+echo 10 > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_close
+echo 20 > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_close_wait
+echo 7440 > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_established
+echo 8192 > /proc/sys/net/netfilter/nf_conntrack_max
+echo 400 > /proc/sys/net/netfilter/nf_conntrack_expect_max
 
 if [ "$BOX_TYPE" = "XB3" ];then
     RESERVED_PORTS="58081"
