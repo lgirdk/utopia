@@ -92,6 +92,8 @@ echo_t "Starting log module.."
 
 mkdir -p /tmp/cron
 
+mount --bind /tmp/cron/ /etc/cron
+
 BUTTON_THRESHOLD=15
 FACTORY_RESET_KEY=factory_reset
 FACTORY_RESET_RGWIFI=y
