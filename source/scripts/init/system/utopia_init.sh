@@ -70,19 +70,6 @@ cat /proc/P-UNIT/status
 echo_t "*                                                                  "
 echo_t "*******************************************************************"
 
-echo "[utopia][init] Tweaking network parameters" > /dev/console
-
-echo 60 > /proc/sys/net/netfilter/nf_conntrack_udp_timeout_stream
-echo 60 > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_syn_sent
-echo 60 > /proc/sys/net/netfilter/nf_conntrack_generic_timeout
-echo 10 > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_time_wait
-echo 10 > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_close
-echo 20 > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_close_wait
-echo 7440 > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_established
-echo 8192 > /proc/sys/net/netfilter/nf_conntrack_max
-echo 400 > /proc/sys/net/netfilter/nf_conntrack_expect_max
-
-
 if [ "$BOX_TYPE" = "XB3" ];then
     RESERVED_PORTS="58081"
     sysctl -w net.ipv4.ip_local_reserved_ports="$RESERVED_PORTS"
@@ -437,6 +424,19 @@ ip6tables -A INPUT -i $cmdiag_ifname -p tcp --dport 22 -j DROP
 #protect from IPv6 NS flooding
 ip6tables -t mangle -A PREROUTING -i $ecm_wan_ifname -d ff00::/8 -p ipv6-icmp -m icmp6 --icmpv6-type 135 -j DROP
 ip6tables -t mangle -A PREROUTING -i $wan_ifname -d ff00::/8 -p ipv6-icmp -m icmp6 --icmpv6-type 135 -j DROP
+
+echo 60 > /proc/sys/net/netfilter/nf_conntrack_generic_timeout
+echo 60 > /proc/sys/net/netfilter/nf_conntrack_udp_timeout_stream
+echo 60 > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_syn_sent
+echo 10 > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_time_wait
+echo 10 > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_close
+echo 20 > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_close_wait
+echo 400 > /proc/sys/net/netfilter/nf_conntrack_expect_max
+echo 8192 > /proc/sys/net/netfilter/nf_conntrack_max
+
+syscfg get nat_udp_timeout > /proc/sys/net/netfilter/nf_conntrack_udp_timeout
+syscfg get nat_tcp_timeout > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_established
+syscfg get nat_icmp_timeout > /proc/sys/net/netfilter/nf_conntrack_icmp_timeout
 
 #/sbin/ulogd -c /etc/ulogd.conf -d
 
