@@ -1303,6 +1303,9 @@ $CredDwnld_Use=false
 $wol_interval=500
 $wol_retries=3
 
+#dhcp server lan blocket subnet defaults
+$dhcp_server_lan_blocked_subnet=0.0.0.0:0.0.0.0,0.0.0.0:0.0.0.0,0.0.0.0:0.0.0.0,0.0.0.0:0.0.0.0,192.168.254.254:255.255.255.252,192.168.34.1:255.255.255.0,192.168.253.254:255.255.255.248,192.168.100.1:255.255.255.0,192.168.253.253:255.255.255.248,192.168.254.253:255.255.255.252
+
 #ocsp staple support
 $EnableOCSPStapling=false
 $EnableOCSPCA=false
