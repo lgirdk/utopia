@@ -693,6 +693,12 @@ typedef enum _UtopiaValue
     UtopiaValue_LGFW_MacDayOfWeek_InsNum,
     UtopiaValue_LGFW_MacDayOfWeek_Alias,
     UtopiaValue_LGFW_MacDayOfWeek_BlockTimeBitMask,
+    UtopiaValue_LanAllowedSubnetCount,
+    UtopiaValue_LanAllowedSubnet,
+    UtopiaValue_LanAllowedSubnet_InsNum,
+    UtopiaValue_LanAllowedSubnet_Alias,
+    UtopiaValue_LanAllowedSubnet_SubnetIP,
+    UtopiaValue_LanAllowedSubnet_SubnetMask,
     UtopiaValue_SPF_RuleSource,
     UtopiaValue_PFR_RuleSource,
     UtopiaValue__LAST__
