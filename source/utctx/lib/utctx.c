@@ -828,6 +828,12 @@ static struct
     { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "ins_num",                          UtopiaValue_LGFW_MacDayOfWeek }, /* UtopiaValue_LGFW_MacDayOfWeek_InsNum */
     { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "alias",                            UtopiaValue_LGFW_MacDayOfWeek }, /* UtopiaValue_LGFW_MacDayOfWeek_Alias */
     { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "mac_dayofweek_block_time_bitmask", UtopiaValue_LGFW_MacDayOfWeek }, /* UtopiaValue_LGFW_MacDayOfWeek_BlockTimeBitMask */
+     { Utopia_Type_Config, Utopia_Event__NONE__,   Utopia_Static__NONE__, Utopia_For__NONE__, 1, "lglanAllowedSubnetCount", UtopiaValue__UNKNOWN__ }, /* UtopiaValue_LanAllowedSubnetCount */
+     { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,   Utopia_Static__NONE__, Utopia_Index_For_Key, 1, "lglanAllowedSubnet_%d", UtopiaValue__UNKNOWN__ }, /* UtopiaValue_LanAllowedSubnet */
+     { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,   Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "ins_num", UtopiaValue_LanAllowedSubnet }, /* UtopiaValue_LanAllowedSubnet_InsNum */
+     { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,   Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "alias", UtopiaValue_LanAllowedSubnet }, /* UtopiaValue_LanAllowedSubnet_Alias */
+     { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,   Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "SubnetIP", UtopiaValue_LanAllowedSubnet }, /* UtopiaValue_LanAllowedSubnet_SubnetIP */
+     { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,   Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "SubnetMask", UtopiaValue_LanAllowedSubnet }, /* UtopiaValue_LanAllowedSubnet_SubnetMask */
     // LGI ADD END
     { Utopia_Type__UNKNOWN__, Utopia_Event__NONE__, Utopia_Static__NONE__, Utopia_For__NONE__, 0, 0, UtopiaValue__UNKNOWN__ }, /* UtopiaValue__LAST__ */
 };

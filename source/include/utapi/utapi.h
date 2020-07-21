@@ -136,6 +136,13 @@ typedef struct {
     unsigned int crc32;
 } config_hdr_t;
 
+typedef struct lanAllowedSubnet
+{
+    unsigned long    InstanceNumber;
+    char             SubnetIP[16];
+    char             SubnetMask[16];
+    char             Alias[256];
+}lanAllowedSubnet_t;
 
 /*
  * Error code
@@ -1253,6 +1260,14 @@ int Utopia_SetMACFilterByIndex(UtopiaContext *ctx, unsigned long ulIndex, const 
 int Utopia_SetMACFilterInsAndAliasByIndex(UtopiaContext *ctx, unsigned long ulIndex, unsigned long ins, const char *alias);
 int Utopia_AddMACFilter(UtopiaContext *ctx, const fwmacfilter_t *macfilter);
 int Utopia_DelMACFilter(UtopiaContext *ctx, unsigned long ins);
+
+int Utopia_GetLanAllowedSubnetInsNumByIndex(UtopiaContext *ctx, unsigned long uIndex, int *ins);
+int Utopia_GetNumberOfLanAllowedSubnet(UtopiaContext *ctx, int *num);
+int Utopia_GetLanAllowedSubnetByIndex(UtopiaContext *ctx, unsigned long ulIndex, lanAllowedSubnet_t *LanAllowedSubnet);
+int Utopia_SetLanAllowedSubnetByIndex(UtopiaContext *ctx, unsigned long ulIndex, const lanAllowedSubnet_t *LanAllowedSubnet);
+int Utopia_SetLanAllowedSubnetInsAndAliasByIndex(UtopiaContext *ctx, unsigned long ulIndex, unsigned long ins);
+int Utopia_AddLanAllowedSubnet(UtopiaContext *ctx, const lanAllowedSubnet_t *LanAllowedSubnet);
+int Utopia_DelLanAllowedSubnet(UtopiaContext *ctx, unsigned long ins);
 
 int Utopia_GetV4DayOfWeekInsNumByIndex(UtopiaContext *ctx, unsigned long uIndex, int *ins);
 int Utopia_GetNumberOfV4DayOfWeek(UtopiaContext *ctx, int *num);
