@@ -8259,4 +8259,110 @@ int Utopia_SetMacDayOfWeekInsAndAliasByIndex(UtopiaContext *ctx, unsigned long u
 
     return 0;
 }
+
+int Utopia_GetLanAllowedSubnetInsNumByIndex(UtopiaContext *ctx, unsigned long uIndex, int *ins)
+{
+    return Utopia_GetIndexedInt(ctx, UtopiaValue_LanAllowedSubnet_InsNum, uIndex+1, ins);
+}
+
+static int g_LanAllowedSubnetCount =  0;
+
+int Utopia_GetNumberOfLanAllowedSubnet(UtopiaContext *ctx, int *num)
+{
+    int rc = SUCCESS;
+
+    if(g_LanAllowedSubnetCount == 0)
+    {
+        Utopia_GetInt(ctx, UtopiaValue_LanAllowedSubnetCount, &g_LanAllowedSubnetCount);
+    }
+
+    *num = g_LanAllowedSubnetCount;
+    return rc;
+}
+
+int Utopia_GetLanAllowedSubnetByIndex(UtopiaContext *ctx, unsigned long ulIndex, lanAllowedSubnet_t *LanAllowedSubnet)
+{
+    int index = ulIndex + 1;
+    int ins_num = 0;
+
+    Utopia_GetIndexedInt(ctx, UtopiaValue_LanAllowedSubnet_InsNum, index, &ins_num);
+    LanAllowedSubnet->InstanceNumber = ins_num;
+    Utopia_GetIndexed(ctx, UtopiaValue_LanAllowedSubnet_Alias, index, LanAllowedSubnet->Alias, sizeof(LanAllowedSubnet->Alias));
+    Utopia_GetIndexed(ctx, UtopiaValue_LanAllowedSubnet_SubnetIP, index, LanAllowedSubnet->SubnetIP, sizeof(LanAllowedSubnet->SubnetIP));
+    Utopia_GetIndexed(ctx, UtopiaValue_LanAllowedSubnet_SubnetMask, index, LanAllowedSubnet->SubnetMask, sizeof(LanAllowedSubnet->SubnetMask));
+
+    return 0;
+}
+
+int Utopia_SetLanAllowedSubnetByIndex(UtopiaContext *ctx, unsigned long ulIndex, const lanAllowedSubnet_t *LanAllowedSubnet)
+{
+    int index = ulIndex + 1;
+    snprintf(s_tokenbuf, sizeof(s_tokenbuf), "arLanAllowedSubnet_%d", index);
+    Utopia_SetIndexed(ctx, UtopiaValue_LanAllowedSubnet, index, s_tokenbuf);
+    Utopia_SetIndexedInt(ctx, UtopiaValue_LanAllowedSubnet_InsNum, index, LanAllowedSubnet->InstanceNumber);
+    Utopia_SetIndexed(ctx, UtopiaValue_LanAllowedSubnet_Alias, index, (char*)LanAllowedSubnet->Alias);
+    Utopia_SetIndexed(ctx, UtopiaValue_LanAllowedSubnet_SubnetIP, index, (char*)LanAllowedSubnet->SubnetIP);
+    Utopia_SetIndexed(ctx, UtopiaValue_LanAllowedSubnet_SubnetMask, index, (char*)LanAllowedSubnet->SubnetMask);
+
+    return 0;
+}
+
+int Utopia_SetLanAllowedSubnetInsAndAliasByIndex(UtopiaContext *ctx, unsigned long ulIndex, unsigned long ins, const char *alias)
+{
+    int index = ulIndex+1;
+    Utopia_SetIndexedInt(ctx, UtopiaValue_LanAllowedSubnet_InsNum, index, ins);
+    Utopia_SetIndexed(ctx, UtopiaValue_LanAllowedSubnet_Alias, index, (char*)alias);
+    return 0;
+}
+
+int Utopia_AddLanAllowedSubnet(UtopiaContext *ctx, const lanAllowedSubnet_t *LanAllowedSubnet)
+{
+    int index;
+
+    Utopia_GetNumberOfLanAllowedSubnet(ctx, &index);
+    g_LanAllowedSubnetCount++;
+    Utopia_SetInt(ctx, UtopiaValue_LanAllowedSubnetCount, g_LanAllowedSubnetCount);
+    Utopia_SetLanAllowedSubnetByIndex(ctx, index, LanAllowedSubnet);
+
+    return 0;
+}
+
+int Utopia_DelLanAllowedSubnet(UtopiaContext *ctx, unsigned long ins)
+{
+    int count, index;
+    Utopia_GetNumberOfLanAllowedSubnet(ctx, &count);
+    for (index = 0; index < count; index++)
+    {
+        int ins_num;
+        Utopia_GetLanAllowedSubnetInsNumByIndex(ctx, index, &ins_num);
+        if (ins_num == (int)ins)
+        {
+            break;
+        }
+    }
+    if (index >= count)
+    {
+        return -1;
+    }
+
+    if (index < count-1)
+    {
+        for (;index < count-1; index++)
+        {
+            lanAllowedSubnet_t LanAllowedSubnet;
+            Utopia_GetLanAllowedSubnetByIndex(ctx, index+1, &LanAllowedSubnet);
+            Utopia_SetLanAllowedSubnetByIndex(ctx, index, &LanAllowedSubnet);
+        }
+    }
+
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LanAllowedSubnet_InsNum, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LanAllowedSubnet_Alias, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LanAllowedSubnet_SubnetIP, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LanAllowedSubnet_SubnetMask, count);
+
+    g_LanAllowedSubnetCount--;
+    Utopia_SetInt(ctx, UtopiaValue_LanAllowedSubnetCount, g_LanAllowedSubnetCount);
+    return 0;
+}
+
 // LGI ADD END
