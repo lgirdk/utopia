@@ -275,7 +275,12 @@ calculate_dhcp_range () {
       	# extract 1st 3 octets of the lan subnet and set the last octet to 2 for the start address
       	DHCP_START_ADDR=`echo $LAN_SUBNET | cut -d"." -f1-3`
 
-      	DHCP_START=2
+      	if [ "$START_ADDR_LAST_OCTET" = "" ]
+      	then
+      	    DHCP_START=2
+      	else
+      	    DHCP_START=$START_ADDR_LAST_OCTET
+      	fi
       	DHCP_START_ADDR="$DHCP_START_ADDR"".""$DHCP_START"
 	  	echo "DHCP_SERVER: Start address to syscfg_db $DHCP_START_ADDR"
       	# update syscfg dhcp_start
