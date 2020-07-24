@@ -310,6 +310,12 @@ case "$1" in
             swctl $PORTMAP_arm -v ${VID} -m $TAGGING_MODE -q 1
             #Re-add the default vlan to allow normal handling for untagged traffic
             #swctl $PORTMAP_arm -v 2 -m $NATIVE_MODE -q 1
+
+            # add default vlan to udma0 port 5 and udma1 port 6
+            echo "--SW handler, swctl -c 16 -p 5 -v ${VID} -m $TAGGING_MODE -q 1"
+            swctl -c 16 -p 5 -v ${VID} -m $TAGGING_MODE -q 1
+            echo "--SW handler, swctl -c 16 -p 6 -v ${VID} -m $TAGGING_MODE -q 1"
+            swctl -c 16 -p 6 -v ${VID} -m $TAGGING_MODE -q 1
         fi
         sysevent set sw_vid_${VID}_ports "${VIDPORTS} ${PORTS_ADD}"
         
