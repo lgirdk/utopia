@@ -1553,6 +1553,7 @@ static int resolv_static_config(struct serv_wan *sw)
     }
 
     fclose(fp);
+    vsystem("/bin/sh /etc/utopia/service.d/set_resolv_conf.sh");
     return 0;
 }
 

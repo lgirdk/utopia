@@ -677,6 +677,23 @@ typedef enum _UtopiaValue
     UtopiaValue_LanAllowedSubnet_Alias,
     UtopiaValue_LanAllowedSubnet_SubnetIP,
     UtopiaValue_LanAllowedSubnet_SubnetMask,
+    UtopiaValue_Dns_StaticServerCount,
+    UtopiaValue_Dns_StaticServer,
+    UtopiaValue_Dns_StaticServer_InsNum,
+    UtopiaValue_Dns_StaticServer_Alias,
+    UtopiaValue_Dns_StaticServer_Enable,
+    UtopiaValue_Dns_StaticServer_IPAddress,
+    UtopiaValue_Dns_StaticServer_Interface,
+    UtopiaValue_Dns_StaticServer_Type,
+    UtopiaValue_Dns_Relay_Enable,
+    UtopiaValue_Dns_ForwardCount,
+    UtopiaValue_Dns_Forward,
+    UtopiaValue_Dns_Forward_InsNum,
+    UtopiaValue_Dns_Forward_Alias,
+    UtopiaValue_Dns_Forward_Enable,
+    UtopiaValue_Dns_Forward_IPAddress,
+    UtopiaValue_Dns_Forward_Interface,
+    UtopiaValue_Dns_Forward_Type,
 // LGI ADD END	
     UtopiaValue__LAST__
 } UtopiaValue;
