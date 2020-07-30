@@ -849,6 +849,23 @@ static struct
      { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,   Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "SubnetIP", UtopiaValue_LanAllowedSubnet }, /* UtopiaValue_LanAllowedSubnet_SubnetIP */
      { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,   Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "SubnetMask", UtopiaValue_LanAllowedSubnet }, /* UtopiaValue_LanAllowedSubnet_SubnetMask */
     // LGI ADD END
+    { Utopia_Type_Config,        Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_For__NONE__,   1, "dns_static_server_count",    UtopiaValue__UNKNOWN__ },         /* UtopiaValue_Dns_StaticServerCount */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_Key, 1, "dns_static_server_%d",      UtopiaValue__UNKNOWN__ },          /* UtopiaValue_Dns_StaticServer */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "ins_num",                   UtopiaValue_Dns_StaticServer },    /* UtopiaValue_Dns_StaticServer_InsNum */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "alias",                     UtopiaValue_Dns_StaticServer },    /* UtopiaValue_Dns_StaticServer_Alias */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "enable",                    UtopiaValue_Dns_StaticServer },    /* UtopiaValue_Dns_StaticServer_Enable */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "ip",                        UtopiaValue_Dns_StaticServer },    /* UtopiaValue_Dns_StaticServer_IPAddress */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "if",                        UtopiaValue_Dns_StaticServer },    /* UtopiaValue_Dns_StaticServer_Interface */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "type",                      UtopiaValue_Dns_StaticServer },    /* UtopiaValue_Dns_StaticServer_Type */
+    { Utopia_Type_Config,        Utopia_Event__NONE__,   Utopia_Static__NONE__, Utopia_For__NONE__,   1, "dns_relay_enable",   UtopiaValue__UNKNOWN__ }, /* UtopiaValue_Dns_Relay_Enable*/
+    { Utopia_Type_Config,        Utopia_Event__NONE__,   Utopia_Static__NONE__, Utopia_For__NONE__,   1, "dns_forward_count",  UtopiaValue__UNKNOWN__ }, /* UtopiaValue_Dns_ForwardCount */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,   Utopia_Static__NONE__, Utopia_Index_For_Key, 1, "dns_forward_%d",     UtopiaValue__UNKNOWN__ }, /* UtopiaValue_Dns_Forward */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,   Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "ins_num",                  UtopiaValue_Dns_Forward }, /* UtopiaValue_Dns_Forward_InsNum */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,   Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "alias",                    UtopiaValue_Dns_Forward }, /* UtopiaValue_Dns_Forward_Alias */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,   Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "enable",                   UtopiaValue_Dns_Forward }, /* UtopiaValue_Dns_Forward_Enable */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,   Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "ip",                       UtopiaValue_Dns_Forward }, /* UtopiaValue_Dns_Forward_IPAddress */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,   Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "if",                       UtopiaValue_Dns_Forward }, /* UtopiaValue_Dns_Forward_Interface */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,   Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "type",                     UtopiaValue_Dns_Forward }, /* UtopiaValue_Dns_Forward_Type */
     { Utopia_Type__UNKNOWN__, Utopia_Event__NONE__, Utopia_Static__NONE__, Utopia_For__NONE__, 0, 0, UtopiaValue__UNKNOWN__ }, /* UtopiaValue__LAST__ */
 };
 
