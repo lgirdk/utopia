@@ -42,7 +42,137 @@
 #include "utapi_util.h"
 #include "utapi_wlan.h"
 #include "DM_TR181.h"
+#include "utapi_dns.h"
 
+static int g_Dns_ServerCount = 0;
+int Utopia_GetNumberOfDnsServers(UtopiaContext *ctx)
+{
+    if(g_Dns_ServerCount == 0)
+    {
+        Utopia_GetInt(ctx, UtopiaValue_Dns_StaticServerCount, &g_Dns_ServerCount);
+    }
+    return g_Dns_ServerCount;
+}
+
+int Utopia_GetDnsServerByIndex(UtopiaContext *ctx, unsigned long ulIndex, dns_server_t *dns)
+{
+    int ins_num = 0;
+    int index = ulIndex + 1;
+
+    if ((index > g_Dns_ServerCount) || (index < 1))
+    {
+        return -1;
+    }
+
+    Utopia_GetIndexedInt(ctx, UtopiaValue_Dns_StaticServer_InsNum, index, &ins_num);
+    dns->ins_num = ins_num;
+    Utopia_GetIndexed(ctx, UtopiaValue_Dns_StaticServer_Alias, index, dns->alias, sizeof(dns->alias));
+    Utopia_GetIndexedBool(ctx, UtopiaValue_Dns_StaticServer_Enable, index, &dns->enable);
+    Utopia_GetIndexed(ctx, UtopiaValue_Dns_StaticServer_IPAddress, index, dns->ip_address, sizeof(dns->ip_address));
+    Utopia_GetIndexed(ctx, UtopiaValue_Dns_StaticServer_Interface, index, dns->interface, sizeof(dns->interface));
+    Utopia_GetIndexed(ctx, UtopiaValue_Dns_StaticServer_Type, index, dns->type, sizeof(dns->type));
+
+    return 0;
+}
+
+int Utopia_SetDnsServerByIndex(UtopiaContext *ctx, unsigned long ulIndex, const dns_server_t *dns)
+{
+    int index = ulIndex + 1;
+
+    if ((index > g_Dns_ServerCount) || (index < 1))
+    {
+        return -1;
+    }
+
+    snprintf(s_tokenbuf, sizeof(s_tokenbuf), "dns_%d", index);
+    Utopia_SetIndexed(ctx, UtopiaValue_Dns_StaticServer, index, s_tokenbuf);
+
+    Utopia_SetIndexedInt(ctx, UtopiaValue_Dns_StaticServer_InsNum, index, dns->ins_num);
+    Utopia_SetIndexed(ctx, UtopiaValue_Dns_StaticServer_Alias, index, (char*)dns->alias);
+    Utopia_SetIndexedBool(ctx, UtopiaValue_Dns_StaticServer_Enable, index, dns->enable);
+    Utopia_SetIndexed(ctx, UtopiaValue_Dns_StaticServer_IPAddress, index, (char*)dns->ip_address);
+    Utopia_SetIndexed(ctx, UtopiaValue_Dns_StaticServer_Interface, index, (char*)dns->interface);
+    Utopia_SetIndexed(ctx, UtopiaValue_Dns_StaticServer_Type, index, (char*)dns->type);
+
+    return 0;
+}
+
+int Utopia_GetDnsServerInsNumByIndex(UtopiaContext *ctx, unsigned long ulIndex, int *ins)
+{
+    return Utopia_GetIndexedInt(ctx, UtopiaValue_Dns_StaticServer_InsNum, ulIndex + 1, ins);
+}
+
+int Utopia_GetDnsServerIndexByInsNum(UtopiaContext *ctx, int ins, unsigned long *ulIndex)
+{
+    int i = 0;
+    int ins_num = 0;
+
+    for (; i < g_Dns_ServerCount; i++)
+    {
+        Utopia_GetDnsServerInsNumByIndex(ctx, i, &ins_num);
+        if (ins_num == ins) {
+            *ulIndex = i;
+            return 0;
+        }
+    }
+
+    return -1;
+}
+
+int Utopia_AddDnsServer(UtopiaContext *ctx, const dns_server_t *dns)
+{
+    int count = Utopia_GetNumberOfDnsServers(ctx);
+    Utopia_SetInt(ctx, UtopiaValue_Dns_StaticServerCount, ++g_Dns_ServerCount);
+    Utopia_SetDnsServerByIndex(ctx, count, dns);
+
+    return 0;
+}
+
+int Utopia_RemoveDnsServer(UtopiaContext *ctx, unsigned long ins)
+{
+    int count = 0;
+    int index = 0;
+
+    count = Utopia_GetNumberOfDnsServers(ctx);
+    for (; index < count; index++)
+    {
+        int ins_num = 0;
+        Utopia_GetDnsServerInsNumByIndex(ctx, index, &ins_num);
+        if (ins_num == (int)ins)
+        {
+            break;
+        }
+    }
+
+    if (index >= count)
+    {
+        return -1;
+    }
+
+    if (index < count - 1)
+    {
+        for (; index < count - 1; index++)
+        {
+            dns_server_t dns = {};
+            Utopia_GetDnsServerByIndex(ctx, index + 1, &dns);
+            Utopia_SetDnsServerByIndex(ctx, index, &dns);
+        }
+    }
+
+    Utopia_UnsetIndexed(ctx, UtopiaValue_Dns_StaticServer_InsNum, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_Dns_StaticServer_Alias, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_Dns_StaticServer_Enable, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_Dns_StaticServer_IPAddress, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_Dns_StaticServer_Interface, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_Dns_StaticServer_Type, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_Dns_StaticServer, count);
+
+    g_Dns_ServerCount--;
+    Utopia_SetInt(ctx, UtopiaValue_Dns_StaticServerCount, g_Dns_ServerCount);
+
+    return 0;
+}
+/* LGI ADD END */
 
 int Utopia_Get_DeviceDnsRelayForwarding(UtopiaContext *pCtx, int index, void *str_handle)
 {
@@ -128,4 +258,143 @@ int Utopia_Set_DeviceDnsRelayForwarding(UtopiaContext *pCtx, int index, void *st
     Utopia_RawSet(pCtx, NULL, tokenBuf, tokenVal);
     
     return UT_SUCCESS;
+}
+static int g_Dns_ForwardCount = 0;
+
+int Utopia_GetNumberOfDnsForwards(UtopiaContext *ctx)
+{
+    if(g_Dns_ForwardCount == 0)
+    {
+        Utopia_GetInt(ctx, UtopiaValue_Dns_ForwardCount, &g_Dns_ForwardCount);
+    }
+    return g_Dns_ForwardCount;
+}
+
+int Utopia_GetDnsForwardByIndex(UtopiaContext *ctx, unsigned long ulIndex, relay_forward_t *forward)
+{
+    int ins_num = 0;
+    int index = ulIndex + 1;
+
+    if ((index > g_Dns_ForwardCount) || (index < 1))
+    {
+        return -1;
+    }
+
+    Utopia_GetIndexedInt(ctx, UtopiaValue_Dns_Forward_InsNum, index, &ins_num);
+    forward->ins_num = ins_num;
+    Utopia_GetIndexed(ctx, UtopiaValue_Dns_Forward_Alias, index, forward->alias, sizeof(forward->alias));
+    Utopia_GetIndexedBool(ctx, UtopiaValue_Dns_Forward_Enable, index, &forward->enable);
+    Utopia_GetIndexed(ctx, UtopiaValue_Dns_Forward_IPAddress, index, forward->ip_address, sizeof(forward->ip_address));
+    Utopia_GetIndexed(ctx, UtopiaValue_Dns_Forward_Interface, index, forward->interface, sizeof(forward->interface));
+    Utopia_GetIndexed(ctx, UtopiaValue_Dns_Forward_Type, index, forward->type, sizeof(forward->type));
+
+    return 0;
+}
+
+int Utopia_SetDnsForwardByIndex(UtopiaContext *ctx, unsigned long ulIndex, const relay_forward_t *forward)
+{
+    int index = ulIndex + 1;
+
+    if ((index > g_Dns_ForwardCount) || (index < 1))
+    {
+        return -1;
+    }
+
+    snprintf(s_tokenbuf, sizeof(s_tokenbuf), "dns_forward_%d", index);
+    Utopia_SetIndexed(ctx, UtopiaValue_Dns_Forward, index, s_tokenbuf);
+
+    Utopia_SetIndexedInt(ctx, UtopiaValue_Dns_Forward_InsNum, index, forward->ins_num);
+    Utopia_SetIndexed(ctx, UtopiaValue_Dns_Forward_Alias, index, (char*)forward->alias);
+    Utopia_SetIndexedBool(ctx, UtopiaValue_Dns_Forward_Enable, index, forward->enable);
+    Utopia_SetIndexed(ctx, UtopiaValue_Dns_Forward_IPAddress, index, (char*)forward->ip_address);
+    Utopia_SetIndexed(ctx, UtopiaValue_Dns_Forward_Interface, index, (char*)forward->interface);
+    Utopia_SetIndexed(ctx, UtopiaValue_Dns_Forward_Type, index, (char*)forward->type);
+
+    return 0;
+}
+
+int Utopia_GetDnsForwardInsNumByIndex(UtopiaContext *ctx, unsigned long ulIndex, int *ins)
+{
+    return Utopia_GetIndexedInt(ctx, UtopiaValue_Dns_Forward_InsNum, ulIndex + 1, ins);
+}
+
+int Utopia_GetDnsForwardIndexByInsNum(UtopiaContext *ctx, int ins, unsigned long *ulIndex)
+{
+    int i = 0;
+    int ins_num = 0;
+
+    for (; i < g_Dns_ForwardCount; i++)
+    {
+        Utopia_GetDnsForwardInsNumByIndex(ctx, i, &ins_num);
+        if (ins_num == ins) {
+            *ulIndex = i;
+            return 0;
+        }
+    }
+
+    return -1;
+}
+
+int Utopia_AddDnsForward(UtopiaContext *ctx, const relay_forward_t *forward)
+{
+    int count = Utopia_GetNumberOfDnsForwards(ctx);
+    Utopia_SetInt(ctx, UtopiaValue_Dns_ForwardCount, ++g_Dns_ForwardCount);
+    Utopia_SetDnsForwardByIndex(ctx, count, forward);
+
+    return 0;
+}
+
+int Utopia_RemoveDnsForward(UtopiaContext *ctx, unsigned long ins)
+{
+    int count = 0;
+    int index = 0;
+
+    count = Utopia_GetNumberOfDnsForwards(ctx);
+    for (; index < count; index++)
+    {
+        int ins_num = 0;
+        Utopia_GetDnsForwardInsNumByIndex(ctx, index, &ins_num);
+        if (ins_num == (int)ins)
+        {
+            break;
+        }
+    }
+
+    if (index >= count)
+    {
+        return -1;
+    }
+
+    if (index < count - 1)
+    {
+        for (; index < count - 1; index++)
+        {
+            relay_forward_t dns = {};
+            Utopia_GetDnsForwardByIndex(ctx, index + 1, &dns);
+            Utopia_SetDnsForwardByIndex(ctx, index, &dns);
+        }
+    }
+
+    Utopia_UnsetIndexed(ctx, UtopiaValue_Dns_Forward_InsNum, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_Dns_Forward_Alias, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_Dns_Forward_Enable, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_Dns_Forward_IPAddress, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_Dns_Forward_Interface, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_Dns_Forward_Type, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_Dns_Forward, count);
+
+    g_Dns_ForwardCount--;
+    Utopia_SetInt(ctx, UtopiaValue_Dns_ForwardCount, g_Dns_ForwardCount);
+
+    return 0;
+}
+
+int Utopia_GetDnsRelayEnabled(UtopiaContext *ctx, boolean_t *enabled)
+{
+    return Utopia_GetBool(ctx, UtopiaValue_Dns_Relay_Enable, enabled);
+}
+
+int Utopia_SetDnsRelayEnabled(UtopiaContext *ctx, boolean_t enabled)
+{
+    return Utopia_SetBool(ctx, UtopiaValue_Dns_Relay_Enable, enabled);
 }
