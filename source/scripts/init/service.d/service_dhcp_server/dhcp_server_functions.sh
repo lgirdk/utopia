@@ -576,7 +576,190 @@ get_dhcp_option_for_brlan0() {
 
 	  echo $DHCP_OPTION_STR
 }
+# LGI ADD START
+DNS_PROXY_RESOLV_CONF=/var/dnsrelay-resolv.conf
+TMP_RESOLV_CONF=/tmp/resolv.conf
+RESOLV_CONF_SUB="\/etc\/resolv.conf"
+DNS_PROXY_RESOLV_CONF_SUB="\/var\/dnsrelay-resolv.conf"
+STATIC_DNS_IPv4=""
+STATIC_DNS_IPv6=""
+get_static_dns_ips () {
+    prefix="dns_static_server"
+    ind=1
+    static_ips=""
+    interface="unknown"
 
+    if [ "$1" == "ipv6" ] ; then
+        STATIC_DNS_IPv6=""
+        delim=":"
+    else
+        STATIC_DNS_IPv4=""
+        delim="\."
+    fi
+
+    if [ "$2" == "wan" ] ; then
+        interface="Device.IP.Interface.1"
+    elif [ "$2" == "lan" ] ; then
+        interface="Device.IP.Interface.3"
+    elif [ "$2" == "forward" ] ; then
+        interface="Device.IP.Interface.3"
+        prefix="dns_forward"
+    fi
+
+    count=`syscfg get ${prefix}_count`
+    if [ -z "$count" ] ; then
+        count="0"
+    fi
+    while [ "$ind" -le "$count" ]
+    do
+        ns=`syscfg get ${prefix}_$ind`
+        enabled=`syscfg get $ns enable`
+        if=`syscfg get $ns if`
+        if [ "$enabled" == "1" ] && [ "$if" == "$interface" ] ; then
+            ip=`syscfg get $ns ip | grep $delim`
+            if [ -n "$ip" ] ; then
+                static_ips=$static_ips""$ip" "
+            fi
+        fi
+        ((ind++))
+    done
+
+    if [ "$1" == "ipv6" ] ; then
+        STATIC_DNS_IPv6=$static_ips
+    else
+        STATIC_DNS_IPv4=$static_ips
+    fi
+}
+
+lgi_prepare_dhcp_options() {
+    DNS_PROXY=`syscfg get dns_relay_enable`
+    DS_LITE=`syscfg get dslite_enable`
+    WAN_DNS_IPv4=`sysevent get wan_dhcp_dns`
+    DHCP_OPTION_STR=""
+    DNS_OVERRIDE=`syscfg get dns_override`
+
+    echo -n > $DHCP_OPTIONS_FILE
+    echo -n > $DNS_PROXY_RESOLV_CONF
+
+    ######################################
+    # DNS proxy is off.
+    ######################################
+    if [ "$DNS_PROXY" != "1" ] ; then
+
+        # Get LAN static configuration.
+        get_static_dns_ips ipv4 lan
+        if [ -z "$STATIC_DNS_IPv4" ] ; then
+            # Get WAN static configuration.
+            get_static_dns_ips ipv4 wan
+        fi
+
+        if [ "$DNS_OVERRIDE" == "true" ] ; then
+            DNS_IPv4_PREFERRED=`syscfg get dns_ipv4_preferred`
+            DNS_IPv4_ALTERNATE=`syscfg get dns_ipv4_alternate`
+            if [ -n "$DNS_IPv4_PREFERRED" ] ; then
+                STATIC_DNS_IPv4=$DNS_IPv4_PREFERRED
+            fi
+            if [ -n "$DNS_IPv4_ALTERNATE" ] ; then
+                STATIC_DNS_IPv4=$STATIC_DNS_IPv4" "$DNS_IPv4_ALTERNATE
+            fi
+        fi
+        ip_list=""
+        if [ -n "$STATIC_DNS_IPv4" ] ; then
+            ip_list=$STATIC_DNS_IPv4
+        else
+            ip_list=$WAN_DNS_IPv4
+        fi
+        for ip in $ip_list
+        do
+            if [ -z "$DHCP_OPTION_STR" ] ; then
+                DHCP_OPTION_STR="option:dns-server, $ip"
+            else
+                DHCP_OPTION_STR=$DHCP_OPTION_STR","$ip
+            fi
+        done
+        echo $DHCP_OPTION_STR > $DHCP_OPTIONS_FILE
+    fi
+
+    ######################################
+    # DNS proxy is on.
+    ######################################
+    if [ "$DNS_PROXY" == "1" ] || [ "$DS_LITE" == "1" ] ; then
+
+        if [ "$DNS_OVERRIDE" == "true" ] ; then
+            DHCP_OPTION_STR=""
+            DNS_IPv4_PREFERRED=`syscfg get dns_ipv4_preferred`
+            DNS_IPv4_ALTERNATE=`syscfg get dns_ipv4_alternate`
+            DNS_IPv6_PREFERRED=`syscfg get dns_ipv6_preferred`
+            DNS_IPv6_ALTERNATE=`syscfg get dns_ipv6_alternate`
+            if [ -n "$DNS_IPv4_PREFERRED" ] ; then
+                STATIC_DNS_IPv4=$DNS_IPv4_PREFERRED
+            fi
+            if [ -n "$DNS_IPv4_ALTERNATE" ] ; then
+                STATIC_DNS_IPv4=$STATIC_DNS_IPv4" "$DNS_IPv4_ALTERNATE
+            fi
+            if [ -n "$DNS_IPv6_PREFERRED" ] ; then
+                STATIC_DNS_IPv6=$DNS_IPv6_PREFERRED
+            fi
+            if [ -n "$DNS_IPv6_ALTERNATE" ] ; then
+                STATIC_DNS_IPv6=$STATIC_DNS_IPv6" "$DNS_IPv6_ALTERNATE
+            fi
+
+            for ip in $STATIC_DNS_IPv4
+            do
+                if [ -z "$DHCP_OPTION_STR" ] ; then
+                    DHCP_OPTION_STR="option:dns-server, $ip"
+                else
+                    DHCP_OPTION_STR=$DHCP_OPTION_STR","$ip
+                fi
+           done
+           echo $DHCP_OPTION_STR > $DHCP_OPTIONS_FILE
+        else
+            # IPv4
+            # Get DNS forwarding configuration.
+            get_static_dns_ips ipv4 forward
+            if [ -z "$STATIC_DNS_IPv4" ] ; then
+                # Get LAN static configuration.
+                get_static_dns_ips ipv4 lan
+            fi
+
+            # IPv6
+            # Get DNS forwarding configuration.
+            get_static_dns_ips ipv6 forward
+            if [ -z "$STATIC_DNS_IPv6" ] ; then
+                # Get LAN static configuration.
+                get_static_dns_ips ipv6 lan
+            fi
+        fi
+
+        for ip in $STATIC_DNS_IPv4;
+        do
+            echo "nameserver $ip" >> $DNS_PROXY_RESOLV_CONF
+        done
+
+        for ip in $STATIC_DNS_IPv6;
+        do
+            echo "nameserver $ip" >> $DNS_PROXY_RESOLV_CONF
+        done
+
+        if [ -s "$DNS_PROXY_RESOLV_CONF" ] ; then
+            # Change resolv config file path.
+            sed -i "s/resolv-file=$RESOLV_CONF_SUB/resolv-file=$DNS_PROXY_RESOLV_CONF_SUB/g" $LOCAL_DHCP_CONF
+
+            # Remove loopback address to use static relay configuration for LAN clients only and do not break router DNS configuration.
+            sed -i "/nameserver 127.0.0.1/d" $TMP_RESOLV_CONF
+            sed -i "/nameserver ::1/d" $TMP_RESOLV_CONF
+
+            # Add dynamic configuration in proxy resolv config.
+            if [ -z "$STATIC_DNS_IPv4" ] ; then
+                cat $TMP_RESOLV_CONF | grep 'nameserver' | grep '\.' >> $DNS_PROXY_RESOLV_CONF
+            fi
+            if [ -z "$STATIC_DNS_IPv6" ] ; then
+                cat $TMP_RESOLV_CONF | grep 'nameserver' | grep ':' >> $DNS_PROXY_RESOLV_CONF
+            fi
+        fi
+    fi
+}
+# LGI ADD END
 prepare_dhcp_options_wan_dns()
 {
    echo -n > $LOCAL_DHCP_OPTIONS_FILE
@@ -935,15 +1118,16 @@ fi
    if [ "dns_only" != "$3" ] ; then
       prepare_dhcp_conf_static_hosts
       #prepare_dhcp_options
-	  prepare_dhcp_options_wan_dns	
+	# prepare_dhcp_options_wan_dns
+	lgi_prepare_dhcp_options
    fi
-   
-   if [ "x$BOX_TYPE" != "xHUB4" ]; then
-      nameserver=`grep "nameserver" $RESOLV_CONF | awk '{print $2}'|grep -v ":"|tr '\n' ','| sed -e 's/,$//'`
-      if [ "" != "$nameserver" ]; then
-         echo "option:dns-server,$nameserver" >> $DHCP_OPTIONS_FILE
-      fi
-   fi
+#  This is handled in lgi_prepare_dhcp_options
+#   if [ "x$BOX_TYPE" != "xHUB4" ]; then
+#      nameserver=`grep "nameserver" $RESOLV_CONF | awk '{print $2}'|grep -v ":"|tr '\n' ','| sed -e 's/,$//'`
+#      if [ "" != "$nameserver" ]; then
+#         echo "option:dns-server,$nameserver" >> $DHCP_OPTIONS_FILE
+#      fi
+#   fi
    
    if [ "started" = $CURRENT_LAN_STATE ]; then
       calculate_dhcp_range $LAN_IPADDR $LAN_NETMASK
