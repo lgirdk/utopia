@@ -1333,6 +1333,9 @@ $v4_dayofweek_block_time_bitmask_type=0
 $v6_dayofweek_block_time_bitmask_type=0
 $mac_dayofweek_block_time_bitmask_type=0
 
+#dns relay - Disabled by default ( LGI specific - to be reviewed )
+$dns_relay_enable=0
+
 #ocsp staple support
 $EnableOCSPStapling=false
 $EnableOCSPCA=false
