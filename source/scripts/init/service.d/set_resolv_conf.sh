@@ -41,67 +41,14 @@ RESOLV_CONF_TMP="/tmp/resolv_tmp.conf"
 # set the resolv.conf file
 #-----------------------------------------------------------------
 
-prepare_resolv_conf () {
-   WAN_DOMAIN=`syscfg get  wan_domain`
-   NAMESERVER1=`syscfg get nameserver1`
-   NAMESERVER2=`syscfg get nameserver2`
-  
-   cp $RESOLV_CONF $RESOLV_CONF_TMP
- 
-   if [ -n "$WAN_DOMAIN" ] ; then
-       sed -i '/domain/d' "$RESOLV_CONF_TMP"
-   fi
-
-       
-   if ( [ "0.0.0.0" != "$NAMESERVER1" ] && [ -n "$NAMESERVER1" ] ) || ( [ "0.0.0.0" != "$NAMESERVER2" ] && [ -n "$NAMESERVER2" ] ) ; then
-   	sed -i '/nameserver [0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}/d' "$RESOLV_CONF_TMP"
-   fi
-
-   N=""
-   while read line; do
-   N="${N}$line
-"
-   done < $RESOLV_CONF_TMP
-   echo -n "$N" > "$RESOLV_CONF"
-   rm -rf $RESOLV_CONF_TMP
-
-   
-   if [ x"1" = x"`syscfg get staticdns_enable`" ];then
-   
-         WAN_DNS=
-         if [ -n "$WAN_DOMAIN" ] ; then
-            echo "search $WAN_DOMAIN" >> $RESOLV_CONF
-         fi
-         if [ "0.0.0.0" != "$NAMESERVER1" ] && [ -n "$NAMESERVER1" ] ; then
-            echo "nameserver $NAMESERVER1" >> $RESOLV_CONF
-            WAN_DNS=`echo "$WAN_DNS" "$NAMESERVER1"`
-         fi
-         if [ "0.0.0.0" != "$NAMESERVER2" ]  && [ -n "$NAMESERVER2" ]; then
-            echo "nameserver $NAMESERVER2" >> $RESOLV_CONF
-            WAN_DNS=`echo "$WAN_DNS" "$NAMESERVER2"`
-         fi
-         if [ "0.0.0.0" != "$NAMESERVER3" ]  && [ -n "$NAMESERVER3" ]; then
-            echo "nameserver $NAMESERVER3" >> $RESOLV_CONF
-            WAN_DNS=`echo "$WAN_DNS" "$NAMESERVER3"`
-         fi
-
-         sysevent set wan_dhcp_dns "${WAN_DNS}"
-         # sysevent set dhcp_server-restart
-         # Avoiding restart, inorder to honor the running dhcp server (RDKB-49696)
-         sysevent set dhcp_server-start
-
-   fi
-
-}
-
 source /etc/utopia/service.d/service_dhcp_server/dhcp_server_functions.sh
 
-lgi_prepare_resolv_conf () {
+prepare_resolv_conf () {
     SEARCH_DOMAIN=`cat $RESOLV_CONF | grep search`
     WAN_DNS_IPv4=`sysevent get wan_dhcp_dns`
     WAN_DNS_IPv6=`sysevent get ipv6_nameserver`
 
-    echo -n  > $RESOLV_CONF
+    echo -n > $RESOLV_CONF
 
     # Write domain.
     echo "$SEARCH_DOMAIN" >> $RESOLV_CONF
@@ -155,5 +102,5 @@ lgi_prepare_resolv_conf () {
     /etc/utopia/service.d/service_dhcp_server.sh dhcp_server-restart &
 }
 
-lgi_prepare_resolv_conf
+prepare_resolv_conf
 
