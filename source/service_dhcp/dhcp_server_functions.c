@@ -255,7 +255,6 @@ void calculate_dhcp_range (FILE *local_dhcpconf_file, char *prefix)
 		fprintf(stderr, "[DHCPCORRUPT_TRACE] DHCP Net Mask:%s is corrupted. Setting to default Net Mask\n",
 				l_cLanNetMask);
 		//copy the default netmask
-		memset(l_cLanNetMask, 0, sizeof(l_cLanNetMask));
 		sprintf(l_cLanNetMask, "%s", "255.255.255.0");
 		syscfg_set(NULL, "lan_netmask", l_cLanNetMask);
 		syscfg_commit();
@@ -467,15 +466,11 @@ void prepare_dhcp_options_wan_dns()
 			{
 				if (0 != l_cNs[0])
 				{
-					sprintf(l_cNs, "%s,%s", l_cNs, l_cToken);
+					strcat(l_cNs, ",");
 				}
-				else
-				{
-					sprintf(l_cNs, "%s", l_cToken);
-				}
+				strcat(l_cNs, l_cToken);
 				l_cToken = strtok(NULL, " ");
 			}
-			l_cNs[strlen(l_cNs)] = '\0';
 			fprintf(stderr, "l_cNs is:%s\n", l_cNs);
 			fprintf(l_fLocalDhcpOpt, "option:dns-server, %s\n", l_cNs);	
 		}
@@ -839,10 +834,8 @@ int prepare_dhcp_conf (char *input)
                 syscfg_set(NULL, "dhcp_end", dhcpEnd);
                 syscfg_commit();
 
-                memset(l_cLanIPAddress, 0, sizeof(l_cLanIPAddress));
                 strncpy(l_cLanIPAddress,lanIP,sizeof(l_cLanIPAddress));
 
-                memset(l_cLanNetMask, 0, sizeof(l_cLanNetMask));
                 strncpy(l_cLanNetMask,lanNetMask,sizeof(l_cLanNetMask));
 
                 pclose(fp);
@@ -1391,51 +1384,48 @@ void get_dhcp_option_for_brlan0( char *pDhcpNs_OptionString )
 		 l_cDhcpNs_2[ 128 ] 	 			 = { 0 },
 		 l_cDhcpNs_3[ 128 ] 				 = { 0 },
                  l_cLocalNs[ 128 ]                               = { 0 },
-                 l_cWan_Dhcp_Dns[ 256 ]                          = { 0 },
-		 l_cDhcpNs_OptionString[ 1024 ] 	 = { 0 };
+                 l_cWan_Dhcp_Dns[ 256 ],
+		 l_cDhcpNs_OptionString[ 1024 ];
 
-    // Static LAN DNS
+	char *options = l_cDhcpNs_OptionString;
+
+	options += sprintf (options, "dhcp-option=brlan0,6");
+
+	// Static LAN DNS
 	syscfg_get(NULL, "dhcp_nameserver_1", l_cDhcpNs_1, sizeof(l_cDhcpNs_1));
 	syscfg_get(NULL, "dhcp_nameserver_2", l_cDhcpNs_2, sizeof(l_cDhcpNs_2));	
 	syscfg_get(NULL, "dhcp_nameserver_3", l_cDhcpNs_3, sizeof(l_cDhcpNs_3));
-        sysevent_get(g_iSyseventfd, g_tSysevent_token, "current_lan_ipaddr", l_cLocalNs, sizeof(l_cLocalNs));		
 
-	strcpy( l_cDhcpNs_OptionString, "dhcp-option=brlan0,6");
-
-	if( ( '\0' != l_cDhcpNs_1[ 0 ] ) && \
-		( 0 != strcmp( l_cDhcpNs_1, "0.0.0.0" ) ) 
-	  )
+	if((l_cDhcpNs_1[0] != 0) && (strcmp(l_cDhcpNs_1, "0.0.0.0") != 0))
 	{
-		sprintf( l_cDhcpNs_OptionString, "%s,%s", l_cDhcpNs_OptionString, l_cDhcpNs_1 );
+		options += sprintf (options, ",%s", l_cDhcpNs_1);
 	}
-
-	if( ( '\0' != l_cDhcpNs_2[ 0 ] ) && \
-		( 0 != strcmp( l_cDhcpNs_2, "0.0.0.0" ) ) 
-	  )
+	if((l_cDhcpNs_2[0] != 0) && (strcmp(l_cDhcpNs_2, "0.0.0.0") != 0))
 	{
-		sprintf( l_cDhcpNs_OptionString, "%s,%s", l_cDhcpNs_OptionString, l_cDhcpNs_2 );
+		options += sprintf (options, ",%s", l_cDhcpNs_2);
 	}
-
-	
-	if( ( '\0' != l_cDhcpNs_3[ 0 ] ) && \
-		( 0 != strcmp( l_cDhcpNs_3, "0.0.0.0" ) ) 
-	  )
+	if((l_cDhcpNs_3[0] != 0) && (strcmp(l_cDhcpNs_3, "0.0.0.0") != 0))
 	{
-		sprintf( l_cDhcpNs_OptionString, "%s,%s", l_cDhcpNs_OptionString, l_cDhcpNs_3 );
+		options += sprintf (options, ",%s", l_cDhcpNs_3);
 	}
 
         char l_cSecWebUI_Enabled[8] = {0};
         syscfg_get(NULL, "SecureWebUI_Enable", l_cSecWebUI_Enabled, sizeof(l_cSecWebUI_Enabled));
         if (!strncmp(l_cSecWebUI_Enabled, "true", 4))
         {
-                check_and_get_wan_dhcp_dns( l_cWan_Dhcp_Dns );
-                if ( '\0' != l_cWan_Dhcp_Dns[ 0 ] )
-                    sprintf( l_cDhcpNs_OptionString, "%s,%s,%s", l_cDhcpNs_OptionString, l_cLocalNs, l_cWan_Dhcp_Dns );
-                else
-                    sprintf( l_cDhcpNs_OptionString, "%s,%s", l_cDhcpNs_OptionString, l_cLocalNs );
+            sysevent_get(g_iSyseventfd, g_tSysevent_token, "current_lan_ipaddr", l_cLocalNs, sizeof(l_cLocalNs));		
+
+            options += sprintf (options, ",%s", l_cLocalNs);
+
+            l_cWan_Dhcp_Dns[0] = 0;
+            check_and_get_wan_dhcp_dns( l_cWan_Dhcp_Dns );
+            if (l_cWan_Dhcp_Dns[0] != 0)
+            {
+                options += sprintf (options, ",%s", l_cWan_Dhcp_Dns);
+            }
         }
         // Copy custom dns servers
-	sprintf( pDhcpNs_OptionString, "%s", l_cDhcpNs_OptionString );
+	strcpy(pDhcpNs_OptionString, l_cDhcpNs_OptionString);
 }
 
 void check_and_get_wan_dhcp_dns( char *pl_cWan_Dhcp_Dns )
@@ -1457,7 +1447,7 @@ void check_and_get_wan_dhcp_dns( char *pl_cWan_Dhcp_Dns )
 		charCounter++;
 	}
 
-	sprintf( pl_cWan_Dhcp_Dns, "%s", l_cWan_Dhcp_Dns );
+	strcpy( pl_cWan_Dhcp_Dns, l_cWan_Dhcp_Dns );
 	
 	fprintf( stderr, "DHCP SERVER : After conversion wan_dhcp_dns:%s \n", l_cWan_Dhcp_Dns );
 }
