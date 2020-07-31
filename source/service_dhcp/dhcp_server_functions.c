@@ -467,7 +467,6 @@ void prepare_dhcp_options_wan_dns()
 	char l_cLocalDhcpOpt[32] = {0}, l_cPropagate_Ns[8] = {0}, l_cWan_Dhcp_Dns[255] = {0}; 
 	char *l_cToken = NULL, l_cNs[255] = {""};
 	FILE *l_fLocalDhcpOpt = NULL;
-	char pL_cNs[256];
 	errno_t safec_rc = -1;
 	
     safec_rc = sprintf_s(l_cLocalDhcpOpt, sizeof(l_cLocalDhcpOpt),"/tmp/dhcp_options%d", getpid());
@@ -499,22 +498,11 @@ void prepare_dhcp_options_wan_dns()
 			{
 				if (0 != l_cNs[0])
 				{
-					safec_rc = sprintf_s(pL_cNs, sizeof(pL_cNs),"%s,%s", l_cNs, l_cToken);
-					if(safec_rc < EOK){
-						ERR_CHK(safec_rc);
-					}
-					strncpy(l_cNs, pL_cNs, strlen(pL_cNs));
+					strcat(l_cNs, ",");
 				}
-				else
-				{
-					safec_rc = sprintf_s(l_cNs, sizeof(l_cNs),"%s", l_cToken);
-					if(safec_rc < EOK){
-						ERR_CHK(safec_rc);
-					}
-				}
+				strcat(l_cNs, l_cToken);
 				l_cToken = strtok(NULL, " ");
 			}
-			l_cNs[strlen(l_cNs)] = '\0';
 			fprintf(stderr, "l_cNs is:%s\n", l_cNs);
 			fprintf(l_fLocalDhcpOpt, "option:dns-server, %s\n", l_cNs);	
 		}
@@ -915,10 +903,8 @@ int prepare_dhcp_conf (char *input)
                 syscfg_set(NULL, "dhcp_end", dhcpEnd);
                 syscfg_commit();
 
-                memset(l_cLanIPAddress, 0, sizeof(l_cLanIPAddress));
                 strncpy(l_cLanIPAddress,lanIP,sizeof(l_cLanIPAddress));
 
-                memset(l_cLanNetMask, 0, sizeof(l_cLanNetMask));
                 strncpy(l_cLanNetMask,lanNetMask,sizeof(l_cLanNetMask));
 
                 pclose(fp);
@@ -1496,75 +1482,48 @@ void get_dhcp_option_for_brlan0( char *pDhcpNs_OptionString )
 		 l_cDhcpNs_2[ 128 ] 	 			 = { 0 },
 		 l_cDhcpNs_3[ 128 ] 				 = { 0 },
                  l_cLocalNs[ 128 ]                               = { 0 },
-                 l_cWan_Dhcp_Dns[ 256 ]                          = { 0 },
-		 l_cDhcpNs_OptionString[ 1024 ] 	         = { 0 },
-		 l_cDhcpNs_OptionString_new[ 1424 ]              = { 0 }; //CID 177296 : Uninitialized scalar variable
-         errno_t safec_rc                                = -1;
+                 l_cWan_Dhcp_Dns[ 256 ],
+		 l_cDhcpNs_OptionString[ 1024 ];
 
-    // Static LAN DNS
+	char *options = l_cDhcpNs_OptionString;
+
+	options += sprintf (options, "dhcp-option=brlan0,6");
+
+	// Static LAN DNS
 	syscfg_get(NULL, "dhcp_nameserver_1", l_cDhcpNs_1, sizeof(l_cDhcpNs_1));
 	syscfg_get(NULL, "dhcp_nameserver_2", l_cDhcpNs_2, sizeof(l_cDhcpNs_2));	
 	syscfg_get(NULL, "dhcp_nameserver_3", l_cDhcpNs_3, sizeof(l_cDhcpNs_3));
-        sysevent_get(g_iSyseventfd, g_tSysevent_token, "current_lan_ipaddr", l_cLocalNs, sizeof(l_cLocalNs));		
 
-	safec_rc = strcpy_s( l_cDhcpNs_OptionString, sizeof(l_cDhcpNs_OptionString),"dhcp-option=brlan0,6");
-	ERR_CHK(safec_rc);
-
-	if( ( '\0' != l_cDhcpNs_1[ 0 ] ) && \
-		( 0 != strcmp( l_cDhcpNs_1, "0.0.0.0" ) ) 
-	  )
+	if((l_cDhcpNs_1[0] != 0) && (strcmp(l_cDhcpNs_1, "0.0.0.0") != 0))
 	{
-		safec_rc = sprintf_s( l_cDhcpNs_OptionString_new, sizeof(l_cDhcpNs_OptionString_new),"%s,%s", l_cDhcpNs_OptionString, l_cDhcpNs_1 );
-		if(safec_rc < EOK){
-			ERR_CHK(safec_rc);
-		}
+		options += sprintf (options, ",%s", l_cDhcpNs_1);
 	}
-
-	if( ( '\0' != l_cDhcpNs_2[ 0 ] ) && \
-		( 0 != strcmp( l_cDhcpNs_2, "0.0.0.0" ) ) 
-	  )
+	if((l_cDhcpNs_2[0] != 0) && (strcmp(l_cDhcpNs_2, "0.0.0.0") != 0))
 	{
-		memset(l_cDhcpNs_OptionString_new, 0 ,sizeof(l_cDhcpNs_OptionString_new));
-		safec_rc = sprintf_s( l_cDhcpNs_OptionString_new, sizeof(l_cDhcpNs_OptionString_new),"%s,%s", l_cDhcpNs_OptionString, l_cDhcpNs_2 );
-		if(safec_rc < EOK){
-			ERR_CHK(safec_rc);
-		}
+		options += sprintf (options, ",%s", l_cDhcpNs_2);
 	}
-
-	
-	if( ( '\0' != l_cDhcpNs_3[ 0 ] ) && \
-		( 0 != strcmp( l_cDhcpNs_3, "0.0.0.0" ) ) 
-	  )
+	if((l_cDhcpNs_3[0] != 0) && (strcmp(l_cDhcpNs_3, "0.0.0.0") != 0))
 	{
-		memset(l_cDhcpNs_OptionString_new, 0 ,sizeof(l_cDhcpNs_OptionString_new));
-		safec_rc = sprintf_s( l_cDhcpNs_OptionString_new, sizeof(l_cDhcpNs_OptionString_new),"%s,%s", l_cDhcpNs_OptionString, l_cDhcpNs_3 );
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
+		options += sprintf (options, ",%s", l_cDhcpNs_3);
 	}
 
         char l_cSecWebUI_Enabled[8] = {0};
         syscfg_get(NULL, "SecureWebUI_Enable", l_cSecWebUI_Enabled, sizeof(l_cSecWebUI_Enabled));
         if (!strncmp(l_cSecWebUI_Enabled, "true", 4))
         {
-                check_and_get_wan_dhcp_dns( l_cWan_Dhcp_Dns );
-                memset(l_cDhcpNs_OptionString_new, 0 ,sizeof(l_cDhcpNs_OptionString_new));
-                if ( '\0' != l_cWan_Dhcp_Dns[ 0 ] ){
-                    safec_rc = sprintf_s( l_cDhcpNs_OptionString_new, sizeof(l_cDhcpNs_OptionString_new),"%s,%s,%s", l_cDhcpNs_OptionString, l_cLocalNs, l_cWan_Dhcp_Dns );
-                    if(safec_rc < EOK){
-                      ERR_CHK(safec_rc);
-                    }
-                }    
-                else{
-                    safec_rc = sprintf_s( l_cDhcpNs_OptionString_new, sizeof(l_cDhcpNs_OptionString_new),"%s,%s", l_cDhcpNs_OptionString, l_cLocalNs );
-                    if(safec_rc < EOK){
-                       ERR_CHK(safec_rc);
-                    }
-                }
+            sysevent_get(g_iSyseventfd, g_tSysevent_token, "current_lan_ipaddr", l_cLocalNs, sizeof(l_cLocalNs));		
+
+            options += sprintf (options, ",%s", l_cLocalNs);
+
+            l_cWan_Dhcp_Dns[0] = 0;
+            check_and_get_wan_dhcp_dns( l_cWan_Dhcp_Dns );
+            if (l_cWan_Dhcp_Dns[0] != 0)
+            {
+                options += sprintf (options, ",%s", l_cWan_Dhcp_Dns);
+            }
         }
         // Copy custom dns servers
-       safec_rc = strcpy_s( pDhcpNs_OptionString, 1024, l_cDhcpNs_OptionString_new ); /* Here pDhcpNs_OptionString is pointer, it's pointing to the array size is 1024 bytes */
-       ERR_CHK(safec_rc);
+	strcpy(pDhcpNs_OptionString, l_cDhcpNs_OptionString);
 }
 
 void check_and_get_wan_dhcp_dns( char *pl_cWan_Dhcp_Dns )
