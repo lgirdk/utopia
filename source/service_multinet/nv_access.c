@@ -35,12 +35,14 @@
 #include "service_multinet_nv.h"
 #include <stdio.h>
 #include <string.h>
+
 #if defined(_COSA_INTEL_XB3_ARM_) || defined(INTEL_PUMA7)
 #include "ccsp_custom.h"
 #include "ccsp_psm_helper.h"
 #include <ccsp_base_api.h>
 #include "ccsp_memory.h"
-#endif /* _COSA_INTEL_XB3_ARM_ */
+#endif
+
 #ifdef MULTILAN_FEATURE
 char* typeStrings[] = {
     "SW", "Gre", "Link", "Eth", "WiFi", "Moca"
@@ -51,49 +53,45 @@ char* typeStrings[] = {
 };
 #endif
 
-
-const char* const multinet_component_id = "ccsp.multinet";
-static void* 	  bus_handle = NULL;
-
 #if defined(_COSA_INTEL_XB3_ARM_) || defined(INTEL_PUMA7)
+
+static const char* const multinet_component_id = "ccsp.multinet";
+static void* bus_handle = NULL;
+
 #define CCSP_SUBSYS 	"eRT."
 #define PSM_VALUE_GET_STRING(name, str) PSM_Get_Record_Value2(bus_handle, CCSP_SUBSYS, name, NULL, &(str))
 
-int dbusInit( void )
+static int dbusInit( void )
 {
-	int   ret  = -1;
-	char* pCfg = CCSP_MSG_BUS_CFG;
+    int ret = 0;
+    char* pCfg = CCSP_MSG_BUS_CFG;
 
-	if( bus_handle == NULL ) 
-	{
-		MNET_DEBUG("dbusInit, called\n")
+    if (bus_handle == NULL)
+    {
+#ifdef DBUS_INIT_SYNC_MODE
+        ret = CCSP_Message_Bus_Init_Synced(multinet_component_id,
+                                           pCfg,
+                                           &bus_handle,
+                                           Ansc_AllocateMemory_Callback,
+                                           Ansc_FreeMemory_Callback);
+#else
+        ret = CCSP_Message_Bus_Init(multinet_component_id,
+                                    pCfg,
+                                    &bus_handle,
+                                    Ansc_AllocateMemory_Callback,
+                                    Ansc_FreeMemory_Callback);
+#endif
 
-		// Dbus connection init
-		#ifdef DBUS_INIT_SYNC_MODE
-			ret = CCSP_Message_Bus_Init_Synced(multinet_component_id, 
-								               pCfg, 
-								               &bus_handle, 
-								               Ansc_AllocateMemory_Callback, 
-								               Ansc_FreeMemory_Callback);
-		#else
-			ret = CCSP_Message_Bus_Init(multinet_component_id, 
-								        pCfg, 
-								        &bus_handle, 
-								        Ansc_AllocateMemory_Callback, 
-								        Ansc_FreeMemory_Callback);
-		#endif /* DBUS_INIT_SYNC_MODE */
-	}
+        if (ret == -1)
+        {
+            fprintf(stderr, "DBUS connection error\n");
+        }
+    }
 
-	if ( ret == -1 )
-	{
-		// Dbus connection error
-		fprintf(stderr, " DBUS connection error\n");
-		bus_handle = NULL;
-	}
-
-	return ret;
+    return ret;
 }
-#endif /* _COSA_INTEL_XB3_ARM_  */
+
+#endif
 
 int nv_get_members(PL2Net net, PMember memberList, int numMembers) 
 {
@@ -154,7 +152,7 @@ int nv_get_members(PL2Net net, PMember memberList, int numMembers)
 
 	/* dbus init based on bus handle value */
 	if(bus_handle == NULL)
-	dbusInit( );
+		dbusInit( );
 
 	if(bus_handle == NULL)
 	{
@@ -241,7 +239,8 @@ int nv_get_members(PL2Net net, PMember memberList, int numMembers)
 			pStr = NULL;
 		} 
    	}
-#endif /* !_COSA_INTEL_XB3_ARM_ */
+
+#endif
 
     return actualNumMembers;
     
@@ -290,8 +289,8 @@ int nv_get_bridge(int l2netInst, PL2Net net)
 #else
 
 	/* dbus init based on bus handle value */
- 	if(bus_handle == NULL)
-	dbusInit( );
+	if(bus_handle == NULL)
+		dbusInit( );
 
 	if(bus_handle == NULL)
 	{
@@ -353,6 +352,8 @@ int nv_get_bridge(int l2netInst, PL2Net net)
 	}  
 
 	net->inst = l2netInst;
+
 #endif /* !_COSA_INTEL_XB3_ARM_ */
+
     return 0;
 }
