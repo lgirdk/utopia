@@ -145,11 +145,14 @@ static int fw_restart(struct serv_routed *sr)
     sysevent_set(sr->sefd, sr->setok, "firewall-restart", NULL, 0);
     return 0;
 }
+
 #ifdef _HUB4_PRODUCT_REQ_
+
 static int dbusInit( void )
 {
     int ret = 0;
     char* pCfg = CCSP_MSG_BUS_CFG;
+
     if (bus_handle == NULL)
     {
 #ifdef DBUS_INIT_SYNC_MODE
@@ -159,12 +162,13 @@ static int dbusInit( void )
                                            Ansc_AllocateMemory_Callback,
                                            Ansc_FreeMemory_Callback);
 #else
-        ret = CCSP_Message_Bus_Init((char *)service_routed_component_id,
+        ret = CCSP_Message_Bus_Init(service_routed_component_id,
                                     pCfg,
                                     &bus_handle,
                                     (CCSP_MESSAGE_BUS_MALLOC)Ansc_AllocateMemory_Callback,
                                     Ansc_FreeMemory_Callback);
 #endif
+
         if (ret == -1)
         {
             fprintf(stderr, "DBUS connection error\n");
