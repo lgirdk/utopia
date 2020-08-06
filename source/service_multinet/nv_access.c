@@ -98,7 +98,7 @@ static int dbusInit( void )
                                            Ansc_AllocateMemory_Callback,
                                            Ansc_FreeMemory_Callback);
 #else
-        ret = CCSP_Message_Bus_Init((char *)multinet_component_id,
+        ret = CCSP_Message_Bus_Init(multinet_component_id,
                                     pCfg,
                                     &bus_handle,
                                     (CCSP_MESSAGE_BUS_MALLOC)Ansc_AllocateMemory_Callback,
