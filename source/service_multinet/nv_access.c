@@ -90,8 +90,9 @@ static void* bus_handle = NULL;
 
 static int dbusInit( void )
 {
-    int ret = -1;
+    int ret = 0;
     char* pCfg = CCSP_MSG_BUS_CFG;
+
     if (bus_handle == NULL)
     {
 #ifdef DBUS_INIT_SYNC_MODE
@@ -101,18 +102,19 @@ static int dbusInit( void )
                                            Ansc_AllocateMemory_Callback,
                                            Ansc_FreeMemory_Callback);
 #else
-        ret = CCSP_Message_Bus_Init((char *)multinet_component_id,
+        ret = CCSP_Message_Bus_Init(multinet_component_id,
                                     pCfg,
                                     &bus_handle,
                                     (CCSP_MESSAGE_BUS_MALLOC)Ansc_AllocateMemory_Callback,
                                     Ansc_FreeMemory_Callback);
-#endif /* DBUS_INIT_SYNC_MODE */
+#endif
+
         if (ret == -1)
         {
             fprintf(stderr, "DBUS connection error\n");
-	    bus_handle = NULL;
         }
     }
+
     return ret;
 }
 
