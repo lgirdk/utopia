@@ -79,7 +79,7 @@
 #define SYSEVENT_VALID_ULA_ADDRESS "valid_ula_address"
 
 static void* bus_handle = NULL;
-const char* const service_routed_component_id = "ccsp.routed";
+static const char* const service_routed_component_id = "ccsp.routed";
 static int getULAAddressFromInterface(char *ulaAddress);
 #endif
 
@@ -113,35 +113,34 @@ static int fw_restart(struct serv_routed *sr)
     sysevent_set(sr->sefd, sr->setok, "firewall-restart", NULL, 0);
     return 0;
 }
+
 #ifdef _HUB4_PRODUCT_REQ_
+
 static int dbusInit( void )
 {
-    int   ret  = -1;
+    int ret = 0;
     char* pCfg = CCSP_MSG_BUS_CFG;
 
-    if(bus_handle == NULL)
+    if (bus_handle == NULL)
     {
-        // Dbus connection init
-        #ifdef DBUS_INIT_SYNC_MODE
+#ifdef DBUS_INIT_SYNC_MODE
         ret = CCSP_Message_Bus_Init_Synced(service_routed_component_id,
                                            pCfg,
                                            &bus_handle,
                                            Ansc_AllocateMemory_Callback,
                                            Ansc_FreeMemory_Callback);
-        #else
+#else
         ret = CCSP_Message_Bus_Init(service_routed_component_id,
                                     pCfg,
                                     &bus_handle,
                                     Ansc_AllocateMemory_Callback,
                                     Ansc_FreeMemory_Callback);
-        #endif /* DBUS_INIT_SYNC_MODE */
-    }
+#endif
 
-    if (ret == -1)
-    {
-        // Dbus connection error
-        fprintf(stderr, " DBUS connection error\n");
-        bus_handle = NULL;
+        if (ret == -1)
+        {
+            fprintf(stderr, "DBUS connection error\n");
+        }
     }
 
     return ret;
