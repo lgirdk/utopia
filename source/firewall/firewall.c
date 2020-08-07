@@ -5623,6 +5623,11 @@ static int do_wan2self_ports(FILE *mangle_fp, FILE *nat_fp, FILE *filter_fp)
 
    }
 
+   if(isPingBlocked) 
+   {
+      fprintf(filter_fp, "-A wan2self_ports -p icmp --icmp-type 8 -j xlog_drop_wan2self\n"); // Drop ICMP PING
+   }
+
    if (strncasecmp(firewall_level, "High", strlen("High")) != 0)
    {
       if (strncasecmp(firewall_level, "Medium", strlen("Medium")) == 0)
@@ -12433,6 +12438,11 @@ static void do_ipv6_filter_table(FILE *fp){
    //Avoid blocking packets at the Intel NIL layer
    fprintf(fp, "-A FORWARD -i a-mux -j ACCEPT\n");
 #endif
+
+   if(isPingBlockedV6) 
+   {
+       fprintf(fp, "-A INPUT -i %s -p icmpv6 -m icmp6 --icmpv6-type 128 -j DROP\n", current_wan_ifname); // Echo request
+   }
 
    fprintf(fp, "%s\n", ":LOG_INPUT_DROP - [0:0]");
    fprintf(fp, "%s\n", ":LOG_FORWARD_DROP - [0:0]");
