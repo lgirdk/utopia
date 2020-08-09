@@ -135,7 +135,8 @@ typedef struct ia_info {
 /*dhcpv6 server type*/
 enum {
     DHCPV6S_TYPE_STATEFUL = 1,
-    DHCPV6S_TYPE_STATELESS,
+    DHCPV6S_TYPE_STATELESS = 2,
+    DHCPV6S_TYPE_CONCURRENT = 3
 };
 
 typedef struct dhcpv6s_cfg {
@@ -1321,8 +1322,6 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
 #endif
 
     get_dhcpv6s_conf(&dhcpv6s_cfg);
-    if (dhcpv6s_cfg.server_type != DHCPV6S_TYPE_STATEFUL)
-        fprintf(fp, "stateless\n");
     
     /*get ia_na & ia_pd info (addr, t1, t2, preftm, vldtm) which passthrough wan*/
     ret = get_ia_info(si6, PROVISIONED_V6_CONFIG_FILE, &ia_na, &ia_pd);
@@ -1336,7 +1335,6 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
         if (strcmp(bridge_mode, "2") || strcmp(dhcpv6s_pool_cfg.interface, "brlan0")) {
 
         fprintf(fp, "iface %s {\n", dhcpv6s_pool_cfg.interface);
-        if (dhcpv6s_cfg.server_type != DHCPV6S_TYPE_STATEFUL) goto OPTIONS;
 
         if (dhcpv6s_pool_cfg.rapid_enable) fprintf(fp, "   rapid-commit yes\n");
 
