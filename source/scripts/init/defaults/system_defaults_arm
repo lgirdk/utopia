@@ -812,7 +812,7 @@ $moca_beacon_pwr_level=9
 
 # CCSP Defaults
 $dhcpv6s00::serverenable=1
-$dhcpv6s00::servertype=1
+$dhcpv6s00::servertype=2
 $dhcpv6s00::poolnumber=1
 $dhcpv6spool00::instancenumber=1
 $dhcpv6spool00::bEnabled=1
