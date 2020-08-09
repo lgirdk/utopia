@@ -67,7 +67,7 @@
 #include "secure_wrapper.h"
 #define PROG_NAME       "SERVICE-ROUTED"
 
-#define ZEBRA_PID_FILE  "/var/zebra.pid"
+#define ZEBRA_PID_FILE  "/var/run/quagga/zebra.pid"
 #define RIPD_PID_FILE   "/var/ripd.pid"
 #define ZEBRA_CONF_FILE "/var/zebra.conf"
 #define RIPD_CONF_FILE  "/etc/ripd.conf"
@@ -365,6 +365,30 @@ static int get_active_lanif(int sefd, token_t setok, unsigned int *insts, unsign
 #endif
 #endif
 
+static  int route_enable()
+{
+    char rt_state[16];
+
+    syscfg_get(NULL, "tr_routing_enabled", rt_state, sizeof(rt_state));
+
+    /* During Modem reboot the forwarding value is reset to default so below lines
+       will retain the value of routing after the reboot */
+    if(strcmp(rt_state, "0") == 0) {
+        if ((vsystem("echo 0 > /proc/sys/net/ipv4/conf/erouter0/forwarding") == 0) ||
+                (vsystem("echo 0 > /proc/sys/net/ipv6/conf/all/forwarding") == 0)) {
+            return -1;
+        }
+    }
+    else {
+        if ((vsystem("echo 1 > /proc/sys/net/ipv4/conf/erouter0/forwarding") == 0) ||
+                (vsystem("echo 1 > /proc/sys/net/ipv6/conf/all/forwarding") == 0)) {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
 static int route_set(struct serv_routed *sr)
 {
 #if defined(CISCO_CONFIG_DHCPV6_PREFIX_DELEGATION) || defined(MULTILAN_FEATURE)
@@ -495,7 +519,7 @@ static int gen_zebra_conf(int sefd, token_t setok)
 #if defined(MULTILAN_FEATURE)
     char orig_lan_prefix[64];
 #endif
-    char m_flag[16], o_flag[16];
+    char m_flag[16], o_flag[16], a_flag[16];
     char rec[256], val[512];
     char buf[6];
     char rfCpEnable[6] = {0};
@@ -687,6 +711,7 @@ static int gen_zebra_conf(int sefd, token_t setok)
 #endif
         fprintf(fp, "interface %s\n", lan_if);
         fprintf(fp, "   no ipv6 nd suppress-ra\n");
+        syscfg_get(NULL, "router_autonomous_flag", a_flag, sizeof(a_flag));
 #ifdef _HUB4_PRODUCT_REQ_
         if (strlen(prefix) && (strncmp(server_type, "2", 1) == 0))
         {
@@ -717,13 +742,21 @@ static int gen_zebra_conf(int sefd, token_t setok)
                 }
                 else
                 {
-                    fprintf(fp, "   ipv6 nd prefix %s %s %s\n", prefix, valid_lft, preferred_lft);
+                    if (strcmp(a_flag, "1") == 0)
+                        fprintf(fp, "   ipv6 nd prefix %s %s %s\n", prefix, valid_lft, preferred_lft);
+                    else
+                        fprintf(fp, "   ipv6 nd prefix %s %s %s no-autoconfig\n", prefix, valid_lft, preferred_lft);
                 }
             }
 
 #if defined (MULTILAN_FEATURE)
             if (strlen(orig_lan_prefix))
-                fprintf(fp, "   ipv6 nd prefix %s 0 0\n", orig_lan_prefix);
+            {
+                if (strcmp(a_flag, "1") == 0)
+                    fprintf(fp, "   ipv6 nd prefix %s 300 0\n", orig_lan_prefix);
+                else
+                    fprintf(fp, "   ipv6 nd prefix %s 300 0 no-autoconfig\n", orig_lan_prefix);
+            }
 #else
             if (strlen(orig_prefix))
                 fprintf(fp, "   ipv6 nd prefix %s 0 0\n", orig_prefix);
@@ -1180,7 +1213,8 @@ static int radv_start(struct serv_routed *sr)
     v_secure_system("zebra -d -f %s -u root -P 0", ZEBRA_CONF_FILE);
     printf("DHCPv6 is %s. Starting zebra Process\n", (bEnabled?"Enabled":"Disabled"));
 #else
-    v_secure_system("zebra -d -f %s -u root -P 0", ZEBRA_CONF_FILE);
+    v_secure_system("/bin/sh /etc/utopia/service.d/set_ipv6_dns.sh zebra");
+    vsystem("zebra -d -f %s -A 127.0.0.1 -u root", ZEBRA_CONF_FILE);
 #endif
 
     return 0;
@@ -1196,7 +1230,8 @@ static int radv_stop(struct serv_routed *sr)
     {
         return 0;
     }
-    return daemon_stop(ZEBRA_PID_FILE, "zebra");
+    daemon_stop(ZEBRA_PID_FILE, "zebra");
+    return 0;
 }
 
 static int radv_restart(struct serv_routed *sr)
