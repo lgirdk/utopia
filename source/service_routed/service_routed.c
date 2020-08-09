@@ -74,7 +74,7 @@ static const char* const service_routed_component_id = "ccsp.routed";
 #include "secure_wrapper.h"
 #define PROG_NAME       "SERVICE-ROUTED"
 
-#define ZEBRA_PID_FILE  "/var/zebra.pid"
+#define ZEBRA_PID_FILE  "/var/run/quagga/zebra.pid"
 #define RIPD_PID_FILE   "/var/ripd.pid"
 #define ZEBRA_CONF_FILE "/var/zebra.conf"
 
@@ -666,7 +666,7 @@ static int gen_zebra_conf(int sefd, token_t setok)
 #if defined(MULTILAN_FEATURE)
     char orig_lan_prefix[64];
 #endif
-    char m_flag[16], o_flag[16], ra_mtu[16];
+    char m_flag[16], o_flag[16], ra_mtu[16], a_flag[16];
     char rec[256], val[512];
     char buf[6];
     FILE *responsefd = NULL;
@@ -939,6 +939,7 @@ static int gen_zebra_conf(int sefd, token_t setok)
 #endif
         fprintf(fp, "interface %s\n", lan_if);
         fprintf(fp, "   no ipv6 nd suppress-ra\n");
+        syscfg_get(NULL, "router_autonomous_flag", a_flag, sizeof(a_flag));
 #if defined (_HUB4_PRODUCT_REQ_) && !defined (_WNXL11BWL_PRODUCT_REQ_)
         if(strlen(orig_prefix)) { //SKYH4-1765: we add only the latest prefix data to zebra.conf.
             fprintf(fp, "   ipv6 nd prefix %s %s 0\n", orig_prefix, prev_valid_lft); //Previous prefix with '0' as the preferred time value
@@ -981,7 +982,10 @@ static int gen_zebra_conf(int sefd, token_t setok)
                     }
                     else
                     {
-                        fprintf(fp, "   ipv6 nd prefix %s %s %s\n", prefix, valid_lft, preferred_lft);
+                        if (strcmp(a_flag, "1") == 0)
+                            fprintf(fp, "   ipv6 nd prefix %s %s %s\n", prefix, valid_lft, preferred_lft);
+                        else
+                            fprintf(fp, "   ipv6 nd prefix %s %s %s no-autoconfig\n", prefix, valid_lft, preferred_lft);
                     }
                 }
             }
@@ -994,7 +998,12 @@ static int gen_zebra_conf(int sefd, token_t setok)
 
 #if defined (MULTILAN_FEATURE)
             if (strlen(orig_lan_prefix))
-                fprintf(fp, "   ipv6 nd prefix %s 0 0\n", orig_lan_prefix);
+            {
+                if (strcmp(a_flag, "1") == 0)
+                    fprintf(fp, "   ipv6 nd prefix %s 300 0\n", orig_lan_prefix);
+                else
+                    fprintf(fp, "   ipv6 nd prefix %s 300 0 no-autoconfig\n", orig_lan_prefix);
+            }
 #else
             if (strlen(orig_prefix))
                 fprintf(fp, "   ipv6 nd prefix %s 0 0\n", orig_prefix);
@@ -1625,7 +1634,8 @@ static int radv_start(struct serv_routed *sr)
     v_secure_system("zebra -d -f %s -P 0", ZEBRA_CONF_FILE);
     printf("DHCPv6 is %s. Starting zebra Process\n", (bEnabled?"Enabled":"Disabled"));
 #else
-    v_secure_system("zebra -d -f %s -P 0", ZEBRA_CONF_FILE);
+    v_secure_system("/bin/sh /etc/utopia/service.d/set_ipv6_dns.sh zebra");
+    vsystem("zebra -d -f %s -A 127.0.0.1", ZEBRA_CONF_FILE);
 #endif
 
     return 0;
@@ -1647,7 +1657,8 @@ static int radv_stop(struct serv_routed *sr)
     {
         return 0;
     }
-    return daemon_stop(ZEBRA_PID_FILE, "zebra");
+    daemon_stop(ZEBRA_PID_FILE, "zebra");
+    return 0;
 }
 
 static int radv_restart(struct serv_routed *sr)
