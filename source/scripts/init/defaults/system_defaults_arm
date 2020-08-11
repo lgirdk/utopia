@@ -560,6 +560,7 @@ $mgmt_mta_sshaccess=0
 # ---
 # NAT can be explicitly turned off by setting nat_enabled 0
 $nat_enabled=1
+$natPassthrough_enable=1
 
 $nat_udp_timeout=120
 $nat_tcp_timeout=1800

@@ -866,6 +866,16 @@ static struct
     { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,   Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "ip",                       UtopiaValue_Dns_Forward }, /* UtopiaValue_Dns_Forward_IPAddress */
     { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,   Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "if",                       UtopiaValue_Dns_Forward }, /* UtopiaValue_Dns_Forward_Interface */
     { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,   Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "type",                     UtopiaValue_Dns_Forward }, /* UtopiaValue_Dns_Forward_Type */
+//LG ADD START CR14
+    { Utopia_Type_Config, Utopia_Event__NONE__,   Utopia_Static__NONE__, Utopia_For__NONE__, 1, "mngFWNATPassthroughCount",                    UtopiaValue__UNKNOWN__ }, /* UtopiaValue_NATPassthroughCount */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,   Utopia_Static__NONE__, Utopia_Index_For_Key, 1, "mngFWNATPassthrough_%d",             UtopiaValue__UNKNOWN__ }, /* UtopiaValue_NATPassthrough */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,   Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "ins_num",                              UtopiaValue_NATPassthrough }, /* UtopiaValue_NATPassthrough_InsNum */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,   Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "alias",                                UtopiaValue_NATPassthrough }, /* UtopiaValue_NATPassthrough_Alias */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,   Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "enable",                               UtopiaValue_NATPassthrough }, /* UtopiaValue_NATPassthrough_Enable */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,   Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "Status",                               UtopiaValue_NATPassthrough }, /* UtopiaValue_NATPassthrough_Status */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,   Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "mac",                                  UtopiaValue_NATPassthrough }, /* UtopiaValue_NATPassthrough_MACAddress */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,   Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "mask",                                 UtopiaValue_NATPassthrough }, /* UtopiaValue_NATPassthrough_MACMask */
+//LG ADD END CR14
     { Utopia_Type__UNKNOWN__, Utopia_Event__NONE__, Utopia_Static__NONE__, Utopia_For__NONE__, 0, 0, UtopiaValue__UNKNOWN__ }, /* UtopiaValue__LAST__ */
 };
 
