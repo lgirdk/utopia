@@ -70,6 +70,7 @@
 // LGI ADD START
 #define MAX_DAYOFWEEK_COUNT              7
 #define DAYOFWEEK_BT_MASK_STR_ALWAYS     "111111111111111111111111"
+static int g_NATPassthroughCount = 0; //CR14
 // LGI ADD END
 /*
  * utapi.c - 
@@ -8243,5 +8244,109 @@ int Utopia_DelLanAllowedSubnet(UtopiaContext *ctx, unsigned long ins)
     Utopia_SetInt(ctx, UtopiaValue_LanAllowedSubnetCount, g_LanAllowedSubnetCount);
     return 0;
 }
+//CR14 START
+int Utopia_GetNATPassthroughInsNumByIndex(UtopiaContext *ctx, unsigned long uIndex, int *ins)
+{
 
+    return Utopia_GetIndexedInt(ctx, UtopiaValue_NATPassthrough_InsNum, uIndex+1, ins);
+}
+
+int Utopia_GetNumberOfNATPassthrough(UtopiaContext *ctx, int *num)
+{
+    int rc = SUCCESS;
+    if(g_NATPassthroughCount == 0)
+    {
+        Utopia_GetInt(ctx, UtopiaValue_NATPassthroughCount, &g_NATPassthroughCount);
+    }
+
+    *num = g_NATPassthroughCount;
+    return rc;
+}
+
+int Utopia_GetNATPassthroughByIndex(UtopiaContext *ctx, unsigned long ulIndex, fwNATPassthrough_t *NATPassthrough)
+{
+    int index = ulIndex + 1;
+    int ins_num = 0;
+
+    Utopia_GetIndexedInt(ctx, UtopiaValue_NATPassthrough_InsNum, index, &ins_num); NATPassthrough->InstanceNumber = ins_num;
+    Utopia_GetIndexedBool(ctx, UtopiaValue_NATPassthrough_Enable, index, &NATPassthrough->Enable);
+    Utopia_GetIndexed(ctx, UtopiaValue_NATPassthrough_Alias, index, NATPassthrough->Alias, sizeof(NATPassthrough->Alias));
+    Utopia_GetIndexed(ctx, UtopiaValue_NATPassthrough_Status, index, NATPassthrough->Status, sizeof(NATPassthrough->Status));
+    Utopia_GetIndexed(ctx, UtopiaValue_NATPassthrough_MACAddress, index, NATPassthrough->MACAddress, sizeof(NATPassthrough->MACAddress));
+    Utopia_GetIndexed(ctx, UtopiaValue_NATPassthrough_MACMask, index, NATPassthrough->MACMask, sizeof(NATPassthrough->MACMask));
+    return 0;
+}
+
+int Utopia_SetNATPassthroughByIndex(UtopiaContext *ctx, unsigned long ulIndex, const fwNATPassthrough_t *NATPassthrough)
+{
+    int index = ulIndex + 1;
+    snprintf(s_tokenbuf, sizeof(s_tokenbuf), "arfwnat_%d", index);
+    Utopia_SetIndexed(ctx, UtopiaValue_NATPassthrough, index, s_tokenbuf);
+    Utopia_SetIndexedInt(ctx, UtopiaValue_NATPassthrough_InsNum, index, NATPassthrough->InstanceNumber);
+    Utopia_SetIndexedBool(ctx, UtopiaValue_NATPassthrough_Enable, index, NATPassthrough->Enable);
+    Utopia_SetIndexed(ctx, UtopiaValue_NATPassthrough_Alias, index, (char*)NATPassthrough->Alias);
+    Utopia_SetIndexed(ctx, UtopiaValue_NATPassthrough_Status, index, (char *)NATPassthrough->Status);
+    Utopia_SetIndexed(ctx, UtopiaValue_NATPassthrough_MACAddress, index, (char *)NATPassthrough->MACAddress);
+    Utopia_SetIndexed(ctx, UtopiaValue_NATPassthrough_MACMask, index, (char *)NATPassthrough->MACMask);
+
+    return 0;
+}
+
+int Utopia_SetNATPassthroughInsAndAliasByIndex(UtopiaContext *ctx, unsigned long ulIndex, unsigned long ins, const char *alias)
+{
+    int index = ulIndex+1;
+    Utopia_SetIndexedInt(ctx, UtopiaValue_NATPassthrough_InsNum, index, ins);
+    Utopia_SetIndexed(ctx, UtopiaValue_NATPassthrough_Alias, index, (char*)alias);
+    return 0;
+}
+
+int Utopia_AddNATPassthrough(UtopiaContext *ctx, const fwNATPassthrough_t *NATPassthrough)
+{
+    int index;
+    Utopia_GetNumberOfNATPassthrough(ctx, &index);
+    g_NATPassthroughCount++;
+    Utopia_SetInt(ctx, UtopiaValue_NATPassthroughCount, g_NATPassthroughCount);
+    Utopia_SetNATPassthroughByIndex(ctx, index, NATPassthrough);
+    return 0;
+}
+
+int Utopia_DelNATPassthrough(UtopiaContext *ctx, unsigned long ins)
+{
+    int count, index;
+    Utopia_GetNumberOfNATPassthrough(ctx, &count);
+    for (index = 0; index < count; index++)
+    {
+        int ins_num;
+        Utopia_GetNATPassthroughInsNumByIndex(ctx, index, &ins_num);
+        if (ins_num == (int)ins)
+        {
+            break;
+        }
+    }
+
+    if (index >= count)
+    {
+        return -1;
+    }
+
+    if (index < count-1)
+    {
+        for (;index < count-1; index++)
+        {
+            fwNATPassthrough_t NATPassthrough;
+            Utopia_GetNATPassthroughByIndex(ctx, index+1, &NATPassthrough);
+            Utopia_SetNATPassthroughByIndex(ctx, index, &NATPassthrough);
+        }
+    }
+    Utopia_UnsetIndexed(ctx, UtopiaValue_NATPassthrough_InsNum, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_NATPassthrough_Enable, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_NATPassthrough_Alias, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_NATPassthrough_Status, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_NATPassthrough_MACAddress, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_NATPassthrough_MACMask, count);
+    g_NATPassthroughCount--;
+    Utopia_SetInt(ctx, UtopiaValue_NATPassthroughCount, g_NATPassthroughCount);
+    return 0;
+}
+//CR14 END
 // LGI ADD END
