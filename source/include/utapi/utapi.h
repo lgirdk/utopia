@@ -1286,5 +1286,24 @@ int Utopia_GetNumberOfMacDayOfWeek(UtopiaContext *ctx, int *num);
 int Utopia_GetMacDayOfWeekByIndex(UtopiaContext *ctx, unsigned long ulIndex, fwmacdayofweek_t *macdayofweek);
 int Utopia_SetMacDayOfWeekByIndex(UtopiaContext *ctx, unsigned long ulIndex, const fwmacdayofweek_t *macdayofweek);
 int Utopia_SetMacDayOfWeekInsAndAliasByIndex(UtopiaContext *ctx, unsigned long ulIndex, unsigned long ins, const char *alias, char* bitmask);
+//LG ADD START CR14
+typedef struct fwNATPassthrough
+{
+   unsigned long  InstanceNumber;
+   char           Alias[256];
+   char           Status[64];
+   char           MACAddress[64];
+   char           MACMask[64];
+   boolean_t      Enable;
+}fwNATPassthrough_t;
+
+int Utopia_GetNATPassthroughInsNumByIndex(UtopiaContext *ctx, unsigned long uIndex, int *ins);
+int Utopia_GetNumberOfNATPassthrough(UtopiaContext *ctx, int *num);
+int Utopia_GetNATPassthroughByIndex(UtopiaContext *ctx, unsigned long ulIndex, fwNATPassthrough_t *NATPassthrough);
+int Utopia_SetNATPassthroughByIndex(UtopiaContext *ctx, unsigned long ulIndex, const fwNATPassthrough_t *NATPassthrough);
+int Utopia_SetNATPassthroughInsAndAliasByIndex(UtopiaContext *ctx, unsigned long ulIndex, unsigned long ins, const char *alias);
+int Utopia_AddNATPassthrough(UtopiaContext *ctx, const fwNATPassthrough_t *NATPassthrough);
+int Utopia_DelNATPassthrough(UtopiaContext *ctx, unsigned long ins);
+//LG ADD END CR14
 //LGI ADD END
 #endif // _UTAPI_H_
