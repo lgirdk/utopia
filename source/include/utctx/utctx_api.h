@@ -706,6 +706,16 @@ typedef enum _UtopiaValue
     UtopiaValue_Dns_Forward_IPAddress,
     UtopiaValue_Dns_Forward_Interface,
     UtopiaValue_Dns_Forward_Type,
+    //LG ADD START CR14
+    UtopiaValue_NATPassthroughCount,
+    UtopiaValue_NATPassthrough,
+    UtopiaValue_NATPassthrough_InsNum,
+    UtopiaValue_NATPassthrough_Alias,
+    UtopiaValue_NATPassthrough_Enable,
+    UtopiaValue_NATPassthrough_Status,
+    UtopiaValue_NATPassthrough_MACAddress,
+    UtopiaValue_NATPassthrough_MACMask,
+    //LG ADD END CR14
 // LGI ADD END	
     UtopiaValue__LAST__
 } UtopiaValue;
