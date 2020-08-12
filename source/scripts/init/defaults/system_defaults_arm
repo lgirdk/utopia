@@ -1314,6 +1314,10 @@ $mac_dayofweek_block_time_bitmask_type=0
 #dns relay - Disabled by default ( LGI specific - to be reviewed )
 $dns_relay_enable=0
 
+#Use of Public DNS servers
+$dns_config_page_show=false
+$dns_override=false
+
 #ocsp staple support
 $EnableOCSPStapling=false
 $EnableOCSPCA=false
