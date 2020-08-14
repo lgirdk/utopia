@@ -215,6 +215,14 @@ mkdir -p /tmp/cron
 
 mount --bind /tmp/cron/ /etc/cron
 
+cat /etc/dhcp_static_hosts > /var/tmp/dhcp_static_hosts
+cat /etc/hosts > /var/tmp/hosts
+cat /etc/hostname > /var/tmp/hostname
+
+mount --bind /var/tmp/dhcp_static_hosts /etc/dhcp_static_hosts
+mount --bind /var/tmp/hosts /etc/hosts
+mount --bind /var/tmp/hostname /etc/hostname
+
 BUTTON_THRESHOLD=15
 FACTORY_RESET_KEY=factory_reset
 FACTORY_RESET_RGWIFI=y
