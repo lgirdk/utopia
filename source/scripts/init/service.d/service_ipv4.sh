@@ -411,6 +411,8 @@ resync_instance () {
         NV_ENABLED=`psmcli get ${IPV4_NV_PREFIX}.${1}.${IPV4_NV_ENABLED}`
     fi
 
+    DM_FALSE="0"
+
     if [ x = x$NV_ENABLED -o x$DM_FALSE = x$NV_ENABLED ]; then
         teardown_instance $1
         return
