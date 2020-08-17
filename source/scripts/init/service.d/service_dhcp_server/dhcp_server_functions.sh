@@ -1151,14 +1151,14 @@ fi
    fi
    
    # For boot itme optimization, run do_extra_pool only when brlan1 interface is available
-   isBrlan1=`ifconfig | grep brlan1`
-   if [ "$isBrlan1" != "" ]
-   then
-      echo_t "DHCP_SERVER : brlan1 availble, creating dnsmasq entry "
+#    isBrlan1=`ifconfig | grep brlan1`
+#    if [ "$isBrlan1" != "" ]
+#    then
+#       echo_t "DHCP_SERVER : brlan1 availble, creating dnsmasq entry "
       do_extra_pools $NAMESERVERENABLED $WAN_DHCP_NS
-   else
-       echo_t "DHCP_SERVER : brlan1 not available, cannot enter details in dnsmasq.conf"
-   fi
+#    else
+#        echo_t "DHCP_SERVER : brlan1 not available, cannot enter details in dnsmasq.conf"
+#    fi
 
    iotEnabled=`syscfg get lost_and_found_enable`
    if [ "$iotEnabled" = "true" ]
