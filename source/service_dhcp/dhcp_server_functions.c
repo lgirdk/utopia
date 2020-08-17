@@ -1113,15 +1113,19 @@ int prepare_dhcp_conf (char *input)
 	// Ideally interface presence is done by passing SIOCGIFCONF and going thru the complete 
 	// Interface list but using SIOCGIFADDR	as it is only call to get IP Address of the interface
 	// If the interface is not present then fecthing IPv4 address will fail with error ENODEV
+	/*
 	if (is_iface_present(XHS_IF_NAME))
 	{
 		fprintf(stderr, "%s interface is present creating dnsmasq\n", XHS_IF_NAME);
+	*/
         do_extra_pools(l_fLocal_Dhcp_ConfFile, l_cDns_Only_Prefix, l_bDhcpNs_Enabled, l_cWan_Dhcp_Dns);
+	/*
 	}
 	else
 	{
 		fprintf(stderr, "%s interface is not present, not adding dnsmasq entries\n", XHS_IF_NAME);
 	}
+	*/
 
 	//Lost And Found Enable
     syscfg_get(NULL, "lost_and_found_enable", l_cIotEnabled, sizeof(l_cIotEnabled));
