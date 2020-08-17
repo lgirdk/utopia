@@ -659,7 +659,8 @@ int main(int argc, char *argv[])
     else if((!strncmp(argv[1], "multinet_1-status", 17)) ||  
             (!strncmp(argv[1], "multinet_2-status", 17)) ||  
             (!strncmp(argv[1], "multinet_3-status", 17)) ||
-            (!strncmp(argv[1], "multinet_4-status", 17)))
+            (!strncmp(argv[1], "multinet_4-status", 17)) ||
+            (!strncmp(argv[1], "multinet_5-status", 17)))
     {   
         int l_iL2Inst, l_iL3Inst;
         char l_cBridgeMode[2]={0};
