@@ -41,6 +41,7 @@
 #define PROG_NAME       "SERVICE-DSLITE"
 #define ER_NETDEVNAME   "erouter0"
 #define TNL_NETDEVNAME  "ipip6tun0"
+#define TNL_WANDEVNAME  "wan0"
 
 /*
  * XXX:
@@ -451,6 +452,9 @@ static int dslite_start(struct serv_dslite *sd)
     snprintf(cmd, sizeof(cmd), "ip -6 tunnel add %s mode ip4ip6 remote %s local %s dev %s encaplimit none", TNL_NETDEVNAME, resolved_ipv6, gw_ipv6, ER_NETDEVNAME);
     vsystem(cmd);
 
+    //Enabling AutoConf for ip4ip6 interface
+    sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/autoconf", "ipip6tun0", "1");
+
     //activate tunnel
     snprintf(cmd, sizeof(cmd), "ip link set dev %s txqueuelen 1000 up",TNL_NETDEVNAME);
     vsystem(cmd);
@@ -461,6 +465,10 @@ static int dslite_start(struct serv_dslite *sd)
 
     //clear the GW IPv4 address(in case of IPv4 address not released successfully)
     snprintf(cmd, sizeof(cmd), "ip -4 addr flush %s",ER_NETDEVNAME);
+    vsystem(cmd);
+
+    //Delete existing default gateway
+    snprintf(cmd, sizeof(cmd), "ip route del default dev %s",TNL_WANDEVNAME);
     vsystem(cmd);
 
     //set default gateway through the tunnel in GW specific routing table
@@ -600,7 +608,7 @@ static int dslite_stop(struct serv_dslite *sd)
         _get_shell_output(cmd, buf, sizeof(buf));
         if(strlen(buf) > 0)
         {
-            vsystem("systemctl stop arris-zebra.service");
+            vsystem("zebra stop");
             vsystem("rm -rf /var/tmp/process");
         }
 
@@ -615,7 +623,7 @@ static int dslite_stop(struct serv_dslite *sd)
         _get_shell_output(cmd, buf, sizeof(buf));
         if(strlen(buf) == 0)
         {
-            vsystem("systemctl start arris-zebra.service");
+            vsystem("zebra start");
             vsystem("rm -rf /var/tmp/process");
         }
     }
