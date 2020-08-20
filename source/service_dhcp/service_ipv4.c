@@ -1290,8 +1290,6 @@ BOOL apply_config(int l3_inst, char *staticIpv4Addr, char *staticIpv4Subnet)
 	}
     l_iRT_Table = l3_inst + 10;
     l_iCIDR = mask2cidr(l_cCur_Ipv4_Subnet);
-    snprintf(l_cSysevent_Cmd, sizeof(l_cSysevent_Cmd), "dslite_enabled");
-    sysevent_get(g_iSyseventfd, g_tSysevent_token, l_cSysevent_Cmd, l_cDsliteEnabled, sizeof(l_cDsliteEnabled));
 #ifdef RDKB_EXTENDER_ENABLED
     syscfg_get(NULL, "Device_Mode", deviceMode, sizeof(deviceMode));
     if (!strncmp(deviceMode,"1",1))
@@ -1306,11 +1304,15 @@ BOOL apply_config(int l3_inst, char *staticIpv4Addr, char *staticIpv4Subnet)
 #endif
     {
         //If it's ipv6 only mode, doesn't config ipv4 address. For ipv6 other things, we don't take care.
+        snprintf(l_cSysevent_Cmd, sizeof(l_cSysevent_Cmd), "dslite_enabled");
+        sysevent_get(g_iSyseventfd, g_tSysevent_token, l_cSysevent_Cmd, l_cDsliteEnabled, sizeof(l_cDsliteEnabled));
         if (!strncmp(l_cIfName, LAN_IF_NAME, 6) && strncmp(l_cDsliteEnabled, "1", 1))
         {
-            char l_cLast_Erouter_Mode[8] = {0};
+            char l_cLast_Erouter_Mode[8];
             syscfg_get(NULL, "last_erouter_mode", l_cLast_Erouter_Mode, sizeof(l_cLast_Erouter_Mode));
-            if ((!strncmp(l_cLast_Erouter_Mode, "1", 1)) || (!strncmp(l_cLast_Erouter_Mode, "3", 1)))
+            if ((strcmp(l_cLast_Erouter_Mode, "1") == 0) ||
+                (strcmp(l_cLast_Erouter_Mode, "2") == 0) ||
+                (strcmp(l_cLast_Erouter_Mode, "3") == 0))
             {
                 addr_derive_broadcast(l_cCur_Ipv4_Addr, l_iCIDR, bcast, INET_ADDRSTRLEN);
                 snprintf(l_cSysevent_Cmd, sizeof(l_cSysevent_Cmd),
