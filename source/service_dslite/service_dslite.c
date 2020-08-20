@@ -41,6 +41,7 @@
 #define PROG_NAME       "SERVICE-DSLITE"
 #define ER_NETDEVNAME   "erouter0"
 #define TNL_NETDEVNAME  "ipip6tun0"
+#define TNL_WANDEVNAME  "wan0"
 
 /*
  * XXX:
@@ -442,6 +443,9 @@ static int dslite_start(struct serv_dslite *sd)
     snprintf(cmd, sizeof(cmd), "ip -6 tunnel add %s mode ip4ip6 remote %s local %s dev %s encaplimit none", TNL_NETDEVNAME, resolved_ipv6, gw_ipv6, ER_NETDEVNAME);
     vsystem(cmd);
 
+    //Enabling AutoConf for ip4ip6 interface
+    sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/autoconf", TNL_NETDEVNAME, "1");
+
     //activate tunnel
     snprintf(cmd, sizeof(cmd), "ip link set dev %s txqueuelen 1000 up",TNL_NETDEVNAME);
     vsystem(cmd);
@@ -454,8 +458,12 @@ static int dslite_start(struct serv_dslite *sd)
     snprintf(cmd, sizeof(cmd), "ip -4 addr flush %s",ER_NETDEVNAME);
     vsystem(cmd);
 
+    /* Keeping the default route as wan0 interface for SNMP and any other Docsis traffic.
+     * Updating the default route (table erouter) through the tunnel for the traffic from LAN client(s).
+     */
+
     //set default gateway through the tunnel in GW specific routing table
-    snprintf(cmd, sizeof(cmd), "ip route add default dev %s",TNL_NETDEVNAME);
+    snprintf(cmd, sizeof(cmd), "ip route add default dev %s table erouter", TNL_NETDEVNAME);
     vsystem(cmd);
 
     //save tunnel interface here in case IPv4 functions use it, like IGMP proxy
@@ -626,7 +634,7 @@ static int dslite_stop(struct serv_dslite *sd)
     }
 
     //Restore default gateway route rule
-    snprintf(cmd, sizeof(cmd), "ip route del default dev %s",TNL_NETDEVNAME);
+    snprintf(cmd, sizeof(cmd), "ip route del default dev %s table erouter", TNL_NETDEVNAME);
     vsystem(cmd);
 
     //if GW is the IPv6 only mode, we need to shutdown the LAN to WAN IPv4 function
