@@ -501,7 +501,7 @@ BOOL apply_config(int l3_inst, char *staticIpv4Addr, char *staticIpv4Subnet)
 	{
 		char l_cLast_Erouter_Mode[8] = {0};
     	syscfg_get(NULL, "last_erouter_mode", l_cLast_Erouter_Mode, sizeof(l_cLast_Erouter_Mode));
-		if ((!strncmp(l_cLast_Erouter_Mode, "1", 1)) || (!strncmp(l_cLast_Erouter_Mode, "3", 1)))
+		if ((!strncmp(l_cLast_Erouter_Mode, "1", 1)) || (!strncmp(l_cLast_Erouter_Mode, "3", 1)) || (!strncmp(l_cLast_Erouter_Mode, "2", 1)))
 		{
 			snprintf(l_cSysevent_Cmd, sizeof(l_cSysevent_Cmd),
                  "ip addr add %s/%d broadcast + dev %s", l_cCur_Ipv4_Addr, l_iCIDR, l_cIfName);
