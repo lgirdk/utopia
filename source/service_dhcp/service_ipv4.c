@@ -538,14 +538,16 @@ BOOL apply_config(int l3_inst, char *staticIpv4Addr, char *staticIpv4Subnet)
     //If it's ipv6 only mode, doesn't config ipv4 address. For ipv6 other things, we don't take care.
 	if (!strncmp(l_cIfName, LAN_IF_NAME, 6))
 	{
-		char l_cLast_Erouter_Mode[8] = {0};
-    	syscfg_get(NULL, "last_erouter_mode", l_cLast_Erouter_Mode, sizeof(l_cLast_Erouter_Mode));
-		if ((!strncmp(l_cLast_Erouter_Mode, "1", 1)) || (!strncmp(l_cLast_Erouter_Mode, "3", 1)))
+		char l_cLast_Erouter_Mode[8];
+		syscfg_get(NULL, "last_erouter_mode", l_cLast_Erouter_Mode, sizeof(l_cLast_Erouter_Mode));
+		if ((strcmp(l_cLast_Erouter_Mode, "1") == 0) ||
+		    (strcmp(l_cLast_Erouter_Mode, "2") == 0) ||
+		    (strcmp(l_cLast_Erouter_Mode, "3") == 0))
 		{
 			snprintf(l_cSysevent_Cmd, sizeof(l_cSysevent_Cmd),
                  "ip addr add %s/%d broadcast + dev %s", l_cCur_Ipv4_Addr, l_iCIDR, l_cIfName);
 	        executeCmd(l_cSysevent_Cmd);
-        }
+		}
 	}
     else
 	{
