@@ -86,6 +86,7 @@ FILE *mnetfp = NULL;
  int set_multicast_mac(char* argv[], int argc);
  int add_ipc_vlan(char* argv[], int argc);
  int add_radius_vlan(char* argv[], int argc);
+ int add_IOT_vlan(char* argv[], int argc); 
  int create_mesh_vlan(char* argv[], int argc);
  // RDKB-15951
  int add_meshbhaul_vlan(char* argv[], int argc);
@@ -105,6 +106,7 @@ FILE *mnetfp = NULL;
 	 {"set_multicast_mac", set_multicast_mac},
 	 {"add_ipc_vlan", add_ipc_vlan},
 	 {"add_radius_vlan", add_radius_vlan},
+         {"add_IOT_vlan", add_IOT_vlan},
 	 {"create_mesh_vlan", create_mesh_vlan},
 	 {"add_meshbhaul_vlan", add_meshbhaul_vlan}
  };
@@ -239,6 +241,13 @@ FILE *mnetfp = NULL;
 #if defined(_COSA_INTEL_USG_ARM_) && !defined(INTEL_PUMA7) && !defined(_COSA_BCM_ARM_)
     addIpcVlan();
 #endif	
+ }
+
+ int add_IOT_vlan(char* argv[], int argc)
+ {
+#if defined(_COSA_INTEL_USG_ARM_) && !defined(INTEL_PUMA7) && !defined(_COSA_BCM_ARM_)
+    addIOTVlan();
+#endif
  }
 
  int add_radius_vlan(char* argv[], int argc)
