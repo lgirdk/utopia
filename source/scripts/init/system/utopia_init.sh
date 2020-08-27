@@ -461,7 +461,7 @@ execute_dir $INIT_DIR&
 
 #--------Set up private IPC vlan----------------
 vconfig add l2sd0 500
-if [ "$BOX_TYPE" = "XB3" ];then
+if [ "$BOX_TYPE" = "XB3" ] || [ "$BOX_TYPE" = "MV1" ];then
 	$UTOPIA_PATH/service_multinet_exec add_ipc_vlan &
 else
 	$SWITCH_HANDLER addVlan 0 500 sw_6
