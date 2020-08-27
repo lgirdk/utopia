@@ -521,20 +521,25 @@ $http_admin_port=80
 $http_admin_is_default=1
 
 # Default settings for WebUI
-$user_count=3
+$user_count=4
 $user_name_1=mso
 $user_name_2=cusadmin
 $user_name_3=admin
+$user_name_4=upccsr
 #$user_password_1=password of the day
 $user_password_1=
 $user_password_2=
 $user_password_3=
+$user_password_4=
 $hash_password_1=
 $hash_password_2=
 $hash_password_3=
+$hash_password_4=
 $user_insNum_1=1
 $user_insNum_2=2
 $user_insNum_3=3
+$user_insNum_4=4
+$user_password_timeout_4=900
 
 # Access restrictions on management interface
 $mgmt_http_enable=1
