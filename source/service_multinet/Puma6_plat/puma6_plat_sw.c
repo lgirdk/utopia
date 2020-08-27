@@ -98,7 +98,7 @@ int configVlan_ESW(PSWFabHALArg args, int numArgs, BOOL up)
             ERR_CHK(rc);
         }
     }
-#if defined(_COSA_INTEL_XB3_ARM_)
+#if defined(_COSA_INTEL_XB3_ARM_) || defined(_PUMA6_ARM_)
 	if (up)
 	{
 		MNET_DEBUG("Adding External ports:%s\n" COMMA ifname)
@@ -147,7 +147,7 @@ int configVlan_WiFi(PSWFabHALArg args, int numArgs, BOOL up)
         }
     }
   
-#if defined(_COSA_INTEL_XB3_ARM_)
+#if defined(_COSA_INTEL_XB3_ARM_) || defined(_PUMA6_ARM_)
     if (up)
     {
 		MNET_DEBUG("Adding ATOM ports:%s\n" COMMA portID)
@@ -210,7 +210,7 @@ int configVlan_ISW(PSWFabHALArg args, int numArgs, BOOL up)
         portState = (PSwPortState) args[i].portID;
         stringIDIntSw(portState, ifname, sizeof(ifname));
         
-#if defined(_COSA_INTEL_XB3_ARM_)
+#if defined(_COSA_INTEL_XB3_ARM_) || defined(_PUMA6_ARM_)
 		if (up)
 		{
 			if (args[i].vidParams.tagging)
