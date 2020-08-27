@@ -439,7 +439,9 @@ void addVlan(int net_id, int vlan_id, char *ports_add)
 					COMMA PORTMAP_arm COMMA vlan_id COMMA TAGGING_MODE)
 
 		//swctl -c 16 -p 7 -v <vlan_id> -m 2 -q 1
-	    swctl(16, 7, vlan_id, TAGGING_MODE, 1, -1, NULL, NULL); 
+            swctl(16, 7, vlan_id, TAGGING_MODE, 1, -1, NULL, NULL);
+            swctl(16, 5, vlan_id, TAGGING_MODE, 1, -1, NULL, NULL);
+            swctl(16, 6, vlan_id, TAGGING_MODE, 1, -1, NULL, NULL);
 	}
     sw_add_ports(vlan_id, ports_add, &atom_port, &ext_port);
 	
