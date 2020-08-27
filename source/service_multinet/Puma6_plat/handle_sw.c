@@ -32,6 +32,7 @@
 #define IPC_VLAN	500	
 #define RADIUS_VLAN	4090	
 #define MESHBHAUL_VLAN	1060	
+#define IOT_VLAN	106
 
 int hdl_sw_sysevent_fd;
 token_t hdl_sw_sysevent_token;
@@ -666,6 +667,11 @@ void addRadiusVlan()
 	addVlan(0, RADIUS_VLAN, "sw_6");
 }
 
+void addIOTVlan()
+{
+       addVlan(0, IOT_VLAN, "sw_6");
+}
+
 // RDKB-15951 
 void addMeshBhaulVlan()
 {
@@ -676,13 +682,17 @@ void createMeshVlan()
 {
 	char cmdBuff[255] = {0};
 	
-	swctl(16, 0, 112, TAGGING_MODE, 1, -1, NULL, NULL);
+	swctl(16, 0, 112, TAGGING_MODE, 1, -1, NULL, NULL); 
+        swctl(16, 5, 112, TAGGING_MODE, 1, -1, NULL, NULL);
+        swctl(16, 6, 112, TAGGING_MODE, 1, -1, NULL, NULL);
 	swctl(16, 7, 112, TAGGING_MODE, 1, -1, NULL, NULL);
 	snprintf(cmdBuff, sizeof(cmdBuff), 
 			 "vconfig add l2sd0 112; ifconfig l2sd0.112 169.254.0.254 netmask 255.255.255.0 up");
     system(cmdBuff);
 	
 	swctl(16, 0, 113, TAGGING_MODE, 1, -1, NULL, NULL);
+        swctl(16, 5, 113, TAGGING_MODE, 1, -1, NULL, NULL);
+        swctl(16, 6, 113, TAGGING_MODE, 1, -1, NULL, NULL);
 	swctl(16, 7, 113, TAGGING_MODE, 1, -1, NULL, NULL);
 	snprintf(cmdBuff, sizeof(cmdBuff), 
 			 "vconfig add l2sd0 113; ifconfig l2sd0.113 169.254.1.254 netmask 255.255.255.0 up");
