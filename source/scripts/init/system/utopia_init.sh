@@ -499,7 +499,7 @@ then
 
 #--------Set up Radius vlan -------------------
 vconfig add l2sd0 4090
-if [ "$BOX_TYPE" = "XB3" ];then
+if [ "$BOX_TYPE" = "XB3" ] || [ "$BOX_TYPE" = "MV1" ];then
 	$UTOPIA_PATH/service_multinet_exec add_radius_vlan &
 else
 	$SWITCH_HANDLER addVlan 0 4090 sw_6 
@@ -510,7 +510,7 @@ ip rule add from all iif l2sd0.4090 lookup erouter
 
 # RDKB-15951 : Dedicated l2sd0 vlan for Mesh Bhaul
 vconfig add l2sd0 1060
-if [ $BOX_TYPE == "XB3" ];then
+if [ "$BOX_TYPE" = "XB3" ] || [ "$BOX_TYPE" = "MV1" ];then
         $UTOPIA_PATH/service_multinet_exec add_meshbhaul_vlan &
 else
         $SWITCH_HANDLER addVlan 0 1060 sw_6
@@ -529,8 +529,11 @@ echo_t "88E6172: Do not egress flood unicast with unknown DA"
 swctl -c 11 -p 5 -r 4 -b 0x007b
 
 # Creating IOT VLAN on ARM
-swctl -c 16 -p 0 -v 106 -m 2 -q 1
-swctl -c 16 -p 7 -v 106 -m 2 -q 1
+if [ "$BOX_TYPE" = "XB3" ] || [ "$BOX_TYPE" = "MV1" ];then
+    $UTOPIA_PATH/service_multinet_exec add_IOT_vlan &
+else
+    $SWITCH_HANDLER addVlan 0 4090 sw_6
+fi
 vconfig add l2sd0 106
 brctl addbr br106
 ifconfig l2sd0.106 up
