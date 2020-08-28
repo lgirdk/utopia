@@ -359,7 +359,7 @@ static int dslite_start(struct serv_dslite *sd)
     fprintf(stderr, "%s: AFTR address is %s\n", __FUNCTION__, DSLITE_AFTR);
 
     /*Filter and store the WAN public IPv6 DNS server to a separate file */
-    vsystem("cat /tmp/resolv.conf | grep nameserver | grep : | grep -v \"nameserver ::1\" | awk '/nameserver/{print $2}' > /tmp/ipv6_dns_server.conf");
+    vsystem("cat /etc/resolv.conf | grep nameserver | grep : | grep -v \"nameserver ::1\" | awk '/nameserver/{print $2}' > /tmp/ipv6_dns_server.conf");
     fptmp = fopen("/tmp/ipv6_dns_server.conf", "r");
     if(fptmp)
     {
