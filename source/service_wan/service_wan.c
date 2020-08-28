@@ -571,6 +571,7 @@ static int Is_Dslite_Dhcpv6option64_received(struct serv_wan *sw)
             {
                 memset(endpointname,0,sizeof(endpointname));
                 sysevent_get(sw->sefd, sw->setok, "dslite_dhcpv6_endpointname", endpointname, sizeof(endpointname));
+                syscfg_set(NULL, "dslite_addr_fqdn_1", endpointname);
                 fprintf(stderr, "DHCP DS-Lite Option 64 received ok value: %s\n",endpointname);
                 return 1;
             }
