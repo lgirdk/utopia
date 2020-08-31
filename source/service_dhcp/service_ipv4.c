@@ -1338,8 +1338,15 @@ BOOL apply_config(int l3_inst, char *staticIpv4Addr, char *staticIpv4Subnet)
 
     rule_add(l_cSysevent_Cmd);
 
+	/*
+	   Note: adding "prio 10" to the command below is an experimental change
+	   added to try to fix forwarding of packets from LAN to LAN. A similar
+	   change has also been made in udhcpc.script (which is currently kept
+	   together with the utopia.bb recipe, not as part of the utopia source
+	   code). Fixme: both changes to be reviewed.
+	*/
 	snprintf(l_cSysevent_Cmd, sizeof(l_cSysevent_Cmd),
-             "iif %s lookup erouter", l_cIfName);
+             "iif %s lookup erouter prio 10", l_cIfName);
 	rule_add(l_cSysevent_Cmd);
 
 	snprintf(l_cSysevent_Cmd, sizeof(l_cSysevent_Cmd),
