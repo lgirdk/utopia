@@ -1473,3 +1473,11 @@ $SWDLDirectEnable=false
 $LatencyMeasure_IPv4Enable=false
 $LatencyMeasure_IPv6Enable=false
 $LatencyMeasure_TCPReportInterval=15
+
+#Allowed Subnet Table
+$lglanAllowedSubnetCount=1
+$arLanAllowedSubnet_1::ins_num=1
+$arLanAllowedSubnet_1::SubnetIP=10.0.0.0
+$arLanAllowedSubnet_1::SubnetMask=255.0.0.0
+$arLanAllowedSubnet_1::alias=LanAllowedSubnet-1
+$lglanAllowedSubnet_1=arLanAllowedSubnet_1
