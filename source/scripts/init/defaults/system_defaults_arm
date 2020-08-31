@@ -1508,3 +1508,11 @@ $NoSpeedBoost_Port_StartV4=50000
 $NoSpeedBoost_Port_EndV4=65000
 $NoSpeedBoost_Port_StartV6=50000
 $NoSpeedBoost_Port_EndV6=65000
+
+#Allowed Subnet Table
+$lglanAllowedSubnetCount=1
+$arLanAllowedSubnet_1::ins_num=1
+$arLanAllowedSubnet_1::SubnetIP=10.0.0.0
+$arLanAllowedSubnet_1::SubnetMask=255.0.0.0
+$arLanAllowedSubnet_1::alias=LanAllowedSubnet-1
+$lglanAllowedSubnet_1=arLanAllowedSubnet_1
