@@ -12164,8 +12164,8 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(filter_fp, "-A INPUT -i host0 -s 192.168.147.0/255.255.255.0 -j ACCEPT\n");
    fprintf(filter_fp, "-A OUTPUT -o host0 -d 192.168.147.0/255.255.255.0 -j ACCEPT\n");
 #endif
-#ifdef _COSA_INTEL_XB3_ARM_
-   fprintf(filter_fp, "-A OUTPUT -p icmp -m icmp --icmp-type 3 -j DROP\n");
+#if defined(_COSA_INTEL_XB3_ARM_) || defined(_PUMA6_ARM_)
+   fprintf(filter_fp, "-A OUTPUT ! -s %s -p icmp -m icmp --icmp-type 3 -j DROP\n", lan_ipaddr);
 #endif
    fprintf(filter_fp, "-A OUTPUT -o lo -p tcp -m tcp --sport 49152:49153 -j ACCEPT\n");
    fprintf(filter_fp, "-A OUTPUT ! -o brlan0 -p tcp -m tcp --sport 49152:49153 -j DROP\n");
@@ -14000,8 +14000,8 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    }
 #endif
 
-#ifdef _COSA_INTEL_XB3_ARM_
-   fprintf(filter_fp, "-A OUTPUT -p icmp -m icmp --icmp-type 3 -j DROP\n");
+#if defined(_COSA_INTEL_XB3_ARM_) || defined(_PUMA6_ARM_)
+   fprintf(filter_fp, "-A OUTPUT ! -s %s -p icmp -m icmp --icmp-type 3 -j DROP\n", lan_ipaddr);
 #endif
    fprintf(filter_fp, ":%s ACCEPT [0:0]\n", "FORWARD");
    fprintf(filter_fp, ":%s ACCEPT [0:0]\n", "OUTPUT");
