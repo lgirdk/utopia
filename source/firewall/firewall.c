@@ -12200,6 +12200,9 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
 #ifdef _COSA_INTEL_XB3_ARM_
    fprintf(filter_fp, "-A OUTPUT -p icmp -m icmp --icmp-type 3 -j DROP\n");
 #endif
+#if defined(_PUMA6_ARM_)
+   fprintf(filter_fp, "-A OUTPUT ! -s %s -p icmp -m icmp --icmp-type 3 -j DROP\n", lan_ipaddr);
+#endif
    fprintf(filter_fp, "-A OUTPUT -o lo -p tcp -m tcp --sport 49152:49153 -j ACCEPT\n");
    fprintf(filter_fp, "-A OUTPUT ! -o brlan0 -p tcp -m tcp --sport 49152:49153 -j DROP\n");
 #ifdef CONFIG_CISCO_FEATURE_CISCOCONNECT
@@ -14036,6 +14039,9 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
 
 #ifdef _COSA_INTEL_XB3_ARM_
    fprintf(filter_fp, "-A OUTPUT -p icmp -m icmp --icmp-type 3 -j DROP\n");
+#endif
+#if defined(_PUMA6_ARM_)
+   fprintf(filter_fp, "-A OUTPUT ! -s %s -p icmp -m icmp --icmp-type 3 -j DROP\n", lan_ipaddr);
 #endif
    fprintf(filter_fp, ":%s ACCEPT [0:0]\n", "FORWARD");
    fprintf(filter_fp, ":%s ACCEPT [0:0]\n", "OUTPUT");
