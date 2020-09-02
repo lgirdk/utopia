@@ -655,3 +655,13 @@ if [ "$MODEL_NUM" = "DPC3939B" ] || [ "$MODEL_NUM" = "DPC3941B" ]; then
 	/etc/utopia/service.d/service_sshd.sh sshd-start &
 fi
 
+# Create a psm default file which contains customer-specific values
+/usr/bin/psm_defaults_create
+
+# If Customer index changed then remove psm db from nvram
+SYSCFG_CUST_CHANGED="$(syscfg get customer-index-changed)"
+if [ "${SYSCFG_CUST_CHANGED}" = "true" ]; then
+    rm -f $PSM_CUR_XML_CONFIG_FILE_NAME $PSM_BAK_XML_CONFIG_FILE_NAME
+    syscfg unset customer-index-changed
+    syscfg commit
+fi
