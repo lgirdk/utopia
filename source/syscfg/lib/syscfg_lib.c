@@ -1750,3 +1750,7 @@ int commit_to_file (const char *fname)
    }
    return 0;
 }
+
+int syscfg_load_from_file(char* fname){
+    return load_from_file(fname);
+}

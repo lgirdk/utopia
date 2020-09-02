@@ -249,6 +249,19 @@ int syscfg_format (const char *mtd_device, const char *seed_file);
  */
 int syscfg_check (const char *mtd_device);
 
+/*
+ * Procedure     : syscfg_load_from_file
+ * Purpose       : Loads the given file to syscfg memory
+ * Parameters    :
+ *   fname       - File name
+ * Return Values :
+ *    0 - success
+ *    1 - File is empty
+ *    ERR_xxx - various errors codes dependening on the failure
+ * Notes         :
+ */
+int syscfg_load_from_file(char* fname);
+
 #ifdef __cplusplus
 }
 #endif
