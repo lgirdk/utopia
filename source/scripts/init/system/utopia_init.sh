@@ -688,3 +688,14 @@ fi
 
 echo_t "[utopia][init] setting Multicast MAC before any switch configs"
 $UTOPIA_PATH/service_multinet_exec set_multicast_mac &
+
+# Create a psm default file which contains customer-specific values
+/usr/bin/psm_defaults_create
+
+# If Customer index changed then remove psm db from nvram
+SYSCFG_CUST_CHANGED="$(syscfg get customer-index-changed)"
+if [ "${SYSCFG_CUST_CHANGED}" = "true" ] || [ "${SYSCFG_CUST_CHANGED}" = "True" ]; then
+    rm -f $PSM_CUR_XML_CONFIG_FILE_NAME $PSM_BAK_XML_CONFIG_FILE_NAME
+    syscfg unset customer-index-changed
+    syscfg commit
+fi
