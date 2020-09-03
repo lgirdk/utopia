@@ -425,9 +425,9 @@ ip6tables -t mangle -A PREROUTING -i $wan_ifname -d ff00::/8 -p ipv6-icmp -m icm
 
 echo 60 > /proc/sys/net/netfilter/nf_conntrack_generic_timeout
 echo 60 > /proc/sys/net/netfilter/nf_conntrack_udp_timeout_stream
-echo 60 > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_syn_sent
-echo 10 > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_time_wait
-echo 10 > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_close
+echo 240 > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_syn_sent
+echo 240 > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_time_wait
+echo 60 > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_close
 echo 20 > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_close_wait
 echo 400 > /proc/sys/net/netfilter/nf_conntrack_expect_max
 echo 8192 > /proc/sys/net/netfilter/nf_conntrack_max
