@@ -1391,6 +1391,13 @@ static int serv_routed_init(struct serv_routed *sr)
         return -1;
     }
 
+    /*
+        LGI ADD
+        Restore the Router Forwarding value from syscfg
+    */
+    if (route_enable() != 0) {
+        fprintf(stderr, "%s: faild to restore Routing Enabled state\n", __FUNCTION__);
+    }
     sysevent_get(sr->sefd, sr->setok, "wan-status", wan_st, sizeof(wan_st));
     if (strcmp(wan_st, "started") == 0)
         sr->wan_ready = true;
