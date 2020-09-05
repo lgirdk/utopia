@@ -503,6 +503,11 @@ static int do_portscanprotectv6(FILE *fp);
 static int do_ipflooddetectv6(FILE *fp);
 
 
+//LGI Add Start
+static int do_wpad_isatap_blockv4(FILE *fp);
+static int do_wpad_isatap_blockv6(FILE* fp);
+//LGI Add End
+
 FILE *firewallfp = NULL;
 
 //#define CONFIG_BUILD_TRIGGER 1
@@ -11494,6 +11499,8 @@ static int prepare_enabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *na
    do_nat_ephemeral(nat_fp);
    do_wan_nat_lan_clients(nat_fp);
 
+   do_wpad_isatap_blockv4(filter_fp); //LGI ADD 
+
 #ifdef CONFIG_CISCO_FEATURE_CISCOCONNECT
    if(isGuestNetworkEnabled) {
        do_guestnet_walled_garden(nat_fp);
@@ -12290,6 +12297,7 @@ int prepare_ipv6_firewall(const char *fw_file, char* strBlockTimeCmd)
 #endif
 	
 	do_ipv6_filter_table(filter_fp);
+	do_wpad_isatap_blockv6(filter_fp); //LGI ADD
 	
 	do_parental_control(filter_fp,nat_fp, 6);
         prepare_lnf_internet_rules(mangle_fp,6);
@@ -14905,3 +14913,72 @@ static int do_mac_filter(FILE *fp)
     }
 }
 // LGI ADD END
+
+//LGI ADD START 
+/*
+*  Procedure     : do_wpad_isatap_block
+ *  Purpose       : blocklist the domain names isatap and wpad for ipv4
+ *  Parameters    :
+ *     filter_fp       : An open file for filter table writes
+ *  Return Values :
+ *     0               : done
+ */
+static int do_wpad_isatap_blockv4(FILE* filter_fp)
+{
+    char* tok = NULL;
+    char net_query[MAX_QUERY] = {0};
+    char net_resp[MAX_QUERY] = {0};
+    char inst_resp[MAX_QUERY] = {0};
+
+    snprintf(net_query, sizeof(net_query), "ipv4-instances");
+    sysevent_get(sysevent_fd, sysevent_token, net_query, inst_resp, sizeof(inst_resp));
+
+    tok = strtok(inst_resp, " ");
+
+    if(tok)
+    {
+        do
+        {
+            snprintf(net_query, sizeof(net_query), "ipv4_%s-status", tok); 
+            sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
+            if (strcmp("up", net_resp) != 0)
+                continue;
+
+            snprintf(net_query, sizeof(net_query), "ipv4_%s-ifname", tok); 
+            sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
+            
+            fprintf(filter_fp, "-I FORWARD -i %s -p udp -m string --string \"EJFDEBFEEBFA\" --algo bm -j DROP\n", net_resp);
+            fprintf(filter_fp, "-I FORWARD -i %s -p udp -m string --string \"isatap\" --algo bm --icase -j DROP\n", net_resp);
+            fprintf(filter_fp, "-I FORWARD -i %s -p tcp --dport 80 -m string --algo bm  --string \"GET /wpad.dat\" -j REJECT --reject-with tcp-reset\n", net_resp);
+
+        } while ((tok = strtok(NULL, " ")) != NULL);
+    }
+    return 0;
+}
+static int do_wpad_isatap_blockv6(FILE* filter_fp)
+{
+    unsigned char sysevent_query[MAX_QUERY] = {0};
+    unsigned char inst_resp[MAX_QUERY] = {0};
+    unsigned char multinet_ifname[MAX_QUERY] = {0};
+    unsigned char* tok = NULL;
+
+    snprintf(sysevent_query, sizeof(sysevent_query), "ipv6_active_inst");
+    sysevent_get(sysevent_fd, sysevent_token, sysevent_query, inst_resp, sizeof(inst_resp));
+    tok = strtok(inst_resp, " ");
+
+    if (tok)
+    {
+        do
+        {
+            snprintf(sysevent_query, sizeof(sysevent_query), "multinet_%s-name", tok);
+            sysevent_get(sysevent_fd, sysevent_token, sysevent_query, multinet_ifname, sizeof(multinet_ifname));
+
+            fprintf(filter_fp, "-I FORWARD -i %s -p udp -m string --string \"EJFDEBFEEBFA\" --algo bm -j DROP\n", multinet_ifname);
+            fprintf(filter_fp, "-I FORWARD -i %s -p udp -m string --string \"isatap\" --algo bm --icase -j DROP\n", multinet_ifname);
+            fprintf(filter_fp, "-I FORWARD -i %s -p tcp --dport 80 -m string --algo bm  --string \"GET /wpad.dat\" -j REJECT --reject-with tcp-reset\n", multinet_ifname);
+        } while ((tok = strtok(NULL, " ")) != NULL);
+    }
+    return 0;
+}
+//LGI END
+
