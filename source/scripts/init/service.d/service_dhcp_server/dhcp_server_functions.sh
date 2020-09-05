@@ -367,7 +367,16 @@ calculate_dhcp_range () {
 
           	echo "DHCP_SERVER: End address to syscfg_db $DHCP_END_ADDR"
       	else
-        	echo "DHCP_SERVER: Invalid subnet mask $2"   
+                #LGI Add Start
+                DHCP_END_ADDR=`echo $LAN_SUBNET | cut -d"." -f1-3`
+                END_ADDR_LAST_OCTET=`echo $ENDING_ADDRESS | awk -F '\\.' '{print $NF}'`
+                DHCP_END_ADDR="$DHCP_END_ADDR"".""$END_ADDR_LAST_OCTET"
+                if [ "$DHCP_END_ADDR" -eq "" ]
+                then
+                   echo "DHCP_SERVER: Invalid subnet mask $2"
+                fi              
+                #LGI Add End
+
       	fi
       	syscfg set dhcp_end $DHCP_END_ADDR
       	syscfg commit
