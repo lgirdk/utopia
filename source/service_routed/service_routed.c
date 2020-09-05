@@ -426,6 +426,28 @@ static int get_active_lanif(int sefd, token_t setok, unsigned int *insts, unsign
 #endif
 #endif
 
+static int route_enable (void)
+{
+    char rt_state[8];
+
+    syscfg_get(NULL, "tr_routing_enabled", rt_state, sizeof(rt_state));
+    if (strcmp(rt_state, "0") != 0) {
+        strcpy(rt_state, "1");
+    }
+
+    /* Replace boot-up forwarding state with persistent value from syscfg */
+
+    if (v_secure_system("echo %s > /proc/sys/net/ipv4/conf/erouter0/forwarding ; "
+                        "echo %s > /proc/sys/net/ipv6/conf/all/forwarding",
+                        rt_state,
+                        rt_state) != 0)
+    {
+        return -1;
+    }
+
+    return 0;
+}
+
 static int route_set(struct serv_routed *sr)
 {
 #if defined(CISCO_CONFIG_DHCPV6_PREFIX_DELEGATION) || defined(MULTILAN_FEATURE)
@@ -1843,6 +1865,11 @@ static int serv_routed_init(struct serv_routed *sr)
         }
     }
 #endif
+
+    /* Restore Router Forwarding state based on value in syscfg */
+    if (route_enable() != 0) {
+        fprintf(stderr, "%s: failed to restore Routing Enabled state\n", __FUNCTION__);
+    }
 
     sysevent_get(sr->sefd, sr->setok, "wan-status", wan_st, sizeof(wan_st));
     if (strcmp(wan_st, "started") == 0)
