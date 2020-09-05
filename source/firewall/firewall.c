@@ -533,6 +533,8 @@ static int do_blockfragippktsv6(FILE *fp);
 static int do_portscanprotectv6(FILE *fp);
 static int do_ipflooddetectv6(FILE *fp);
 
+static int do_wpad_isatap_blockv4(FILE *fp);
+static int do_wpad_isatap_blockv6(FILE *fp);
 
 int prepare_rabid_rules(FILE *filter_fp, FILE *mangle_fp, ip_ver_t ver);
 int prepare_rabid_rules_v2020Q3B(FILE *filter_fp, FILE *mangle_fp, ip_ver_t ver);
@@ -13098,6 +13100,8 @@ static int prepare_enabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *na
    }
 #endif //FEATURE_MAPT
 
+   do_wpad_isatap_blockv4(filter_fp);
+
 #ifdef CONFIG_CISCO_FEATURE_CISCOCONNECT
    if(isGuestNetworkEnabled) {
        do_guestnet_walled_garden(nat_fp);
@@ -14179,6 +14183,8 @@ int prepare_ipv6_firewall(const char *fw_file)
 #endif
 	
 	do_ipv6_filter_table(filter_fp);
+
+	do_wpad_isatap_blockv6(filter_fp);
 
 #if !(defined(_COSA_INTEL_XB3_ARM_) || defined(_COSA_BCM_MIPS_))
         prepare_rabid_rules(filter_fp, mangle_fp, IP_V6);
@@ -16398,3 +16404,99 @@ static int lan2wan_multinet_disable (FILE *filter_fp)
     return 0;
 }
 
+static int do_wpad_isatap_blockv4 (FILE *filter_fp)
+{
+    char *tok;
+    char net_query[MAX_QUERY];
+    char net_resp[MAX_QUERY];
+    char inst_resp[MAX_QUERY];
+
+    fprintf(filter_fp, "-N block_wpad\n");
+
+    inst_resp[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "ipv4-instances", inst_resp, sizeof(inst_resp));
+
+    tok = strtok(inst_resp, " ");
+
+    if (tok)
+    {
+        do
+        {
+            snprintf(net_query, sizeof(net_query), "ipv4_%s-status", tok);
+            net_resp[0] = 0;
+            sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
+            if (strcmp("up", net_resp) != 0)
+                continue;
+
+            snprintf(net_query, sizeof(net_query), "ipv4_%s-ifname", tok);
+            net_resp[0] = 0;
+            sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
+
+            //Representation of hostname in NetBIOS protocol uses encoding mechanism as specified in RFC-1001, hence hostname "ISATAP", "WSPAD" and "WPAD" will get encoded as string EJFDEBFEEBFA, FHFDFAEBEE, and FHFAEBEE
+            fprintf(filter_fp, "-I FORWARD -i %s -p udp --dport 53 -m string --string \"EJFDEBFEEBFA\" --algo bm -j DROP\n", net_resp);
+            fprintf(filter_fp, "-I FORWARD -i %s -p udp --dport 53 -m string --hex-string \"|06|isatap|\" --algo bm --icase -j DROP\n", net_resp);
+            fprintf(filter_fp, "-I FORWARD -i %s -p udp --dport 53 -m string --string \"/isatap\" --algo bm --icase -j DROP\n", net_resp);
+
+            fprintf(filter_fp, "-I FORWARD -i %s -p udp --dport 53 -m string --string \"FHFDFAEBEE\" --algo bm -j DROP\n", net_resp);
+            fprintf(filter_fp, "-I FORWARD -i %s -p udp --dport 53 -m string --hex-string \"|05|wspad|\" --algo bm --icase -j DROP\n", net_resp);
+            fprintf(filter_fp, "-I FORWARD -i %s -p udp --dport 53 -m string --string \"/wspad\" --algo bm --icase -j DROP\n", net_resp);
+
+            fprintf(filter_fp, "-I FORWARD -i %s -p udp --dport 53 -m string --string \"FHFAEBEE\" --algo bm -j DROP\n", net_resp);
+            fprintf(filter_fp, "-I FORWARD -i %s -p udp --dport 53 -m string --hex-string \"|04|wpad|\" --algo bm --icase -j DROP\n", net_resp);
+            fprintf(filter_fp, "-I FORWARD -i %s -p udp --dport 53 -m string --string \"/wpad\" --algo bm --icase -j DROP\n", net_resp);
+
+            fprintf(filter_fp, "-I FORWARD -i %s -p tcp --dport 80 -m string --algo bm --string \"GET /wpad.dat\" -j REJECT --reject-with tcp-reset\n", net_resp);
+            fprintf(filter_fp, "-I FORWARD -i %s -p tcp --sport 80 -m string --algo bm --string \"application/x-ns-proxy-autoconfig\" -j block_wpad\n", net_resp);
+        }
+        while ((tok = strtok(NULL, " ")) != NULL);
+    }
+
+    fprintf(filter_fp, "-A block_wpad -m string --algo bm --string \"FindProxyForURL\" -j DROP\n");
+
+    return 0;
+}
+
+static int do_wpad_isatap_blockv6 (FILE *filter_fp)
+{
+    unsigned char *tok;
+    unsigned char sysevent_query[MAX_QUERY];
+    unsigned char inst_resp[MAX_QUERY];
+    unsigned char multinet_ifname[MAX_QUERY];
+
+    fprintf(filter_fp, "-N block_wpad\n");
+
+    inst_resp[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "ipv6_active_inst", inst_resp, sizeof(inst_resp));
+
+    tok = strtok(inst_resp, " ");
+
+    if (tok)
+    {
+        do
+        {
+            snprintf(sysevent_query, sizeof(sysevent_query), "multinet_%s-name", tok);
+            multinet_ifname[0] = 0;
+            sysevent_get(sysevent_fd, sysevent_token, sysevent_query, multinet_ifname, sizeof(multinet_ifname));
+
+            fprintf(filter_fp, "-I FORWARD -i %s -p udp --dport 53 -m string --string \"EJFDEBFEEBFA\" --algo bm -j DROP\n", multinet_ifname);
+            fprintf(filter_fp, "-I FORWARD -i %s -p udp --dport 53 -m string --hex-string \"|06|isatap|\" --algo bm --icase -j DROP\n", multinet_ifname);
+            fprintf(filter_fp, "-I FORWARD -i %s -p udp --dport 53 -m string --string \"/isatap\" --algo bm --icase -j DROP\n", multinet_ifname);
+
+            fprintf(filter_fp, "-I FORWARD -i %s -p udp --dport 53 -m string --string \"FHFDFAEBEE\" --algo bm -j DROP\n", multinet_ifname);
+            fprintf(filter_fp, "-I FORWARD -i %s -p udp --dport 53 -m string --hex-string \"|05|wspad|\" --algo bm --icase -j DROP\n", multinet_ifname);
+            fprintf(filter_fp, "-I FORWARD -i %s -p udp --dport 53 -m string --string \"/wspad\" --algo bm --icase -j DROP\n", multinet_ifname);
+
+            fprintf(filter_fp, "-I FORWARD -i %s -p udp --dport 53 -m string --string \"FHFAEBEE\" --algo bm -j DROP\n", multinet_ifname);
+            fprintf(filter_fp, "-I FORWARD -i %s -p udp --dport 53 -m string --hex-string \"|04|wpad|\" --algo bm --icase -j DROP\n", multinet_ifname);
+            fprintf(filter_fp, "-I FORWARD -i %s -p udp --dport 53 -m string --string \"/wpad\" --algo bm --icase -j DROP\n", multinet_ifname);
+
+            fprintf(filter_fp, "-I FORWARD -i %s -p tcp --dport 80 -m string --algo bm --string \"GET /wpad.dat\" -j REJECT --reject-with tcp-reset\n", multinet_ifname);
+            fprintf(filter_fp, "-I FORWARD -i %s -p tcp --sport 80 -m string --algo bm --string \"application/x-ns-proxy-autoconfig\" -j block_wpad\n", multinet_ifname);
+        }
+        while ((tok = strtok(NULL, " ")) != NULL);
+    }
+
+    fprintf(filter_fp, "-A block_wpad -m string --algo bm --string \"FindProxyForURL\" -j DROP\n");
+
+    return 0;
+}
