@@ -172,7 +172,7 @@ lgi_prepare_resolv_conf () {
 
     # Restart DHCP server.
     #sysevent set dhcp_server-restart (Uncomment me after fixing : RDKB-4563)
-    /etc/utopia/service.d/service_dhcp_server.sh dhcp_server-restart
+    /etc/utopia/service.d/service_dhcp_server.sh dhcp_server-restart &
 }
 # LGI ADD END
 # LGI MOD START
