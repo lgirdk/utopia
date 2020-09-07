@@ -51,7 +51,7 @@
 #define ULOG_FILE   "/var/log/messages"
 #define ULOG_IDENT  "UTOPIA"
 
-static _sys_Log_Info sys_Log_Info = {"", 0, LOG_INFO, 1, NULL};
+static _sys_Log_Info sys_Log_Info = {"", 0, LOG_INFO, 1, 0, NULL};
 
 typedef struct ucomp {
     char *name;
