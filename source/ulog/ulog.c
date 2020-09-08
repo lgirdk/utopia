@@ -45,6 +45,8 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+#include <sys/time.h>
 #include <syslog.h>
 #include "ulog.h"
 
@@ -378,7 +380,7 @@ void ulog_SetEnable(unsigned int enable)
 
 void ulog_sys(int prior, const char* fileName, int line, const char* fmt, ...)
 {
-    char *buf[ULOG_STR_SIZE] = {'\0'}; 
+    char buf[ULOG_STR_SIZE] = {'\0'};
     struct timeval tv;
     time_t curtime;
     va_list ap;
@@ -388,11 +390,10 @@ void ulog_sys(int prior, const char* fileName, int line, const char* fmt, ...)
     if(sys_Log_Info.stream != NULL && sys_Log_Info.enable == 1)
         fprintf(sys_Log_Info.stream, "%s", buf);*/
 
-    memset(buf, 0, ULOG_STR_SIZE);
     gettimeofday(&tv, NULL);
     curtime=tv.tv_sec;
 
-    strftime(buf,30,"%Y-%m-%d  %T.",localtime(&curtime));
+    strftime(buf, sizeof(buf), "%Y-%m-%d  %T.", localtime(&curtime));
 
     snprintf(sfmt, sizeof(sfmt), "%s, %s:%d, %s", buf, fileName, line, fmt);
 
