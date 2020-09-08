@@ -13133,7 +13133,7 @@ BOOL validate_mac(char * physAddress)
 					
 	return FALSE;
 }
-void ClearEstbConnection()
+static int ClearEstbConnection(void)
 {
 char mac[20];
 char buf[200] = {0};
@@ -13159,6 +13159,8 @@ memset(buf,0,200);
 		  pclose(fp);
 		  system("rm /tmp/conn_mac");  
     }
+
+    return 0;
 }
 
 /*
