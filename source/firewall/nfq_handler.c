@@ -456,7 +456,7 @@ static int http_get_callback(struct nfq_q_handle *queueHandle, struct nfgenmsg *
 
     return ret;
 }
-void getIFMac(char *interface, char *mac){
+static void getIFMac(char *interface, char *mac){
     int s;
     struct ifreq buffer;
     int ret = -1;
@@ -469,7 +469,6 @@ void getIFMac(char *interface, char *mac){
         sleep(5);
     }while(ret != 0);
     strcpy(mac, (void *)ether_ntoa((struct ether_addr *)(buffer.ifr_hwaddr.sa_data)));
-    return 0;
 }
 //skeleton to connect to iptables NFQUEUE argv[1]
 //argv[2] query:intercept dns query, response:intercept dns response
