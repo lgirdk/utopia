@@ -13267,7 +13267,7 @@ static int get_options(int argc, char **argv)
             break;
 
          case 'i':
-            snprintf(sysevent_ip, sizeof(sysevent_ip), optarg);
+            snprintf(sysevent_ip, sizeof(sysevent_ip), "%s", optarg);
             break;
 
          case 'h':
