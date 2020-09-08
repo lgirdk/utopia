@@ -13208,7 +13208,6 @@ v6GPFirewallRuleNext:
 end_of_ipv6_firewall:
 
       FIREWALL_DEBUG("Exiting prepare_ipv6_firewall \n");
-   return(0);
 }
 
 /*
