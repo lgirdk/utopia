@@ -585,14 +585,14 @@ int set_syscfg_partner_values(char *pValue,char *param)
 	if ((syscfg_set(NULL, param, pValue) != 0)) 
 	{
         	APPLY_PRINT("setPartnerId : syscfg_set failed\n");
-		return ;
+		return -1;
 	}
 	else 
 	{
        	 	if (syscfg_commit() != 0) 
 		{
 			APPLY_PRINT("setPartnerId : syscfg_commit failed\n");
-			return ;
+			return -1;
 		}
 		return 0;
 	}
