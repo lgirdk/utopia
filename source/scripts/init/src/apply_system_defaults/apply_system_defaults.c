@@ -595,7 +595,7 @@ int IsValuePresentinSyscfgDB( char *param )
 	int  ret;
 
 	//check whether passed param with value is already existing or not
-	memset( buf, sizeof( buf ), 0 );
+	memset( buf, 0, sizeof( buf ) );
 	ret = syscfg_get( NULL, param, buf, sizeof(buf));
 
 	if( ( ret != 0 ) || ( buf[ 0 ] == '\0' ) )
