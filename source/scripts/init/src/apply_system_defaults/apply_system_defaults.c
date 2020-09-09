@@ -1540,7 +1540,7 @@ int apply_partnerId_default_values(char *data, char *PartnerID)
 		if( !json ) 
 		{
 			APPLY_PRINT(  "%s-%d : json file parser error\n", __FUNCTION__,__LINE__ );
-			return ;
+			return -1;
 		} 
 		else
 		{
@@ -2055,7 +2055,7 @@ if ( paramObjVal != NULL )
                 {
                    APPLY_PRINT(  "%s-%d : json file parser error\n", __FUNCTION__,__LINE__ );
                 }
-                return;
+                return -1;
              } 
              else
              {
@@ -2107,6 +2107,7 @@ if ( paramObjVal != NULL )
        }
     } //For Loop
 
+    return 0;
 }
 
 static void getPartnerIdWithRetry(char* buf, char* PartnerID)
