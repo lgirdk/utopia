@@ -439,7 +439,7 @@ static int update_trigger_entry(int id, struct in_addr host)
       } else {
          int i;
          for (i=high_trigger ; i< id ; i++) {
-            memset(&(trigger_info[i]), 0, sizeof(trigger_info));
+            memset(&(trigger_info[i]), 0, sizeof(trigger_info_t));
          }
          high_trigger = id;
       }
