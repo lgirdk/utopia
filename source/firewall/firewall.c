@@ -826,6 +826,10 @@ int greDscp = 44; // Default initialized to 44
 static int do_block_ports(FILE *filter_fp);
 static int isInRFCaptivePortal();
 
+#ifdef DSLITE_FEATURE_SUPPORT
+static void add_dslite_mss_clamping(FILE *fp);
+#endif
+
 #ifdef _HUB4_PRODUCT_REQ_
 static int IsValidIPv4Addr(char* ip_addr_string)
 {
@@ -13982,7 +13986,7 @@ int error;
    return(rc);
 }
 #ifdef DSLITE_FEATURE_SUPPORT
-void add_dslite_mss_clamping(FILE *fp)
+static void add_dslite_mss_clamping(FILE *fp)
 {
     char val[64] = {0};
     sysevent_get(sysevent_fd, sysevent_token, "dslite_service-status", val, sizeof(val));
