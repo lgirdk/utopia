@@ -1233,7 +1233,7 @@ static int shm_cb_init (syscfg_shm_ctx *ctx, int shmid, store_info_t store_info)
 {
     shm_cb *cb = &(ctx->cb);
 
-    memset(cb, 0, sizeof(cb));
+    memset(cb, 0, sizeof(shm_cb));
 
     cb->magic = SYSCFG_SHM_MAGIC;
     cb->version = (SYSCFG_SHM_VERSION_MAJOR << 4) | (SYSCFG_SHM_VERSION_MINOR);
