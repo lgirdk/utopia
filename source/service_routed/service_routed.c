@@ -368,6 +368,8 @@ static  int route_enable()
 {
     char rt_state[16];
 
+    rt_state[0] = 0;
+
     syscfg_get(NULL, "tr_routing_enabled", rt_state, sizeof(rt_state));
 
     /* During Modem reboot the forwarding value is reset to default so below lines
