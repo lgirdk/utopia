@@ -67,8 +67,6 @@ then
     fi
 
 #    gw_lan_refresh &
-    firewall
-    execute_dir /etc/utopia/post.d/ restart
 
     sysevent set start-misc ready	
     sysevent set misc-ready-from-mischandler true
