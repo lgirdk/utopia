@@ -70,7 +70,6 @@ then
     fi
 
 #    gw_lan_refresh &
-    firewall
     if [ ! -f "$POSTD_START_FILE" ];
     then
             touch $POSTD_START_FILE
