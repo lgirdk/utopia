@@ -701,14 +701,12 @@ void createMeshVlan()
 	
 	swctl(16, 0, 112, TAGGING_MODE, 1, -1, NULL, NULL); 
         swctl(16, 5, 112, TAGGING_MODE, 1, -1, NULL, NULL);
-        swctl(16, 6, 112, TAGGING_MODE, 1, -1, NULL, NULL);
 	swctl(16, 7, 112, TAGGING_MODE, 1, -1, NULL, NULL);
-        v_secure_system("vconfig add l2sd0 112; ifconfig l2sd0.112 169.254.0.254 netmask 255.255.255.0 up");
+        v_secure_system("vconfig add l2sd0 112; ifconfig l2sd0.112 169.254.0.2 netmask 255.255.255.0 up");
 	
 	swctl(16, 0, 113, TAGGING_MODE, 1, -1, NULL, NULL);
-        swctl(16, 5, 113, TAGGING_MODE, 1, -1, NULL, NULL);
         swctl(16, 6, 113, TAGGING_MODE, 1, -1, NULL, NULL);
 	swctl(16, 7, 113, TAGGING_MODE, 1, -1, NULL, NULL);
-    v_secure_system("vconfig add l2sd0 113; ifconfig l2sd0.113 169.254.1.254 netmask 255.255.255.0 up");
+	v_secure_system("vconfig add l2sd0 113; ifconfig l2sd0.113 169.254.1.2 netmask 255.255.255.0 up");
 }
 #endif
