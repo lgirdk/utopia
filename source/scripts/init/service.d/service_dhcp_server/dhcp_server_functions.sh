@@ -1224,6 +1224,21 @@ fi
 			   echo "${PREFIX}""dhcp-option=l2sd0.4090,6,$WAN_DHCP_NS" >> $LOCAL_DHCP_CONF
 		   fi
 
+        elif [ "$BOX_TYPE" = "MV1" ]; then
+            echo "interface=l2sd0.112" >> $LOCAL_DHCP_CONF
+            echo "dhcp-range=169.254.0.3,169.254.0.254,255.255.255.0,infinite" >> $LOCAL_DHCP_CONF
+
+            if [ "1" == "$NAMESERVERENABLED" ] && [ "$WAN_DHCP_NS" != "" ]; then
+                echo "${PREFIX}""dhcp-option=l2sd0.112,6,$WAN_DHCP_NS" >> $LOCAL_DHCP_CONF
+            fi
+
+            echo "interface=l2sd0.113" >> $LOCAL_DHCP_CONF
+            echo "dhcp-range=169.254.1.3,169.254.1.254,255.255.255.0,infinite" >> $LOCAL_DHCP_CONF
+
+            if [ "1" == "$NAMESERVERENABLED" ] && [ "$WAN_DHCP_NS" != "" ]; then
+                echo "${PREFIX}""dhcp-option=l2sd0.113,6,$WAN_DHCP_NS" >> $LOCAL_DHCP_CONF
+            fi
+
         elif [ "$MODEL_NUM" = "CGM4331COM" ] || [ "$MODEL_NUM" = "TG4482A" ]; then
             echo "interface=brlan112" >> $LOCAL_DHCP_CONF
             echo "dhcp-range=169.254.0.5,169.254.0.253,255.255.255.0,infinite" >> $LOCAL_DHCP_CONF
