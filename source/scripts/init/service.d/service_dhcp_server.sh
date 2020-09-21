@@ -203,37 +203,36 @@ restart_request ()
       sanitize_leases_file
    fi
 
-   # we need to decide whether to completely restart the dhcp_server
+   # we need to decide whether to completely restart the dns/dhcp_server
    # or whether to just have it reread everything
    # SIGHUP is reread (except for dnsmasq.conf)
    RESTART=0
-   FOO=`diff $DHCP_CONF $DHCP_TMP_CONF`
-   if [ -n "$FOO" ] ; then
-      RESTART=1
-   fi
-   CURRENT_PID=`cat $PID_FILE`
-   if [ -z "$CURRENT_PID" ] ; then
+   if ! cmp -s $DHCP_CONF $DHCP_TMP_CONF ; then
       RESTART=1
    else
-      CURRENT_PIDS=`pidof dnsmasq`
-      if [ -z "$CURRENT_PIDS" ] ; then
+      CURRENT_PID=`cat $PID_FILE`
+      if [ -z "$CURRENT_PID" ] ; then
          RESTART=1
       else
          RUNNING_PIDS=`pidof dnsmasq`
-         FOO=`echo $RUNNING_PIDS | grep $CURRENT_PID`
-         if [ -z "$FOO" ] ; then
+         if [ -z "$RUNNING_PIDS" ] ; then
             RESTART=1
-         fi
-   
-         	#Intel Proposed RDKB Generic Bug Fix from XB6 SDK
-         	#Check for the case where dnsmasq is running without config file
-          	FOO=`cat /proc/${CURRENT_PID}/cmdline | grep "$DHCP_CONF"`
-          	if [ -z "$FOO" ] ; then
-            	RESTART=1
-          	fi
-         
-      fi 
+         else
+            FOO=`echo $RUNNING_PIDS | grep $CURRENT_PID`
+            if [ -z "$FOO" ] ; then
+               RESTART=1
+            else
+               # Intel Proposed RDKB Generic Bug Fix from XB6 SDK
+               # Check for the case where dnsmasq is running without config file
+               FOO=`cat /proc/${CURRENT_PID}/cmdline | grep "$DHCP_CONF"`
+               if [ -z "$FOO" ] ; then
+                  RESTART=1
+               fi
+            fi
+         fi 
+      fi
    fi
+
    rm -f $DHCP_TMP_CONF
 
    killall -HUP `basename $SERVER`
@@ -429,30 +428,29 @@ dhcp_server_start ()
    # or whether to just have it reread everything
    # SIGHUP is reread (except for dnsmasq.conf)
    RESTART=0
-   FOO=`diff $DHCP_CONF $DHCP_TMP_CONF`
-   if [ -n "$FOO" ] ; then
-      RESTART=1
-   fi
-   CURRENT_PID=`cat $PID_FILE`
-   if [ -z "$CURRENT_PID" ] ; then
+   if ! cmp -s $DHCP_CONF $DHCP_TMP_CONF ; then
       RESTART=1
    else
-      RUNNING_PIDS=`pidof dnsmasq`
-      if [ -z "$RUNNING_PIDS" ] ; then
+      CURRENT_PID=`cat $PID_FILE`
+      if [ -z "$CURRENT_PID" ] ; then
          RESTART=1
       else
-         FOO=`echo $RUNNING_PIDS | grep $CURRENT_PID`
-         if [ -z "$FOO" ] ; then
+         RUNNING_PIDS=`pidof dnsmasq`
+         if [ -z "$RUNNING_PIDS" ] ; then
             RESTART=1
-         fi
-         
-         	#Intel Proposed RDKB Generic Bug Fix from XB6 SDK
-         	#Check for the case where dnsmasq is running without config file
-          	FOO=`cat /proc/${CURRENT_PID}/cmdline | grep "$DHCP_CONF"`
-          	if [ -z "$FOO" ] ; then
-            	RESTART=1
-          	fi
-         
+         else
+            FOO=`echo $RUNNING_PIDS | grep $CURRENT_PID`
+            if [ -z "$FOO" ] ; then
+               RESTART=1
+            else
+               # Intel Proposed RDKB Generic Bug Fix from XB6 SDK
+               # Check for the case where dnsmasq is running without config file
+               FOO=`cat /proc/${CURRENT_PID}/cmdline | grep "$DHCP_CONF"`
+               if [ -z "$FOO" ] ; then
+                  RESTART=1
+               fi
+            fi
+         fi 
       fi
    fi
 
