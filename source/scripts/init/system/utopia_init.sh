@@ -510,6 +510,10 @@ fi
 #echo_t "[utopia][init] Starting system logging"
 #$UTOPIA_PATH/service_syslog.sh syslog-start
 
+#starting lighttpd 
+echo_t "[utopia][init] Starting lighttpd"
+sh /etc/start_lighttpd.sh start
+
 # update max number of msg in queue based on system maximum queue memory.
 # This update will be used for presence detection feature.
 MSG_SIZE_MAX=`cat /proc/sys/fs/mqueue/msgsize_max`
