@@ -1032,7 +1032,7 @@ $ems_server_url=https://emsdev.sys.comcast.net:8080/captiveportalEMS
 $X_COMCAST-COM_CMC=0
 $X_COMCAST-COM_CID=0
 $X_COMCAST-COM_SyncProtocolVersion=0
-$CaptivePortal_Enable=true
+$CaptivePortal_Enable=false
 
 #SelfHeal
 $ConnTest_PingInterval=60
@@ -1256,7 +1256,7 @@ $Advsecurity_RabidDNSCacheSize=10000
 $iot_brname=br106
 
 #Enable RF Captive Portal
-$enableRFCaptivePortal=true
+$enableRFCaptivePortal=false
 
 #LNF network internet enable for lnf clients
 $BlockLostandFoundInternet=false
