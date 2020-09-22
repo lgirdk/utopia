@@ -1121,6 +1121,7 @@ $NumOfFailedAttempts_2=0
 $PasswordLoginCounts_3=0
 $NumOfFailedAttempts_3=0
 $HTTPSecurityHeaderEnable=true
+$local_ui_enable=true
 
 #WiFi password Get/Set disabled by default
 $SNMPPSWDCTRLFLAG=false
