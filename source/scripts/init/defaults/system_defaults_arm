@@ -698,8 +698,9 @@ $ipv6_static_enable=0
 # router advertisement provisioning on LAN side
 # $router_adv_enable= 0|1
 $router_adv_enable=1
-$router_managed_flag=1
+$router_managed_flag=0
 $router_other_flag=1
+$router_autonomous_flag=1
 
 # allow wan interface to be provisioned using router advertisement
 $router_adv_provisioning_enable=1
