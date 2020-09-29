@@ -10349,7 +10349,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
 #endif
 #endif
    prepare_lnf_internet_rules(mangle_fp,4);
-   prepare_xconf_rules(mangle_fp);
+   //prepare_xconf_rules(mangle_fp);
 
 #ifdef CONFIG_BUILD_TRIGGER
 #ifndef CONFIG_KERNEL_NF_TRIGGER_SUPPORT
@@ -11639,7 +11639,7 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    fprintf(mangle_fp, "%s\n", ":postrouting_lan2lan - [0:0]");
    
    //zqiu: RDKB-5686: xconf rule should work for pseudo bridge mode
-   prepare_xconf_rules(mangle_fp);
+   //prepare_xconf_rules(mangle_fp);
 
 #ifdef CONFIG_BUILD_TRIGGER
 #ifndef CONFIG_KERNEL_NF_TRIGGER_SUPPORT
@@ -12031,9 +12031,6 @@ static void do_ipv6_sn_filter(FILE* fp) {
         }
 	//RDKB-10248: IPv6 Entries issue in ip neigh show 2. Bring back TOS mirroring 
 
-#if !defined(_PLATFORM_IPQ_)
-        prepare_xconf_rules(fp);
-#endif
 
 #ifdef _COSA_INTEL_XB3_ARM_
         fprintf(fp, "-A PREROUTING -i %s -p tcp -m tcp ! --tcp-flags FIN,SYN,RST,ACK SYN -m conntrack --ctstate NEW -j DROP\n",current_wan_ifname);
