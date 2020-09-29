@@ -13894,10 +13894,10 @@ static int do_ipflooddetectv4(FILE *fp)
         fprintf(fp, "-A DOS -p tcp --syn -j DOS_TCP\n");
         fprintf(fp, "-A DOS -p udp -m state --state NEW -j DOS_UDP\n");
         fprintf(fp, "-A DOS -p icmp -j DOS_ICMP\n");
-        fprintf(fp, "-A DOS_TCP -i brlan0 -p tcp --syn %s -j RETURN\n", LAN_DoS);
+        fprintf(fp, "-A DOS_TCP ! -i erouter0 -p tcp --syn %s -j RETURN\n", LAN_DoS);
         fprintf(fp, "-A DOS_TCP -i erouter0 -p tcp --syn %s -j RETURN\n", WAN_DoS);
         fprintf(fp, "-A DOS_TCP -j DOS_DROP\n");
-        fprintf(fp, "-A DOS_UDP -i brlan0 -p udp %s -j RETURN\n", LAN_DoS);
+	fprintf(fp, "-A DOS_UDP ! -i erouter0 -p udp %s -j RETURN\n", LAN_DoS);
         fprintf(fp, "-A DOS_UDP -i erouter0 -p udp %s -j RETURN\n", WAN_DoS);
         fprintf(fp, "-A DOS_UDP -j DOS_DROP\n");
         fprintf(fp, "-A DOS_ICMP -j DOS_ICMP_REQUEST\n");
@@ -14014,10 +14014,10 @@ static int do_ipflooddetectv6(FILE *fp)
         fprintf(fp, "-A DOS -p tcp --syn -j DOS_TCP\n");
         fprintf(fp, "-A DOS -p udp -m state --state NEW -j DOS_UDP\n");
         fprintf(fp, "-A DOS -p ipv6-icmp -j DOS_ICMP\n");
-        fprintf(fp, "-A DOS_TCP -i brlan0 -p tcp --syn %s -j RETURN\n", LAN_DoS);
+        fprintf(fp, "-A DOS_TCP ! -i erouter0 -p tcp --syn %s -j RETURN\n", LAN_DoS);
         fprintf(fp, "-A DOS_TCP -i erouter0 -p tcp --syn %s -j RETURN\n", WAN_DoS);
         fprintf(fp, "-A DOS_TCP -j DOS_DROP\n");
-        fprintf(fp, "-A DOS_UDP -i brlan0 -p udp %s -j RETURN\n", LAN_DoS);
+        fprintf(fp, "-A DOS_UDP ! -i erouter0 -p udp %s -j RETURN\n", LAN_DoS);
         fprintf(fp, "-A DOS_UDP -i erouter0 -p udp %s -j RETURN\n", WAN_DoS);
         fprintf(fp, "-A DOS_UDP -j DOS_DROP\n");
         fprintf(fp, "-A DOS_ICMP -j DOS_ICMP_REQUEST\n");
