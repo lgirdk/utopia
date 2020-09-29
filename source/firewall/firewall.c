@@ -13527,6 +13527,11 @@ static int do_ipflooddetectv4(FILE *fp)
 {
     int rc=0, enable=0;
     char query[MAX_QUERY]={0};
+
+    char *logRateLimit = "-m limit --limit 6/h --limit-burst 1";
+    char *WAN_DoS = "-m limit --limit 20/s --limit-burst 40";
+    char *LAN_DoS = "-m limit --limit 50/s --limit-burst 100";//DoS rule for CPE to LAN traffic should be much looser
+
     rc = syscfg_get(NULL, V4_IPFLOODDETECT, query, sizeof(query));
     if (query[0] != '\0')
     {
@@ -13560,9 +13565,11 @@ static int do_ipflooddetectv4(FILE *fp)
         fprintf(fp, "-A DOS -p tcp --syn -j DOS_TCP\n");
         fprintf(fp, "-A DOS -p udp -m state --state NEW -j DOS_UDP\n");
         fprintf(fp, "-A DOS -p icmp -j DOS_ICMP\n");
-        fprintf(fp, "-A DOS_TCP -p tcp --syn -m limit --limit 20/s --limit-burst 40 -j RETURN\n");
+        fprintf(fp, "-A DOS_TCP -i brlan0 -p tcp --syn %s -j RETURN\n", LAN_DoS);
+        fprintf(fp, "-A DOS_TCP -i erouter0 -p tcp --syn %s -j RETURN\n", WAN_DoS);
         fprintf(fp, "-A DOS_TCP -j DOS_DROP\n");
-        fprintf(fp, "-A DOS_UDP -p udp -m limit --limit 20/s --limit-burst 40 -j RETURN\n");
+        fprintf(fp, "-A DOS_UDP -i brlan0 -p udp %s -j RETURN\n", LAN_DoS);
+        fprintf(fp, "-A DOS_UDP -i erouter0 -p udp %s -j RETURN\n", WAN_DoS);
         fprintf(fp, "-A DOS_UDP -j DOS_DROP\n");
         fprintf(fp, "-A DOS_ICMP -j DOS_ICMP_REQUEST\n");
         fprintf(fp, "-A DOS_ICMP -j DOS_ICMP_REPLY\n");
@@ -13642,6 +13649,10 @@ static int do_ipflooddetectv6(FILE *fp)
     int rc=0, enable=0;
     char query[MAX_QUERY]={0};
 
+    char *logRateLimit = "-m limit --limit 6/h --limit-burst 1";
+    char *WAN_DoS = "-m limit --limit 20/s --limit-burst 40";
+    char *LAN_DoS = "-m limit --limit 50/s --limit-burst 100";//DoS rule for CPE to LAN traffic should be much looser
+
     rc = syscfg_get(NULL, V6_IPFLOODDETECT, query, sizeof(query));
     if (query[0] != '\0')
     {
@@ -13674,9 +13685,11 @@ static int do_ipflooddetectv6(FILE *fp)
         fprintf(fp, "-A DOS -p tcp --syn -j DOS_TCP\n");
         fprintf(fp, "-A DOS -p udp -m state --state NEW -j DOS_UDP\n");
         fprintf(fp, "-A DOS -p ipv6-icmp -j DOS_ICMP\n");
-        fprintf(fp, "-A DOS_TCP -p tcp --syn -m limit --limit 20/s --limit-burst 40 -j RETURN\n");
+        fprintf(fp, "-A DOS_TCP -i brlan0 -p tcp --syn %s -j RETURN\n", LAN_DoS);
+        fprintf(fp, "-A DOS_TCP -i erouter0 -p tcp --syn %s -j RETURN\n", WAN_DoS);
         fprintf(fp, "-A DOS_TCP -j DOS_DROP\n");
-        fprintf(fp, "-A DOS_UDP -p udp -m limit --limit 20/s --limit-burst 40 -j RETURN\n");
+        fprintf(fp, "-A DOS_UDP -i brlan0 -p udp %s -j RETURN\n", LAN_DoS);
+        fprintf(fp, "-A DOS_UDP -i erouter0 -p udp %s -j RETURN\n", WAN_DoS);
         fprintf(fp, "-A DOS_UDP -j DOS_DROP\n");
         fprintf(fp, "-A DOS_ICMP -j DOS_ICMP_REQUEST\n");
         fprintf(fp, "-A DOS_ICMP -j DOS_ICMP_REPLY\n");
