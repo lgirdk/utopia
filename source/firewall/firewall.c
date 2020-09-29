@@ -14960,6 +14960,8 @@ static int do_wpad_isatap_blockv4(FILE* filter_fp)
 
     tok = strtok(inst_resp, " ");
 
+    fprintf(filter_fp, "-N block_wpad\n");
+
     if(tok)
     {
         do
@@ -14971,13 +14973,17 @@ static int do_wpad_isatap_blockv4(FILE* filter_fp)
 
             snprintf(net_query, sizeof(net_query), "ipv4_%s-ifname", tok); 
             sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
-            
+
+            //Representation of hostname in NetBIOS protocol uses encoding mechanism as specified in RFC-1001, hence hostname "ISATAP" and "WPAD" will get encoded as string EJFDEBFEEBFA and FHFAEBEE            
             fprintf(filter_fp, "-I FORWARD -i %s -p udp -m string --string \"EJFDEBFEEBFA\" --algo bm -j DROP\n", net_resp);
             fprintf(filter_fp, "-I FORWARD -i %s -p udp -m string --string \"isatap\" --algo bm --icase -j DROP\n", net_resp);
+            fprintf(filter_fp, "-I FORWARD -i %s -p udp -m string --string \"wpad\" --algo bm --icase -j DROP\n", net_resp);
+            fprintf(filter_fp, "-I FORWARD -i %s -p udp -m string --string \"FHFAEBEE\" --algo bm -j DROP\n", net_resp);
             fprintf(filter_fp, "-I FORWARD -i %s -p tcp --dport 80 -m string --algo bm  --string \"GET /wpad.dat\" -j REJECT --reject-with tcp-reset\n", net_resp);
-
+            fprintf(filter_fp, "-I FORWARD -i %s -p tcp --sport 80 -m string --algo bm --string \"application/x-ns-proxy-autoconfig\" -j block_wpad\n", net_resp);
         } while ((tok = strtok(NULL, " ")) != NULL);
     }
+    fprintf(filter_fp, "-A block_wpad -m string --algo bm --string \"FindProxyForURL\" -j DROP\n");
     return 0;
 }
 static int do_wpad_isatap_blockv6(FILE* filter_fp)
@@ -14991,6 +14997,8 @@ static int do_wpad_isatap_blockv6(FILE* filter_fp)
     sysevent_get(sysevent_fd, sysevent_token, sysevent_query, inst_resp, sizeof(inst_resp));
     tok = strtok(inst_resp, " ");
 
+    fprintf(filter_fp, "-N block_wpad\n");
+
     if (tok)
     {
         do
@@ -15000,9 +15008,13 @@ static int do_wpad_isatap_blockv6(FILE* filter_fp)
 
             fprintf(filter_fp, "-I FORWARD -i %s -p udp -m string --string \"EJFDEBFEEBFA\" --algo bm -j DROP\n", multinet_ifname);
             fprintf(filter_fp, "-I FORWARD -i %s -p udp -m string --string \"isatap\" --algo bm --icase -j DROP\n", multinet_ifname);
+            fprintf(filter_fp, "-I FORWARD -i %s -p udp -m string --string \"wpad\" --algo bm --icase -j DROP\n", multinet_ifname);
+            fprintf(filter_fp, "-I FORWARD -i %s -p udp -m string --string \"FHFAEBEE\" --algo bm -j DROP\n", multinet_ifname);
             fprintf(filter_fp, "-I FORWARD -i %s -p tcp --dport 80 -m string --algo bm  --string \"GET /wpad.dat\" -j REJECT --reject-with tcp-reset\n", multinet_ifname);
+            fprintf(filter_fp, "-I FORWARD -i %s -p tcp --sport 80 -m string --algo bm --string \"application/x-ns-proxy-autoconfig\" -j block_wpad\n", multinet_ifname);
         } while ((tok = strtok(NULL, " ")) != NULL);
     }
+    fprintf(filter_fp, "-A block_wpad -m string --algo bm --string \"FindProxyForURL\" -j DROP\n");
     return 0;
 }
 //LGI END
