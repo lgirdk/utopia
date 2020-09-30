@@ -16,7 +16,11 @@
 #######################################################################
 source /etc/utopia/service.d/service_dhcp_server/dhcp_server_functions.sh
 
-dibbler_conf=/etc/dibbler/server.conf
+#dibbler_conf=/etc/dibbler/server.conf
+#/etc/dibbler/server.conf is soft link of /var/tmp/dhcp6s.conf
+#sed operation on soft link will delete the soft link.
+#Hence process on the actual configuration file.
+dibbler_conf=/var/tmp/dhcp6s.conf
 zebra_conf=/var/zebra.conf
 tool=$1
 ips=""
