@@ -94,7 +94,8 @@ PORTMAP_VENABLE_E2I="-c 4 -p 5"
 
 EXTPORTS="sw_1|sw_2|sw_3|sw_4"
 ATOM_PORTS='ath*|sw_6'
-
+PORT_24G='cei0*'
+PORT_5G='wdev0ap*'
 EXT_DEP="I2E-t E2I-a"
 ATOM_DEP="atom-t"
 
@@ -187,6 +188,12 @@ check_for_dependent_ports () {
         \;\; \
         sw_5\) \
             handle_moca 1\
+        \;\; \
+        $PORT_24G\) \
+            PORT_24G_ADD=1 \
+        \;\; \
+        $PORT_5G\) \
+            PORT_5G_ADD=1 \
         \;\; \
     esac
         
@@ -311,11 +318,16 @@ case "$1" in
             #Re-add the default vlan to allow normal handling for untagged traffic
             #swctl $PORTMAP_arm -v 2 -m $NATIVE_MODE -q 1
 
-            # add default vlan to udma0 port 5 and udma1 port 6
-            echo "--SW handler, swctl -c 16 -p 5 -v ${VID} -m $TAGGING_MODE -q 1"
-            swctl -c 16 -p 5 -v ${VID} -m $TAGGING_MODE -q 1
-            echo "--SW handler, swctl -c 16 -p 6 -v ${VID} -m $TAGGING_MODE -q 1"
-            swctl -c 16 -p 6 -v ${VID} -m $TAGGING_MODE -q 1
+            if [ x != x"$PORT_24G_ADD" ]; then
+                # add default vlan to udma0 port 5
+                echo "--SW handler, swctl -c 16 -p 5 -v ${VID} -m $TAGGING_MODE -q 1"
+                swctl -c 16 -p 5 -v ${VID} -m $TAGGING_MODE -q 1
+            fi
+            if [ x != x"$PORT_5G_ADD" ]; then
+                # add default vlan to udma0 port 6
+                echo "--SW handler, swctl -c 16 -p 6 -v ${VID} -m $TAGGING_MODE -q 1"
+                swctl -c 16 -p 6 -v ${VID} -m $TAGGING_MODE -q 1
+            fi
         fi
         sysevent set sw_vid_${VID}_ports "${VIDPORTS} ${PORTS_ADD}"
         
