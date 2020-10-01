@@ -37,8 +37,8 @@
 #include "service_multinet_base.h"
 
 #define MNET_EP_ALLMEMBERS_KEY_FORMAT(x) "multinet_%d-allMembers", x
-#define MNET_EP_MEMBER_FORMAT(ifname, iftype, ready) "%[^:]:%[^,],%hhu", iftype, ifname, ready
-#define MNET_EP_MEMBER_SET_FORMAT(ifname, iftype, ready) "%s:%s,%hhu" , iftype, ifname, ready
+#define MNET_EP_MEMBER_FORMAT(ifname, iftype, ready, vid) "%[^:]:%[^,],%hhu,%d", iftype, ifname, ready, vid
+#define MNET_EP_MEMBER_SET_FORMAT(ifname, iftype, ready, vid) "%s:%s,%hhu,%d" , iftype, ifname, ready, vid
 #define MNET_EP_BRIDGE_VID_FORMAT(instance) "multinet_%d-vid", instance
 #define MNET_EP_BRIDGE_NAME_FORMAT(instance) "multinet_%d-name", instance
 #define MNET_EP_BRIDGE_MODE_KEY "bridge_mode"
