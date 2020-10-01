@@ -111,7 +111,7 @@ int ep_get_allMembers(PL2Net net, PMember live_members, int numMembers){
     {
         MNET_DEBUG("%s: Token [%s]\n" COMMA __FUNCTION__ COMMA ifToken);
  
-        sscanf(ifToken, MNET_EP_MEMBER_FORMAT(ifnamebuf, live_members[curNumMembers].interface->type->name, &live_members[curNumMembers].bReady));
+        sscanf(ifToken, MNET_EP_MEMBER_FORMAT(ifnamebuf, live_members[curNumMembers].interface->type->name, &live_members[curNumMembers].bReady, &live_members[curNumMembers].pvid));
  
 #ifdef MULTILAN_FEATURE
 #if defined (INTEL_PUMA7)
@@ -172,7 +172,7 @@ int ep_set_allMembers(PL2Net net, PMember members, int numMembers) {
         snprintf(ifnamebuf, sizeof(ifnamebuf), "%s%s", members[i].interface->name, members[i].bTagging ? "-t" : "");
         offset += snprintf(iflistbuf + offset, 
                            sizeof(iflistbuf) - offset, " "
-                           MNET_EP_MEMBER_SET_FORMAT(ifnamebuf, members[i].interface->type->name, members[i].bReady));
+                           MNET_EP_MEMBER_SET_FORMAT(ifnamebuf, members[i].interface->type->name, members[i].bReady, members[i].pvid));
 #endif
     }
     

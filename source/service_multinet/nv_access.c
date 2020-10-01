@@ -104,15 +104,65 @@ int nv_get_members(PL2Net net, PMember memberList, int numMembers)
 
 #if !defined(_COSA_INTEL_XB3_ARM_) && !defined(INTEL_PUMA7)
 
-    int i;
-    char cmdBuff[512];
-    char valBuff[256];
+    int i, j;
+    char cmdBuff[1024];
+    char valBuff[512];
+    char port_ifname[16];
+    struct {
+        char ifnames[200];
+        int vid;
+    } port_vids[8];
+    int number_port_vids = 0;
     int offset = 0;
     FILE* psmcliOut;
     char* ifToken = NULL, *dash = NULL;
-    
+    const char* buf = NULL;
     int actualNumMembers = 0;
-    
+    int portCount = 0;
+
+    snprintf(cmdBuff, sizeof(cmdBuff), "psmcli getinstcnt dmsb.l2net.%d.Port.", net->inst);
+    psmcliOut = popen(cmdBuff, "r");
+    if (psmcliOut) {
+        fgets(valBuff, sizeof(valBuff), psmcliOut);
+        portCount = atoi(valBuff);
+        pclose(psmcliOut);
+    }
+    offset += snprintf(cmdBuff, sizeof(cmdBuff),"psmcli get -e");
+    for (i = 2; i <= portCount; ++i) {
+        MNET_DEBUG("nv_get_members, adding lookup string index %d. offset=%d\n" COMMA i COMMA offset)
+        offset += snprintf(cmdBuff+offset, sizeof(cmdBuff)-offset, " X dmsb.l2net.%d.Port.%d.LinkName X dmsb.l2net.%d.Port.%d.Pvid",
+                            net->inst, i, net->inst, i);
+        MNET_DEBUG("nv_get_members, current lookup offset: %d, string: %s\n" COMMA offset COMMA cmdBuff)
+    }
+    psmcliOut = popen(cmdBuff, "r");
+    if (!psmcliOut)
+        return 0;
+    /* Collect all bridge VLANs */
+    for (i = 2; i <= portCount; ++i) {
+        fgets(valBuff, sizeof(valBuff), psmcliOut);
+        ifToken = strtok(valBuff+2, "\" \n");
+        snprintf(port_ifname, sizeof(port_ifname), "%s", ifToken);
+        fgets(valBuff, sizeof(valBuff), psmcliOut);
+        ifToken = strtok(valBuff+2, "\" \n");
+        int pvid = atoi(ifToken);
+        for (j = 0; j < number_port_vids; ++j) {
+            if (pvid == port_vids[j].vid) {
+                strcat(port_vids[j].ifnames, ", ");
+                strcat(port_vids[j].ifnames, port_ifname);
+                break;
+            }
+        }
+        if (j == number_port_vids && number_port_vids < sizeof(port_vids)/sizeof(port_vids[0])) {
+            port_vids[j].vid = pvid;
+            snprintf(port_vids[j].ifnames, sizeof(port_vids[j].ifnames), "%s", port_ifname);
+            number_port_vids++;
+        }
+    }
+    pclose(psmcliOut);
+    for (i = 0; i < number_port_vids; ++i) {
+        MNET_DEBUG("nv_get_members, port_vids[%d], vid=%d, ifname=%s\n" COMMA i COMMA port_vids[i].vid COMMA port_vids[i].ifnames)
+    }
+    offset = 0;
     offset += snprintf(cmdBuff, sizeof(cmdBuff),"psmcli get -e");
     
     for (i = 0; i < sizeof(typeStrings)/sizeof(*typeStrings); ++i) {
@@ -120,7 +170,7 @@ int nv_get_members(PL2Net net, PMember memberList, int numMembers)
         offset += snprintf(cmdBuff+offset, sizeof(cmdBuff)-offset, " X dmsb.l2net.%d.Members.%s", net->inst, typeStrings[i]);
         MNET_DEBUG("nv_get_members, current lookup offset: %d, string: %s\n" COMMA offset COMMA cmdBuff)
     }
-     
+
     psmcliOut = popen(cmdBuff, "r");
 
     if(psmcliOut) { /*RDKB-7137, CID-33511, null before use*/
@@ -132,13 +182,27 @@ int nv_get_members(PL2Net net, PMember memberList, int numMembers)
                 MNET_DEBUG("nv_get_members, current lookup token %s\n" COMMA ifToken)
                 if ((dash = strchr(ifToken, '-'))){
                     *dash = '\0';
-                    memberList[actualNumMembers].bTagging = 1;
+                    /* Add virtual interface for all bridge Vlans */
+                    for (j = 0; j < number_port_vids; ++j) {
+                        memberList[actualNumMembers].bTagging = 1;
+                        memberList[actualNumMembers].pvid = port_vids[j].vid;
+                        memberList[actualNumMembers].interface->map = NULL; // No mapping has been performed yet
+                        strcpy(memberList[actualNumMembers].interface->name, ifToken);
+                        strcpy(memberList[actualNumMembers++].interface->type->name, typeStrings[i]);
+                    }
                 } else {
+                    memberList[actualNumMembers].pvid = net->vid;
+                    for (j = 0; j < number_port_vids; ++j) {
+                        if (strstr(port_vids[j].ifnames, ifToken)) {
+                            memberList[actualNumMembers].pvid = port_vids[j].vid;
+                            break;
+                        }
+                    }
                     memberList[actualNumMembers].bTagging = 0;
+                    memberList[actualNumMembers].interface->map = NULL; // No mapping has been performed yet
+                    strcpy(memberList[actualNumMembers].interface->name, ifToken);
+                    strcpy(memberList[actualNumMembers++].interface->type->name, typeStrings[i]);
                 }
-                memberList[actualNumMembers].interface->map = NULL; // No mapping has been performed yet
-                strcpy(memberList[actualNumMembers].interface->name, ifToken);
-                strcpy(memberList[actualNumMembers++].interface->type->name, typeStrings[i]);
                 if (dash) *dash = '-'; // replace character just in case it would confuse strtok
                 
                 ifToken = strtok(NULL, "\" \n");

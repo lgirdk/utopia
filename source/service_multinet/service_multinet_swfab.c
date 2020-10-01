@@ -139,44 +139,78 @@ static int swfab_configVlan(PL2Net net, PMemberControl members, BOOL add) {
     List trunkPorts = {0};
     ListIterator portIter, matchIter;
     PListItem item;
-    
+    int bridge_vids[8];
+    int number_bridge_vids = 0, vid_index;
+
     MNET_DEBUG("swfab_configVlan, net %d, numMembers %d, add: %hhu\n" COMMA net->inst COMMA members->numMembers COMMA add)
     
-    //Fill map to handlers
-    map(net, members,0);
+    for (i = 0; i < members->numMembers; ++i) {
+        int vlan_added = 0;
+        for (j = 0; j < number_bridge_vids; ++j) {
+            if (members->member[i].pvid == bridge_vids[j]) {
+                vlan_added = 1;
+                break;
+            }
+        }
+        if (members->member[i].pvid && !vlan_added && number_bridge_vids < sizeof(bridge_vids)/sizeof(bridge_vids[0])) {
+            bridge_vids[number_bridge_vids++] = members->member[i].pvid;
+            MNET_DEBUG("swfab_configVlan: bridge_vids[%d] = %d\n" COMMA number_bridge_vids - 1 COMMA bridge_vids[number_bridge_vids - 1])
+        }
+    }
     
     MNET_DEBUG("swfab_configVlan, map() returned.\n" );
     
-    //NOTE: This is a single vlan per bridge implementation. Change logic here to 
-    //take into account any additional vlans / pvids.
-    getVlanState(&vlanState, net->vid); 
     
     MNET_DEBUG("swfab_configVlan, getVlanState() returned.\n")
-    
-    for(i = 0; i < members->numMembers; ++i) {
-        
-        platPort = (PPlatformPort) members->member[i].interface->map;
-        
-        MNET_DEBUG("swfab_configVlan, considering %s, ready: %d, dynamic: %d, handled:%d platport: " COMMA members->member[i].interface->name COMMA members->member[i].bReady COMMA members->member[i].interface->dynamic COMMA members->handled[i]) 
-        MNET_DBG_CMD(printPlatport(platPort); printf("\n"))
-        if (!platPort || (add && !members->member[i].bReady && members->member[i].interface->dynamic)|| members->handled[i]) continue;
-        
-        //Map member info to port config
+    for (vid_index = 0; vid_index < number_bridge_vids; ++vid_index) {
+        numConfigs=0;
+        //Fill map to handlers
+        map(net, members,0);
+
+        getVlanState(&vlanState, bridge_vids[vid_index]? bridge_vids[vid_index]: net->vid);
+
+        for(i = 0; i < members->numMembers; ++i) {
+            
+            platPort = (PPlatformPort) members->member[i].interface->map;
+            
+            MNET_DEBUG("swfab_configVlan, considering %s, ready: %d, dynamic: %d, handled:%d platport: " COMMA members->member[i].interface->name COMMA members->member[i].bReady COMMA members->member[i].interface->dynamic COMMA members->handled[i]) 
+            MNET_DBG_CMD(printPlatport(platPort); printf("\n"))
+            if (!platPort || (add && !members->member[i].bReady && members->member[i].interface->dynamic)|| members->handled[i]) continue;
+            if (members->member[i].pvid && members->member[i].pvid != bridge_vids[vid_index]) continue;
+            //Map member info to port config
 #ifdef MULTILAN_FEATURE
-        portConfig.config.platPort = platPort;
-        portConfig.config.vidParams.vid = net->vid;
-        portConfig.config.vidParams.pvid = net->vid;
-        portConfig.handled = 0;
-        portConfig.config.vidParams.tagging = members->member[i].bTagging;
+            portConfig.config.platPort = platPort;
+            portConfig.config.vidParams.vid = net->vid;
+            portConfig.config.vidParams.pvid = net->vid;
+            portConfig.handled = 0;
+            portConfig.config.vidParams.tagging = members->member[i].bTagging;
 
 #if defined (MULTILAN_FEATURE)
-        //Change in logic for WiFi interfaces: Instead of using handler returned by map, using generic portHelper()
-        //to create User VLAN (if necessary) and connect interface to the bridge.
-        if (!strcmp("WiFi", members->member[i].interface->type->name ))
-        {
-            if ( portHelper(net->name, members->member[i].interface->name, members->member[i].bTagging, net->vid, add) != -1 )
+            //Change in logic for WiFi interfaces: Instead of using handler returned by map, using generic portHelper()
+            //to create User VLAN (if necessary) and connect interface to the bridge.
+            if (!strcmp("WiFi", members->member[i].interface->type->name ))
             {
-                if (add)
+                if ( portHelper(net->name, members->member[i].interface->name, members->member[i].bTagging, net->vid, add) != -1 )
+                {
+                    if (add)
+                    {
+                        members->member[i].bReady = STATUS_STARTED;
+                    }
+                }
+                else
+                {
+                    if (add)
+                    {
+                        members->member[i].bReady = STATUS_STOPPED;
+                    }
+                }
+                continue;
+            }
+#endif
+
+            if ( swfab_configVlan_inner(&portConfig, net, add) == 0 )
+            {
+                if (add) 
                 {
                     members->member[i].bReady = STATUS_STARTED;
                 }
@@ -188,100 +222,83 @@ static int swfab_configVlan(PL2Net net, PMemberControl members, BOOL add) {
                     members->member[i].bReady = STATUS_STOPPED;
                 }
             }
-            continue;
-        }
-#endif
-
-        if ( swfab_configVlan_inner(&portConfig, net, add) == 0 )
-        {
-            if (add) 
-            {
-                members->member[i].bReady = STATUS_STARTED;
-            }
-        }
-        else
-        {
-            if (add)
-            {
-                members->member[i].bReady = STATUS_STOPPED;
-            }
-        }
 
 #else
-        portConfigs[numConfigs].config.platPort = platPort;
-        portConfigs[numConfigs].config.vidParams.vid = net->vid;
-        portConfigs[numConfigs].config.vidParams.pvid = net->vid;
-        portConfigs[numConfigs].handled = 0;
-        portConfigs[numConfigs++].config.vidParams.tagging = members->member[i].bTagging;
-#endif
-        
-        MNET_DEBUG("swfab_configVlan, calling dep model for %s.\n" COMMA members->member[i].interface->name)
-        
-        if (add)
-            addAndGetTrunkPorts(vlanState, platPort, &trunkPorts);
-        else
-            removeAndGetTrunkPorts(vlanState, platPort, &trunkPorts);
-        
-        MNET_DEBUG("swfab_configVlan, dep model returned for %s. number of trunk ports: %d\n" COMMA members->member[i].interface->name COMMA trunkPorts.count)
-        
-        initIterator(&trunkPorts, &portIter);
-        //Loop through trunking ports and add their config as well
-        while ((item = getNext(&portIter))) {
-            trunkPort = (PPlatformPort) item->data;
-            MNET_DBG_CMD(printPlatport(trunkPort)) 
-#ifdef MULTILAN_FEATURE
-            portConfig.config.platPort = trunkPort;
-            portConfig.config.vidParams.vid = net->vid;
-            portConfig.config.vidParams.pvid = net->vid;
-            portConfig.handled = 0;
-            portConfig.config.vidParams.tagging = 1; //trunkPort->isShared ? 1 : members->member[i].bTagging;
-            swfab_configVlan_inner(&portConfig, net, add);
-#else
-            portConfigs[numConfigs].config.platPort = trunkPort;
-            portConfigs[numConfigs].config.vidParams.vid = net->vid;
-            portConfigs[numConfigs].config.vidParams.pvid = net->vid;
+            portConfigs[numConfigs].config.platPort = platPort;
+            portConfigs[numConfigs].config.vidParams.vid = members->member[i].pvid? bridge_vids[vid_index]: net->vid;
+            portConfigs[numConfigs].config.vidParams.pvid = members->member[i].pvid? bridge_vids[vid_index]: net->vid;
             portConfigs[numConfigs].handled = 0;
-            portConfigs[numConfigs++].config.vidParams.tagging = 1; //trunkPort->isShared ? 1 : members->member[i].bTagging;
+            portConfigs[numConfigs++].config.vidParams.tagging = members->member[i].bTagging;
 #endif
+
+            MNET_DEBUG("swfab_configVlan, calling dep model for %s.\n" COMMA members->member[i].interface->name)
+
+            if (add)
+                addAndGetTrunkPorts(vlanState, platPort, &trunkPorts);
+            else
+                removeAndGetTrunkPorts(vlanState, platPort, &trunkPorts);
+
+            MNET_DEBUG("swfab_configVlan, dep model returned for %s. number of trunk ports: %d\n" COMMA members->member[i].interface->name COMMA trunkPorts.count)
+
+            initIterator(&trunkPorts, &portIter);
+            //Loop through trunking ports and add their config as well
+            while ((item = getNext(&portIter))) {
+                trunkPort = (PPlatformPort) item->data;
+                MNET_DBG_CMD(printPlatport(trunkPort)) 
+#ifdef MULTILAN_FEATURE
+                portConfig.config.platPort = trunkPort;
+                portConfig.config.vidParams.vid = net->vid;
+                portConfig.config.vidParams.pvid = net->vid;
+                portConfig.handled = 0;
+                portConfig.config.vidParams.tagging = 1; //trunkPort->isShared ? 1 : members->member[i].bTagging;
+                swfab_configVlan_inner(&portConfig, net, add);
+#else
+                portConfigs[numConfigs].config.platPort = trunkPort;
+                portConfigs[numConfigs].config.vidParams.vid = bridge_vids[vid_index]? bridge_vids[vid_index]: net->vid;
+                portConfigs[numConfigs].config.vidParams.pvid = bridge_vids[vid_index]? bridge_vids[vid_index]: net->vid;
+                portConfigs[numConfigs].handled = 0;
+                portConfigs[numConfigs++].config.vidParams.tagging = 1; //trunkPort->isShared ? 1 : members->member[i].bTagging;
+#endif
+            }
+            MNET_DEBUG("swfab_configVlan, trunk ports added.\n" )
+            
+            clearList(&trunkPorts);
         }
-        MNET_DEBUG("swfab_configVlan, trunk ports added.\n" )
-        
-        clearList(&trunkPorts);
-    }
-    
+
 #ifndef MULTILAN_FEATURE
-    
-    //Now iterate through the ports, and aggregate commands to each hal into a single call
-    for (i = 0; i < numConfigs; ++i) 
-	{
-        if (portConfigs[i].handled) continue;
-        
-        numArgs = 0;
-        hal = portConfigs[i].config.platPort->hal;
-		if (NULL != hal)
-        {	
-            for (j = i; j < numConfigs; ++j) 
-			{
-            	if (portConfigs[j].config.platPort->hal->id != hal->id) continue;
-	            MNET_DEBUG("swfab_configVlan, aggregating\n")
-    	        MNET_DBG_CMD(printPlatport(portConfigs[j].config.platPort))
-        	    args[numArgs].portID = portConfigs[j].config.platPort->portID;
-            	args[numArgs].hints.network = net;
-	            args[numArgs++].vidParams = portConfigs[j].config.vidParams; 
-    	        portConfigs[j].handled =1;
-        	}
-        	MNET_DEBUG("swfab_configVlan, Calling configVlan on hal %d. numArgs %d\n" COMMA hal->id COMMA numArgs)
-	        hal->configVlan(args, numArgs, add);
-    	    MNET_DEBUG("swfab_configVlan, Hal %d returned.\n" COMMA hal->id)
-		}
-	    else
-		{
-			MNET_DEBUG("hal is NULL continue to next port\n")
-			continue;
-		}
-    }    
+
+        //Now iterate through the ports, and aggregate commands to each hal into a single call
+        for (i = 0; i < numConfigs; ++i)
+        {
+            if (portConfigs[i].handled) continue;
+            
+            numArgs = 0;
+            hal = portConfigs[i].config.platPort->hal;
+            if (NULL != hal)
+            {	
+                for (j = i; j < numConfigs; ++j)
+                {
+                    if (portConfigs[j].config.platPort->hal->id != hal->id) continue;
+                    MNET_DEBUG("swfab_configVlan, aggregating\n")
+                    MNET_DBG_CMD(printPlatport(portConfigs[j].config.platPort))
+                    args[numArgs].portID = portConfigs[j].config.platPort->portID;
+                    args[numArgs].hints.network = net;
+                    args[numArgs++].vidParams = portConfigs[j].config.vidParams;
+                    portConfigs[j].handled =1;
+                }
+                MNET_DEBUG("swfab_configVlan, Calling configVlan on hal %d. numArgs %d\n" COMMA hal->id COMMA numArgs)
+                hal->configVlan(args, numArgs, add);
+                MNET_DEBUG("swfab_configVlan, Hal %d returned.\n" COMMA hal->id)
+            }
+            else
+            {
+                MNET_DEBUG("hal is NULL continue to next port\n")
+                continue;
+            }
+        }
 #endif
-    saveVlanState(vlanState);    
+        saveVlanState(vlanState);
+    }
 }
 
 void printPlatport(PPlatformPort port) {
