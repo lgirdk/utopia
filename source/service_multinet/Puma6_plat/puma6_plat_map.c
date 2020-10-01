@@ -103,22 +103,22 @@ static SWFabHAL halList[] = {
     {HAL_LINUX, ifhandlerNoop/*linuxIfInit*/, linuxIfConfigVlan, isEqualStringCompare, stringIDPortIDDirect, eventIDFromStringPortID},
 };
 static PlatformPort wifiPortList[] = {
-    {(void*)"ath0", ENTITY_AP, halList + HAL_WIFI, 0},
-    {(void*)"ath1", ENTITY_AP, halList + HAL_WIFI, 0},
-    {(void*)"ath2", ENTITY_AP, halList + HAL_WIFI, 0},
-    {(void*)"ath3", ENTITY_AP, halList + HAL_WIFI, 0},
-    {(void*)"ath4", ENTITY_AP, halList + HAL_WIFI, 0},
-    {(void*)"ath5", ENTITY_AP, halList + HAL_WIFI, 0},
-    {(void*)"ath6", ENTITY_AP, halList + HAL_WIFI, 0},
-    {(void*)"ath7", ENTITY_AP, halList + HAL_WIFI, 0},
-    {(void*)"ath8", ENTITY_AP, halList + HAL_WIFI, 0},
-    {(void*)"ath9", ENTITY_AP, halList + HAL_WIFI, 0},
-    {(void*)"ath10", ENTITY_AP, halList + HAL_WIFI, 0},
-    {(void*)"ath11", ENTITY_AP, halList + HAL_WIFI, 0},
-    {(void*)"ath12", ENTITY_AP, halList + HAL_WIFI, 0},
-    {(void*)"ath13", ENTITY_AP, halList + HAL_WIFI, 0},
-    {(void*)"ath14", ENTITY_AP, halList + HAL_WIFI, 0},
-    {(void*)"ath15", ENTITY_AP, halList + HAL_WIFI, 0}
+    {(void*)"cei00", ENTITY_AP, halList + HAL_WIFI, 0},
+    {(void*)"wdev0ap0", ENTITY_AP, halList + HAL_WIFI, 0},
+    {(void*)"cei01", ENTITY_AP, halList + HAL_WIFI, 0},
+    {(void*)"wdev0ap1", ENTITY_AP, halList + HAL_WIFI, 0},
+    {(void*)"cei02", ENTITY_AP, halList + HAL_WIFI, 0},
+    {(void*)"wdev0ap2", ENTITY_AP, halList + HAL_WIFI, 0},
+    {(void*)"cei03", ENTITY_AP, halList + HAL_WIFI, 0},
+    {(void*)"wdev0ap3", ENTITY_AP, halList + HAL_WIFI, 0},
+    {(void*)"cei04", ENTITY_AP, halList + HAL_WIFI, 0},
+    {(void*)"wdev0ap4", ENTITY_AP, halList + HAL_WIFI, 0},
+    {(void*)"cei05", ENTITY_AP, halList + HAL_WIFI, 0},
+    {(void*)"wdev0ap5", ENTITY_AP, halList + HAL_WIFI, 0},
+    {(void*)"cei06", ENTITY_AP, halList + HAL_WIFI, 0},
+    {(void*)"wdev0ap6", ENTITY_AP, halList + HAL_WIFI, 0},
+    {(void*)"cei07", ENTITY_AP, halList + HAL_WIFI, 0},
+    {(void*)"wdev0ap7", ENTITY_AP, halList + HAL_WIFI, 0}
 };
 
 SwPortState intSwIDs[4] = { 
@@ -203,8 +203,13 @@ int plat_addImplicitMembers(PL2Net nv_net, PMember memberBuf) {
 int mapToPlat(PNetInterface iface) {
     int portIndex;
     if (!strcmp("WiFi", iface->type->name)) {
-        sscanf(iface->name, "ath%d", &portIndex);
-        iface->map = wifiPortList + portIndex;
+        for (portIndex = 0; portIndex < sizeof(wifiPortList)/sizeof(wifiPortList[0]); ++portIndex) {
+            if (strcmp((const char*)wifiPortList[portIndex].portID, iface->name) == 0) {
+                MNET_DEBUG("mapToPlat, found intf %s" COMMA iface->name)
+                iface->map = wifiPortList + portIndex;
+                break;
+            }
+        }
     } /*else if (!strcmp("Link", iface->type->name)) {
         if (!strcmp("l2sd0", iface->name))
             iface->map = &npLinkPort;
@@ -230,9 +235,14 @@ PPlatformPort plat_mapFromString(char* portIdString) {
     if (strstr(portIdString, "dep")) {
         sscanf(portIdString, "dep%d", &portIndex);
         return trunkSwPortList + portIndex;
-    } else if (strstr(portIdString, "ath")) {
-        sscanf(portIdString, "ath%d", &portIndex);
-        return wifiPortList + portIndex;
+    } else if (strstr(portIdString, "cei0") || strstr(portIdString, "wdev0ap")) {
+        MNET_DEBUG("plat_mapFromString, mapping intf %s" COMMA portIdString)
+        for (portIndex = 0; portIndex < sizeof(wifiPortList)/sizeof(wifiPortList[0]); ++portIndex) {
+            if (strcmp((const char*)wifiPortList[portIndex].portID, portIdString) == 0) {
+                MNET_DEBUG("mapToPlat, found intf %s" COMMA portIdString);
+                return wifiPortList + portIndex;
+            }
+        }
     } else if (strstr(portIdString, "l2sd0")) {
         return &npLinkPort;
     } else if (strstr(portIdString, "sw_")) {
