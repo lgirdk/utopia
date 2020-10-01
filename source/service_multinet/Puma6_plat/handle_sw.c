@@ -39,7 +39,8 @@ token_t hdl_sw_sysevent_token;
 
 void check_for_dependent_ports(char *port, int *tag, int *atom_port, int *ext_port)
 {
-	if(!strncmp(port, "ath", 3) || (!strncmp(port, "sw_6", 4)))
+	if(!strncmp(port, "ath", 3) || !strncmp(port, "cei0", 4) ||
+		!strncmp(port, "wdev0ap", 7) || (!strncmp(port, "sw_6", 4)))
 	{
 		*atom_port = 1;
 		*ext_port = 0;
@@ -90,7 +91,7 @@ void sw_remove_member(char *from_member, char *to_remove_mem)
 //handle_moca is a function for configuring MOCA port
 void handle_moca(int vlan_id, int *tagged, int add)
 {
-	char l_cMoca_Tports[16] = {0}, l_cMoca_Utport[8] = {0}, l_cMoca_Tport[8] = {0};
+	char l_cMoca_Tports[16] = {0}, l_cMoca_Utport[16] = {0}, l_cMoca_Tport[16] = {0};
 	int l_iMoca_UtPort = 100;
 	char l_cSystem_Cmd[128] = {0};
 
@@ -330,7 +331,7 @@ void execSwCtl(char *port, int vlan_id, int tagged, int add)
 
 void sw_add_ports(int vlan_id, char* ports_add, int *atom_port, int *ext_port)
 {
-	char port[10] = {0};
+	char port[16] = {0};
 	int i = 0, tagged = UNTAGGED_MODE;
 
 	while(*ports_add != '\0')
@@ -441,9 +442,11 @@ void addVlan(int net_id, int vlan_id, char *ports_add)
 
 		//swctl -c 16 -p 7 -v <vlan_id> -m 2 -q 1
             swctl(16, 7, vlan_id, TAGGING_MODE, 1, -1, NULL, NULL);
-            swctl(16, 5, vlan_id, TAGGING_MODE, 1, -1, NULL, NULL);
-            swctl(16, 6, vlan_id, TAGGING_MODE, 1, -1, NULL, NULL);
 	}
+	if (strstr(ports_add, "cei0")) /* CBN Mv1 */
+		swctl(16, 5, vlan_id, TAGGING_MODE, 1, -1, NULL, NULL);
+	if (strstr(ports_add, "wdev0ap")) /* CBN Mv1 */
+		swctl(16, 6, vlan_id, TAGGING_MODE, 1, -1, NULL, NULL);
     sw_add_ports(vlan_id, ports_add, &atom_port, &ext_port);
 	
 	l_iLen = strlen(vidPorts);		
@@ -534,7 +537,7 @@ void delVlan(int net_id, int vlan_id, char *ports_add)
 {
 	char l_cVid_Ports[64] = {0}, l_cExt_Vid_Ports[64] = {0};
 	char l_cAtom_Vid_Ports[32] = {0}, l_cExt_Vids[8] = {0};
-	char l_cCmd_Buff[128] = {0}, l_cVlan_Id[8] = {0}, l_cPort[8] = {0};
+	char l_cCmd_Buff[128] = {0}, l_cVlan_Id[8] = {0}, l_cPort[16] = {0};
 	
 	int l_iAtom_Port, l_iExt_Port, l_iIter = 0, l_iTagged = UNTAGGED_MODE;
 
@@ -605,7 +608,11 @@ void delVlan(int net_id, int vlan_id, char *ports_add)
 	    MNET_DEBUG("Removing vlan %s.%d\n" COMMA MGMT_PORT_LINUX_IFNAME COMMA vlan_id)
 		system(l_cCmd_Buff);*/
     }
-	snprintf(l_cCmd_Buff, sizeof(l_cCmd_Buff), "sw_vid_%d_ports",vlan_id);
+    if (strstr(ports_add, "cei0")) /* CBN Mv1 */
+        swctl(17, 5, vlan_id, -1, -1, -1, NULL, NULL);
+    if (strstr(ports_add, "wdev0ap")) /* CBN Mv1 */
+        swctl(17, 6, vlan_id, -1, -1, -1, NULL, NULL);
+    snprintf(l_cCmd_Buff, sizeof(l_cCmd_Buff), "sw_vid_%d_ports",vlan_id);
     sysevent_set(hdl_sw_sysevent_fd, hdl_sw_sysevent_token, l_cCmd_Buff, l_cVid_Ports, 0);
         
     // Add to switch connection ports if on external switch
