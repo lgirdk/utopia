@@ -91,7 +91,7 @@ if [ $KERNEL_VERSION -lt 4 ] ; then
 	KERNEL_SUBVERSION=`uname -r | cut -f 2 -d .`
 	if [ $KERNEL_SUBVERSION -gt 11 ] ; then
 		echo "120" > /proc/sys/net/netfilter/nf_conntrack_udp_timeout
-		echo "60" > /proc/sys/net/netfilter/nf_conntrack_udp_timeout_stream
+		echo "120" > /proc/sys/net/netfilter/nf_conntrack_udp_timeout_stream
 		echo "240" > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_syn_sent
 		echo "60" > /proc/sys/net/netfilter/nf_conntrack_generic_timeout
 		echo "240" > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_time_wait
@@ -101,7 +101,7 @@ if [ $KERNEL_VERSION -lt 4 ] ; then
 		echo "8192" > /proc/sys/net/netfilter/nf_conntrack_max
 	else
 		echo "120" > /proc/sys/net/ipv4/netfilter/ip_conntrack_udp_timeout
-		echo "60" > /proc/sys/net/ipv4/netfilter/ip_conntrack_udp_timeout_stream
+		echo "120" > /proc/sys/net/ipv4/netfilter/ip_conntrack_udp_timeout_stream
 		echo "240" > /proc/sys/net/ipv4/netfilter/ip_conntrack_tcp_timeout_syn_sent
 		echo "60" > /proc/sys/net/ipv4/netfilter/ip_conntrack_generic_timeout
 		echo "240" > /proc/sys/net/ipv4/netfilter/ip_conntrack_tcp_timeout_time_wait
@@ -112,7 +112,7 @@ if [ $KERNEL_VERSION -lt 4 ] ; then
 	fi
 else
 	echo "120" > /proc/sys/net/netfilter/nf_conntrack_udp_timeout
-	echo "60" > /proc/sys/net/netfilter/nf_conntrack_udp_timeout_stream
+	echo "120" > /proc/sys/net/netfilter/nf_conntrack_udp_timeout_stream
 	echo "240" > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_syn_sent
 	echo "60" > /proc/sys/net/netfilter/nf_conntrack_generic_timeout
 	echo "240" > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_time_wait
