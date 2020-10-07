@@ -426,7 +426,7 @@ ip6tables -t mangle -A PREROUTING -i $ecm_wan_ifname -d ff00::/8 -p ipv6-icmp -m
 ip6tables -t mangle -A PREROUTING -i $wan_ifname -d ff00::/8 -p ipv6-icmp -m icmp6 --icmpv6-type 135 -j DROP
 
 echo 60 > /proc/sys/net/netfilter/nf_conntrack_generic_timeout
-echo 60 > /proc/sys/net/netfilter/nf_conntrack_udp_timeout_stream
+echo 120 > /proc/sys/net/netfilter/nf_conntrack_udp_timeout_stream
 echo 240 > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_syn_sent
 echo 240 > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_time_wait
 echo 60 > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_close
