@@ -1356,3 +1356,6 @@ $lglanAllowedSubnet_1=arLanAllowedSubnet_1
 
 #SSH - Disabled by default
 $mgmt_wan_sshaccess=0
+
+#DHCP ip conflict check disable by default
+$dhcp_disable_ip_conflict_det=1
