@@ -703,7 +703,7 @@ int prepare_dhcp_conf (char *input)
     char l_cCaptivePortalEn[8] = {0}, l_cRedirect_Flag[8] = {0}, l_cMigCase[8] = {0};
     char l_cRfCPFeatureEnabled[8] = {0}, l_cRfCPEnabled[8] = {0};
     char l_cWifi_Not_Configured[8] = {0}, l_cWifi_Res_Mig[8] = {0};
-    char l_cIotEnabled[16] = {0}, l_cIotIfName[16] = {0}, l_cIotStartAddr[16] = {0};
+    char l_cIotEnabled[16] = {0}, l_cIotIfName[16] = {0}, l_cIotStartAddr[16] = {0}, l_cLocalIPConflictDet[16] = {0};
    	char l_cIotEndAddr[16] = {0}, l_cIotNetMask[16] = {0};
 	char l_cPropagate_Dom[8] = {0}, l_cLan_Domain[32] = {0}, l_cLog_Level[8] = {0};
 	char l_cLan_Status[16] = {0};
@@ -1009,6 +1009,13 @@ int prepare_dhcp_conf (char *input)
     {
         fprintf(l_fLocal_Dhcp_ConfFile, "domain-needed\n");
         fprintf(l_fLocal_Dhcp_ConfFile, "bogus-priv\n");
+
+        syscfg_get(NULL, "dhcp_disable_ip_conflict_det", l_cLocalIPConflictDet, sizeof(l_cLocalIPConflictDet));
+
+        if (!strncmp(l_cLocalIPConflictDet, "1", 1))
+        {
+            fprintf(l_fLocal_Dhcp_ConfFile, "no-ping\n");
+        }
 
         if (TRUE == l_bCaptivePortal_Mode)
         {
