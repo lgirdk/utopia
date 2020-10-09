@@ -1059,6 +1059,11 @@ fi
             echo "resolv-file=$RESOLV_CONF" >> $LOCAL_DHCP_CONF
         fi
 
+        while ! [ -e /var/tmp/tr069paready ] ; do
+            echo "Waiting for PandM to initalize completely to set Managed device"
+            sleep 2
+        done
+
         MFR_OUI=`dmcli eRT getv Device.DeviceInfo.ManufacturerOUI | grep value | awk '{print $5}'`
         SERIAL_NUM=`dmcli eRT getv Device.DeviceInfo.SerialNumber | grep value | awk '{print $5}'`
         PROD_CLASS=`dmcli eRT getv Device.DeviceInfo.ProductClass | grep value | awk '{print $5}'`
