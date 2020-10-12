@@ -719,6 +719,8 @@ typedef enum _UtopiaValue
     UtopiaValue_NATPassthrough_Status,
     UtopiaValue_NATPassthrough_MACAddress,
     UtopiaValue_NATPassthrough_MACMask,
+    UtopiaValue_SPF_RuleSource,
+    UtopiaValue_PFR_RuleSource,
 // LGI ADD END	
     UtopiaValue__LAST__
 } UtopiaValue;
