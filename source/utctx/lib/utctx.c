@@ -862,6 +862,8 @@ static struct
     { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,   Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "mac",                                  UtopiaValue_NATPassthrough }, /* UtopiaValue_NATPassthrough_MACAddress */
     { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,   Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "mask",                                 UtopiaValue_NATPassthrough }, /* UtopiaValue_NATPassthrough_MACMask */
 //LG ADD END CR14
+    { Utopia_Type_IndexedConfig, Utopia_Event_Firewall_Restart,   Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "RuleSource",                       UtopiaValue_SinglePortForward },    /* UtopiaValue_SPF_RuleSource */
+    { Utopia_Type_IndexedConfig, Utopia_Event_Firewall_Restart,   Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "RuleSource",                       UtopiaValue_PortRangeForward },     /* UtopiaValue_PFR_RuleSource */
     { Utopia_Type__UNKNOWN__, Utopia_Event__NONE__, Utopia_Static__NONE__, Utopia_For__NONE__, 0, 0, UtopiaValue__UNKNOWN__ }, /* UtopiaValue__LAST__ */
 };
 
