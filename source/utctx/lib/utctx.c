@@ -790,6 +790,8 @@ static struct
     { Utopia_Type_IndexedConfig, Utopia_Event_DSLite_Restart,       Utopia_Static__NONE__, Utopia_Index_For_Key, 1, "dslite_ipv6_frag_enable_%d", UtopiaValue__UNKNOWN__ },         /* UtopiaValue_Dslite_IPv6_Frag_Enable */
     { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_Key, 1, "dslite_tunnel_v4addr_%d",   UtopiaValue__UNKNOWN__ },          /* UtopiaValue_Dslite_Tunneled_Interface */
 #endif
+    { Utopia_Type_IndexedConfig, Utopia_Event_Firewall_Restart,     Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "RuleSource",                UtopiaValue_SinglePortForward },   /* UtopiaValue_SPF_RuleSource */
+    { Utopia_Type_IndexedConfig, Utopia_Event_Firewall_Restart,     Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "RuleSource",                UtopiaValue_PortRangeForward },    /* UtopiaValue_PFR_RuleSource */
     { Utopia_Type__UNKNOWN__, Utopia_Event__NONE__, Utopia_Static__NONE__, Utopia_For__NONE__, 0, 0, UtopiaValue__UNKNOWN__ }, /* UtopiaValue__LAST__ */
 };
 
