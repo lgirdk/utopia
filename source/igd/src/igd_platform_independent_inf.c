@@ -907,6 +907,8 @@ INT32 IGD_pii_add_portmapping_entry( IN INT32 WanDeviceIndex,
             pmap.lease = portmapEntry->leaseTime;
             pmap.protocol = proto;
     
+            strncpy(pmap.rule_source, "UPnP", sizeof(pmap.rule_source));
+
             int st = Utopia_AddDynPortMapping(&pmap);
             if (UT_SUCCESS == st) {
                 RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: successfully added port map entry", __FUNCTION__);
