@@ -373,6 +373,7 @@ typedef struct portFwdSingle {
     int        internal_port;
     char       dest_ip[IPADDR_SZ];              
     char       dest_ipv6[64];              
+    char       rule_source[32];
 } portFwdSingle_t;
 
 typedef struct portMapDyn {
@@ -385,6 +386,7 @@ typedef struct portMapDyn {
     int        internal_port;
     int        lease;
     time_t     last_updated;
+    char       rule_source[32];
 } portMapDyn_t;
 
 typedef struct portFwdRange {
@@ -399,6 +401,7 @@ typedef struct portFwdRange {
     int        internal_port_range_size;
     char       dest_ip[IPADDR_SZ];              
     char       dest_ipv6[64];    
+    char       rule_source[32];
 	char       public_ip[IPADDR_SZ];              
 } portFwdRange_t;
 
