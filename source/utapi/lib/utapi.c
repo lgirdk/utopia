@@ -2201,6 +2201,7 @@ static int s_getportfwd (UtopiaContext *ctx, int index, portFwdSingle_t *portmap
     Utopia_GetIndexed(ctx, UtopiaValue_SPF_ToIpV6, index, (char *)&portmap->dest_ipv6, IPADDR_SZ);
     Utopia_GetIndexed(ctx, UtopiaValue_SPF_Protocol, index, tokenbuf, sizeof(tokenbuf));
     portmap->protocol = s_StrToEnum(g_ProtocolMap, tokenbuf);
+    Utopia_GetIndexed(ctx, UtopiaValue_SPF_RuleSource, index, portmap->rule_source, sizeof(portmap->rule_source));
     
     return SUCCESS;
 }
@@ -2217,6 +2218,7 @@ static int s_setportfwd (UtopiaContext *ctx, int index, portFwdSingle_t *portmap
     UTOPIA_SETINDEXED(ctx, UtopiaValue_SPF_ToIpV6, index,portmap->dest_ipv6);
     char *p = s_EnumToStr(g_ProtocolMap, portmap->protocol);
     UTOPIA_SETINDEXED(ctx, UtopiaValue_SPF_Protocol, index, p);
+    UTOPIA_SETINDEXED(ctx, UtopiaValue_SPF_RuleSource, index, portmap->rule_source);
     
     return SUCCESS;
 }
@@ -2231,6 +2233,7 @@ static int s_unsetportfwd (UtopiaContext *ctx, int index)
     UTOPIA_UNSETINDEXED(ctx, UtopiaValue_SPF_ToIp, index);
     UTOPIA_UNSETINDEXED(ctx, UtopiaValue_SPF_ToIpV6, index);
     UTOPIA_UNSETINDEXED(ctx, UtopiaValue_SPF_Protocol, index);
+    UTOPIA_UNSETINDEXED(ctx, UtopiaValue_SPF_RuleSource, index);
 
     return SUCCESS;
 }
@@ -2574,7 +2577,7 @@ static int s_add_portmapdyn (int index, portMapDyn_t *pmap)
     char value[1024], param[128];
     /*char unique[128];*/
     time(&pmap->last_updated);
-    snprintf(value, sizeof(value), "%s,%s,%d,%s,%d,%s,%d,%ld,%s", 
+    snprintf(value, sizeof(value), "%s,%s,%d,%s,%d,%s,%d,%ld,%s,%s", 
                                (TRUE == pmap->enabled) ? "enabled" : "disabled",
                                (strlen(pmap->external_host) == 0) ? "none" : pmap->external_host,
                                pmap->external_port,
@@ -2583,7 +2586,8 @@ static int s_add_portmapdyn (int index, portMapDyn_t *pmap)
                                (TCP == pmap->protocol) ? "tcp" : "udp",
                                pmap->lease,
                                (long)(pmap->last_updated),
-                               pmap->name);
+                               pmap->name,
+                               pmap->rule_source);
 
 #if 0
     sysevent_get(se_fd, se_token, param, unique, sizeof(unique));
@@ -2733,12 +2737,19 @@ static int s_get_portmapdyn (int index, portMapDyn_t *portmap)
     portmap->last_updated = (time_t)atol(p);
     p = next;
 
-    // last entry doesn't have delimiter, nothing to chop; use as-is
+    if (NULL == (next = chop_str(p,','))) {
+        return ERR_INVALID_VALUE;
+    }
      /* CID 135651: BUFFER_SIZE_WARNING */
     strncpy(portmap->name, p, sizeof(portmap->name)-1);
     portmap->name[sizeof(portmap->name)-1] = '\0';
+    p = next;
 
-    ulog_debugf(ULOG_CONFIG, UL_UTAPI, "enabled %d ext host %s ext port %d int host %s int port %d lease %d name %s last update %ld",
+    // last entry doesn't have delimiter, nothing to chop; use as-is
+    strncpy(portmap->rule_source, p, sizeof(portmap->rule_source)-1);
+    portmap->rule_source[sizeof(portmap->rule_source)-1] = '\0';
+
+    ulog_debugf(ULOG_CONFIG, UL_UTAPI, "enabled %d ext host %s ext port %d int host %s int port %d lease %d name %s last update %ld rule source %s",
                 portmap->enabled,
                 portmap->external_host,
                 portmap->external_port,
@@ -2746,7 +2757,8 @@ static int s_get_portmapdyn (int index, portMapDyn_t *portmap)
                 portmap->internal_port,
                 portmap->lease,
                 portmap->name,
-                portmap->last_updated);
+                portmap->last_updated,
+                portmap->rule_source);
 
     return UT_SUCCESS;
 }
@@ -3118,6 +3130,7 @@ static int s_getportfwdrange (UtopiaContext *ctx, int index, portFwdRange_t *por
     Utopia_GetIndexed(ctx, UtopiaValue_PFR_PublicIp, index, (char *)&portmap->public_ip, IPADDR_SZ);
     Utopia_GetIndexed(ctx, UtopiaValue_PFR_Protocol, index, tokenbuf, sizeof(tokenbuf));
     portmap->protocol = s_StrToEnum(g_ProtocolMap, tokenbuf);
+    Utopia_GetIndexed(ctx, UtopiaValue_PFR_RuleSource, index, portmap->rule_source, sizeof(portmap->rule_source));
 
     *port_range = '\0';
     Utopia_GetIndexed(ctx, UtopiaValue_PFR_ExternalPortRange, index, port_range, sizeof(port_range));
@@ -3157,6 +3170,7 @@ static int s_setportfwdrange (UtopiaContext *ctx, int index, portFwdRange_t *por
     UTOPIA_SETINDEXED(ctx, UtopiaValue_PFR_Protocol, index, p);
     snprintf(port_range, sizeof(port_range), "%d %d", portmap->start_port, portmap->end_port);
     UTOPIA_SETINDEXED(ctx, UtopiaValue_PFR_ExternalPortRange, index, port_range);
+    UTOPIA_SETINDEXED(ctx, UtopiaValue_PFR_RuleSource, index, portmap->rule_source);
     
     return SUCCESS;
 }
@@ -3173,6 +3187,7 @@ static int s_unsetportfwdrange (UtopiaContext *ctx, int index)
     UTOPIA_UNSETINDEXED(ctx, UtopiaValue_PFR_ToIpV6, index);
     UTOPIA_UNSETINDEXED(ctx, UtopiaValue_PFR_Protocol, index);
     UTOPIA_UNSETINDEXED(ctx, UtopiaValue_PFR_ExternalPortRange, index);
+    UTOPIA_UNSETINDEXED(ctx, UtopiaValue_PFR_RuleSource, index);
     
     return SUCCESS;
 }
