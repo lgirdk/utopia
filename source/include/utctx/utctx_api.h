@@ -632,6 +632,8 @@ typedef enum _UtopiaValue
     UtopiaValue_Dslite_IPv6_Frag_Enable,
     UtopiaValue_Dslite_Tunnel_V4Addr,
     #endif /* DSLITE_FEATURE_SUPPORT */
+    UtopiaValue_SPF_RuleSource,
+    UtopiaValue_PFR_RuleSource,
     UtopiaValue__LAST__
 } UtopiaValue;
 
