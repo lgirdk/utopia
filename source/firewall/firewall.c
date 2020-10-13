@@ -3314,6 +3314,10 @@ static int do_single_port_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, 
    }
 #endif
 
+   syscfg_get("CosaNAT", "port_forward_enabled", query, sizeof(query));
+   if ((query[0] != '\0') && (atoi(query) != 0))
+   {
+
    for (idx=1 ; idx<=count ; idx++) {
       namespace[0] = '\0';
       snprintf(query, sizeof(query), "SinglePortForward_%d", idx);
@@ -3654,6 +3658,9 @@ static int do_single_port_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, 
             }
 #endif
    }
+
+   } // END of if (CosaNAT::port_forward_enabled)
+
 SinglePortForwardNext:
 #if defined (FEATURE_MAPT) || defined (FEATURE_SUPPORT_MAPT_NAT46)
      if(isFeatureDisabled == TRUE)
@@ -3709,6 +3716,10 @@ static int do_port_range_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, F
    FIREWALL_DEBUG("PortMapping:Feature Enable %d\n" COMMA TRUE);
    isFeatureDisabled = FALSE;
 #endif
+
+   syscfg_get("CosaNAT", "port_forward_enabled", query, sizeof(query));
+   if ((query[0] != '\0') && (atoi(query) != 0))
+   {
 
    for (idx=1 ; idx<=count ; idx++) {
       namespace[0] = '\0';
@@ -4104,6 +4115,9 @@ static int do_port_range_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, F
 #endif
 
    }
+
+   } // END of if (CosaNAT::port_forward_enabled)
+
 PortRangeForwardNext:
 #if defined (FEATURE_MAPT) || defined (FEATURE_SUPPORT_MAPT_NAT46)
       if (isFeatureDisabled == TRUE)
