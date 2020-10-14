@@ -3501,6 +3501,7 @@ static int do_port_range_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, F
    BOOL isFeatureDisabled = TRUE;
 #endif
 
+   BOOL varyingPortRange = TRUE; // LGI ADD
 
    query[0] = '\0';
            FIREWALL_DEBUG("Entering do_port_range_forwarding\n");       
@@ -3686,6 +3687,22 @@ static int do_port_range_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, F
       char target_internal_port[40] = "";
       char match_internal_port[40] = "";
 
+      // LGI ADD - START
+      varyingPortRange = TRUE;
+      //  If internal port is 0, match it with external port.
+      if (internal_port == 0) {
+          internal_port = atoi(sdport);
+          internal_port_range_size = atoi(edport) - atoi(sdport);
+          varyingPortRange = FALSE;
+      } else {
+          //  Check if the external and internal port ranges are matching
+          if( (atoi(sdport) == internal_port) &&
+              (atoi(edport) == internal_port + internal_port_range_size)) {
+              varyingPortRange = FALSE;
+          }
+      }
+      // LGI ADD - END
+
       if (internal_port)
       {
          if (internal_port_range_size)
@@ -3767,11 +3784,26 @@ static int do_port_range_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, F
 #endif //FEATURE_MAPT
 #endif //_HUB4_PRODUCT_REQ_
       
+
+      int num = 0;                         // LGI ADD
+      int internalPortCnt = internal_port; // LGI ADD
       
       if ((0 == strcmp("both", prot) || 0 == strcmp("tcp", prot)) && (privateIpCheck(toip)))
 	  {
 		 if (isNatReady) {
+            // LGI ADD - START
+            if(TRUE == varyingPortRange)
+            {
+                for(num = atoi(sdport); num <= atoi(edport); num++)
+                {
+
+                    fprintf(nat_fp, "-A prerouting_fromwan -p tcp -m tcp -d %s --dport %d -j DNAT --to-destination %s:%d\n", natip4, num, toip, internalPortCnt++);
+                }
+            }
+            else
+            {      // LGI ADD - END
             fprintf(nat_fp, "-A prerouting_fromwan -p tcp -m tcp -d %s --dport %s:%s -j DNAT --to-destination %s%s\n", natip4, sdport, edport, toip, target_internal_port);
+            }      // LGI ADD
          }
 
 #ifdef _HUB4_PRODUCT_REQ_
@@ -3817,7 +3849,19 @@ static int do_port_range_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, F
 #endif //_HUB4_PRODUCT_REQ_
          if(isHairpin){
              if (isNatReady) {
+                 // LGI ADD - START
+                 if(TRUE == varyingPortRange)
+                 {
+                     internalPortCnt = internal_port;
+                     for(num = atoi(sdport); num <= atoi(edport); num++)
+                     {
+                         fprintf(nat_fp, "-A prerouting_fromlan -p tcp -m tcp -d %s --dport %d -j DNAT --to-destination %s:%d\n", natip4, num, toip, internalPortCnt++);
+                     }
+                }
+                else
+                {   // LGI ADD - END
                 fprintf(nat_fp, "-A prerouting_fromlan -p tcp -m tcp -d %s --dport %s:%s -j DNAT --to-destination %s%s\n", natip4, sdport, edport, toip, target_internal_port);
+                }      // LGI ADD
  
                 fprintf(nat_fp, "-A postrouting_tolan -s %s.0/%s -p tcp -m tcp -d %s --dport %s -j SNAT --to-source %s\n", lan_3_octets, lan_netmask, toip, match_internal_port, natip4);
             }
@@ -3834,10 +3878,32 @@ static int do_port_range_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, F
 #endif 
 #endif 
          }else if (!isNatRedirectionBlocked) {
+            // LGI ADD - START
+            if(TRUE == varyingPortRange)
+            {
+                internalPortCnt = internal_port;
+                for(num = atoi(sdport); num <= atoi(edport); num++) {
+                    fprintf(nat_fp, "-A prerouting_fromlan -p tcp -m tcp -d %s --dport %d -j DNAT --to-destination %s:%d\n", lan_ipaddr, num, toip, internalPortCnt++);
+                }
+            }
+            else
+            { // LGI ADD - END
             fprintf(nat_fp, "-A prerouting_fromlan -p tcp -m tcp -d %s --dport %s:%s -j DNAT --to-destination %s%s\n", lan_ipaddr, sdport, edport, toip, target_internal_port);
+            } // LGI ADD
 
             if (isNatReady) {
+               // LGI ADD - START
+               if(TRUE == varyingPortRange)
+               {
+                   internalPortCnt = internal_port;
+                   for(num = atoi(sdport); num <= atoi(edport); num++) {
+                       fprintf(nat_fp, "-A prerouting_fromlan -p tcp -m tcp -d %s --dport %d -j DNAT --to-destination %s:%d\n", natip4, num, toip, internalPortCnt++);
+                   }
+               }
+               else
+               {  // LGI ADD - END
                fprintf(nat_fp, "-A prerouting_fromlan -p tcp -m tcp -d %s --dport %s:%s -j DNAT --to-destination %s%s\n", natip4, sdport, edport, toip, target_internal_port);
+               } // LGI ADD
             }
 
             fprintf(nat_fp, "-A postrouting_tolan -s %s.0/%s -p tcp -m tcp -d %s --dport %s -j SNAT --to-source %s\n", lan_3_octets, lan_netmask, toip, match_internal_port, lan_ipaddr);
@@ -3854,7 +3920,19 @@ static int do_port_range_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, F
       if ((0 == strcmp("both", prot) || 0 == strcmp("udp", prot)) &&  (privateIpCheck(toip)) )
 	  {
 		 if (isNatReady) {
+            // LGI ADD - START
+            if(TRUE == varyingPortRange)
+            {
+                internalPortCnt = internal_port;
+                for(num = atoi(sdport); num <= atoi(edport); num++)
+                {
+                    fprintf(nat_fp, "-A prerouting_fromwan -p udp -m udp -d %s --dport %d -j DNAT --to-destination %s:%d\n", natip4, num, toip, internalPortCnt++);
+                }
+            }
+            else
+            { // LGI ADD - END
             fprintf(nat_fp,  "-A prerouting_fromwan -p udp -m udp -d %s --dport %s:%s -j DNAT --to-destination %s%s\n", natip4, sdport, edport, toip, target_internal_port);
+            } // LGI ADD
          }
  
 #ifdef _HUB4_PRODUCT_REQ_
@@ -3901,7 +3979,18 @@ static int do_port_range_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, F
 #endif //_HUB4_PRODUCT_REQ_
          if(isHairpin){
              if (isNatReady) {
+                // LGI ADD - START
+                if(TRUE == varyingPortRange)
+                {
+                    internalPortCnt = internal_port;
+                    for(num = atoi(sdport); num <= atoi(edport); num++) {
+                        fprintf(nat_fp, "-A prerouting_fromlan -p udp -m udp -d %s --dport %d -j DNAT --to-destination %s:%d\n", natip4, num, toip, internalPortCnt++);
+                    }
+                }
+                else
+                { // LGI ADD - END
                 fprintf(nat_fp, "-A prerouting_fromlan -p udp -m udp -d %s --dport %s:%s -j DNAT --to-destination %s%s\n", natip4, sdport, edport, toip, target_internal_port);
+                } // LGI ADD
  
                 fprintf(nat_fp, "-A postrouting_tolan -s %s.0/%s -p udp -m udp -d %s --dport %s -j SNAT --to-source %s\n", lan_3_octets, lan_netmask, toip, match_internal_port, natip4);
             }
@@ -3919,10 +4008,33 @@ static int do_port_range_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, F
 #endif
 #endif
          }else if (!isNatRedirectionBlocked) {
+            // LGI ADD - START
+            if(TRUE == varyingPortRange)
+            {
+                internalPortCnt = internal_port;
+                for(num = atoi(sdport); num <= atoi(edport); num++) {
+                    fprintf(nat_fp, "-A prerouting_fromlan -p udp -m udp -d %s --dport %d -j DNAT --to-destination %s:%d\n", lan_ipaddr, num, toip, internalPortCnt++);
+                }
+            }
+            else
+            { // LGI ADD - END
             fprintf(nat_fp, "-A prerouting_fromlan -p udp -m udp -d %s --dport %s:%s -j DNAT --to-destination %s%s\n", lan_ipaddr, sdport, edport, toip, target_internal_port);
+            } // LGI ADD
 
             if (isNatReady) {
+               // LGI ADD - START
+               if(TRUE == varyingPortRange)
+               {
+                   internalPortCnt = internal_port;
+                   for(num = atoi(sdport); num <= atoi(edport); num++)
+                   {
+                       fprintf(nat_fp, "-A prerouting_fromlan -p udp -m udp -d %s --dport %d -j DNAT --to-destination %s:%d\n", natip4, num, toip, internalPortCnt++);
+                   }
+               }
+               else
+               {  // LGI ADD - END
                fprintf(nat_fp, "-A prerouting_fromlan -p udp -m udp -d %s --dport %s:%s -j DNAT --to-destination %s%s\n", natip4, sdport, edport, toip, target_internal_port);
+               } // LGI ADD
             }
 
             fprintf(nat_fp, "-A postrouting_tolan -s %s.0/%s -p udp -m udp -d %s --dport %s -j SNAT --to-source %s\n", lan_3_octets, lan_netmask, toip, match_internal_port, lan_ipaddr);
