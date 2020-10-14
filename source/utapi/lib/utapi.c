@@ -3746,12 +3746,16 @@ int _check_port_range( UtopiaContext *ctx, int new_rule_id, int new_start, int n
         rule_id = get_ruleid_func(ctx, i);
         if(rule_id == new_rule_id)
             continue;
-/* no matter whether this rule is enabled or disabled , always check the port range */
+/* LGI MOD START
+check the port range only with the enabled rules
 #if 0
+LGI MOD END */
         Utopia_GetIndexedBool(ctx, utopia[1], i, &enabled);
         if(enabled == FALSE)
             continue;
+/* LGI MOD START
 #endif
+LGI MOD END */
         Utopia_GetIndexed(ctx, utopia[2], i, s_tokenbuf, sizeof(s_tokenbuf));
         protocol = s_StrToEnum(g_ProtocolMap, s_tokenbuf);
         if(new_protocol == BOTH_TCP_UDP || protocol == BOTH_TCP_UDP || new_protocol == protocol ){ 
