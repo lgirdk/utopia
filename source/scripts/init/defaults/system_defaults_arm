@@ -1301,4 +1301,4 @@ $XHFW_Enable=true
 $XHFW_Status="not activated"
 
 #Use XPKI certificate
-UseXPKI_Enable=false
+$UseXPKI_Enable=false

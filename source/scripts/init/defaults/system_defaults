@@ -1123,4 +1123,4 @@ $EnableOCSPStapling=false
 $EnableOCSPCA=false
 
 #Use XPKI certificate
-UseXPKI_Enable=false
+$UseXPKI_Enable=false
