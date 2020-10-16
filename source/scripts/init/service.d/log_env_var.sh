@@ -35,9 +35,10 @@ else
       LOG_FOLDER="/var/tmp"
 fi
 
-LOG_UPLOAD_FOLDER="/nvram"
+LOG_UPLOAD_FOLDER="/tmp"
 RDK_LOGGER_PATH="/rdklogger"
 LOG_PATH="$LOG_FOLDER/logs/"
+TMP_LOG_PATH="$LOG_UPLOAD_FOLDER/logs/"
 
 ATOM_LOG_PATH="/rdklogs/logs/"
 
