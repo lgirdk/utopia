@@ -31,9 +31,10 @@ LOG_SYNC_BACK_UP_REBOOT_PATH="/nvram2/logs/"
 . /etc/device.properties
 
 LOG_FOLDER="/rdklogs"
-LOG_UPLOAD_FOLDER="/nvram"
+LOG_UPLOAD_FOLDER="/tmp"
 RDK_LOGGER_PATH="/rdklogger"
 LOG_PATH="$LOG_FOLDER/logs/"
+TMP_LOG_PATH="$LOG_UPLOAD_FOLDER/logs/"
 
 ATOM_LOG_PATH="/rdklogs/logs/"
 
