@@ -4915,7 +4915,6 @@ static int do_lan2self_by_wanip(FILE *filter_fp, int family)
    do_multinet_lan2self_by_wanip(filter_fp);
 #endif
 
-   fprintf(filter_fp, "-A lan2self_by_wanip -d %s -j RETURN\n", current_wan_ipaddr); //eRouter address doesn't have any restrictions
 #ifdef CISCO_CONFIG_TRUE_STATIC_IP
    if(isWanStaticIPReady){
          int i;
