@@ -889,8 +889,8 @@ $ManagedServiceTrustCount=0
 $ManagedDeviceCount=0
 
 #HS Port Forward Defaults
-$CosaNAT::port_trigger_enabled=0
-$CosaNAT::port_forward_enabled=0
+$CosaNAT::port_trigger_enabled=1
+$CosaNAT::port_forward_enabled=1
 $CosaNAT::port_hs_forward_enabled=1
 
 #Email Notification Defaults
