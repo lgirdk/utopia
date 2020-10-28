@@ -10947,7 +10947,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(filter_fp, "-A INPUT -i host0 -s 192.168.147.0/255.255.255.0 -j ACCEPT\n");
    fprintf(filter_fp, "-A OUTPUT -o host0 -d 192.168.147.0/255.255.255.0 -j ACCEPT\n");
 #endif
-#ifdef _COSA_INTEL_XB3_ARM_
+#if defined(_COSA_INTEL_XB3_ARM_) || defined(INTEL_MV1)
    fprintf(filter_fp, "-A OUTPUT ! -s %s -p icmp -m icmp --icmp-type 3 -j DROP\n", lan_ipaddr);
 #endif
    fprintf(filter_fp, "-A OUTPUT -o lo -p tcp -m tcp --sport 49152:49153 -j ACCEPT\n");
@@ -12243,7 +12243,7 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
 #endif
    }
 
-#ifdef _COSA_INTEL_XB3_ARM_
+#if defined(_COSA_INTEL_XB3_ARM_) || defined(INTEL_MV1)
    if (!isBridgeMode)
        fprintf(filter_fp, "-A OUTPUT ! -s %s -p icmp -m icmp --icmp-type 3 -j DROP\n", lan_ipaddr);
 #endif
