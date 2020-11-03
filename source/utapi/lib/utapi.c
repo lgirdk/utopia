@@ -2553,7 +2553,7 @@ static int s_add_portmapdyn (int index, portMapDyn_t *pmap)
     char value[1024], param[128];
     /*char unique[128];*/
     time(&pmap->last_updated);
-    snprintf(value, sizeof(value), "%s,%s,%d,%s,%d,%s,%d,%ld,%s", 
+    snprintf(value, sizeof(value), "%s,%s,%d,%s,%d,%s,%d,%ld,%s,%s", 
                                (TRUE == pmap->enabled) ? "enabled" : "disabled",
                                (strlen(pmap->external_host) == 0) ? "none" : pmap->external_host,
                                pmap->external_port,
@@ -2562,7 +2562,8 @@ static int s_add_portmapdyn (int index, portMapDyn_t *pmap)
                                (TCP == pmap->protocol) ? "tcp" : "udp",
                                pmap->lease,
                                (long)(pmap->last_updated),
-                               pmap->name);
+                               pmap->name,
+                               pmap->rule_source);//LGI MOD
 
 #if 0
     sysevent_get(se_fd, se_token, param, unique, sizeof(unique));
@@ -2708,12 +2709,20 @@ static int s_get_portmapdyn (int index, portMapDyn_t *portmap)
     portmap->last_updated = (time_t)atol(p);
     p = next;
 
-    // last entry doesn't have delimiter, nothing to chop; use as-is
-     /* CID 135651: BUFFER_SIZE_WARNING */
+    //LGI MOD START
+    if (NULL == (next = chop_str(p,','))) {
+        return ERR_INVALID_VALUE;
+    }
     strncpy(portmap->name, p, sizeof(portmap->name)-1);
     portmap->name[sizeof(portmap->name)-1] = '\0';
+    p = next;
 
-    ulog_debugf(ULOG_CONFIG, UL_UTAPI, "enabled %d ext host %s ext port %d int host %s int port %d lease %d name %s last update %ld",
+    // last entry doesn't have delimiter, nothing to chop; use as-is
+    strncpy(portmap->rule_source, p, sizeof(portmap->rule_source)-1);
+    portmap->rule_source[sizeof(portmap->rule_source)-1] = '\0';
+    //LGI MOD END
+
+    ulog_debugf(ULOG_CONFIG, UL_UTAPI, "enabled %d ext host %s ext port %d int host %s int port %d lease %d name %s last update %ld rule source %s",
                 portmap->enabled,
                 portmap->external_host,
                 portmap->external_port,
@@ -2721,7 +2730,8 @@ static int s_get_portmapdyn (int index, portMapDyn_t *portmap)
                 portmap->internal_port,
                 portmap->lease,
                 portmap->name,
-                portmap->last_updated);
+                portmap->last_updated,
+                portmap->rule_source);
 
     return UT_SUCCESS;
 }
