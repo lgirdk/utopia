@@ -572,6 +572,13 @@ if [ "$BOX_TYPE" = "MV1" ];then
 
 fi
 
+# ------ Creating trunk port for ext switch ports of primary LAN --------------------
+if [ "$BOX_TYPE" = "MV1" ]; then
+    l2switchPort=$(syscfg get lan_ethernet_physical_ifnames)
+    vconfig add ${l2switchPort%%.*} ${l2switchPort##*.}
+    ip link set dev ${l2switchPort} up
+fi
+
 # ----------------------------------------------------------------------------
 # ----------------------------------------------------------------------------
 # ----------------------------------------------------------------------------
