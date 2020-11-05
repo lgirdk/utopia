@@ -531,6 +531,15 @@ if [ "$BOX_TYPE" = "MV1" ];then
     $UTOPIA_PATH/service_multinet_exec create_mesh_vlan &
 fi
 
+# ------ Creating trunk port for ext switch ports of primary LAN --------------------
+if [ "$BOX_TYPE" = "MV1" ]; then
+    for l2switchPort in $(syscfg get lan_ethernet_physical_ifnames)
+    do
+        vconfig add ${l2switchPort%%.*} ${l2switchPort##*.}
+        ip link set dev ${l2switchPort} up
+    done
+fi
+
 # ----------------------------------------------------------------------------
 # ----------------------------------------------------------------------------
 # ----------------------------------------------------------------------------
