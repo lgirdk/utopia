@@ -1381,3 +1381,5 @@ $arLanAllowedSubnet_1::SubnetIP=10.0.0.0
 $arLanAllowedSubnet_1::SubnetMask=255.0.0.0
 $arLanAllowedSubnet_1::alias=LanAllowedSubnet-1
 $lglanAllowedSubnet_1=arLanAllowedSubnet_1
+
+$TraceRouteMaxHopCount=30
