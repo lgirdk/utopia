@@ -769,3 +769,9 @@ $UTOPIA_PATH/service_multinet_exec set_multicast_mac &
 
 #echo_t "[utopia][init] started dropbear process"
 #/etc/utopia/service.d/service_sshd.sh sshd-start &
+
+if [ -d /sys/class/net/wlan1 ];then
+    echo_t "[utopia][init] Starting ALE daemon"
+    AL_MAC=`ifconfig wlan1 | grep HWaddr | awk '{print $5}'`
+    /usr/bin/al_entity -m $AL_MAC -i wlan1 -vv &
+fi
