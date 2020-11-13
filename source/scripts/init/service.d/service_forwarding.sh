@@ -94,7 +94,7 @@ service_start ()
 
       # if we are in bridge mode then make sure that the wan, lan are down
       if [ "1" = "$bridge_mode" ] || [ "2" = "$bridge_mode" ] || [ "3" = "$bridge_mode" ]; then
-        if [ "2" != "$bridge_mode" ] && [ "3" != "$bridge_mode" ]; then 
+        if [ "3" != "$bridge_mode" ]; then
             STATUS=`sysevent get wan-status`
             if [ "stopped" != "$STATUS" ] ; then
                 ulog forwarding status "stopping wan"
@@ -164,7 +164,7 @@ service_start ()
          ulog forwarding status "starting bridge"
          sysevent set bridge-start
          STATUS=`sysevent get wan-status`
-         if [ "2" = "$bridge_mode" ] || [ "3" = "$bridge_mode" ]; then 
+         if [ "3" = "$bridge_mode" ]; then
             if [ "started" != "$STATUS" ] ; then
                 ulog forwarding status "starting wan"
                 sysevent set wan-start
