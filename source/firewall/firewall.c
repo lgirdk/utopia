@@ -488,6 +488,11 @@ NOT_DEF:
 #define BTMASK_BYDAYHOUR        2
 #define DAYOFWEEK_BITMASK_LEN   256
 
+#ifdef USE_WHITELISTED_IP
+#define HTTP_STR "http://"
+#define HTTPS_STR "https://"
+#endif
+
 static unsigned long v4_dayofweek_block_time_bit_mask_type;
 static unsigned long v6_dayofweek_block_time_bit_mask_type;
 static unsigned long mac_dayofweek_block_time_bit_mask_type;
@@ -10657,6 +10662,173 @@ static int prepare_multinet_disabled_ipv4_firewall(FILE *filter_fp) {
 }
 #endif
 
+#ifdef USE_WHITELISTED_IP
+
+/*Gets the ACS URL set by the tr069 process using sysevent */
+static void getWhitelistedACSUrl(char * acsURL)
+{  
+  FILE *f;
+  char *pos;
+  FIREWALL_DEBUG("%s:%d \n" COMMA __FUNCTION__  COMMA  __LINE__);
+  f = popen("sysevent get whitelistedAcsUrl","r");
+  if(f == NULL || !acsURL)
+  {
+    FIREWALL_DEBUG("%s:%d whitelistedAcsUrl not set yet.. \n" COMMA __FUNCTION__  COMMA  __LINE__);
+    return;
+  }
+  fgets(acsURL,MAX_URL_LEN,f);
+  if((pos = strrchr(acsURL, '\n')) != NULL)
+    *pos = '\0';
+  pclose(f); 
+  FIREWALL_DEBUG("%s:%d whitelistedAcsUrl:%s \n" COMMA __FUNCTION__  COMMA  __LINE__ COMMA acsURL);
+}
+
+/*
+ * Gets the IPAddress (IPv4/IPv6 based on the family parameter) for a given host name.
+ */
+static int getIPAddress (const char *hostName, char *ipStr, int family)
+{
+  struct addrinfo hints, *res;  
+  void *ptr = NULL;  
+  
+  FIREWALL_DEBUG("%s:%d host:%s family:%s \n" COMMA __FUNCTION__ COMMA __LINE__ COMMA  hostName COMMA ((family == AF_INET) ? "IPv4" : "IPv6"));
+  memset(&hints, 0, sizeof (hints));
+  hints.ai_family = family;
+  hints.ai_socktype = 0;
+  
+ 
+  char hostToResolve[MAX_URL_LEN] = {0};
+  strcpy(hostToResolve,hostName);
+  char *str1end = NULL;
+  str1end = strchr(hostToResolve, '/'); //Ignore the path name if one exists.
+  if(str1end)
+  {    
+    *str1end = 0;    
+    FIREWALL_DEBUG("%s:%d host:%s family:%s  Ignore the path name from the URL\n" COMMA __FUNCTION__ COMMA __LINE__ COMMA  hostName COMMA ((family == AF_INET) ? "IPv4" : "IPv6"));
+  }
+
+  FIREWALL_DEBUG("%s:%d hostToResolve:%s \n" COMMA __FUNCTION__ COMMA __LINE__ COMMA hostToResolve );
+  int result = getaddrinfo (hostToResolve, NULL, &hints, &res);
+  if(result != 0)
+  {
+    FIREWALL_DEBUG("%s:%d getaddrinfo failed for %s error code:%d error:%s \n" COMMA __FUNCTION__ COMMA __LINE__ COMMA  hostToResolve COMMA result COMMA gai_strerror(result));
+    return -1;
+  }
+  if(res)
+  {
+    switch (res->ai_family)
+    {
+      case AF_INET:
+        ptr = &((struct sockaddr_in *) res->ai_addr)->sin_addr;
+        break;
+      case AF_INET6:
+         ptr = &((struct sockaddr_in6 *) res->ai_addr)->sin6_addr;
+         break;
+    }
+    if(!ptr)
+    {
+      FIREWALL_DEBUG("%s:%d  failed to get IPAddress for the %s family \n" COMMA __FUNCTION__ COMMA __LINE__ COMMA ((family == AF_INET) ? "IPv4" : "IPv6"));
+      return -1;
+    }
+    inet_ntop (res->ai_family, ptr, ipStr, 100);
+    FIREWALL_DEBUG("getIPAddress:%d ipStr::%s \n" COMMA __LINE__ COMMA  ipStr);    
+    freeaddrinfo(res);
+  }
+  return 0;
+}
+
+/*
+ * Parses the ACS URL to get the IPV4/IPv6 address for iptable rule creation
+ */
+static void getWhiteListedACSServer(int family,char *acsIP)
+{
+  FIREWALL_DEBUG("Entering %s:%d family:(%s)\n" COMMA __FUNCTION__ COMMA __LINE__ COMMA ((family == AF_INET) ? "IPv4" : "IPv6") );
+  /* IPAddress based ACR URL (IPV4/IPv6) */
+  /* IPv4 format: http://172.19.17.149:9675 or https://172.19.17.149:9675 */
+  /* IPv6 format: http://[2001:dead:beef:1:56ee:75ff:fe44:d457]:9675 or https://[2001:dead:beef:1:56ee:75ff:fe44:d457]:9675 */
+  
+  /* FQDN based ACR URL */  
+  /*http://mv1rdkb.svl.ipv6.acs2.com */
+  
+  char acsAddress[MAX_URL_LEN] = {0};
+  getWhitelistedACSUrl(acsAddress);
+  if(strlen(acsAddress) > 0)
+  {
+    char * str1end;
+    char *str1 = strstr(acsAddress, HTTPS_STR);
+    if(str1)
+    {
+      str1 += strlen(HTTPS_STR);      
+    }
+    else
+    {
+      str1 = strstr(acsAddress, HTTP_STR);
+      if(str1)
+      {
+        str1 += strlen(HTTP_STR);
+      }      
+    }
+    if (str1 == NULL)
+    {
+      FIREWALL_DEBUG("%s:%d Could not parse URL\n" COMMA __FUNCTION__ COMMA __LINE__);
+      return;
+    }
+    //Get rid of the port number if the URL 
+    if (str1[0] == '[') //IPv6
+    {
+      if (family == AF_INET)
+      {
+        FIREWALL_DEBUG("%s:%d Invalid URL in IPv4\n" COMMA __FUNCTION__ COMMA __LINE__);
+        return;
+      }
+      str1++;
+      str1end = strchr(str1, ']');
+      if(str1end)
+      {
+        *str1end = 0;
+      }
+    }
+    else //IPv4 and FQDN
+    {
+      str1end = strchr(str1, ':');
+      if(str1end)
+      {
+        *str1end = 0;
+      }
+    }
+    struct sockaddr_in sa;    
+    //check if it's a hostname and not IPv4/IPv6 address
+    int res = inet_pton(family, str1, &(sa.sin_addr));
+    if(res == 1) //IPAddress based URL
+    {
+      FIREWALL_DEBUG("%s:%d IPaddress %s is valid\n" COMMA __FUNCTION__ COMMA __LINE__ COMMA str1);
+      strncpy(acsIP,str1,MAX_URL_LEN);  
+    }
+    else //domain name based URL
+    {
+      FIREWALL_DEBUG("%s:%d IPaddress:%s: family:%d: is NOT VALId IPv4/IPv6 address...must be a domain name\n" COMMA __FUNCTION__ COMMA __LINE__ COMMA str1 COMMA family);
+      char ipStr[100] = {0};
+      if( getIPAddress (str1, ipStr,family) == 0) //Get the IPAddress from the URL
+      {
+        FIREWALL_DEBUG("%s:%d Retrieved IPAddress:%s \n" COMMA __FUNCTION__ COMMA __LINE__ COMMA ipStr);
+        strncpy(acsIP,ipStr,MAX_URL_LEN);  
+      }
+      else
+      {
+        FIREWALL_DEBUG("%s:%d Could not get the IPAddress for family:%s\n"  COMMA __FUNCTION__ COMMA __LINE__ COMMA ((family == AF_INET) ? "IPv4" : "IPv6"));
+        return;
+      }
+    }    
+  }
+  else
+  {
+    FIREWALL_DEBUG("%s:%d ACS URL is not set yet \n"COMMA __FUNCTION__ COMMA  __LINE__);
+  }
+  FIREWALL_DEBUG("Exiting %s:%d family:(%s)\n"COMMA __FUNCTION__ COMMA __LINE__ COMMA ((family == AF_INET) ? "IPv4" : "IPv6"));
+}
+
+#endif
+
 static void do_tr69_whitelistTable (FILE *filter_fp, FILE *nat_fp, int family, char *current_wan_ifname, void *bus_handle)
 {
     int retCwmpEnabled;
@@ -10674,12 +10846,30 @@ static void do_tr69_whitelistTable (FILE *filter_fp, FILE *nat_fp, int family, c
 
         if(filter_fp)
         {
+#ifdef USE_WHITELISTED_IP
+            char acsAddress[MAX_URL_LEN] = {0};
+
+            getWhiteListedACSServer(family, acsAddress);
+            if(strlen(acsAddress) > 0)
+            {
+                FIREWALL_DEBUG("%s:%d USE_WHITELISTED_IP acsAddress:%s \n" COMMA __FUNCTION__ COMMA __LINE__ COMMA acsAddress);
+
+                fprintf(filter_fp, "-A tr69_filter -i %s -p tcp --dport %s -s %s -j ACCEPT\n", current_wan_ifname, cwmpPort, acsAddress);
+            }
+            else
+            {
+                FIREWALL_DEBUG("%s:%d whitelistedAcsUrl not set yet.. \n" COMMA __FUNCTION__  COMMA  __LINE__);     
+            }
+#else
             fprintf(filter_fp, "-A tr69_filter -i %s -p tcp --dport %s -j ACCEPT\n", current_wan_ifname, cwmpPort);
+#endif
             fprintf(filter_fp, "-A tr69_filter -p tcp --dport %s -j DROP\n", cwmpPort);
         }
 
         if(nat_fp)
         {
+            /* Fixme: is a USE_WHITELISTED_IP case needed here too? */
+
             fprintf(nat_fp, "-I PREROUTING -i erouter0 -p tcp --dport %s -j RETURN\n", cwmpPort);
         }
     }
