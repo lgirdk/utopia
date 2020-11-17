@@ -123,12 +123,12 @@ void dhcp_server_stop()
 	memset(l_cSystemCmd, 0x00, sizeof(l_cSystemCmd));
 	if (!strncasecmp(g_cXdns_Enabled, "true", 4)) //If XDNS is ENABLED
     {
-        sprintf(l_cSystemCmd, "%s -u nobody -q --clear-on-reload --bind-dynamic --add-mac --add-cpe-id=abcdefgh -P 4096 -C %s %s",
+        sprintf(l_cSystemCmd, "%s -q --clear-on-reload --bind-dynamic --add-mac --add-cpe-id=abcdefgh -P 4096 -C %s %s",
 				SERVER, DHCP_CONF,dnsOption);
     }
     else //If XDNS is not enabled 
     {
-        sprintf(l_cSystemCmd, "%s -u nobody -P 4096 -C %s %s", SERVER, DHCP_CONF,dnsOption);
+        sprintf(l_cSystemCmd, "%s -P 4096 -C %s %s", SERVER, DHCP_CONF,dnsOption);
     }
 
     l_iSystem_Res = system(l_cSystemCmd); //dnsmasq command
@@ -334,11 +334,11 @@ int dhcp_server_start (char *input)
 	int l_iDnamasq_Retry;	
 	if (!strncasecmp(g_cXdns_Enabled, "true", 4)) //If XDNS is ENABLED
 	{
-		sprintf(l_cSystemCmd, "%s -u nobody -q --clear-on-reload --bind-dynamic --add-mac --add-cpe-id=abcdefgh -P 4096 -C %s %s",SERVER, DHCP_CONF,dnsOption);
+		sprintf(l_cSystemCmd, "%s -q --clear-on-reload --bind-dynamic --add-mac --add-cpe-id=abcdefgh -P 4096 -C %s %s",SERVER, DHCP_CONF,dnsOption);
 	}
 	else //If XDNS is not enabled 
 	{
-    	sprintf(l_cSystemCmd, "%s -u nobody -P 4096 -C %s %s", SERVER, DHCP_CONF,dnsOption);
+    	sprintf(l_cSystemCmd, "%s -P 4096 -C %s %s", SERVER, DHCP_CONF,dnsOption);
 	}
 
 	l_iSystem_Res = system(l_cSystemCmd); //dnsmasq command
@@ -599,12 +599,12 @@ void lan_status_change(char *input)
         fprintf(stderr, "SERVICE DHCP : Start dhcp-server from lan status change");
 		if (!strncasecmp(g_cXdns_Enabled, "true", 4)) //If XDNS is ENABLED
 	    {
-    	    sprintf(l_cSystemCmd, "%s -u nobody -q --clear-on-reload --bind-dynamic --add-mac --add-cpe-id=abcdefgh -P 4096 -C %s %s", 
+    	    sprintf(l_cSystemCmd, "%s -q --clear-on-reload --bind-dynamic --add-mac --add-cpe-id=abcdefgh -P 4096 -C %s %s", 
 					SERVER, DHCP_CONF,dnsOption);
     	}
     	else //If XDNS is not enabled 
     	{
-        	snprintf(l_cSystemCmd, sizeof(l_cSystemCmd), "%s -u nobody -P 4096 -C %s %s", SERVER, DHCP_CONF,dnsOption);
+        	snprintf(l_cSystemCmd, sizeof(l_cSystemCmd), "%s -P 4096 -C %s %s", SERVER, DHCP_CONF,dnsOption);
     	}
 		fprintf(stderr, "Starting dnsmasq: %s now\n", l_cSystemCmd);
 	    l_iSystem_Res = system(l_cSystemCmd); //dnsmasq command
