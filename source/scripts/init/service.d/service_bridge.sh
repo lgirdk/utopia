@@ -47,6 +47,8 @@ SERVICE_NAME="bridge"
 UDHCPC_PID_FILE=/var/run/udhcpc.pid
 UDHCPC_SCRIPT=/etc/utopia/service.d/service_bridge/dhcp_link.sh
 
+cmdiag_ip="192.168.100.1"
+
 #-------------------------------------------------------------
 # Registration/Deregistration of dhcp client restart/release/renew handlers
 # These are only needed if the dhcp is used
@@ -191,7 +193,6 @@ add_ebtable_rule()
     cmdiag_if_mac=`ip link show $cmdiag_if | awk '/link/ {print $2}'`
 
     wan_if=`syscfg get wan_physical_ifname`
-    cmdiag_ip="192.168.100.1"
     subnet_wan=`ip route show | awk '/'$wan_if'/ {print $1}'`
 
     ip route del $subnet_wan dev $wan_if
@@ -201,7 +202,7 @@ add_ebtable_rule()
 
     dst_ip=`syscfg get lan_ipaddr` # RT-10-580 @ XB3 
     ip addr add $dst_ip/24 dev $cmdiag_if
-    ebtables -t nat -A PREROUTING -p ipv4 --ip-dst $dst_ip -j dnat --to-destination $cmdiag_if_mac
+    ebtables -t nat -A PREROUTING -p ipv4 --ip-dst $cmdiag_ip -j dnat --to-destination $cmdiag_if_mac
     echo 2 > /proc/sys/net/ipv4/conf/wan0/arp_announce
 }
 
@@ -227,7 +228,7 @@ del_ebtable_rule()
 
     dst_ip=`syscfg get lan_ipaddr` # RT-10-580 @ XB3 PRD
     ip addr del $dst_ip/24 dev $cmdiag_if
-    ebtables -t nat -D PREROUTING -p ipv4 --ip-dst $dst_ip -j dnat --to-destination $cmdiag_if_mac
+    ebtables -t nat -D PREROUTING -p ipv4 --ip-dst $cmdiag_ip -j dnat --to-destination $cmdiag_if_mac
     echo 0 > /proc/sys/net/ipv4/conf/wan0/arp_announce
 }
 
