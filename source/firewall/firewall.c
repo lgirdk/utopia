@@ -1172,6 +1172,47 @@ static int BlockTimeBitMask_AddToCron(unsigned long *pMaskDayOfWeek,
     fclose(cron_fp);
     return 0;
 }
+
+/*
+ * Procedure     : getCwmpPort
+ * Purpose       : To get the value of CWMP Port from PSM if applicable.
+ * Parameters    :
+ *    in         : None.
+ * Return Value  : None.
+ * Note          : None.
+*/
+
+#define PSM_CWMP_PORT_VALUE "eRT.com.cisco.spvtg.ccsp.tr069pa.Device.ManagementServer.X_CISCO_COM_ConnectionRequestURLPort.Value"
+#define DEF_CWMP_PORT "7547"
+
+static void getCwmpPort (char *cwmpPort, size_t n)
+{
+    char *port;
+    char *portpsm;
+    size_t len;
+
+    PSM_VALUE_GET_STRING(PSM_CWMP_PORT_VALUE, portpsm);
+
+    if (portpsm)
+        port = portpsm;
+    else
+        port = DEF_CWMP_PORT;
+
+    len = strlen (port);
+    if (len >= n)
+        len = n;
+
+    memcpy (cwmpPort, port, len);
+    cwmpPort[len] = 0;
+
+    if (portpsm) {
+        Ansc_FreeMemory_Callback(portpsm);
+        portpsm = NULL;
+    }
+
+    FIREWALL_DEBUG("getCwmpPort port: %s\n" COMMA cwmpPort);
+}
+
 // LGI ADD END
 
 /*
@@ -10650,28 +10691,31 @@ static void do_tr69_whitelistTable (FILE *filter_fp, FILE *nat_fp, int family, c
 {
     int retCwmpEnabled;
     char *pCwmpEnabled = NULL;
+    char cwmpPort[6];
 
     FIREWALL_DEBUG("Entering do_tr69_whitelistTable (%s)\n" COMMA ((family == AF_INET) ? "IPv4" : "IPv6") );
+
+    getCwmpPort(cwmpPort, sizeof(cwmpPort));
 
     retCwmpEnabled = PSM_VALUE_GET_STRING(PSM_CWMP_ENABLE_VALUE, pCwmpEnabled);
     if ((retCwmpEnabled == CCSP_SUCCESS) && (strcmp(pCwmpEnabled, "1") == 0))
     {
-        FIREWALL_DEBUG("CWMP is enabled. ACCEPT TR069 port 7547\n");
+        FIREWALL_DEBUG("CWMP is enabled. ACCEPT TR069 port %s\n" COMMA cwmpPort);
 
         if(filter_fp)
         {
-            fprintf(filter_fp, "-A tr69_filter -i %s -p tcp --dport 7547 -j ACCEPT\n", current_wan_ifname);
-            fprintf(filter_fp, "-A tr69_filter -p tcp --dport 7547 -j DROP\n");
+            fprintf(filter_fp, "-A tr69_filter -i %s -p tcp --dport %s -j ACCEPT\n", current_wan_ifname, cwmpPort);
+            fprintf(filter_fp, "-A tr69_filter -p tcp --dport %s -j DROP\n", cwmpPort);
         }
 
         if(nat_fp)
         {
-            fprintf(nat_fp, "-I PREROUTING -i erouter0 -p tcp --dport 7547 -j RETURN\n");
+            fprintf(nat_fp, "-I PREROUTING -i erouter0 -p tcp --dport %s -j RETURN\n", cwmpPort);
         }
     }
     else
     {
-        FIREWALL_DEBUG("CWMP is disabled. DROP TR069 port 7547 for IPv4\n");
+        FIREWALL_DEBUG("CWMP is disabled. DROP TR069 port %s for IPv4\n" COMMA cwmpPort);
     }
 
     FIREWALL_DEBUG("Exiting do_tr69_whitelistTable (%s)\n" COMMA ((family == AF_INET) ? "IPv4" : "IPv6"));
@@ -11048,10 +11092,13 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
 #endif //_HUB4_PRODUCT_REQ_
 
    if(isComcastImage) {
+       char cwmpPort[6];
+
+       getCwmpPort(cwmpPort, sizeof(cwmpPort));
        //tr69 chains for logging and filtering
        fprintf(filter_fp, "%s\n", ":LOG_TR69_DROP - [0:0]");
        fprintf(filter_fp, "%s\n", ":tr69_filter - [0:0]");
-       fprintf(filter_fp, "-A INPUT -p tcp -m tcp --dport 7547 -j tr69_filter\n");
+       fprintf(filter_fp, "-A INPUT -p tcp -m tcp --dport %s -j tr69_filter\n", cwmpPort);
    }
 #ifdef _COSA_INTEL_XB3_ARM_
    fprintf(filter_fp, "-A INPUT -p icmp -m state --state ESTABLISHED -m limit --limit 5/sec --limit-burst 10 -j ACCEPT\n");
@@ -12236,10 +12283,13 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    }
 
    if(isComcastImage && isBridgeMode) {
+       char cwmpPort[6];
+
+       getCwmpPort(cwmpPort, sizeof(cwmpPort));
        //tr69 chains for logging and filtering
        fprintf(filter_fp, "%s\n", ":LOG_TR69_DROP - [0:0]");
        fprintf(filter_fp, "%s\n", ":tr69_filter - [0:0]");
-       fprintf(filter_fp, "-A INPUT -p tcp -m tcp --dport 7547 -j tr69_filter\n");
+       fprintf(filter_fp, "-A INPUT -p tcp -m tcp --dport %s -j tr69_filter\n", cwmpPort);
        fprintf(filter_fp, "-A LOG_TR69_DROP -m limit --limit 1/minute -j LOG --log-level %d --log-prefix \"TR-069 ACS Server Blocked:\"\n",syslog_level);
        fprintf(filter_fp, "-A LOG_TR69_DROP -j DROP\n");
        do_tr69_whitelistTable(filter_fp, nat_fp, AF_INET, current_wan_ifname, bus_handle);
@@ -12951,10 +13001,13 @@ static void do_ipv6_filter_table(FILE *fp){
    fprintf(fp, "%s\n", ":LOG_INPUT_DROP - [0:0]");
    fprintf(fp, "%s\n", ":LOG_FORWARD_DROP - [0:0]");
    if(isComcastImage) {
+       char cwmpPort[6];
+
+       getCwmpPort(cwmpPort, sizeof(cwmpPort));
        //tr69 chains for logging and filtering
        fprintf(fp, "%s\n", ":LOG_TR69_DROP - [0:0]");
        fprintf(fp, "%s\n", ":tr69_filter - [0:0]");
-       fprintf(fp, "-A INPUT -p tcp -m tcp --dport 7547 -j tr69_filter\n");
+       fprintf(fp, "-A INPUT -p tcp -m tcp --dport %s -j tr69_filter\n", cwmpPort);
        fprintf(fp, "-A LOG_TR69_DROP -m limit --limit 1/minute -j LOG --log-level %d --log-prefix \"TR-069 ACS Server Blocked:\"\n",syslog_level);
        fprintf(fp, "-A LOG_TR69_DROP -j DROP\n");
        do_tr69_whitelistTable(fp, NULL, AF_INET6, current_wan_ifname, bus_handle);
