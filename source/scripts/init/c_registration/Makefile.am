@@ -37,7 +37,6 @@ AM_LDFLAGS = $(top_builddir)/source/util/utils/libutopiautil.la \
 # but this needs review.
 
 bin_PROGRAMS = \
-    01_init \
     01_system \
     02_bridge \
     02_forwarding \
@@ -89,7 +88,6 @@ bin_PROGRAMS = \
     33_cosa
 
 
-01_init_SOURCES = 01_init.c
 01_system_SOURCES = 01_system.c
 02_bridge_SOURCES = 02_bridge.c
 02_forwarding_SOURCES = 02_forwarding.c
