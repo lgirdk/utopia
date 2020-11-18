@@ -180,10 +180,13 @@ int nv_get_members(PL2Net net, PMember memberList, int numMembers)
             ifToken = strtok(valBuff+2, "\" \n");
             while(ifToken) { //FIXME: check for memberList overflow
                 MNET_DEBUG("nv_get_members, current lookup token %s\n" COMMA ifToken)
-                if ((dash = strchr(ifToken, '-'))){
+                if ((dash = strchr(ifToken, '-')) && strncmp(typeStrings[i],"Gre",3)){
                     *dash = '\0';
                     /* Add virtual interface for all bridge Vlans */
                     for (j = 0; j < number_port_vids; ++j) {
+                        if(strstr(port_vids[j].ifnames,"gretap"))
+                            continue;
+
                         memberList[actualNumMembers].bTagging = 1;
                         memberList[actualNumMembers].pvid = port_vids[j].vid;
                         memberList[actualNumMembers].interface->map = NULL; // No mapping has been performed yet
@@ -193,12 +196,17 @@ int nv_get_members(PL2Net net, PMember memberList, int numMembers)
                 } else {
                     memberList[actualNumMembers].pvid = net->vid;
                     for (j = 0; j < number_port_vids; ++j) {
-                        if (strstr(port_vids[j].ifnames, ifToken)) {
+                        if (strstr(port_vids[j].ifnames, ifToken) || (strstr(ifToken,"gretap") && strstr(port_vids[j].ifnames, "gretap"))) {
                             memberList[actualNumMembers].pvid = port_vids[j].vid;
                             break;
                         }
                     }
-                    memberList[actualNumMembers].bTagging = 0;
+
+                    if(!strncmp(typeStrings[i],"Gre",3) && memberList[actualNumMembers].pvid != 0)
+                        memberList[actualNumMembers].bTagging = 1;
+                    else
+                        memberList[actualNumMembers].bTagging = 0;
+
                     memberList[actualNumMembers].interface->map = NULL; // No mapping has been performed yet
                     strcpy(memberList[actualNumMembers].interface->name, ifToken);
                     strcpy(memberList[actualNumMembers++].interface->type->name, typeStrings[i]);
