@@ -531,18 +531,16 @@ static int dslite_start(struct serv_dslite *sd)
     else
         syscfg_set(NULL,  "dslite_origin_1", "2");//Static
 
-    //add for clm_48041 BEGIN
     syscfg_get(NULL,  "dslite_ipv6_frag_enable_1", dslite_ipv6_frag_enable, sizeof(dslite_ipv6_frag_enable));
 
     if(strcmp(dslite_ipv6_frag_enable, "1")!=0)
     {
-        vsystem("echo 0 >/proc/arris/dslite_ipv6_frag");
+        vsystem("echo 0 >/proc/dslite/dslite_ipv6_frag");
     }
     else
     {
-        vsystem("echo 1 >/proc/arris/dslite_ipv6_frag");
+        vsystem("echo 1 >/proc/dslite/dslite_ipv6_frag");
     }
-    //add for clm_48041 END
 
     SEM_POST
     return 0;
@@ -673,7 +671,7 @@ static int dslite_stop(struct serv_dslite *sd)
     vsystem("sysevent set firewall-restart");//restart firewall to install the rules
     vsystem("conntrack_flush");
 
-    vsystem("echo 0 >/proc/arris/dslite_ipv6_frag");
+    vsystem("echo 0 >/proc/dslite/dslite_ipv6_frag");
 
     sysevent_set(sd->sefd, sd->setok, "dslite_service-status", "stopped", 0);
 
