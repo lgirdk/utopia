@@ -12200,7 +12200,8 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    fprintf(nat_fp, "%s\n", ":POSTROUTING ACCEPT [0:0]");
    fprintf(nat_fp, "%s\n", ":OUTPUT ACCEPT [0:0]");
    fprintf(nat_fp, "%s\n", ":postrouting_towan - [0:0]");
-   fprintf(nat_fp, "-A POSTROUTING -o %s -j postrouting_towan\n", current_wan_ifname);
+   if (!isBridgeMode)
+       fprintf(nat_fp, "-A POSTROUTING -o %s -j postrouting_towan\n", current_wan_ifname);
 #if defined(_COSA_BCM_MIPS_)
    if(isBridgeMode) {       
        fprintf(nat_fp, "-A PREROUTING -d %s/32 -i %s -p tcp -j DNAT --to-destination %s\n", BRIDGE_MODE_IP_ADDRESS, current_wan_ifname, lan0_ipaddr);
@@ -12228,7 +12229,7 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
   
    fprintf(filter_fp, "-A xlog_drop_wan2self -j DROP\n");
    fprintf(filter_fp, "-A xlog_drop_lan2self -j DROP\n");
-   if(isWanServiceReady || isBridgeMode) {
+   if(isWanServiceReady) {
 #if defined(_COSA_BCM_MIPS_)
        fprintf(filter_fp, "-A INPUT -p tcp -m multiport --dports 80,443 -d %s -j ACCEPT\n",lan0_ipaddr);
 #endif
@@ -12256,44 +12257,6 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    fprintf(filter_fp, "-A mtadosattack -j DROP\n");
 #endif
    //<<DOS
-   /* Enabling SSH, SNMP and TR-069 firewall rules in bridge mode */
-   if(isBridgeMode) {
-   /* Filtering firewall rules for ssh and SNMP in bridgemode*/
-   fprintf(filter_fp, "%s\n", ":LOG_SSH_DROP - [0:0]");
-   fprintf(filter_fp, "%s\n", ":SSH_FILTER - [0:0]");
-   fprintf(filter_fp, "-A INPUT -i %s -p tcp -m tcp --dport 22 -j SSH_FILTER\n", ecm_wan_ifname);
-   if (erouterSSHEnable)
-       fprintf(filter_fp, "-A INPUT -i erouter0 -p tcp -m tcp --dport 22 -j SSH_FILTER\n");
-   fprintf(filter_fp, "-A LOG_SSH_DROP -m limit --limit 1/minute -j LOG --log-level %d --log-prefix \"SSH Connection Blocked:\"\n",syslog_level);
-   fprintf(filter_fp, "-A LOG_SSH_DROP -j DROP\n");
-
-   //SNMPv3 chains for logging and filtering
-   fprintf(filter_fp, "%s\n", ":SNMPDROPLOG - [0:0]");
-   fprintf(filter_fp, "%s\n", ":SNMP_FILTER - [0:0]");
-   fprintf(filter_fp, "-A INPUT -p udp -m udp --match multiport --dports 10161,10163 -j SNMP_FILTER\n");
-   fprintf(filter_fp, "-A SNMPDROPLOG -m limit --limit 1/minute -j LOG --log-level %d --log-prefix \"SNMP Connection Blocked:\"\n",syslog_level);
-   fprintf(filter_fp, "-A SNMPDROPLOG -j DROP\n");
-#if !defined(_PLATFORM_RASPBERRYPI_) && !defined(_PLATFORM_TURRIS_)
-   do_ssh_IpAccessTable(filter_fp, "22", AF_INET, ecm_wan_ifname);
-#else
-   fprintf(filter_fp, "-A SSH_FILTER -j ACCEPT\n");
-#endif
-   do_snmp_IpAccessTable(filter_fp, AF_INET);
-
-   }
-
-   if(isComcastImage && isBridgeMode) {
-       char cwmpPort[6];
-
-       getCwmpPort(cwmpPort, sizeof(cwmpPort));
-       //tr69 chains for logging and filtering
-       fprintf(filter_fp, "%s\n", ":LOG_TR69_DROP - [0:0]");
-       fprintf(filter_fp, "%s\n", ":tr69_filter - [0:0]");
-       fprintf(filter_fp, "-A INPUT -p tcp -m tcp --dport %s -j tr69_filter\n", cwmpPort);
-       fprintf(filter_fp, "-A LOG_TR69_DROP -m limit --limit 1/minute -j LOG --log-level %d --log-prefix \"TR-069 ACS Server Blocked:\"\n",syslog_level);
-       fprintf(filter_fp, "-A LOG_TR69_DROP -j DROP\n");
-       do_tr69_whitelistTable(filter_fp, nat_fp, AF_INET, current_wan_ifname, bus_handle);
-   }
 
    if(!isBridgeMode) //brlan0 exists
        fprintf(filter_fp, "-A INPUT -i %s -j lan2self_mgmt\n", lan_ifname);
@@ -12305,14 +12268,16 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
 
    fprintf(filter_fp, "-A INPUT -i %s -j lan2self_mgmt\n", cmdiag_ifname); //lan0 always exist
 
-   lan_telnet_ssh(filter_fp, AF_INET);
-
-   #if defined(CONFIG_CCSP_LAN_HTTP_ACCESS)
-   lan_http_access(filter_fp);
-   #endif
+   if (!isBridgeMode) {
+       lan_telnet_ssh(filter_fp, AF_INET);
+#if defined(CONFIG_CCSP_LAN_HTTP_ACCESS)
+       lan_http_access(filter_fp);
+#endif
+   }
 
 #ifdef _COSA_INTEL_XB3_ARM_
-   fprintf(filter_fp, "-A OUTPUT ! -s %s -p icmp -m icmp --icmp-type 3 -j DROP\n", lan_ipaddr);
+   if (!isBridgeMode)
+       fprintf(filter_fp, "-A OUTPUT ! -s %s -p icmp -m icmp --icmp-type 3 -j DROP\n", lan_ipaddr);
 #endif
    fprintf(filter_fp, "%s\n", ":FORWARD ACCEPT [0:0]");
    fprintf(filter_fp, "%s\n", ":OUTPUT ACCEPT [0:0]");
@@ -12527,6 +12492,10 @@ static void do_ipv6_sn_filter(FILE* fp) {
     fprintf(fp, "*mangle\n");
     
    fprintf(fp, "%s\n", ":postrouting_qos - [0:0]");
+
+   if (isBridgeMode) {
+      return;
+   }
     
     for (i = 0; i < numifs; ++i) {
         snprintf(ifIpv6AddrKey, sizeof(ifIpv6AddrKey), "ipv6_%s_dhcp_solicNodeAddr", ifnames[i]);
@@ -12584,6 +12553,10 @@ static void do_ipv6_nat_table(FILE* fp)
 	
    fprintf(fp, "%s\n", ":prerouting_devices - [0:0]");
    fprintf(fp, "%s\n", ":prerouting_redirect - [0:0]");
+
+   if (isBridgeMode) {
+       return;
+   }
 
 #ifdef MULTILAN_FEATURE
    prepare_multinet_prerouting_nat_v6(fp);
@@ -12839,9 +12812,11 @@ int prepare_ipv6_firewall(const char *fw_file, char* strBlockTimeCmd)
           }
       }
 // LGI ADD END
-       do_blockfragippktsv6(filter_fp);
-       do_portscanprotectv6(filter_fp);
-       do_ipflooddetectv6(filter_fp);
+      if (!isBridgeMode) {
+          do_blockfragippktsv6(filter_fp);
+          do_portscanprotectv6(filter_fp);
+          do_ipflooddetectv6(filter_fp);
+      }
 	
 	/* XDNS - route dns req though dnsmasq */
 #ifdef XDNS_ENABLE
@@ -13000,7 +12975,7 @@ static void do_ipv6_filter_table(FILE *fp){
 
    fprintf(fp, "%s\n", ":LOG_INPUT_DROP - [0:0]");
    fprintf(fp, "%s\n", ":LOG_FORWARD_DROP - [0:0]");
-   if(isComcastImage) {
+   if(isComcastImage && !isBridgeMode) {
        char cwmpPort[6];
 
        getCwmpPort(cwmpPort, sizeof(cwmpPort));
@@ -13017,12 +12992,15 @@ static void do_ipv6_filter_table(FILE *fp){
 
    if (!isFirewallEnabledV6 || isBridgeMode || !isWanServiceReady || (!iseRouter0IPv6AddrReady && (erouter_mode() >= 2)))
    {
-       if (isBridgeMode || isWanServiceReady)
+       if (isWanServiceReady)
        {
            do_remote_access_control(NULL, fp, AF_INET6);
        }
 
-       lan_telnet_ssh(fp, AF_INET6);
+       if (!isBridgeMode)
+       {
+           lan_telnet_ssh(fp, AF_INET6);
+       }
 
        goto end_of_ipv6_firewall;
    }
