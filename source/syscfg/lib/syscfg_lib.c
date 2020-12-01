@@ -533,7 +533,7 @@ int syscfg_init ()
 }
 
 /******************************************************************************
- *                External utility routines
+ *                Internal utility routines
  *****************************************************************************/
 
 /*
@@ -550,14 +550,10 @@ int syscfg_init ()
  * Notes         :
  *   caller need to free 'name' & 'value' 
  */
-char *syscfg_parse (const char *str, char **name, char **value)
+static char *syscfg_parse (const char *str, char **name, char **value)
 {
     char *n, *p;
     int len;
-
-    if (NULL == str || NULL == name || NULL == value) {
-        return NULL;
-    }
 
     *name = *value = NULL;
 
@@ -587,10 +583,6 @@ char *syscfg_parse (const char *str, char **name, char **value)
     }
     return NULL;
 }
-
-/******************************************************************************
- *                Internal utility routines
- *****************************************************************************/
 
 // dbj2 hash: hash * 33 + str[i]
 static unsigned int hash (const char *str)
