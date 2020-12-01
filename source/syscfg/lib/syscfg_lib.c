@@ -124,98 +124,6 @@ int syscfg_set (const char *ns, const char *name, const char *value)
 }
 
 /*
- * Procedure     : syscfg_get_encrypt
- * Purpose       : Retrieve an encrypted entry from syscfg
- * Parameters    :   
- *   ns  -  namespace string (optional)
- *   name  - name string, entry to add
- *   out_val  - buffer to store decrypted output value string
- *   outbufsz  - output buffer size
- * Return Values :
- *    0 on success, -1 on error
- * Notes: 
- *   Use this only for retrieving values set using set_encrypt method
- */
-int syscfg_get_encrypt (const char *ns, const char *name, char *out_val, int outbufsz)
-{
-    char *val;
-    char *val_decrypt;
-    size_t len;
-
-    if (0 == syscfg_initialized || NULL == name || NULL == out_val) {
-        return -1;
-    }
-
-    if(outbufsz > 1)
-    {
-        val = _syscfg_get(ns, name);
-        if (val) {
-	    len = strlen(val);
-            if (len > MAX_NAME_LEN)
-                len = MAX_NAME_LEN;
-
-            val_decrypt = malloc(len+1);
-            if (NULL == val_decrypt) {
-                return ERR_MEM_ALLOC;
-            }
-            encrypt_str((const char *) val, val_decrypt, len);
-            strncpy(out_val, val_decrypt, outbufsz-1);
-            out_val[outbufsz-1] = '\0';
-            free(val_decrypt);/*RDKB-7135, CID-33450, free unused resources before exit */
-            return 0;
-        }
-    }
-    return -1;
-}
-
-/*
- * Procedure     : syscfg_set_encrypt
- * Purpose       : Adds an entry to syscfg in encrypted form
- * Parameters    :   
- *   ns  -  namespace string (optional)
- *   name  - name string, entry to add
- *   value  - value string to associate with name
- * Return Values :
- *    0 - success
- *    ERR_xxx - various errors codes dependening on the failure
- * Notes         :
- *    Should use syscfg_get_encrypt to get back the original string
- *    Only changes syscfg hash table, persistent store contents
- *    not changed until 'commit' operation
- *    When committed, only the encrypted value is stored in the system
- */
-int syscfg_set_encrypt (const char *ns, const char *name, const char *value)
-{
-    int rc = 0;
-    char *value_encrypt;
-    size_t len;
-
-    if (0 == syscfg_initialized || NULL == syscfg_ctx) {
-        return ERR_NOT_INITIALIZED;
-    }
-    if (NULL == name || NULL == value) {
-        return ERR_INVALID_PARAM;
-    }
-
-    len = strlen(value);
-    if (len > MAX_NAME_LEN)
-        len = MAX_NAME_LEN;
-
-    value_encrypt = malloc(len+1);
-    if (NULL == value_encrypt) {
-        return ERR_MEM_ALLOC;
-    }
-
-    encrypt_str(value, value_encrypt, len);
-
-    rc = _syscfg_set( ns, name, value_encrypt, 0);
-
-    free(value_encrypt); /*Once the value is set free it*/
-
-    return rc;
-}
-
-/*
  * Procedure     : syscfg_getall
  * Purpose       : Retrieve all entries from syscfg
  * Parameters    :   
@@ -605,27 +513,6 @@ static unsigned int hash (const char *str)
     }
 
     return hash;
-}
-
-/*
- * A simple XOR encryption using a key
- * Assumption: outstr buffer size equal to instr
- */
-static void encrypt_str (const char *instr, char *outstr, size_t len)
-{
-    int i;
-    unsigned int key = 5381; /* Fixme: 5381 dec (== 0x1505 hex) is more than 8 bits, so doesn't make sense to xor'ing with byte values ?!? (it's the same as xor'ing with 0x05) */
-
-    for (i = 0; i < len; i++) {
-
-        /*
-           Warning: xor'ing arbitrary data could result in a false nul being inserted into the output string.
-           However, since we xor with the fixed value 0x05 (see above) only an input char of 0x05 (an ASCII control character?) would be affected...
-        */
-        outstr[i] = instr[i] ^ key;
-    }
-
-    outstr[len] = 0;
 }
 
 /******************************************************************************
