@@ -924,8 +924,7 @@ static int wan_start(struct serv_wan *sw)
 
                    fprintf(stderr, "Starting DHCPv6 Client now\n");
                     /* In IPv6 or dual mode, raise wan-status event here */
-                   if (sw->rtmod == WAN_RTMOD_IPV6)
-                        sysevent_set(sw->sefd, sw->setok, "wan-status", "starting", 0);
+                   sysevent_set(sw->sefd, sw->setok, "wan-status", "starting", 0);
 
 #if defined (FEATURE_RDKB_DHCP_MANAGER)
                     sysevent_set(sw->sefd, sw->setok, "dhcpv6_client-start", "", 0);
