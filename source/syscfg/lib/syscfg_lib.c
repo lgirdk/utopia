@@ -35,7 +35,7 @@
 
 /* _GNU_SOURCE is needed for strchrnul() and program_invocation_short_name */
 
-//#define _GNU_SOURCE
+#define _GNU_SOURCE
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -54,12 +54,14 @@
 #include <string.h>
 #include <semaphore.h>
 #include <pthread.h>
+#include <assert.h>
+
 #include <ulog/ulog.h>
 #include "syscfg_lib.h"   // internal interface
 #include "syscfg.h"       // external interface used by users
 #include "safec_lib_common.h"
 
-//#define VERBOSE_DEBUG
+#define VERBOSE_DEBUG
 
 /*
  * Global data structures
@@ -73,6 +75,42 @@ static int syscfg_init_internal (void);
 
 static int load_from_file (const char *fname);
 static int commit_to_file (const char *fname);
+
+#if defined (VERBOSE_DEBUG)
+
+static void dump_maps (void)
+{
+    char buf[8192];
+    pid_t pid;
+    int fd;
+
+    pid = getpid();
+
+    fd = open ("/proc/self/maps", O_RDONLY);
+
+    if (fd == -1) {
+        fprintf (stderr, "Open /proc/self/maps failed (PID %d)\n", pid);
+    }
+    else {
+        int nread;
+        fprintf (stderr, "/proc/self/maps (PID %d):\n\n", pid);
+        while (1)
+        {
+            nread = read (fd, buf, sizeof(buf) - 1);
+            if (nread == 0)
+                break;
+            buf[nread] = 0;
+            if (buf[0] != 0)
+                fprintf (stderr, "%s", buf);
+        }
+        close (fd);
+        fprintf (stderr, "\n\n");
+    }
+
+    fflush(NULL);
+}
+
+#endif
 
 /******************************************************************************
  *                External syscfg library access apis
@@ -94,6 +132,8 @@ int syscfg_get (const char *ns, const char *name, char *out_val, int outbufsz)
 {
     char *val;
     size_t len;
+
+    assert(outbufsz > 1);
 
     if (NULL == name || NULL == out_val) {
         if (out_val != NULL) {
@@ -124,6 +164,7 @@ int syscfg_get (const char *ns, const char *name, char *out_val, int outbufsz)
         out_val[outbufsz - 1] = 0;
 #if defined (VERBOSE_DEBUG)
         fprintf(stderr, "syscfg_get: %s outbufsz too small (%d < %d) (%s: lr %p)\n", name, outbufsz, (int) len + 1, program_invocation_short_name, __builtin_extract_return_addr (__builtin_return_address (0)));
+        dump_maps();
 #endif
     }
     else {
