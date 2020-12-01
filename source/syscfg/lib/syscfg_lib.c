@@ -50,6 +50,8 @@
 #include <string.h>
 #include <semaphore.h>
 #include <pthread.h>
+#include <assert.h>
+
 #include <ulog/ulog.h>
 #include "syscfg_mtd.h"   // MTD IO friend sub-class
 #include "syscfg_lib.h"   // internal interface
@@ -66,6 +68,38 @@ static char name_p[MAX_NAME_LEN+1];                      // internal temp name b
 int load_from_file (const char *fname);
 int commit_to_file (const char *fname);
 int backup_file (const char *bkupFile, const char *localFile);
+
+static void dump_maps (void)
+{
+    char buf[8192];
+    pid_t pid;
+    int fd;
+
+    pid = getpid();
+
+    fd = open ("/proc/self/maps", O_RDONLY);
+
+    if (fd == -1) {
+        fprintf (stderr, "Open /proc/self/maps failed (PID %d)\n", pid);
+    }
+    else {
+        int nread;
+        fprintf (stderr, "/proc/self/maps (PID %d):\n\n", pid);
+        while (1)
+        {
+            nread = read (fd, buf, sizeof(buf) - 1);
+            if (nread == 0)
+                break;
+            buf[nread] = 0;
+            if (buf[0] != 0)
+                fprintf (stderr, "%s", buf);
+        }
+        close (fd);
+        fprintf (stderr, "\n\n");
+    }
+
+    fflush(NULL);
+}
 
 /******************************************************************************
  *                External syscfg library access apis
@@ -84,17 +118,36 @@ int backup_file (const char *bkupFile, const char *localFile);
  */
 int syscfg_get (const char *ns, const char *name, char *out_val, int outbufsz)
 {
+    char *val;
+    size_t len;
+
+    assert(outbufsz > 1);
+
     if (0 == syscfg_initialized) {
+        out_val[0] = 0;
         return -1;
     }
 
-    char *val = _syscfg_get(ns, name);
-    if (val) {
-        strncpy(out_val, val, outbufsz-1);
-        out_val[outbufsz-1] = '\0';
-        return 0;
+    val = _syscfg_get(ns, name);
+
+    if (val == NULL) {
+        out_val[0] = 0;
+        return -1;
     }
-    return -1;
+
+    len = strlen(val);
+
+    if (len >= outbufsz) {
+        fprintf(stderr, "syscfg_get: %s outbufsz too small (%d < %d) (lr %p)\n", name, outbufsz, len + 1, __builtin_extract_return_addr (__builtin_return_address (0)));
+        dump_maps();
+        fflush(NULL);
+        len = outbufsz - 1;
+    }
+
+    memcpy(out_val, val, len);
+    out_val[len] = 0;
+
+    return 0;
 }
 
 /*
