@@ -522,10 +522,6 @@ static char *syscfg_parse (const char *str, char **name, char **value)
     char *n, *p;
     int len;
 
-    if (NULL == str || NULL == name || NULL == value) {
-        return NULL;
-    }
-
     *name = *value = NULL;
 
     if ((n = strchr(str,'='))) {
