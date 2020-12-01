@@ -135,13 +135,6 @@ int syscfg_get (const char *ns, const char *name, char *out_val, int outbufsz)
 
     assert(outbufsz > 1);
 
-    if (NULL == name || NULL == out_val) {
-        if (out_val != NULL) {
-            out_val[0] = 0;
-        }
-        return -1;
-    }
-
     if (syscfg_initialized == 0) {
         int rc = syscfg_init_internal();
         if (rc != 0) {
@@ -195,9 +188,6 @@ int syscfg_set_ns (const char *ns, const char *name, const char *value)
         if (rc != 0) {
             return rc;
         }
-    }
-    if (NULL == name || NULL == value) {
-        return ERR_INVALID_PARAM;
     }
 
     return _syscfg_set(ns, name, value, 0);
@@ -267,9 +257,6 @@ int syscfg_getall (char *buf, int bufsz, int *outsz)
             return rc;
         }
     }
-    if (NULL == buf) {
-        return ERR_INVALID_PARAM;
-    }
 
     /* smallest possible result is 'a','=','b','\0' */
     if (bufsz < 4) {
@@ -301,9 +288,6 @@ int syscfg_unset (const char *ns, const char *name)
             return rc;
         }
     }
-    if (NULL == name) {
-        return ERR_INVALID_PARAM;
-    }
 
     return _syscfg_unset(ns, name, 0);
 }
@@ -327,10 +311,6 @@ int syscfg_is_match (const char *ns, const char *name, char *value, unsigned int
         if (rc != 0) {
             return rc;
         }
-    }
-
-    if (NULL == name || NULL == value || NULL == out_match) {
-        return -1;
     }
 
     char *val = _syscfg_get(ns, name);
@@ -542,10 +522,6 @@ static char *syscfg_parse (const char *str, char **name, char **value)
 {
     char *n, *p;
     int len;
-
-    if (NULL == str || NULL == name || NULL == value) {
-        return NULL;
-    }
 
     *name = *value = NULL;
 
