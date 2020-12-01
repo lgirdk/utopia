@@ -59,7 +59,7 @@
  * Global data structures
  */
 static syscfg_shm_ctx *syscfg_ctx = NULL;
-int            syscfg_initialized = 0;
+static int syscfg_initialized = 0;
 
 static char name_p[MAX_NAME_LEN+1];                      // internal temp name buffer
 
@@ -84,7 +84,7 @@ int backup_file (const char *bkupFile, const char *localFile);
  */
 int syscfg_get (const char *ns, const char *name, char *out_val, int outbufsz)
 {
-    if (0 == syscfg_initialized || NULL == name || NULL == out_val) {
+    if (0 == syscfg_initialized) {
         return -1;
     }
 
@@ -116,9 +116,6 @@ int syscfg_set (const char *ns, const char *name, const char *value)
     if (0 == syscfg_initialized || NULL == syscfg_ctx) {
         return ERR_NOT_INITIALIZED;
     }
-    if (NULL == name || NULL == value) {
-        return ERR_INVALID_PARAM;
-    }
 
     return _syscfg_set(ns, name, value, 0);
 }
@@ -140,9 +137,6 @@ int syscfg_getall (char *buf, int bufsz, int *outsz)
 {
     if (0 == syscfg_initialized) {
         return ERR_NOT_INITIALIZED;
-    }
-    if (NULL == buf) {
-        return ERR_INVALID_PARAM;
     }
 
     *outsz = _syscfg_getall(buf, bufsz);
@@ -167,9 +161,6 @@ int syscfg_unset (const char *ns, const char *name)
     if (0 == syscfg_initialized) {
         return ERR_NOT_INITIALIZED;
     }
-    if (NULL == name) {
-        return ERR_INVALID_PARAM;
-    }
 
     return _syscfg_unset(ns, name, 0);
 }
@@ -187,7 +178,7 @@ int syscfg_unset (const char *ns, const char *name)
  */
 int syscfg_is_match (const char *ns, const char *name, char *value, unsigned int *out_match)
 {
-    if (0 == syscfg_initialized || NULL == name || NULL == value || NULL == out_match) {
+    if (0 == syscfg_initialized) {
         return -1;
     }
 
