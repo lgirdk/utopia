@@ -8357,6 +8357,7 @@ int Utopia_DelLanAllowedSubnet(UtopiaContext *ctx, unsigned long ins)
     Utopia_UnsetIndexed(ctx, UtopiaValue_LanAllowedSubnet_Alias, count);
     Utopia_UnsetIndexed(ctx, UtopiaValue_LanAllowedSubnet_SubnetIP, count);
     Utopia_UnsetIndexed(ctx, UtopiaValue_LanAllowedSubnet_SubnetMask, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LanAllowedSubnet, count);
 
     g_LanAllowedSubnetCount--;
     Utopia_SetInt(ctx, UtopiaValue_LanAllowedSubnetCount, g_LanAllowedSubnetCount);
