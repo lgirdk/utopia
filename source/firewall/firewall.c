@@ -10918,7 +10918,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
     * if the wan is currently unavailable, then drop any packets from lan to wan
     * except for DHCP (broadcast)
     */
-   char str[MAX_QUERY];
+   //char str[MAX_QUERY];
    //snprintf(str, sizeof(str), "-I OUTPUT 1 -s 0.0.0.0 ! -d 255.255.255.255 -o %s -j DROP", current_wan_ifname);
    //fprintf(filter_fp, "%s\n", str);
 #if defined(_COSA_BCM_MIPS_)
@@ -10972,7 +10972,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    do_forwardPorts(filter_fp);
 
    // RDKB-4826 - IOT rules for DHCP
-   static char iot_enabled[20];
+   char iot_enabled[20];
    memset(iot_enabled, 0, sizeof(iot_enabled));
    syscfg_get(NULL, "lost_and_found_enable", iot_enabled, sizeof(iot_enabled));
   
