@@ -42,56 +42,96 @@ fi
 # Don't forget to delete rules added here in service_stop
 init_ebtables()
 {
+
+    if [ ! -d /sys/class/net/brlan0/bridge/ ]; then
+        echo "ERROR: bridge brlan0 doesn't exists"
+        return 1
+    else
+        if [ -d /sys/class/net/lbr0/brport ]; then
+            echo "WARNING: interface lbr0 is already in a bridge"
+        else
+            # connect lbr0 interface to brlan0 bridge.
+            brctl addif brlan0 lbr0
+        fi
+    fi
+
     # new chains to filter NAT passthrough based on MAC
-    ebtables -N nat_passthrough_to_host -P RETURN
     ebtables -N nat_passthrough_from_host -P RETURN
-    ebtables -N nat_passthrough_to_lan -P DROP
-    ebtables -N nat_passthrough_from_lan -P DROP
+    err=$?
+    # If the chains are already present no need to duplicate it again
+    if [ $err -eq 0 ]; then
+        ebtables -N nat_passthrough_to_host -P RETURN
+        ebtables -N nat_passthrough_to_lan  -P RETURN
+
+        ebtables -t filter -A FORWARD -i l2sd0.100 -j nat_passthrough_from_host
+        ebtables -t filter -A FORWARD -o l2sd0.100 -j nat_passthrough_to_host
+        ebtables -t filter -A FORWARD -i lbr0 -j DROP
+        ebtables -t filter -A FORWARD -o lbr0 -j DROP
+
+        ebtables -t filter -A INPUT   -j nat_passthrough_to_lan
+    fi
+
     refresh_ebtables
+    return 0
 }
 
-# Update the nat_passthrough ebtables chains
-# Caution! Calling this function when the $NP_IFNAME interface is up,
-# may cause unwanted communication between the Atom and NPT clients
 refresh_ebtables()
 {
-    echo " refresh_ebtables  "
-    ebtables -F nat_passthrough_to_lan
-    ebtables -F nat_passthrough_from_lan
-    ebtables -F nat_passthrough_to_host
+
     ebtables -F nat_passthrough_from_host
+    ebtables -F nat_passthrough_to_host
+    ebtables -F nat_passthrough_to_lan
 
     local mac
     for mac in $client_macs; do
-        ebtables -A nat_passthrough_to_lan -d $mac -j ACCEPT
-        ebtables -A nat_passthrough_from_lan -s $mac -j ACCEPT
-        ebtables -A nat_passthrough_to_host -s $mac -p 0x888e -j ACCEPT
-        ebtables -A nat_passthrough_to_host -s $mac -j DROP
-        ebtables -A nat_passthrough_from_host -d $mac -j DROP
+        ebtables -A nat_passthrough_from_host -s $mac -j ACCEPT
+        ebtables -A nat_passthrough_to_host   -d $mac -j ACCEPT
+        ebtables -A nat_passthrough_to_lan    -s $mac -j DROP
+        ebtables -A nat_passthrough_to_lan    -d $mac -j DROP
     done
+
 }
 
 service_start()
 {
+    echo "*** Starting MNG NAT Passthrough ***"
+
     if [ "$bridge_mode" != 0 ] || [ "$client_count" = 0 ]; then
         # nothing to do
         return 0
     fi
 
     init_ebtables
-    sysevent set firewall-restart
+    res=$?
+    if [ $res -eq 0 ]; then
+        sysevent set firewall-restart
+    fi
 }
 
 service_stop()
 {
     echo "*** Stopping MNG NAT Passthrough ***"
 
-    # delete the ebtables rules created by init_ebtables()
- 
-    ebtables -X nat_passthrough_to_host
+    ebtables -F nat_passthrough_from_host
+    ebtables -F nat_passthrough_to_host
+    ebtables -F nat_passthrough_to_lan
+
+    ebtables -t filter -D FORWARD -i l2sd0.100 -j nat_passthrough_from_host
+    ebtables -t filter -D FORWARD -o l2sd0.100 -j nat_passthrough_to_host
+    ebtables -t filter -D FORWARD -i lbr0 -j DROP
+    ebtables -t filter -D FORWARD -o lbr0 -j DROP
+    ebtables -t filter -D INPUT   -j nat_passthrough_to_lan
+
+    # Delete the custom chains
     ebtables -X nat_passthrough_from_host
+    ebtables -X nat_passthrough_to_host
     ebtables -X nat_passthrough_to_lan
-    ebtables -X nat_passthrough_from_lan
+
+    # If not in bridge mode then delete lbr0 interface from the bridge
+    if [ "$bridge_mode" = "0" ] && [ -d /sys/class/net/brlan0/bridge ]
+    then
+        brctl delif brlan0 lbr0
+    fi
 
     sysevent set firewall-restart
 }
