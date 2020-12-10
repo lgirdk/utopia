@@ -729,7 +729,6 @@ static char guest_network_mask[20];
 
 static int ppFlushNeeded = 0;
 static int isProdImage = 0;
-static int isComcastImage = 0;
 static int isContainerEnabled = 0;
 
 #if defined(_ENABLE_EPON_SUPPORT_)
@@ -1705,30 +1704,6 @@ int get_ip6address (char * ifname, char ipArry[][40], int * p_num, unsigned int 
     return 0;
  }
 
- /*
-  *  RDKB-12305  Adding method to check whether comcast device or not
-  *  Procedure     : bIsComcastImage
-  *  Purpose       : return True for Comcast build.
-  *  Parameters    :
-  *  Return Values :
-  *  1             : 1 for comcast images
-  *  2             : 0 for other images
-  */
- static int bIsComcastImage( void)
- {
-    char PartnerId[255] = {'\0'};
-    int isComcastImg = 1;
-    
-    getPartnerId ( PartnerId ) ;
-    
-    if ( 0 != strcmp ( PartnerId, "comcast") ) {
-   	 isComcastImg = 0;
-    }
-
-    return isComcastImg;
- }
-
-
 static int bIsContainerEnabled( void)
  {
     char *pContainerSupport = NULL, *pLxcBridge = NULL;
@@ -1843,7 +1818,6 @@ static int prepare_globals_from_configuration(void)
 #endif
    
    isProdImage = bIsProductionImage(); 
-   isComcastImage = bIsComcastImage();
    sysevent_get(sysevent_fd, sysevent_token, "wan_ifname", default_wan_ifname, sizeof(default_wan_ifname));
    sysevent_get(sysevent_fd, sysevent_token, "current_wan_ifname", current_wan_ifname, sizeof(current_wan_ifname));
    if ('\0' == current_wan_ifname[0]) {
@@ -2498,11 +2472,9 @@ static int prepare_globals_from_configuration(void)
                   "-A xlog_drop_lan2wan -j LOG --log-prefix \"UTOPIA: FW.LAN2WAN DROP \" --log-level %d --log-tcp-sequence --log-tcp-options --log-ip-options -m limit --limit 1/minute --limit-burst 1", syslog_level);
          fprintf(fp, "%s\n", str);
 
-         if(isComcastImage) {
-             snprintf(str, sizeof(str),
+         snprintf(str, sizeof(str),
                   "-A LOG_TR69_DROP -j LOG --log-prefix \"TR-069 ACS Server Blocked: \" --log-level %d --log-tcp-sequence --log-tcp-options --log-ip-options -m limit --limit 1/minute --limit-burst 1", syslog_level);
-             fprintf(fp, "%s\n", str);
-         }
+         fprintf(fp, "%s\n", str);
 
          snprintf(str, sizeof(str),
                   "-A LOG_SSH_DROP -j LOG --log-prefix \"SSH Connection Blocked: \" --log-level %d --log-tcp-sequence --log-tcp-options --log-ip-options -m limit --limit 1/minute --limit-burst 1", syslog_level);
@@ -2559,11 +2531,9 @@ static int prepare_globals_from_configuration(void)
             "-A xlogreject -p tcp -m tcp -j REJECT --reject-with tcp-reset");
    fprintf(fp, "%s\n", str);
 
-   if(isComcastImage) {
-       snprintf(str, sizeof(str),
-            "-A LOG_TR69_DROP -j DROP");
-       fprintf(fp, "%s\n", str);
-   }
+   snprintf(str, sizeof(str),
+        "-A LOG_TR69_DROP -j DROP");
+   fprintf(fp, "%s\n", str);
 
    snprintf(str, sizeof(str),
             "-A LOG_SSH_DROP -j DROP");
@@ -11121,7 +11091,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
 #endif //FEATURE_MAPT
 #endif //_HUB4_PRODUCT_REQ_
 
-   if(isComcastImage) {
+   {
        char cwmpPort[6];
 
        getCwmpPort(cwmpPort, sizeof(cwmpPort));
@@ -11231,10 +11201,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
       fprintf(filter_fp, "-A INPUT -i %s -d 192.168.100.1 -j ACCEPT\n", cmdiag_ifname);
    }
 
-   if(isComcastImage)
-   {
-      do_tr69_whitelistTable(filter_fp, nat_fp, AF_INET, current_wan_ifname, bus_handle);
-   }
+   do_tr69_whitelistTable(filter_fp, nat_fp, AF_INET, current_wan_ifname, bus_handle);
   
    if (isContainerEnabled) {
        do_container_allow(filter_fp, mangle_fp, nat_fp, AF_INET);
@@ -13020,7 +12987,9 @@ static void do_ipv6_filter_table(FILE *fp){
 
    fprintf(fp, "%s\n", ":LOG_INPUT_DROP - [0:0]");
    fprintf(fp, "%s\n", ":LOG_FORWARD_DROP - [0:0]");
-   if(isComcastImage && !isBridgeMode) {
+
+   if (!isBridgeMode)
+   {
        char cwmpPort[6];
 
        getCwmpPort(cwmpPort, sizeof(cwmpPort));
@@ -13094,9 +13063,7 @@ static void do_ipv6_filter_table(FILE *fp){
        lan_telnet_ssh(fp, AF_INET6);
        do_ssh_IpAccessTable(fp, "22", AF_INET6, ecm_wan_ifname);
        do_snmp_IpAccessTable(fp, AF_INET6);
-       if(isComcastImage) {
-          do_tr69_whitelistTable(fp, NULL, AF_INET6, current_wan_ifname, bus_handle);
-       }
+       do_tr69_whitelistTable(fp, NULL, AF_INET6, current_wan_ifname, bus_handle);
        goto end_of_ipv6_firewall;
    }
 
