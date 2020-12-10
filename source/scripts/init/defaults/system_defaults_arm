@@ -1411,7 +1411,6 @@ $tr_routing_enabled=1
 
 #Use of Public DNS servers
 $dns_config_page_show=false
-$dns_override=false
 
 #ocsp staple support
 $EnableOCSPStapling=false
