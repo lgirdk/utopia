@@ -576,6 +576,9 @@ static int checkIfULAEnabled();
 #endif
 static int lan2wan_multinet_disable(FILE *fp);
 
+static int iseRouter0IPv6AddrReady;
+static int isFirewallEnabledV6;
+
 FILE *firewallfp = NULL;
 
 #define CONFIG_BUILD_TRIGGER 1
@@ -738,6 +741,7 @@ static char rip_interface_wan[20];  // if rip is enabled, then is it enabled on 
 static char nat_enabled[20];      // is nat enabled
 static char dmz_enabled[20];      // is dmz enabled
 static char firewall_enabled[20]; // is the firewall enabled
+static char firewall_enabledv6[20]; // is the IPv6 firewall enabled
 static char container_enabled[20]; // is the container enabled
 static char bridge_mode[20];      // is system in bridging mode
 static char log_level[5];         // if logging is enabled then this is the log level
@@ -2543,6 +2547,7 @@ static int prepare_globals_from_configuration(void)
    memset(nat_enabled, 0, sizeof(nat_enabled));
    memset(dmz_enabled, 0, sizeof(dmz_enabled));
    memset(firewall_enabled, 0, sizeof(firewall_enabled));
+   memset(firewall_enabledv6, 0, sizeof(firewall_enabledv6));
    memset(container_enabled, 0, sizeof(container_enabled));
    memset(bridge_mode, 0, sizeof(bridge_mode));
    memset(log_level, 0, sizeof(log_level));
@@ -2560,6 +2565,7 @@ static int prepare_globals_from_configuration(void)
    syscfg_get(NULL, "nat_enabled", nat_enabled, sizeof(nat_enabled)); 
    syscfg_get(NULL, "dmz_enabled", dmz_enabled, sizeof(dmz_enabled)); 
    syscfg_get(NULL, "firewall_enabled", firewall_enabled, sizeof(firewall_enabled)); 
+   syscfg_get(NULL, "firewall_enabledv6", firewall_enabledv6, sizeof(firewall_enabledv6));
    syscfg_get(NULL, "containersupport", container_enabled, sizeof(container_enabled)); 
    //mipieper - change for pseudo bridge
    //syscfg_get(NULL, "bridge_mode", bridge_mode, sizeof(bridge_mode)); 
@@ -2648,12 +2654,15 @@ static int prepare_globals_from_configuration(void)
    get_ip6address(mesh_wan_ifname, mesh_wan_ipv6addr, &mesh_wan_ipv6_num,IPV6_ADDR_SCOPE_GLOBAL);
    #endif 
 
+   iseRouter0IPv6AddrReady = (current_wan_ipv6_num > 0) ? 1 : 0;
+
    if (0 == strcmp("true", container_enabled)) {
       isContainerEnabled = bIsContainerEnabled();
    }
    rfstatus =  isInRFCaptivePortal();
    isCacheActive     = (0 == strcmp("started", transparent_cache_state)) ? 1 : 0;
    isFirewallEnabled = (0 == strcmp("0", firewall_enabled)) ? 0 : 1; 
+   isFirewallEnabledV6 = (0 == strcmp("0", firewall_enabledv6)) ? 0 : 1;
 
 #if defined (FEATURE_MAPT) || defined (FEATURE_SUPPORT_MAPT_NAT46)
    isMAPTReady = isMAPTSet();
@@ -14873,6 +14882,20 @@ clean_up_files:
 	return ret;
 }
 
+static int erouter_mode (void)
+{
+    char gw_mode[8];
+
+    syscfg_get(NULL, "last_erouter_mode", gw_mode, sizeof(gw_mode));
+
+    if (gw_mode[0] != 0)
+    {
+        return atoi(gw_mode);
+    }
+
+    return -1;
+}
+
 static void do_ipv6_filter_table(FILE *fp){
 	FIREWALL_DEBUG("Inside do_ipv6_filter_table \n");
 
@@ -14927,6 +14950,20 @@ static void do_ipv6_filter_table(FILE *fp){
        fprintf(fp, "-A LOG_TR69_DROP -m limit --limit 1/minute -j LOG --log-level %d --log-prefix \"TR-069 ACS Server Blocked:\"\n",syslog_level);
        fprintf(fp, "-A LOG_TR69_DROP -j DROP\n");
        do_tr69_whitelistTable(fp, NULL, AF_INET6, current_wan_ifname, bus_handle);
+   }
+
+   /* Fixme: this duplicates some of the tests a few lines below. Should the two be combined? */
+
+   if (!isFirewallEnabledV6 || isBridgeMode || !isWanServiceReady || (!iseRouter0IPv6AddrReady && (erouter_mode() >= 2)))
+   {
+       if (isBridgeMode || isWanServiceReady)
+       {
+           do_remote_access_control(NULL, fp, AF_INET6);
+       }
+
+       lan_telnet_ssh(fp, AF_INET6);
+
+       goto end_of_ipv6_firewall;
    }
 
 #ifdef _COSA_INTEL_XB3_ARM_
