@@ -1186,7 +1186,7 @@ static int BlockTimeBitMask_AddToCron(unsigned long *pMaskDayOfWeek,
  * Note          : None.
 */
 
-#define PSM_CWMP_PORT_VALUE "eRT.com.cisco.spvtg.ccsp.tr069pa.Device.ManagementServer.X_CISCO_COM_ConnectionRequestURLPort.Value"
+#define PSM_CWMP_PORT_VALUE "eRT.com.cisco.spvtg.ccsp.tr069pa.Device.ManagementServer.X_LGI-COM_ConnectionRequestPort.Value"
 #define DEF_CWMP_PORT "7547"
 
 static void getCwmpPort (char *cwmpPort, size_t n)
