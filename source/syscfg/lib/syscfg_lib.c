@@ -439,31 +439,6 @@ int syscfg_create (const char *file, long int max_file_sz)
     return 0;
 }
 
-int syscfg_reload(const char *file) {
-    int rc = 0;
-
-    if (NULL == file)
-        return ERR_INVALID_PARAM;
-
-    ulog_LOG_Info("Enter in function %s \n", __FUNCTION__);
-
-    rc = load_from_file(file);
-    if (0 != rc)
-        ulog_LOG_Err("Error reloading config file %s", file);
-
-    return rc;
-}
-
-int syscfg_commit_lock() {
-    syscfg_shm_ctx *ctx = syscfg_ctx;
-    return commit_lock(ctx);
-}
-
-int syscfg_commit_unlock() {
-    syscfg_shm_ctx *ctx = syscfg_ctx;
-    return commit_unlock(ctx);
-}
-
 /******************************************************************************
  *                Internal utility routines
  *****************************************************************************/
