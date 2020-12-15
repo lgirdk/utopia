@@ -81,10 +81,6 @@ extern "C"{
  */
 int syscfg_create(const char *file, long int max_file_sz);
 
-int syscfg_reload(const char *file);
-int syscfg_commit_lock();
-int syscfg_commit_unlock();
-
 /*
  * Historically calling syscfg_init() was the responsibility of any code which
  * wanted to use syscfg. However, it's now handled automatically within
