@@ -519,8 +519,9 @@ static int dslite_start(struct serv_dslite *sd)
     else
     {
         //Restart the LAN side DHCPv4 server & DNS proxy
-        vsystem("systemctl stop dnsmasq.service");
-        vsystem("systemctl start dnsmasq.service");
+        vsystem("/etc/utopia/service.d/service_dhcp_server.sh dhcp_server-stop");
+        vsystem("/etc/utopia/service.d/service_dhcp_server.sh dhcp_server-start");
+
         // Restart IGMP proxy if in dual stack mode
         vsystem("/etc/utopia/service.d/service_mcastproxy.sh mcastproxy-restart");
     }
@@ -668,9 +669,9 @@ static int dslite_stop(struct serv_dslite *sd)
     else
     {
         /*Restart the LAN side DHCPv4 server & DNS proxy */
-        vsystem("systemctl stop dnsmasq.service");
+        vsystem("/etc/utopia/service.d/service_dhcp_server.sh dhcp_server-stop");
+        vsystem("/etc/utopia/service.d/service_dhcp_server.sh dhcp_server-start");
 
-        vsystem("systemctl start dnsmasq.service");
         // Restart IGMP proxy if in dual stack mode
         vsystem("/etc/utopia/service.d/service_mcastproxy.sh mcastproxy-restart");
     }
