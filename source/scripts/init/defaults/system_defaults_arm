@@ -1386,3 +1386,10 @@ $arLanAllowedSubnet_1::alias=LanAllowedSubnet-1
 $lglanAllowedSubnet_1=arLanAllowedSubnet_1
 
 $TraceRouteMaxHopCount=30
+
+$son_url=""
+$son_admin_status=0
+$son_operational_status=1
+$son_dfs_enable=1
+$son_native_atm_bs_disable=0
+$smart_wifi_hide=0
