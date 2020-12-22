@@ -426,9 +426,6 @@ $dhcp_server_propagate_wan_domain=1
 $dhcp_server_propagate_wan_nameserver=1
 $dhcp_server_slow_start=1
 
-$dibbler_client_enable=false
-$dibbler_client_enable_v2=false
-
 $dibbler_log_level=4
 
 #Bydefault dnsmasq uses new code changes
