@@ -523,7 +523,7 @@ $http_admin_is_default=1
 
 # Default settings for WebUI
 $user_count=4
-$user_name_1=mso
+$user_name_1=upccsr
 $user_name_2=cusadmin
 $user_name_3=admin
 $user_name_4=upccsr
