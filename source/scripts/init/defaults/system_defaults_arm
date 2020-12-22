@@ -411,7 +411,7 @@ $dhcp_disable_ip_conflict_det=1
 #default is UDHCPEnable flag false, ti_udhcp will be the dhcp client, if UDHCPEnable flag true udhcp (busybox) will be dhcp client
 $UDHCPEnable=false
 
-$dibbler_client_enable=false
+$$dibbler_client_enable=true
 
 #Bydefault dnsmasq uses new code changes
 $XDNS_RefacCodeEnable=1
