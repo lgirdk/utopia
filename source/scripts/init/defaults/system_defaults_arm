@@ -365,7 +365,7 @@ $$lan_ethernet_physical_ifnames=l2sd0.100
 
 # lan_ipaddr          - the ip address to assign the lan_ifname
 # lan_netmask         - the netmask to assign the lan_ifname
-$lan_ipaddr=10.0.0.1
+$lan_ipaddr=192.168.0.1
 $lan_netmask=255.255.255.0
 
 # lan_domain          - the name of the lan side domain
@@ -398,8 +398,8 @@ $StaticRouteCount=0
 #                          clients a short lease in order to give wan a chance to come up
 $dhcp_nameserver_enabled=0
 $dhcp_server_enabled=1
-$dhcp_start=10.0.0.2
-$dhcp_end=10.0.0.253
+$dhcp_start=192.168.0.2
+$dhcp_end=192.168.0.253
 $dhcp_num=252
 $dhcp_lease_time=7d
 $dhcp_server_propagate_wan_domain=1
@@ -1400,8 +1400,8 @@ $custom_data_model_enabled=1
 #Allowed Subnet Table
 $lglanAllowedSubnetCount=1
 $arLanAllowedSubnet_1::ins_num=1
-$arLanAllowedSubnet_1::SubnetIP=10.0.0.0
-$arLanAllowedSubnet_1::SubnetMask=255.0.0.0
+$arLanAllowedSubnet_1::SubnetIP=192.168.0.1
+$arLanAllowedSubnet_1::SubnetMask=255.255.255.0
 $arLanAllowedSubnet_1::alias=LanAllowedSubnet-1
 $lglanAllowedSubnet_1=arLanAllowedSubnet_1
 
