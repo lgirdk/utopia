@@ -431,7 +431,7 @@ $dhcp_server_slow_start=1
 #default is UDHCPEnable flag false, ti_udhcp will be the dhcp client, if UDHCPEnable flag true udhcp (busybox) will be dhcp client
 $UDHCPEnable=false
 
-$dibbler_client_enable=false
+$$dibbler_client_enable=true
 
 $dibbler_log_level=4
 
