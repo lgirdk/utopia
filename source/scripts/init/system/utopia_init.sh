@@ -661,8 +661,6 @@ if [ -f "/nvram/RDKB3939-500_RebootNotByPwrOff" ]; then
 fi
 #endif 
 
-echo_t "[utopia][init] setting Multicast MAC before any switch configs"
-
 # starting the rpcserver
 echo_t "[utopia][init] Starting rpcserver in arm" 
 if [ -f /usr/bin/rpcserver ];then
@@ -696,4 +694,5 @@ if [ -e /nvram/rbus ]; then
     rm /nvram/rbus
 fi
 
+echo_t "[utopia][init] setting Multicast MAC before any switch configs"
 $UTOPIA_PATH/service_multinet_exec set_multicast_mac &
