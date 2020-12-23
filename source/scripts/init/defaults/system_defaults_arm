@@ -475,6 +475,8 @@ $ddns_last_update=0
 $ddns_hostname=none
 $ddns_username=none
 $ddns_password=none
+$lgi_dynamic_dns_enable=0
+$ddns_service_providers_list=no-ip,dyndns,duckdns,afraid,changeip
 
 # ntp_server is the name of the ntp server we should use
 $ntp_enabled=0
