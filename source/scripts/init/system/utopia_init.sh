@@ -671,14 +671,6 @@ if [ "$MODEL_NUM" = "DPC3939B" ] || [ "$MODEL_NUM" = "DPC3941B" ]; then
     rm -f /nvram/syscfg.db.prev
 fi
 
-CBF_Defaulted=`syscfg get CodeBigFirstDefaulted`
-if [ "$CBF_Defaulted" != "true" ]; then
-    if [ "$MODEL_NUM" = "DPC3939B" ] || [ "$MODEL_NUM" = "DPC3941B" ] || [ "$MODEL_NUM" = "DPC3939" ] || [ "$MODEL_NUM" = "DPC3941" ]; then
-         syscfg set CodeBigFirstEnabled "true"
-    fi
-    syscfg set CodeBigFirstDefaulted "true"
-fi
-
 syscfg commit
 
 #ifdef CISCO_XB3_PLATFORM_CHANGES
