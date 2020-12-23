@@ -148,8 +148,9 @@ lgi_prepare_resolv_conf () {
     fi
 
     # Restart DHCP server.
-    #sysevent set dhcp_server-restart (Uncomment me after fixing : RDKB-4563)
-    /etc/utopia/service.d/service_dhcp_server.sh dhcp_server-restart &
+    #(Uncomment me after fixing : RDKB-4563) 20201223 since RDKB-4563 is fixed. Change it to sysevent to avoid dnsmasq is started by script and c code at the same time	
+    sysevent set dhcp_server-restart 
+    #/etc/utopia/service.d/service_dhcp_server.sh dhcp_server-restart &
 }
 # LGI ADD END
 # LGI MOD START
