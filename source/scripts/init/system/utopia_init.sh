@@ -124,8 +124,6 @@ fi
 echo_t "Starting log module.."
 /usr/sbin/log_start.sh
 
-echo_t "[utopia][init] Starting udev.."
-
 #echo_t "[utopia][init]  Starting syslogd"
 #/sbin/syslogd && /sbin/klogd
 
