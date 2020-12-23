@@ -62,15 +62,6 @@ REVERTFLAG="/nvram/reverted"
 MAINT_START="/nvram/.FirmwareUpgradeStartTime"
 MAINT_END="/nvram/.FirmwareUpgradeEndTime"
 
-# determine the build type (debug or production)
-if [ -f /etc/debug_build ] ; then
-    debug_build=1
-else
-    debug_build=0
-fi
-
-
-
 echo_t "*******************************************************************"
 echo_t "*                                                                  "
 echo_t "[utopia][init] P-UNIT status"
@@ -136,13 +127,6 @@ echo_t "Starting log module.."
 /usr/sbin/log_start.sh
 
 echo_t "[utopia][init] Starting udev.."
-
-# Spawn telnet daemon only for production images
-#if [ $debug_build -ne 0 ]; then
-    #echo_t "[utopia][init] Starting telnetd"
-    #service telnet start
-    #utelnetd -d
-#fi
 
 #echo_t "[utopia][init]  Starting syslogd"
 #/sbin/syslogd && /sbin/klogd
