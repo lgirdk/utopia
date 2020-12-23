@@ -818,7 +818,9 @@ case "$1" in
 		sysevent set dhcp_server-restart lan_not_restart
                 #service_dhcp lan-status started lan_not_restart
             else
-                lan_status_change started lan_not_restart
+                #lan_status_change started lan_not_restart
+                #20201223 change from script to c code to avoid dnsmasq is configured by scrip and c code at the same time. but sysevent can't pass two paras
+                sysevent set lan-status started
             fi
         fi
       ;;
