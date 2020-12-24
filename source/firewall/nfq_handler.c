@@ -51,6 +51,7 @@
 #include <netinet/ip6.h>
 #include <linux/udp.h>
 #include <linux/tcp.h>
+#include <linux/icmp.h>
 #include <libnetfilter_queue/libnetfilter_queue.h>
 #include <linux/netfilter.h>
 #include <sys/ioctl.h>
@@ -456,6 +457,89 @@ static int http_get_callback(struct nfq_q_handle *queueHandle, struct nfgenmsg *
 
     return ret;
 }
+
+/* function: ip_checksum_add
+ * adds data to a checksum.
+ * current - the current checksum (or 0 to start a new checksum)
+ *   data        - the data to add to the checksum
+ *   len         - length of data
+ */
+static uint32_t ip_checksum_add(uint32_t current, const void* data, int len) {
+    uint32_t checksum = current;
+    int left = len;
+    const uint16_t* data_16 = data;
+    while (left > 1) {
+        checksum += *data_16;
+        data_16++;
+        left -= 2;
+    }
+    if (left) {
+        checksum += *(uint8_t*)data_16;
+    }
+    return checksum;
+}
+/* function: ip_checksum_fold
+ * folds a 32-bit partial checksum into 16 bits
+ *   temp_sum - sum from ip_checksum_add
+ *   returns: the folded checksum in network byte order
+ */
+static uint16_t ip_checksum_fold(uint32_t temp_sum) {
+    while (temp_sum > 0xffff) {
+        temp_sum = (temp_sum >> 16) + (temp_sum & 0xFFFF);
+    }
+    return temp_sum;
+}
+/* function: ip_checksum_finish
+ * folds and closes the checksum
+ *   temp_sum - sum from ip_checksum_add
+ *   returns: a header checksum value in network byte order
+ */
+static uint16_t ip_checksum_finish(uint32_t temp_sum) {
+    return ~ip_checksum_fold(temp_sum);
+}
+/* function: ip_checksum
+ * combined ip_checksum_add and ip_checksum_finish
+ *   data - data to checksum
+ *   len  - length of data
+ */
+static uint16_t ip_checksum(const void* data, int len) {
+    uint32_t temp_sum;
+    temp_sum = ip_checksum_add(0, data, len);
+    return ip_checksum_finish(temp_sum);
+}
+
+static int icmp_error_callback(struct nfq_q_handle *queueHandle, 
+			struct nfgenmsg *nfmsg, struct nfq_data *pkt, void *data)
+{
+    int id = 0x00;
+    struct nfqnl_msg_packet_hdr *ph = nfq_get_msg_packet_hdr(pkt);
+    char *payload = NULL;
+
+    if (ph) {
+        id = ntohl(ph->packet_id);
+    }
+
+    int len = nfq_get_payload(pkt,&payload);
+    if (len > 0){
+        struct iphdr *ipHdr = ((struct iphdr*)payload);
+        if (ipHdr->version == 4){
+            struct icmphdr *icmpHdr = (struct icmphdr *)((char *)payload + (ipHdr->ihl*4));
+
+            /* validate inner ipv4 checksum */
+            if ((icmpHdr->type == ICMP_DEST_UNREACH)){
+                struct iphdr *innerIpHdr = (struct iphdr *)((char *)icmpHdr + sizeof(struct icmphdr));
+                if (innerIpHdr->version == 4) {
+                    if (ip_checksum((void *)innerIpHdr, (innerIpHdr->ihl*4)) != 0) {
+                        return nfq_set_verdict(queueHandle,id,NF_DROP,0,NULL);
+                    }
+                }
+            }
+        }
+    } 
+
+    return nfq_set_verdict(queueHandle,id,NF_ACCEPT,0,NULL);
+}
+
 static void getIFMac(char *interface, char *mac){
     int s;
     struct ifreq buffer;
@@ -470,6 +554,8 @@ static void getIFMac(char *interface, char *mac){
     }while(ret != 0);
     strcpy(mac, (void *)ether_ntoa((struct ether_addr *)(buffer.ifr_hwaddr.sa_data)));
 }
+
+
 //skeleton to connect to iptables NFQUEUE argv[1]
 //argv[2] query:intercept dns query, response:intercept dns response
 int main(int argc, char *argv[])
@@ -495,7 +581,8 @@ int main(int argc, char *argv[])
     const nfq_cfg nfqCfg[] = {
         {"dns_query", 5, 5, dns_query_callback},
         {"dns_response", 6, 8, dns_response_callback},
-        {"http_get", 11, 12, http_get_callback}
+        {"http_get", 11, 12, http_get_callback},
+        {"rfc5508_3a",15, 15, icmp_error_callback},
     };
 
    const nfq_cfg nfqCfgV6[] = {
