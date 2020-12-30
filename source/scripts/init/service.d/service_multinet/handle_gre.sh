@@ -99,6 +99,8 @@ ARP_NFQUEUE=0
 
 WAN_IF=erouter0
 
+TUNNEL_TYPE_GRE="gretap"
+
 AB_SSID_DELIM=':'
 AB_DELIM=","
 
@@ -124,6 +126,15 @@ init_snooper_sysevents () {
     fi
 }
 
+multinet_restart(){
+    inst=$1
+
+    BRIDGE_INST_1=`psmcli get $HS_PSM_BASE.${inst}.interface.1.$GRE_PSM_BRIDGES`
+
+    brinst=`echo $BRIDGE_INST_1 |cut -d . -f 4`
+    sysevent set multinet-restart $brinst
+}
+
 read_greInst()
 {
 
@@ -132,7 +143,7 @@ read_greInst()
 
    eval `psmcli get -e BRIDGE_INST_1 $HS_PSM_BASE.${inst}.interface.1.$GRE_PSM_BRIDGES BRIDGE_INST_2 $HS_PSM_BASE.${inst}.interface.2.$GRE_PSM_BRIDGES BRIDGE_INST_3 $HS_PSM_BASE.${inst}.interface.3.$GRE_PSM_BRIDGES BRIDGE_INST_4 $HS_PSM_BASE.${inst}.interface.4.$GRE_PSM_BRIDGES BRIDGE_INST_5 $HS_PSM_BASE.${inst}.interface.5.$GRE_PSM_BRIDGES WECB_BRIDGES dmsb.wecb.hhs_extra_bridges NAME $GRE_PSM_BASE.${inst}.$GRE_PSM_NAME`
 
-        set '5 6 9 10 16'
+        set '5 6'
 
         for i in $@; do
             count=`expr $count + 1`
@@ -164,7 +175,19 @@ read_greInst()
 
 #args: remote endpoint, gre tunnel ifname
 create_tunnel () {
-    echo "Creating tunnel... remote:$1"
+    REMOTE_ENDPOINT=$1
+    echo "Creating tunnel... remote:$REMOTE_ENDPOINT"
+
+
+    NUMOF_COLON=`echo $REMOTE_ENDPOINT |  grep -o "\:" | wc -l`
+    NUMOF_POINTS=`echo $REMOTE_ENDPOINT |  grep -o "\." | wc -l`
+
+    if [ $NUMOF_COLON -gt 2 ] && [ $NUMOF_POINTS -eq 0 ]
+    then
+        TUNNEL_TYPE_GRE="ip6gretap"
+    fi
+
+
  if [ "$BOX_TYPE" = "XF3" ] ; then
     echo "read_tunnel_param $2"  
     while true 
@@ -197,7 +220,7 @@ create_tunnel () {
     # TODO: use assigned lower layer instead
     WAN_IF=`sysevent get current_wan_ifname`
     
-    update_bridge_frag_config $inst $1
+    update_bridge_frag_config $inst $REMOTE_ENDPOINT
     
     isgretap0Present=`ip link show | grep gretap0`
     if [ "$isgretap0Present" != "" ]; then
@@ -205,13 +228,19 @@ create_tunnel () {
         ip link set dev $GRE_IFNAME name $GRE_IFNAME_DUMMY
     fi
 
-    if [ "$BOX_TYPE" = "XB6" -a "$MANUFACTURE" = "Arris" ] || [ "$MODEL_NUM" = "INTEL_PUMA" ] ; then
+    if [ "$TUNNEL_TYPE_GRE" = "gretap" ] ; then
     	#Intel Proposed RDKB Generic Bug Fix from XB6 SDK
-    	ip link add $2 type gretap remote $1 dev $WAN_IF $extra nopmtudisc
-    	ip link set $2 txqueuelen 1000 mtu 1500
+        WAN_IP_ADDR=`sysevent get current_wan_ipaddr`
+        ip link add $GRE_IFNAME type gretap remote ${REMOTE_ENDPOINT} local ${WAN_IP_ADDR} dev $WAN_IF $extra nopmtudisc
+        ip link set $GRE_IFNAME txqueuelen 1000 mtu 1500
     else
-    	ip link add $2 type gretap remote $1 dev $WAN_IF $extra
+        #ipv6
+        WAN_IP_ADDR=`sysevent get wan6_ipaddr`
+        ip link add $GRE_IFNAME type $TUNNEL_TYPE_GRE remote ${REMOTE_ENDPOINT} local ${WAN_IP_ADDR} dev $WAN_IF $extra encaplimit none
+    	ip link set $GRE_IFNAME txqueuelen 1000 mtu 1442
     fi
+
+    ip link set up dev $GRE_IFNAME
 
     sysevent set gre_current_endpoint $1
     sysevent set if_${2}-status $IF_READY
@@ -413,6 +442,10 @@ update_bridge_config () {
         fi
         br_snoop_rule="`sysevent setunique GeneralPurposeFirewallRule " -A FORWARD -o $br -p udp --dport=67:68 -j NFQUEUE --queue-bypass --queue-num $queue"`"
         sysevent set gre_${inst}_${br}_snoop_rule "$br_snoop_rule"
+
+        br_snoop_rule_v6="`sysevent setunique v6GeneralPurposeFirewallRule " -A FORWARD -o $br -p udp --dport=546:547 -j NFQUEUE --queue-bypass --queue-num $queue"`"
+        sysevent set gre_${inst}_${br}_snoop_rule_v6 "$br_snoop_rule_v6"
+
   if [ "$BOX_TYPE" = "XF3" ] ; then
        sleep 5
   fi
@@ -440,6 +473,7 @@ remove_bridge_config () {
             fi
             sysevent set `sysevent get gre_${1}_${br}_snoop_rule`
             sysevent set `sysevent get gre_${1}_${br}_mss_rule`
+            sysevent set `sysevent get gre_${1}_${br}_snoop_rule_v6`
         done
 }
 
@@ -463,15 +497,12 @@ update_bridge_frag_config () {
 #       $ssid_${instance}_radio - radio for the specified ssid
 get_ssids() {
 
-
-       localif_1=`psmcli get $HS_PSM_BASE.${1}.interface.1.$GRE_PSM_LOCALIFS`
-       localif_2=`psmcli get $HS_PSM_BASE.${1}.interface.2.$GRE_PSM_LOCALIFS`
-       localif_3=`psmcli get $HS_PSM_BASE.${1}.interface.3.$GRE_PSM_LOCALIFS`
-       localif_4=`psmcli get $HS_PSM_BASE.${1}.interface.4.$GRE_PSM_LOCALIFS`
-       localif_5=`psmcli get $HS_PSM_BASE.${1}.interface.5.$GRE_PSM_LOCALIFS`
-
+     
+       localif_1=`psmcli get $HS_PSM_BASE.${1}.interface.1.$GRE_PSM_LOCALIFS`		
+       localif_2=`psmcli get $HS_PSM_BASE.${1}.interface.2.$GRE_PSM_LOCALIFS`	
+      
        count=0
-       set '5 6 9 10 16'
+       set '5 6'
        
        for i in $@; do          
             count=`expr $count + 1`
@@ -576,17 +607,9 @@ hotspot_down() {
     sysevent get gre_primary_async
     
     #bridgeFQDM=`psmcli get $HS_PSM_BASE.${inst}.$GRE_PSM_BRIDGES`	
-	BRIDGE_INST_1=`psmcli get $HS_PSM_BASE.${inst}.interface.1.$GRE_PSM_BRIDGES`
-	BRIDGE_INST_2=`psmcli get $HS_PSM_BASE.${inst}.interface.2.$GRE_PSM_BRIDGES`
-	BRIDGE_INST_5=`psmcli get $HS_PSM_BASE.${inst}.interface.5.$GRE_PSM_BRIDGES`
-#TCCBR doesnot support BRIDGE_INST_3 and BRIDGE_INST_4, skip this after completing RDKB-20382
-	if [ "$BOX_TYPE" = "TCCBR" ]; then
-		bridgeFQDM="$BRIDGE_INST_1,$BRIDGE_INST_2,$BRIDGE_INST_5"
-	else
-		BRIDGE_INST_3=`psmcli get $HS_PSM_BASE.${inst}.interface.3.$GRE_PSM_BRIDGES`
-		BRIDGE_INST_4=`psmcli get $HS_PSM_BASE.${inst}.interface.4.$GRE_PSM_BRIDGES`
-		bridgeFQDM="$BRIDGE_INST_1,$BRIDGE_INST_2,$BRIDGE_INST_3,$BRIDGE_INST_4,$BRIDGE_INST_5"
-	fi
+    BRIDGE_INST_1=`psmcli get $HS_PSM_BASE.${inst}.interface.1.$GRE_PSM_BRIDGES`
+    BRIDGE_INST_2=`psmcli get $HS_PSM_BASE.${inst}.interface.2.$GRE_PSM_BRIDGES`
+    bridgeFQDM="$BRIDGE_INST_1,$BRIDGE_INST_2"
 	
     remove_bridge_config ${inst} "`sysevent get gre_${inst}_current_bridges`"
 
@@ -625,7 +648,7 @@ hotspot_up() {
 #TCCBR doesnot support BRIDGE_INST_3 and BRIDGE_INST_4, skip this after completing RDKB-20382
 	if [ "$BOX_TYPE" = "TCCBR" ]; then
 		eval `psmcli get -e BRIDGE_INST_1 $HS_PSM_BASE.${inst}.interface.1.$GRE_PSM_BRIDGES BRIDGE_INST_2 $HS_PSM_BASE.${inst}.interface.2.$GRE_PSM_BRIDGES BRIDGE_INST_5 $HS_PSM_BASE.${inst}.interface.5.$GRE_PSM_BRIDGES ENABLED $HS_PSM_BASE.${inst}.$HS_PSM_ENABLE GRE_ENABLED $GRE_PSM_BASE.${inst}.$GRE_PSM_ENABLE WECB_BRIDGES dmsb.wecb.hhs_extra_bridges`
-                bridgeFQDM="$BRIDGE_INST_1,$BRIDGE_INST_2,$BRIDGE_INST_5"
+                bridgeFQDM="$BRIDGE_INST_1,$BRIDGE_INST_2"
 	else
 		eval `psmcli get -e BRIDGE_INST_1 $HS_PSM_BASE.${inst}.interface.1.$GRE_PSM_BRIDGES BRIDGE_INST_2 $HS_PSM_BASE.${inst}.interface.2.$GRE_PSM_BRIDGES BRIDGE_INST_3 $HS_PSM_BASE.${inst}.interface.3.$GRE_PSM_BRIDGES BRIDGE_INST_4 $HS_PSM_BASE.${inst}.interface.4.$GRE_PSM_BRIDGES BRIDGE_INST_5 $HS_PSM_BASE.${inst}.interface.5.$GRE_PSM_BRIDGES ENABLED $HS_PSM_BASE.${inst}.$HS_PSM_ENABLE GRE_ENABLED $GRE_PSM_BASE.${inst}.$GRE_PSM_ENABLE WECB_BRIDGES dmsb.wecb.hhs_extra_bridges`
 
@@ -637,7 +660,7 @@ hotspot_up() {
                     eval `psmcli get -e BRIDGE_INST_1 $HS_PSM_BASE.${inst}.interface.1.$GRE_PSM_BRIDGES BRIDGE_INST_2 $HS_PSM_BASE.${inst}.interface.2.$GRE_PSM_BRIDGES BRIDGE_INST_3 $HS_PSM_BASE.${inst}.interface.3.$GRE_PSM_BRIDGES BRIDGE_INST_4 $HS_PSM_BASE.${inst}.interface.4.$GRE_PSM_BRIDGES WECB_BRIDGES dmsb.wecb.hhs_extra_bridges NAME $GRE_PSM_BASE.${inst}.$GRE_PSM_NAME`
                     count=0
                     bridgeFQDM=""
-                    set '5 6 9 10 16'
+                    set '5 6'
                     for i in $@; do
                         count=`expr $count + 1`
                         eval bridgeinfo=\${BRIDGE_INST_${count}}
@@ -723,10 +746,7 @@ set_wecb_bridges() {
     #BRIDGE_INS="`psmcli get $HS_PSM_BASE.1.$GRE_PSM_BRIDGES`"	
     BRIDGE_INST_1="`psmcli get $HS_PSM_BASE.1.interface.1.$GRE_PSM_BRIDGES`"
 	BRIDGE_INST_2="`psmcli get $HS_PSM_BASE.1.interface.2.$GRE_PSM_BRIDGES`"
-	BRIDGE_INST_3="`psmcli get $HS_PSM_BASE.1.interface.3.$GRE_PSM_BRIDGES`"
-	BRIDGE_INST_4="`psmcli get $HS_PSM_BASE.1.interface.4.$GRE_PSM_BRIDGES`"
-	BRIDGE_INST_5="`psmcli get $HS_PSM_BASE.1.interface.5.$GRE_PSM_BRIDGES`"
-	BRIDGE_INS="$BRIDGE_INST_1,$BRIDGE_INST_2,$BRIDGE_INST_3,$BRIDGE_INST_4,$BRIDGE_INST_5"
+	BRIDGE_INS="$BRIDGE_INST_1,$BRIDGE_INST_2"
 	
     local binst=""
     local query=""
@@ -856,7 +876,6 @@ case "$1" in
 
 
          if [ x"NULL" != x${2} ] || [ $recover = "true" ]; then
-              echo "inside create tunnel"                             
               if [ $recover = "true" ] ; then                                    
                   TUNNEL_EP="dmcli eRT getv Device.X_COMCAST-COM_GRE.Tunnel.1.PrimaryRemoteEndpoint"
                   TUNNEL_IP=`$TUNNEL_EP`                                                            
@@ -868,7 +887,9 @@ case "$1" in
                   fi
               else
                   create_tunnel $2 $GRE_IFNAME
-              fi                                                                                     
+              fi
+              inst=1
+              multinet_restart $inst
          fi           
 
         if [ "$BOX_TYPE" = "XF3" ] ; then 
