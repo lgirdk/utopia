@@ -1752,19 +1752,21 @@ static int bIsContainerEnabled( void)
  * Return Values  :
  *    0           : Success
  */
-static int prepare_multinet_prerouting_raw(FILE *raw_fp) {
-    char* tok = NULL;
-    char net_query[MAX_QUERY] = {0};
-    char net_resp[MAX_QUERY] = {0};
-    char inst_resp[MAX_QUERY] = {0};
-    char primary_inst[MAX_QUERY] = {0};
+static int prepare_multinet_prerouting_raw (FILE *raw_fp)
+{
+    char *tok;
+    char net_query[MAX_QUERY];
+    char net_resp[MAX_QUERY];
+    char inst_resp[MAX_QUERY];
+    char primary_inst[MAX_QUERY];
 
     FIREWALL_DEBUG("Entering prepare_multinet_prerouting_raw\n");         
-    snprintf(net_query, sizeof(net_query), "ipv4-instances");
-    sysevent_get(sysevent_fd, sysevent_token, net_query, inst_resp, sizeof(inst_resp));
 
-    snprintf(net_query, sizeof(net_query), "primary_lan_l3net");
-    sysevent_get(sysevent_fd, sysevent_token, net_query, primary_inst, sizeof(inst_resp));
+    inst_resp[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "ipv4-instances", inst_resp, sizeof(inst_resp));
+
+    primary_inst[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "primary_lan_l3net", primary_inst, sizeof(primary_inst));
 
     tok = strtok(inst_resp, " ");
 
@@ -1776,21 +1778,24 @@ static int prepare_multinet_prerouting_raw(FILE *raw_fp) {
         // Skip primary LAN instance, it is handled elsewhere
         if (strcmp(primary_inst,tok) == 0)
             continue;
+
         snprintf(net_query, sizeof(net_query), "ipv4_%s-status", tok);
+        net_resp[0] = 0;
         sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
         if (strcmp("up", net_resp) != 0)
             continue;
 
         snprintf(net_query, sizeof(net_query), "ipv4_%s-ifname", tok);
+        net_resp[0] = 0;
         sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
 
         fprintf(raw_fp, "-A prerouting_raw -i %s -j lan2wan_helpers\n", net_resp);
 
     } while ((tok = strtok(NULL, " ")) != NULL);
 
-    return 0;
+    FIREWALL_DEBUG("Exiting prepare_multinet_prerouting_raw\n");         
 
-   FIREWALL_DEBUG("Exiting prepare_multinet_prerouting_raw\n");         
+    return 0;
 }
 
 /*
@@ -4714,18 +4719,19 @@ static int do_wan_nat_lan_clients(FILE *fp)
  * Return Values  :
  *    0           : Success
  */
-static int do_multinet_lan2self_attack(FILE *filter_fp) {
-    char* tok = NULL;
-    char net_query[MAX_QUERY] = {0};
-    char net_resp[MAX_QUERY] = {0};
-    char inst_resp[MAX_QUERY] = {0};
-    char primary_inst[MAX_QUERY] = {0};
+static int do_multinet_lan2self_attack (FILE *filter_fp)
+{
+    char *tok;
+    char net_query[MAX_QUERY];
+    char net_resp[MAX_QUERY];
+    char inst_resp[MAX_QUERY];
+    char primary_inst[MAX_QUERY];
 
-    snprintf(net_query, sizeof(net_query), "ipv4-instances");
-    sysevent_get(sysevent_fd, sysevent_token, net_query, inst_resp, sizeof(inst_resp));
+    inst_resp[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "ipv4-instances", inst_resp, sizeof(inst_resp));
 
-    snprintf(net_query, sizeof(net_query), "primary_lan_l3net");
-    sysevent_get(sysevent_fd, sysevent_token, net_query, primary_inst, sizeof(inst_resp));
+    primary_inst[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "primary_lan_l3net", primary_inst, sizeof(primary_inst));
 
     tok = strtok(inst_resp, " ");
 
@@ -4733,12 +4739,15 @@ static int do_multinet_lan2self_attack(FILE *filter_fp) {
         // Skip primary LAN instance, it is handled elsewhere
         if (strcmp(primary_inst,tok) == 0)
             continue;
+
         snprintf(net_query, sizeof(net_query), "ipv4_%s-status", tok);
+        net_resp[0] = 0;
         sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
         if (strcmp("up", net_resp) != 0)
             continue;
 
         snprintf(net_query, sizeof(net_query), "ipv4_%s-ipv4addr", tok);
+        net_resp[0] = 0;
         sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
 
         fprintf(filter_fp, "-A lanattack -s %s -d %s -j xlog_drop_lanattack\n", net_resp, net_resp);
@@ -4894,21 +4903,22 @@ static int do_lan2self_by_wanip6(FILE *filter_fp)
  * Return Values  :
  *    0           : Success
  */
-static int do_multinet_lan2self_by_wanip(FILE *filter_fp) {
-    char* tok = NULL;
-    char net_query[MAX_QUERY] = {0};
-    char net_resp[MAX_QUERY] = {0};
-    char inst_resp[MAX_QUERY] = {0};
-    char primary_inst[MAX_QUERY] = {0};
+static int do_multinet_lan2self_by_wanip (FILE *filter_fp)
+{
+    char *tok = NULL;
+    char net_query[MAX_QUERY];
+    char net_resp[MAX_QUERY];
+    char inst_resp[MAX_QUERY];
+    char primary_inst[MAX_QUERY];
 
     // First skip packets destined to primary LAN instance
     fprintf(filter_fp, "-A lan2self_by_wanip -d %s -j RETURN\n", lan_ipaddr);    
 
-    snprintf(net_query, sizeof(net_query), "ipv4-instances");
-    sysevent_get(sysevent_fd, sysevent_token, net_query, inst_resp, sizeof(inst_resp));
+    inst_resp[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "ipv4-instances", inst_resp, sizeof(inst_resp));
 
-    snprintf(net_query, sizeof(net_query), "primary_lan_l3net");
-    sysevent_get(sysevent_fd, sysevent_token, net_query, primary_inst, sizeof(inst_resp));
+    primary_inst[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "primary_lan_l3net", primary_inst, sizeof(primary_inst));
 
     tok = strtok(inst_resp, " ");
 
@@ -4916,12 +4926,15 @@ static int do_multinet_lan2self_by_wanip(FILE *filter_fp) {
         // Skip primary LAN instance, it is handled elsewhere
         if (strcmp(primary_inst,tok) == 0)
             continue;
+
         snprintf(net_query, sizeof(net_query), "ipv4_%s-status", tok);
+        net_resp[0] = 0;
         sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
         if (strcmp("up", net_resp) != 0)
             continue;
 
         snprintf(net_query, sizeof(net_query), "ipv4_%s-ipv4addr", tok);
+        net_resp[0] = 0;
         sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
 
         fprintf(filter_fp, "-A lan2self_by_wanip -d %s -j RETURN\n", net_resp);
@@ -5103,18 +5116,19 @@ static int do_lan2self(FILE *fp)
  * Return Values  :
  *    0           : Success
  */
-static int do_multinet_wan2self_attack(FILE *filter_fp) {
-    char* tok = NULL;
-    char net_query[MAX_QUERY] = {0};
-    char net_resp[MAX_QUERY] = {0};
-    char inst_resp[MAX_QUERY] = {0};
-    char primary_inst[MAX_QUERY] = {0};
+static int do_multinet_wan2self_attack (FILE *filter_fp)
+{
+    char *tok;
+    char net_query[MAX_QUERY];
+    char net_resp[MAX_QUERY];
+    char inst_resp[MAX_QUERY];
+    char primary_inst[MAX_QUERY];
 
-    snprintf(net_query, sizeof(net_query), "ipv4-instances");
-    sysevent_get(sysevent_fd, sysevent_token, net_query, inst_resp, sizeof(inst_resp));
+    inst_resp[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "ipv4-instances", inst_resp, sizeof(inst_resp));
 
-    snprintf(net_query, sizeof(net_query), "primary_lan_l3net");
-    sysevent_get(sysevent_fd, sysevent_token, net_query, primary_inst, sizeof(inst_resp));
+    primary_inst[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "primary_lan_l3net", primary_inst, sizeof(primary_inst));
 
     tok = strtok(inst_resp, " ");
 
@@ -5122,12 +5136,15 @@ static int do_multinet_wan2self_attack(FILE *filter_fp) {
         // Skip primary LAN instance, it is handled elsewhere
         if (strcmp(primary_inst,tok) == 0)
             continue;
+
         snprintf(net_query, sizeof(net_query), "ipv4_%s-status", tok);
+        net_resp[0] = 0;
         sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
         if (strcmp("up", net_resp) != 0)
             continue;
 
         snprintf(net_query, sizeof(net_query), "ipv4_%s-ipv4addr", tok);
+        net_resp[0] = 0;
         sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
 
         fprintf(filter_fp, "-A wanattack -s %s -j xlog_drop_wanattack\n", net_resp);
@@ -8938,19 +8955,20 @@ static int do_wan2lan_IoT_Allow(FILE *filter_fp)
  * Return Values  :
  *    0           : Success
  */
-static int do_multinet_lan2wan_disable(FILE *filter_fp) {
-    char* tok = NULL;
-    char net_query[MAX_QUERY] = {0};
-    char net_resp[MAX_QUERY] = {0};
-    char net_resp2[MAX_QUERY] = {0};
-    char inst_resp[MAX_QUERY] = {0};
-    char primary_inst[MAX_QUERY] = {0};
+static int do_multinet_lan2wan_disable (FILE *filter_fp)
+{
+    char *tok;
+    char net_query[MAX_QUERY];
+    char net_resp[MAX_QUERY];
+    char net_resp2[MAX_QUERY];
+    char inst_resp[MAX_QUERY];
+    char primary_inst[MAX_QUERY];
 
-    snprintf(net_query, sizeof(net_query), "ipv4-instances");
-    sysevent_get(sysevent_fd, sysevent_token, net_query, inst_resp, sizeof(inst_resp));
+    inst_resp[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "ipv4-instances", inst_resp, sizeof(inst_resp));
 
-    snprintf(net_query, sizeof(net_query), "primary_lan_l3net");
-    sysevent_get(sysevent_fd, sysevent_token, net_query, primary_inst, sizeof(inst_resp));
+    primary_inst[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "primary_lan_l3net", primary_inst, sizeof(primary_inst));
 
     tok = strtok(inst_resp, " ");
 
@@ -8958,14 +8976,19 @@ static int do_multinet_lan2wan_disable(FILE *filter_fp) {
         // Skip primary LAN instance, it is handled elsewhere
         if (strcmp(primary_inst,tok) == 0)
             continue;
+
         snprintf(net_query, sizeof(net_query), "ipv4_%s-status", tok);
+        net_resp[0] = 0;
         sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
         if (strcmp("up", net_resp) != 0)
             continue;
 
         snprintf(net_query, sizeof(net_query), "ipv4_%s-ipv4addr", tok);
+        net_resp[0] = 0;
         sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
+
         snprintf(net_query, sizeof(net_query), "ipv4_%s-ipv4subnet", tok);
+        net_resp2[0] = 0;
         sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp2, sizeof(net_resp2));
 
         fprintf(filter_fp, "-A lan2wan_disable -s %s/%s -j DROP\n", net_resp, net_resp2);
@@ -9441,19 +9464,20 @@ FirewallRuleNext2:
  * Return Values  :
  *    0           : Success
  */
-static int do_multinet_wan2lan_disable(FILE *filter_fp) {
-    char* tok = NULL;
-    char net_query[MAX_QUERY] = {0};
-    char net_resp[MAX_QUERY] = {0};
-    char net_resp2[MAX_QUERY] = {0};
-    char inst_resp[MAX_QUERY] = {0};
-    char primary_inst[MAX_QUERY] = {0};
+static int do_multinet_wan2lan_disable (FILE *filter_fp)
+{
+    char *tok;
+    char net_query[MAX_QUERY];
+    char net_resp[MAX_QUERY];
+    char net_resp2[MAX_QUERY];
+    char inst_resp[MAX_QUERY];
+    char primary_inst[MAX_QUERY];
 
-    snprintf(net_query, sizeof(net_query), "ipv4-instances");
-    sysevent_get(sysevent_fd, sysevent_token, net_query, inst_resp, sizeof(inst_resp));
+    inst_resp[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "ipv4-instances", inst_resp, sizeof(inst_resp));
 
-    snprintf(net_query, sizeof(net_query), "primary_lan_l3net");
-    sysevent_get(sysevent_fd, sysevent_token, net_query, primary_inst, sizeof(inst_resp));
+    primary_inst[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "primary_lan_l3net", primary_inst, sizeof(primary_inst));
 
     tok = strtok(inst_resp, " ");
 
@@ -9461,14 +9485,19 @@ static int do_multinet_wan2lan_disable(FILE *filter_fp) {
         // Skip primary LAN instance, it is handled elsewhere
         if (strcmp(primary_inst,tok) == 0)
             continue;
+
         snprintf(net_query, sizeof(net_query), "ipv4_%s-status", tok);
+        net_resp[0] = 0;
         sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
         if (strcmp("up", net_resp) != 0)
             continue;
 
         snprintf(net_query, sizeof(net_query), "ipv4_%s-ipv4addr", tok);
+        net_resp[0] = 0;
         sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
+
         snprintf(net_query, sizeof(net_query), "ipv4_%s-ipv4subnet", tok);
+        net_resp2[0] = 0;
         sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp2, sizeof(net_resp2));
 
         fprintf(filter_fp, "-A wan2lan_disabled -d %s/%s -j DROP\n", net_resp, net_resp2);
@@ -9793,18 +9822,19 @@ GPFirewallRuleNext:
  * Return Values  :
  *    0           : Success
  */
-static int prepare_multinet_prerouting_nat(FILE *nat_fp) {
-    char* tok = NULL;
-    char net_query[MAX_QUERY] = {0};
-    char net_resp[MAX_QUERY] = {0};
-    char inst_resp[MAX_QUERY] = {0};
-    char primary_inst[MAX_QUERY] = {0};
+static int prepare_multinet_prerouting_nat (FILE *nat_fp)
+{
+    char *tok;
+    char net_query[MAX_QUERY];
+    char net_resp[MAX_QUERY];
+    char inst_resp[MAX_QUERY];
+    char primary_inst[MAX_QUERY];
 
-    snprintf(net_query, sizeof(net_query), "ipv4-instances");
-    sysevent_get(sysevent_fd, sysevent_token, net_query, inst_resp, sizeof(inst_resp));
+    inst_resp[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "ipv4-instances", inst_resp, sizeof(inst_resp));
 
-    snprintf(net_query, sizeof(net_query), "primary_lan_l3net");
-    sysevent_get(sysevent_fd, sysevent_token, net_query, primary_inst, sizeof(inst_resp));
+    primary_inst[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "primary_lan_l3net", primary_inst, sizeof(primary_inst));
 
     tok = strtok(inst_resp, " ");
 
@@ -9812,12 +9842,15 @@ static int prepare_multinet_prerouting_nat(FILE *nat_fp) {
         // Skip primary LAN instance, it is handled elsewhere
         if (strcmp(primary_inst,tok) == 0)
             continue;
+
         snprintf(net_query, sizeof(net_query), "ipv4_%s-status", tok);
+        net_resp[0] = 0;
         sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
         if (strcmp("up", net_resp) != 0)
             continue;
 
         snprintf(net_query, sizeof(net_query), "ipv4_%s-ifname", tok);
+        net_resp[0] = 0;
         sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
 
         fprintf(nat_fp, "-A PREROUTING -i %s -j prerouting_fromlan\n", net_resp);
@@ -9838,18 +9871,19 @@ static int prepare_multinet_prerouting_nat(FILE *nat_fp) {
  * Return Values  :
  *    0           : Success
  */
-static int prepare_multinet_postrouting_nat(FILE *nat_fp) {
-    char* tok = NULL;
-    char net_query[MAX_QUERY] = {0};
-    char net_resp[MAX_QUERY] = {0};
-    char inst_resp[MAX_QUERY] = {0};
-    char primary_inst[MAX_QUERY] = {0};
+static int prepare_multinet_postrouting_nat (FILE *nat_fp)
+{
+    char *tok;
+    char net_query[MAX_QUERY];
+    char net_resp[MAX_QUERY];
+    char inst_resp[MAX_QUERY];
+    char primary_inst[MAX_QUERY];
 
-    snprintf(net_query, sizeof(net_query), "ipv4-instances");
-    sysevent_get(sysevent_fd, sysevent_token, net_query, inst_resp, sizeof(inst_resp));
+    inst_resp[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "ipv4-instances", inst_resp, sizeof(inst_resp));
 
-    snprintf(net_query, sizeof(net_query), "primary_lan_l3net");
-    sysevent_get(sysevent_fd, sysevent_token, net_query, primary_inst, sizeof(inst_resp));
+    primary_inst[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "primary_lan_l3net", primary_inst, sizeof(primary_inst));
 
     tok = strtok(inst_resp, " ");
 
@@ -9857,12 +9891,15 @@ static int prepare_multinet_postrouting_nat(FILE *nat_fp) {
         // Skip primary LAN instance, it is handled elsewhere
         if (strcmp(primary_inst,tok) == 0)
             continue;
+
         snprintf(net_query, sizeof(net_query), "ipv4_%s-status", tok);
+        net_resp[0] = 0;
         sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
         if (strcmp("up", net_resp) != 0)
             continue;
 
         snprintf(net_query, sizeof(net_query), "ipv4_%s-ifname", tok);
+        net_resp[0] = 0;
         sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
 
         fprintf(nat_fp, "-A POSTROUTING -o %s -j postrouting_tolan\n", net_resp);
@@ -9912,22 +9949,22 @@ static void prepare_ipc_filter(FILE *filter_fp) {
  * Return Values  :
  *    0           : Success
  */
-static int prepare_multinet_filter_input(FILE *filter_fp) {
-
+static int prepare_multinet_filter_input (FILE *filter_fp)
+{
 #if defined (MULTILAN_FEATURE)
-    char* tok = NULL;
-    char net_query[MAX_QUERY] = {0};
-    char net_resp[MAX_QUERY] = {0};
-    char inst_resp[MAX_QUERY] = {0};
-    char primary_inst[MAX_QUERY] = {0};
+    char *tok;
+    char net_query[MAX_QUERY];
+    char net_resp[MAX_QUERY];
+    char inst_resp[MAX_QUERY];
+    char primary_inst[MAX_QUERY];
  
     FIREWALL_DEBUG("Entering prepare_multinet_filter_input\n"); 	  
 
-    snprintf(net_query, sizeof(net_query), "ipv4-instances");
-    sysevent_get(sysevent_fd, sysevent_token, net_query, inst_resp, sizeof(inst_resp));
+    inst_resp[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "ipv4-instances", inst_resp, sizeof(inst_resp));
 
-    snprintf(net_query, sizeof(net_query), "primary_lan_l3net");
-    sysevent_get(sysevent_fd, sysevent_token, net_query, primary_inst, sizeof(inst_resp));
+    primary_inst[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "primary_lan_l3net", primary_inst, sizeof(primary_inst));
 
     tok = strtok(inst_resp, " ");
 
@@ -9935,12 +9972,15 @@ static int prepare_multinet_filter_input(FILE *filter_fp) {
         // Skip primary LAN instance, it is handled elsewhere
         if (strcmp(primary_inst,tok) == 0)
             continue;
+
         snprintf(net_query, sizeof(net_query), "ipv4_%s-status", tok);
+        net_resp[0] = 0;
         sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
         if (strcmp("up", net_resp) != 0)
             continue;
 
         snprintf(net_query, sizeof(net_query), "ipv4_%s-ifname", tok);
+        net_resp[0] = 0;
         sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
 
         fprintf(filter_fp, "-A INPUT -i %s -j lan2self\n", net_resp);
@@ -9954,8 +9994,9 @@ static int prepare_multinet_filter_input(FILE *filter_fp) {
     // TODO: Read sysevent enable flag
     fprintf(filter_fp, "-I INPUT -i %s -p gre -j ACCEPT\n", current_wan_ifname);
     
-                 FIREWALL_DEBUG("Exiting prepare_multinet_filter_input\n"); 	 
-    
+    FIREWALL_DEBUG("Exiting prepare_multinet_filter_input\n"); 	 
+
+    return 0;
 }
 
 #ifdef MULTILAN_FEATURE
@@ -9969,18 +10010,19 @@ static int prepare_multinet_filter_input(FILE *filter_fp) {
  * Return Values  :
  *    0           : Success
  */
-static int prepare_multinet_filter_output(FILE *filter_fp) {
-    char* tok = NULL;
-    char net_query[MAX_QUERY] = {0};
-    char net_resp[MAX_QUERY] = {0};
-    char inst_resp[MAX_QUERY] = {0};
-    char primary_inst[MAX_QUERY] = {0};
+static int prepare_multinet_filter_output (FILE *filter_fp)
+{
+    char *tok;
+    char net_query[MAX_QUERY];
+    char net_resp[MAX_QUERY];
+    char inst_resp[MAX_QUERY];
+    char primary_inst[MAX_QUERY];
 
-    snprintf(net_query, sizeof(net_query), "ipv4-instances");
-    sysevent_get(sysevent_fd, sysevent_token, net_query, inst_resp, sizeof(inst_resp));
+    inst_resp[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "ipv4-instances", inst_resp, sizeof(inst_resp));
 
-    snprintf(net_query, sizeof(net_query), "primary_lan_l3net");
-    sysevent_get(sysevent_fd, sysevent_token, net_query, primary_inst, sizeof(inst_resp));
+    primary_inst[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "primary_lan_l3net", primary_inst, sizeof(primary_inst));
 
     tok = strtok(inst_resp, " ");
 
@@ -9988,12 +10030,15 @@ static int prepare_multinet_filter_output(FILE *filter_fp) {
         // Skip primary LAN instance, it is handled elsewhere
         if (strcmp(primary_inst,tok) == 0)
             continue;
+
         snprintf(net_query, sizeof(net_query), "ipv4_%s-status", tok);
+        net_resp[0] = 0;
         sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
         if (strcmp("up", net_resp) != 0)
             continue;
 
         snprintf(net_query, sizeof(net_query), "ipv4_%s-ifname", tok);
+        net_resp[0] = 0;
         sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
 
         fprintf(filter_fp, "-A OUTPUT -o %s -j self2lan\n", net_resp);
@@ -10020,18 +10065,21 @@ static int prepare_multinet_filter_output(FILE *filter_fp) {
  * Return Values  :
  *    0           : Success
  */
-static int prepare_multinet_prerouting_nat_v6(FILE *fp) {
-   unsigned char sysevent_query[40] = {0};
-   unsigned char inst_resp[MAX_QUERY] = {0};
-   unsigned char multinet_ifname[MAX_QUERY] = {0};
-   unsigned char* tok = NULL;
+static int prepare_multinet_prerouting_nat_v6 (FILE *fp)
+{
+   unsigned char *tok;
+   unsigned char sysevent_query[MAX_QUERY];
+   unsigned char inst_resp[MAX_QUERY];
+   unsigned char multinet_ifname[MAX_QUERY];
 
-   snprintf(sysevent_query, sizeof(sysevent_query), "ipv6_active_inst");
-   sysevent_get(sysevent_fd, sysevent_token, sysevent_query, inst_resp, sizeof(inst_resp));
+   inst_resp[0] = 0;
+   sysevent_get(sysevent_fd, sysevent_token, "ipv6_active_inst", inst_resp, sizeof(inst_resp));
+
    tok = strtok(inst_resp, " ");
 
    if(tok) do {
       snprintf(sysevent_query, sizeof(sysevent_query), "multinet_%s-name", tok);
+      multinet_ifname[0] = 0;
       sysevent_get(sysevent_fd, sysevent_token, sysevent_query, multinet_ifname, sizeof(multinet_ifname));
 
       // Ignoring Primary lan interface.
@@ -10056,18 +10104,21 @@ static int prepare_multinet_prerouting_nat_v6(FILE *fp) {
  * Return Values  :
  *    0           : Success
  */
-static int prepare_multinet_filter_output_v6(FILE *fp) {
-   unsigned char sysevent_query[MAX_QUERY] = {0};
-   unsigned char inst_resp[MAX_QUERY] = {0};
-   unsigned char multinet_ifname[MAX_QUERY] = {0};
-   unsigned char* tok = NULL;
+static int prepare_multinet_filter_output_v6 (FILE *fp)
+{
+   unsigned char *tok;
+   unsigned char sysevent_query[MAX_QUERY];
+   unsigned char inst_resp[MAX_QUERY];
+   unsigned char multinet_ifname[MAX_QUERY];
 
-   snprintf(sysevent_query, sizeof(sysevent_query), "ipv6_active_inst");
-   sysevent_get(sysevent_fd, sysevent_token, sysevent_query, inst_resp, sizeof(inst_resp));
+   inst_resp[0] = 0;
+   sysevent_get(sysevent_fd, sysevent_token, "ipv6_active_inst", inst_resp, sizeof(inst_resp));
+
    tok = strtok(inst_resp, " ");
 
    if(tok) do {
       snprintf(sysevent_query, sizeof(sysevent_query), "multinet_%s-name", tok);
+      multinet_ifname[0] = 0;
       sysevent_get(sysevent_fd, sysevent_token, sysevent_query, multinet_ifname, sizeof(multinet_ifname));
 
       // Skip primary LAN instance, it is handled as a special case
@@ -10092,19 +10143,22 @@ static int prepare_multinet_filter_output_v6(FILE *fp) {
  * Return Values  :
  *    0           : Success
  */
-static int prepare_multinet_filter_forward_v6(FILE *fp) {
-   unsigned char sysevent_query[MAX_QUERY] = {0};
-   unsigned char inst_resp[MAX_QUERY] = {0};
-   unsigned char multinet_ifname[MAX_QUERY] = {0};
-   unsigned char lan_prefix[MAX_QUERY] = {0};
-   unsigned char* tok = NULL;
+static int prepare_multinet_filter_forward_v6 (FILE *fp)
+{
+   unsigned char *tok;
+   unsigned char sysevent_query[MAX_QUERY];
+   unsigned char inst_resp[MAX_QUERY];
+   unsigned char multinet_ifname[MAX_QUERY];
+   unsigned char lan_prefix[MAX_QUERY];
 
-   snprintf(sysevent_query, sizeof(sysevent_query), "ipv6_active_inst");
-   sysevent_get(sysevent_fd, sysevent_token, sysevent_query, inst_resp, sizeof(inst_resp));
+   inst_resp[0] = 0;
+   sysevent_get(sysevent_fd, sysevent_token, "ipv6_active_inst", inst_resp, sizeof(inst_resp));
+
    tok = strtok(inst_resp, " ");
 
    if(tok) do {
       snprintf(sysevent_query, sizeof(sysevent_query), "multinet_%s-name", tok);
+      multinet_ifname[0] = 0;
       sysevent_get(sysevent_fd, sysevent_token, sysevent_query, multinet_ifname, sizeof(multinet_ifname));
 
       // Skip primary LAN instance, it is handled as a special case
@@ -10113,6 +10167,7 @@ static int prepare_multinet_filter_forward_v6(FILE *fp) {
 
       // Query the IPv6 prefix currently allocated to this bridge from sysevent
       snprintf(sysevent_query, sizeof(sysevent_query), "ipv6_%s-prefix", multinet_ifname);
+      lan_prefix[0] = 0;
       sysevent_get(sysevent_fd, sysevent_token, sysevent_query, lan_prefix, sizeof(lan_prefix));
 
       // Allow DHCPv6 from LAN clients
@@ -10146,7 +10201,6 @@ static int prepare_multinet_filter_forward_v6(FILE *fp) {
 
 #endif
 
-#ifdef MULTILAN_FEATURE
 /*
  *  Procedure     : prepare_multinet_filter_forward
  *  Purpose       : prepare the iptables-restore file that establishes all
@@ -10157,60 +10211,46 @@ static int prepare_multinet_filter_forward_v6(FILE *fp) {
  * Return Values  :
  *    0           : Success
  */
-static int prepare_multinet_filter_forward(FILE *filter_fp) {
-    char* tok = NULL;
-    char net_query[MAX_QUERY] = {0};
-    char net_resp[MAX_QUERY] = {0};
-    char inst_resp[MAX_QUERY] = {0};
-    char primary_inst[MAX_QUERY] = {0};
-    char ip[MAX_QUERY] = {0};
-
-#else
-static int prepare_multinet_filter_forward(FILE *filter_fp) {
-     unsigned int instanceCnt = 0;
-    unsigned int *instanceList = NULL;
-    unsigned int i = 0;
-    unsigned int func_ret = CCSP_SUCCESS;
-    char* tok = NULL;
-    
-    char net_query[40];
-    net_query[0] = '\0';
+static int prepare_multinet_filter_forward (FILE *filter_fp)
+{
+    char *tok;
+    char net_query[MAX_QUERY];
     char net_resp[MAX_QUERY];
     char inst_resp[MAX_QUERY];
-    inst_resp[0] = '\0';
-    //char net_ip[MAX_QUERY];
     char primary_inst[MAX_QUERY];
-    primary_inst[0] = '\0';
-    char ip[20];
-#endif
-          FIREWALL_DEBUG("Entering prepare_multinet_filter_forward\n"); 	 
+    char ip[MAX_QUERY];
+
+    FIREWALL_DEBUG("Entering prepare_multinet_filter_forward\n"); 	 
+
+    do_block_ports (filter_fp);
+
     //L3 rules
-    snprintf(net_query, sizeof(net_query), "ipv4-instances");
-    sysevent_get(sysevent_fd, sysevent_token, net_query, inst_resp, sizeof(inst_resp));
+    inst_resp[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "ipv4-instances", inst_resp, sizeof(inst_resp));
     
-    snprintf(net_query, sizeof(net_query), "primary_lan_l3net");
-    sysevent_get(sysevent_fd, sysevent_token, net_query, primary_inst, sizeof(inst_resp));
+    primary_inst[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "primary_lan_l3net", primary_inst, sizeof(primary_inst));
     
-    do_block_ports(filter_fp);    
     tok = strtok(inst_resp, " ");
     
     if (tok) do {
         // TODO: IGNORING Primary INSTANCE FOR NOW
         if (strcmp(primary_inst,tok) == 0) 
             continue;
+
         snprintf(net_query, sizeof(net_query), "ipv4_%s-status", tok);
+        net_resp[0] = 0;
         sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
         if (strcmp("up", net_resp) != 0)
             continue;
         
         snprintf(net_query, sizeof(net_query), "ipv4_%s-ifname", tok);
+        net_resp[0] = 0;
         sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
         
         snprintf(net_query, sizeof(net_query), "ipv4_%s-ipv4addr", tok);
+        ip[0] = 0;
         sysevent_get(sysevent_fd, sysevent_token, net_query, ip, sizeof(ip));
-        
-//         snprintf(net_query, sizeof(net_query), "ipv4_%s-ipv4addr", tok);
-//         sysevent_get(sysevent_fd, sysevent_token, net_query, net_ip, sizeof(net_resp));
         
 //         fprintf(filter_fp, "-I INPUT -i %s -d %s -j ACCEPT\n", net_resp, net_ip);
 #if !defined(_HUB4_PRODUCT_REQ_) /* Rules for pod interface */
@@ -10293,24 +10333,28 @@ static int prepare_multinet_filter_forward(FILE *filter_fp) {
 #endif
     //<<
 
-    snprintf(net_query, sizeof(net_query), "multinet-instances");
-    sysevent_get(sysevent_fd, sysevent_token, net_query, inst_resp, sizeof(inst_resp));
+    inst_resp[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "multinet-instances", inst_resp, sizeof(inst_resp));
     
     tok = strtok(inst_resp, " ");
     
     if (tok) do {
         snprintf(net_query, sizeof(net_query), "multinet_%s-localready", tok);
+        net_resp[0] = 0;
         sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
         if (strcmp("1", net_resp) != 0)
             continue;
         
         snprintf(net_query, sizeof(net_query), "multinet_%s-name", tok);
+        net_resp[0] = 0;
         sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
         
         fprintf(filter_fp, "-A FORWARD -i %s -o %s -j ACCEPT\n", net_resp, net_resp);
         
     } while ((tok = strtok(NULL, " ")) != NULL);
-      FIREWALL_DEBUG("Exiting prepare_multinet_filter_forward\n"); 	 
+
+    FIREWALL_DEBUG("Exiting prepare_multinet_filter_forward\n"); 	 
+
     return 0;
 }
 
@@ -10539,22 +10583,24 @@ static int do_ipv4_norf_captiveportalrule(FILE *nat_fp)
  *    0              : Connection tracking helpers will be loaded automatically
  *    1              : Connection tracking helpers must be explicitly loaded
 */
-int AutoConntrackHelperDisabled(void)
+static int AutoConntrackHelperDisabled (void)
 {
-
-   FIREWALL_DEBUG("Entering AutoConntrackHelperDisabled\n");         
-    FILE * fp = NULL;
-    char output[MAX_QUERY] = {0};
+    FILE * fp;
+    char output[MAX_QUERY];
     int result = 1;
 
-    if (NULL == (fp = fopen(SYSCTL_NF_CONNTRACK_HELPER, "r")))
-    {
+    FIREWALL_DEBUG("Entering AutoConntrackHelperDisabled\n");         
 
+    if ((fp = fopen (SYSCTL_NF_CONNTRACK_HELPER, "r")) == NULL)
+    {
    	FIREWALL_DEBUG("fopen call failed for %s, returning\n" COMMA SYSCTL_NF_CONNTRACK_HELPER);         
         return result;
     }
 
-    if (NULL == fgets(output, MAX_QUERY, fp) || (strnlen(output, MAX_QUERY) < 1))
+    if (fgets (output, sizeof(output), fp) == NULL)
+        goto cleanup;
+
+    if (output[0] == 0)
         goto cleanup;
 
     /* Return 0 if value is 0, 1 othersie */
@@ -10632,18 +10678,19 @@ static int prepare_lnf_internet_rules(FILE *mangle_fp,int iptype)
  * Return Values  :
  *    0           : Success
  */
-static int prepare_multinet_disabled_ipv4_firewall(FILE *filter_fp) {
-    char* tok = NULL;
-    char net_query[MAX_QUERY] = {0};
-    char net_resp[MAX_QUERY] = {0};
-    char inst_resp[MAX_QUERY] = {0};
-    char primary_inst[MAX_QUERY] = {0};
+static int prepare_multinet_disabled_ipv4_firewall (FILE *filter_fp)
+{
+    char *tok;
+    char net_query[MAX_QUERY];
+    char net_resp[MAX_QUERY];
+    char inst_resp[MAX_QUERY];
+    char primary_inst[MAX_QUERY];
 
-    snprintf(net_query, sizeof(net_query), "ipv4-instances");
-    sysevent_get(sysevent_fd, sysevent_token, net_query, inst_resp, sizeof(inst_resp));
+    inst_resp[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "ipv4-instances", inst_resp, sizeof(inst_resp));
 
-    snprintf(net_query, sizeof(net_query), "primary_lan_l3net");
-    sysevent_get(sysevent_fd, sysevent_token, net_query, primary_inst, sizeof(inst_resp));
+    primary_inst[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "primary_lan_l3net", primary_inst, sizeof(primary_inst));
 
     tok = strtok(inst_resp, " ");
 
@@ -10651,12 +10698,15 @@ static int prepare_multinet_disabled_ipv4_firewall(FILE *filter_fp) {
         // Skip primary LAN instance, it is handled elsewhere
         if (strcmp(primary_inst,tok) == 0)
             continue;
+
         snprintf(net_query, sizeof(net_query), "ipv4_%s-status", tok);
+        net_resp[0] = 0;
         sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
         if (strcmp("up", net_resp) != 0)
             continue;
 
         snprintf(net_query, sizeof(net_query), "ipv4_%s-ipv4addr", tok);
+        net_resp[0] = 0;
         sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
 
         fprintf(filter_fp, "-A INPUT -i %s -j lan2self_mgmt\n", net_resp);
@@ -13716,10 +13766,11 @@ v6GPFirewallRuleNext:
       }
 
 /* From community: utopia/generic */
-      unsigned char sysevent_query[MAX_QUERY] = {0};
-      unsigned char lan_prefix[MAX_QUERY] = {0};
+      unsigned char sysevent_query[MAX_QUERY];
+      unsigned char lan_prefix[MAX_QUERY];
 
       snprintf(sysevent_query, sizeof(sysevent_query), "ipv6_%s-prefix", lan_ifname);
+      lan_prefix[0] = 0;
       sysevent_get(sysevent_fd, sysevent_token, sysevent_query, lan_prefix, sizeof(lan_prefix));
 
       if ( '\0' != lan_prefix[0] ) {
@@ -15644,30 +15695,32 @@ static int do_mac_filter(FILE *fp)
  *  Return Values :
  *     0               : done
  */
-static int do_wpad_isatap_blockv4(FILE* filter_fp)
+static int do_wpad_isatap_blockv4 (FILE* filter_fp)
 {
-    char* tok = NULL;
-    char net_query[MAX_QUERY] = {0};
-    char net_resp[MAX_QUERY] = {0};
-    char inst_resp[MAX_QUERY] = {0};
-
-    snprintf(net_query, sizeof(net_query), "ipv4-instances");
-    sysevent_get(sysevent_fd, sysevent_token, net_query, inst_resp, sizeof(inst_resp));
-
-    tok = strtok(inst_resp, " ");
+    char *tok;
+    char net_query[MAX_QUERY];
+    char net_resp[MAX_QUERY];
+    char inst_resp[MAX_QUERY];
 
     fprintf(filter_fp, "-N block_wpad\n");
 
-    if(tok)
+    inst_resp[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "ipv4-instances", inst_resp, sizeof(inst_resp));
+
+    tok = strtok(inst_resp, " ");
+
+    if (tok)
     {
         do
         {
             snprintf(net_query, sizeof(net_query), "ipv4_%s-status", tok); 
+            net_resp[0] = 0;
             sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
             if (strcmp("up", net_resp) != 0)
                 continue;
 
             snprintf(net_query, sizeof(net_query), "ipv4_%s-ifname", tok); 
+            net_resp[0] = 0;
             sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
 
             //Representation of hostname in NetBIOS protocol uses encoding mechanism as specified in RFC-1001, hence hostname "ISATAP" and "WPAD" will get encoded as string EJFDEBFEEBFA and FHFAEBEE            
@@ -15675,42 +15728,49 @@ static int do_wpad_isatap_blockv4(FILE* filter_fp)
             fprintf(filter_fp, "-I FORWARD -i %s -p udp -m string --string \"isatap\" --algo bm --icase -j DROP\n", net_resp);
             fprintf(filter_fp, "-I FORWARD -i %s -p udp -m string --string \"wpad\" --algo bm --icase -j DROP\n", net_resp);
             fprintf(filter_fp, "-I FORWARD -i %s -p udp -m string --string \"FHFAEBEE\" --algo bm -j DROP\n", net_resp);
-            fprintf(filter_fp, "-I FORWARD -i %s -p tcp --dport 80 -m string --algo bm  --string \"GET /wpad.dat\" -j REJECT --reject-with tcp-reset\n", net_resp);
+            fprintf(filter_fp, "-I FORWARD -i %s -p tcp --dport 80 -m string --algo bm --string \"GET /wpad.dat\" -j REJECT --reject-with tcp-reset\n", net_resp);
             fprintf(filter_fp, "-I FORWARD -i %s -p tcp --sport 80 -m string --algo bm --string \"application/x-ns-proxy-autoconfig\" -j block_wpad\n", net_resp);
         } while ((tok = strtok(NULL, " ")) != NULL);
     }
+
     fprintf(filter_fp, "-A block_wpad -m string --algo bm --string \"FindProxyForURL\" -j DROP\n");
+
     return 0;
 }
-static int do_wpad_isatap_blockv6(FILE* filter_fp)
-{
-    unsigned char sysevent_query[MAX_QUERY] = {0};
-    unsigned char inst_resp[MAX_QUERY] = {0};
-    unsigned char multinet_ifname[MAX_QUERY] = {0};
-    unsigned char* tok = NULL;
 
-    snprintf(sysevent_query, sizeof(sysevent_query), "ipv6_active_inst");
-    sysevent_get(sysevent_fd, sysevent_token, sysevent_query, inst_resp, sizeof(inst_resp));
-    tok = strtok(inst_resp, " ");
+static int do_wpad_isatap_blockv6 (FILE* filter_fp)
+{
+    unsigned char *tok;
+    unsigned char sysevent_query[MAX_QUERY];
+    unsigned char inst_resp[MAX_QUERY];
+    unsigned char multinet_ifname[MAX_QUERY];
 
     fprintf(filter_fp, "-N block_wpad\n");
+
+    inst_resp[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "ipv6_active_inst", inst_resp, sizeof(inst_resp));
+
+    tok = strtok(inst_resp, " ");
 
     if (tok)
     {
         do
         {
             snprintf(sysevent_query, sizeof(sysevent_query), "multinet_%s-name", tok);
+            multinet_ifname[0] = 0;
             sysevent_get(sysevent_fd, sysevent_token, sysevent_query, multinet_ifname, sizeof(multinet_ifname));
 
             fprintf(filter_fp, "-I FORWARD -i %s -p udp -m string --string \"EJFDEBFEEBFA\" --algo bm -j DROP\n", multinet_ifname);
             fprintf(filter_fp, "-I FORWARD -i %s -p udp -m string --string \"isatap\" --algo bm --icase -j DROP\n", multinet_ifname);
             fprintf(filter_fp, "-I FORWARD -i %s -p udp -m string --string \"wpad\" --algo bm --icase -j DROP\n", multinet_ifname);
             fprintf(filter_fp, "-I FORWARD -i %s -p udp -m string --string \"FHFAEBEE\" --algo bm -j DROP\n", multinet_ifname);
-            fprintf(filter_fp, "-I FORWARD -i %s -p tcp --dport 80 -m string --algo bm  --string \"GET /wpad.dat\" -j REJECT --reject-with tcp-reset\n", multinet_ifname);
+            fprintf(filter_fp, "-I FORWARD -i %s -p tcp --dport 80 -m string --algo bm --string \"GET /wpad.dat\" -j REJECT --reject-with tcp-reset\n", multinet_ifname);
             fprintf(filter_fp, "-I FORWARD -i %s -p tcp --sport 80 -m string --algo bm --string \"application/x-ns-proxy-autoconfig\" -j block_wpad\n", multinet_ifname);
         } while ((tok = strtok(NULL, " ")) != NULL);
     }
+
     fprintf(filter_fp, "-A block_wpad -m string --algo bm --string \"FindProxyForURL\" -j DROP\n");
+
     return 0;
 }
 //LGI END
