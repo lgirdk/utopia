@@ -5395,14 +5395,12 @@ static void do_container_allow(FILE *pFilter, FILE *pMangle, FILE *pNat, int fam
     FIREWALL_DEBUG("Exiting remote_ssh_access_set_proto_prodImg\n");
  }
 
-
-#define IPRANGE_UTKEY_PREFIX "mgmt_wan_iprange_"
 static int do_remote_access_control(FILE *nat_fp, FILE *filter_fp, int family)
 {
     int rc, ret;
     char query[MAX_QUERY], tmpQuery[MAX_QUERY];
-    char srcaddr[MAX_QUERY];
-    char iprangeAddr[REMOTE_ACCESS_IP_RANGE_MAX_RULE][MAX_QUERY] = {'\0'};
+    char srcaddr[64 + 64 + 40];
+    char iprangeAddr[REMOTE_ACCESS_IP_RANGE_MAX_RULE][64 + 64 + 40];
     unsigned long count, i;
     char countStr[16];
     char startip[64];
@@ -5414,7 +5412,9 @@ static int do_remote_access_control(FILE *nat_fp, FILE *filter_fp, int family)
     unsigned char srcany = 0, validEntry = 0, noIPv6Entry = 0;
     char cm_ip_webaccess[2];
     char rg_ip_webaccess[2];
-         FIREWALL_DEBUG("Entering do_remote_access_control\n");    
+
+    FIREWALL_DEBUG("Entering do_remote_access_control\n");    
+
     httpport[0] = '\0';
     httpsport[0] = '\0';
     cm_ip_webaccess[0] = '\0';
@@ -5443,24 +5443,36 @@ static int do_remote_access_control(FILE *nat_fp, FILE *filter_fp, int family)
 #endif
 #endif
 
+    for (i = 0; i < REMOTE_ACCESS_IP_RANGE_MAX_RULE; i++)
+    {
+        iprangeAddr[i][0] = 0;
+    }
 
-    rc = syscfg_get(NULL, IPRANGE_UTKEY_PREFIX"count", countStr, sizeof(countStr));
+    rc = syscfg_get(NULL, "mgmt_wan_iprange_count", countStr, sizeof(countStr));
     if(rc == 0)
         count = strtoul(countStr, NULL, 10);
     else
         count = 0;
 
-    rc = syscfg_get(NULL, "mgmt_wan_srcany", query, sizeof(query));
+    if (count > REMOTE_ACCESS_IP_RANGE_MAX_RULE)
+    {
+        count = REMOTE_ACCESS_IP_RANGE_MAX_RULE;
+    }
 
-    if (rc == 0 && (srcany = atoi(query)) == 1)
-        ;
-    else {
+    rc = syscfg_get(NULL, "mgmt_wan_srcany", query, sizeof(query));
+    if (rc == 0)
+        srcany = (strcmp (query, "1") == 0) ? 1 : 0;
+    else
+        srcany = 0;
+
+    if (!srcany)
+    {
         if (family == AF_INET) {
             //get iprange src IP address first
             for(i = 0; i < count; i++) {
-                snprintf(utKey, sizeof(utKey), IPRANGE_UTKEY_PREFIX"%u_startIP", i);
+                snprintf(utKey, sizeof(utKey), "mgmt_wan_iprange_%u_startIP", i);
                 syscfg_get(NULL, utKey, startip, sizeof(startip));
-                snprintf(utKey, sizeof(utKey), IPRANGE_UTKEY_PREFIX"%u_endIP", i);
+                snprintf(utKey, sizeof(utKey), "mgmt_wan_iprange_%u_endIP", i);
                 syscfg_get(NULL, utKey, endip, sizeof(endip));
 
                 if (strcmp(startip, endip) == 0)
