@@ -1222,7 +1222,7 @@ typedef struct fwipfilter
     unsigned long   DstEndPort;
     unsigned long   IPv6SrcPrefixLen;
     unsigned long   IPv6DstPrefixLen;
-    char            ProtocolType[8]; //TCP or UDP or BOTH
+    char            ProtocolType[16]; //TCP, UDP, BOTH, etc (longest string is currently "IPv6Fragment" ?)
     char            FilterAction[8]; //allow or deny
     char            FilterDirec[32]; //incoming or outgoing
 }fwipfilter_t;
