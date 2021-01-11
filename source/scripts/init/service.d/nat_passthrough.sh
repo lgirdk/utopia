@@ -128,7 +128,7 @@ service_stop()
     ebtables -X nat_passthrough_to_lan
 
     # If not in bridge mode then delete lbr0 interface from the bridge
-    if [ "$bridge_mode" = "0" ] && [ -d /sys/class/net/brlan0/bridge ]
+    if [ "$bridge_mode" = "0" ] && [ -d /sys/class/net/lbr0/brport ]
     then
         brctl delif brlan0 lbr0
     fi
@@ -147,13 +147,17 @@ service_reload()
         return 0
     fi
 
-        if [ "$client_count" = 0 ]; then
-            # NPT was never started and the client count is still zero: do nothing
-            return 0
-        else
-            # NPT was never started but now we need to add some clients: do a full start
-            service_start
+    if [ "$client_count" = 0 ]; then
+        # Check if lbr0 is connected to a bridge.
+        # If connected, that means one entry is there in ebtables and need to remove it.
+        if [ -d /sys/class/net/lbr0/brport ]; then
+            service_stop 2>/dev/null
         fi
+        return 0
+    else
+        # NPT was never started but now we need to add some clients: do a full start
+        service_start
+    fi
 }
 
 case "$1" in
