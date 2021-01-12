@@ -2,7 +2,7 @@
 
 #NAT passthrough ,MNG 
 
-bridge_mode="$(syscfg get bridge_mode)"
+bridge_mode="$(sysevent get bridge_mode)"
 natPassthrough_enable="$(syscfg get natPassthrough_enable)"
 
 # get the NAT Passthrough client configuration early, it may be used
