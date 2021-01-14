@@ -695,7 +695,7 @@ void do_extra_pools (FILE *local_dhcpconf_file, char *prefix, unsigned char bDhc
 	char l_cIpv4Inst[8] = {0}, l_cIpv4InstStatus[8] = {0};
 	char l_cDhcp_Start_Addr[16] = {0}, l_cDhcp_End_Addr[16] = {0};
 	char l_cLan_Subnet[16] = {0}, l_cDhcp_Lease_Time[8] = {0}, l_cIfName[8] = {0};
-	char l_cPools[8] = {0};
+	char l_cPools[64] = {0};
 	char *l_cToken = NULL;	
 	int l_iPool, l_iIpv4Inst;
 	errno_t safec_rc = -1;
@@ -703,7 +703,7 @@ void do_extra_pools (FILE *local_dhcpconf_file, char *prefix, unsigned char bDhc
 	sysevent_get(g_iSyseventfd, g_tSysevent_token, 
 				 "dhcp_server_current_pools", l_cPools, sizeof(l_cPools));
 
-	l_cToken = strtok(l_cPools, "\n");
+	l_cToken = strtok(l_cPools, " ");
 	while(l_cToken != NULL)	
 	{
 		if (0 != l_cToken[0])
