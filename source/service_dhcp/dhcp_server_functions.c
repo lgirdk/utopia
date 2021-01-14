@@ -636,7 +636,7 @@ void do_extra_pools (FILE *local_dhcpconf_file, char *prefix, unsigned char bDhc
 	char l_cIpv4Inst[8] = {0}, l_cIpv4InstStatus[8] = {0};
 	char l_cDhcp_Start_Addr[16] = {0}, l_cDhcp_End_Addr[16] = {0};
 	char l_cLan_Subnet[16] = {0}, l_cDhcp_Lease_Time[8] = {0}, l_cIfName[8] = {0};
-	char l_cPools[8] = {0};
+	char l_cPools[64] = {0};
 	char *l_cToken = NULL;	
 	int l_iPool, l_iIpv4Inst;
     
@@ -722,7 +722,7 @@ void do_extra_pools (FILE *local_dhcpconf_file, char *prefix, unsigned char bDhc
 		{
 			fprintf(stderr, "pool is empty continue to next pool\n");
 		}	
-		l_cToken = strtok(NULL, " ");
+		l_cToken = strtok(NULL, "\n");
 	}
 }
 
