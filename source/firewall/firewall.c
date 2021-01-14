@@ -13272,6 +13272,19 @@ static void do_ipv6_filter_table(FILE *fp){
       fprintf(fp, "-A INPUT ! -i %s -p udp -m udp --sport 123 -m limit --limit 10/sec -j ACCEPT\n", lan_ifname);
 
       // DHCPv6 from inside clients (high rate in case of global reboot)
+
+      /* adding INPUT rule for DNS LAN traffic */
+      {
+         char prefix[129];
+
+         prefix[0] = 0;
+         sysevent_get(sysevent_fd, sysevent_token, "ipv6_prefix", prefix, sizeof(prefix));
+         if (prefix[0] != 0)
+         {
+            fprintf(fp, "-A INPUT -s %s -p tcp --dport 53 -i %s -j ACCEPT\n", prefix, lan_ifname);
+         }
+      }
+
       fprintf(fp, "-A INPUT -i %s -p udp -m udp --dport 547 -m limit --limit 100/sec -j ACCEPT\n", lan_ifname);
 
       // DHCPv6 from outside server (low rate as only a couple of potential DHCP servers)
