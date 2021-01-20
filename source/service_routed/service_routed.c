@@ -546,6 +546,8 @@ static int gen_zebra_conf(int sefd, token_t setok)
     char lan_addr_prefix[64] = {0};
 #endif
     char wan_st[16] = {0};
+    char dhcpv6ServerStatus[16];
+    bool isdhcpv6ServerEnable = true;
 
 #ifdef _HUB4_PRODUCT_REQ_
     char server_type[16] = {0};
@@ -646,6 +648,11 @@ static int gen_zebra_conf(int sefd, token_t setok)
 
     sysevent_get(sefd, setok, "wan-status", wan_st, sizeof(wan_st));
     syscfg_get(NULL, "last_erouter_mode", rtmod, sizeof(rtmod));
+
+    dhcpv6ServerStatus[0] = 0;
+    sysevent_get(sefd, setok, "dhcpv6_server-status", dhcpv6ServerStatus, sizeof(dhcpv6ServerStatus));
+    if (strcmp(dhcpv6ServerStatus, "down") == 0)
+        isdhcpv6ServerEnable = false;
 
 #if defined(MULTILAN_FEATURE) || defined(CISCO_CONFIG_DHCPV6_PREFIX_DELEGATION)
     get_active_lanif(sefd, setok, l2_insts, &enabled_iface_num);
@@ -781,7 +788,7 @@ static int gen_zebra_conf(int sefd, token_t setok)
 #endif
 
             /* If WAN is stopped or not in IPv6 or dual stack mode, send RA with router lifetime of zero */
-            if ( (strcmp(wan_st, "stopped") == 0) || (atoi(rtmod) != 2 && atoi(rtmod) != 3) )
+            if ( (strcmp(wan_st, "stopped") == 0) || (atoi(rtmod) != 2 && atoi(rtmod) != 3) || !isdhcpv6ServerEnable )
             {
                 fprintf(fp, "   ipv6 nd ra-lifetime 0\n");
             }
