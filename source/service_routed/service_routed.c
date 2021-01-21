@@ -531,6 +531,11 @@ static int route_set(struct serv_routed *sr)
            the simple workaround is OK.
         */
     }
+
+    /* Clean 'iif brlan0 table all_lans' if exists */
+    system("ip -6 rule del iif brlan0 table all_lans prio 10");
+    system("ip -6 rule add iif brlan0 table all_lans prio 10");
+
     return 0;
 #endif
 }
@@ -566,6 +571,7 @@ static int route_unset(struct serv_routed *sr)
         return -1;
     }
 #else
+    system("ip -6 rule del iif brlan0 table all_lans prio 10");
     if (vsystem("ip -6 route del default dev %s table erouter"
             " && ip -6 rule del iif brlan0 table erouter", wanIface) != 0)
         return -1;
