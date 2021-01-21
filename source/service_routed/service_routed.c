@@ -422,6 +422,11 @@ static int route_set(struct serv_routed *sr)
          return -1;
     return 0;
 #else
+
+    /* Warning: this is a duplicate of the _HUB4_PRODUCT_REQ_ code above */
+    /*Clean 'iif brlan0 table erouter' if exist already*/
+    vsystem("ip -6 rule del iif brlan0 table erouter");
+
     if (vsystem("ip -6 rule add iif brlan0 table erouter;"
             "gw=$(ip -6 route show default dev erouter0 | awk '/via/ {print $3}');"
             "if [ \"$gw\" != \"\" ]; then"
