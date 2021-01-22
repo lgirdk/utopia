@@ -50,6 +50,7 @@
 #define DEFAULT_RESOLV_CONF     "/var/default/resolv.conf"
 #define DEFAULT_CONF_DIR      	"/var/default"
 #define DEFAULT_FILE            "/etc/utopia/system_defaults"
+#define PAM_FILE                "/tmp/pam_initialized"
 //#define LAN_IF_NAME     "brlan0"
 #define XHS_IF_NAME     "brlan1"
 #define ERROR   		-1
@@ -151,6 +152,80 @@ static int isValidLANIP(const char* ipStr)
                 return 0;
         }
         return 1;
+}
+
+static int get_dmcli_value(char *cli, char *out, size_t out_size)
+{
+    char cmd[128];
+    FILE *fp;
+    size_t len;
+
+    out[0] = 0;
+
+    snprintf(cmd, sizeof(cmd), "dmcli eRT getv %s | sed -n -e 's/^.*value: //p'", cli);
+
+//  fprintf(stderr, "DHCP SERVER: %s:: %s:%s\n", __func__, "cmd", cmd);
+
+    if ((fp = popen(cmd, "r")) == NULL) {
+        fprintf(stderr, "popen %s error\n", cmd);
+        return ERROR;
+    }
+
+    fgets(out, out_size, fp);
+    pclose(fp);
+
+    len = strlen(out);
+    while ((len > 0) && ((out[len - 1] == ' ') || (out[len - 1] == '\n')))
+    {
+        out[len - 1] = 0;
+        len--;
+    }
+
+//  fprintf(stderr, "DHCP SERVER: %s:: %s:%s\n", __func__, "out", (out[0] == 0) ? "EMPTY" : out);
+
+    return SUCCESS;
+}
+
+/*
+   Values for ManufacturerOUI, SerialNumber and ProductClass are static,
+   therefore cache results to avoid unnecessary repeated calls to dmcli (which
+   is very bad for performance). Fixme: maybe better to fix these at compile
+   time and avoid the overhead of dmcli completely?
+*/
+static char *get_dmcli_value_ProductClass (void)
+{
+    static char buf[32];
+
+    if (buf[0] == 0)
+        get_dmcli_value ("Device.DeviceInfo.ProductClass", buf, sizeof(buf));
+    if (buf[0] != 0)
+        return buf;
+
+    return "LG5678"; /* Fallback default value */
+}
+
+static char *get_dmcli_value_SerialNumber (void)
+{
+    static char buf[32];
+
+    if (buf[0] == 0)
+        get_dmcli_value ("Device.DeviceInfo.SerialNumber", buf, sizeof(buf));
+    if (buf[0] != 0)
+        return buf;
+
+    return "001234"; /* Fallback default value */
+}
+
+static char *get_dmcli_value_ManufacturerOUI (void)
+{
+    static char buf[32];
+
+    if (buf[0] == 0)
+        get_dmcli_value ("Device.DeviceInfo.ManufacturerOUI", buf, sizeof(buf));
+    if (buf[0] != 0)
+        return buf;
+
+    return "5C353B"; /* Fallback default value */
 }
 
 int prepare_hostname()
@@ -1050,6 +1125,24 @@ int prepare_dhcp_conf (char *input)
                 fprintf(l_fLocal_Dhcp_ConfFile, "resolv-file=%s\n", RESOLV_CONF);
             }
         }
+
+        while (1)
+        {
+            if ((access(PAM_FILE,  F_OK) == 0)) //PAM_FILE file exists
+            {
+               fprintf(stderr,"DHCP SERVER : file pam_initialized exists\n");
+               break;
+            }
+            else
+            {
+               fprintf(stderr,"DHCP SERVER : file pam_initialized doesn't exist wait until the PA is initialised\n");
+               sleep(2);
+            }
+        }
+
+        fprintf(l_fLocal_Dhcp_ConfFile,"dhcp-option-force=tag:cpewan-id,vi-encap:3561,6,\"%s\"\n", get_dmcli_value_ProductClass());
+        fprintf(l_fLocal_Dhcp_ConfFile,"dhcp-option-force=tag:cpewan-id,vi-encap:3561,5,\"%s\"\n", get_dmcli_value_SerialNumber());
+        fprintf(l_fLocal_Dhcp_ConfFile,"dhcp-option-force=tag:cpewan-id,vi-encap:3561,4,\"%s\"\n", get_dmcli_value_ManufacturerOUI());
 
         //Propagate Domain
         syscfg_get(NULL, "dhcp_server_propagate_wan_domain", l_cPropagate_Dom, sizeof(l_cPropagate_Dom));
