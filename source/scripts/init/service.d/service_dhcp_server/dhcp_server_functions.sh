@@ -1069,30 +1069,6 @@ fi
         if [ "0" = "$NAMESERVERENABLED" ] && [ $isLocalDNSOnly -eq 0 ] ; then
             echo "resolv-file=$RESOLV_CONF" >> $LOCAL_DHCP_CONF
         fi
-
-        while ! [ -e /var/tmp/tr069paready ] ; do
-            echo "Waiting for PandM to initalize completely to set Managed device"
-            sleep 2
-        done
-
-        MFR_OUI=`dmcli eRT getv Device.DeviceInfo.ManufacturerOUI | grep value | awk '{print $5}'`
-        SERIAL_NUM=`dmcli eRT getv Device.DeviceInfo.SerialNumber | grep value | awk '{print $5}'`
-        PROD_CLASS=`dmcli eRT getv Device.DeviceInfo.ProductClass | grep value | awk '{print $5}'`
-        ACS_URL=`dmcli eRT getv Device.ManagementServer.URL | grep value | awk '{print $5}'`
-        PROV_CODE=`dmcli eRT getv Device.DeviceInfo.ProvisioningCode | grep value | awk '{print $5}'`
-        RETRY_MIN=`dmcli eRT getv Device.ManagementServer.CWMPRetryMinimumWaitInterval | grep value | awk '{print $5}'`
-        INTERVAL_MULTI=`dmcli eRT getv Device.ManagementServer.CWMPRetryIntervalMultiplier | grep value | awk '{print $5}'`
-        echo "dhcp-option=vendor:dslforum.org,4,\"$INTERVAL_MULTI\"" >> $LOCAL_DHCP_CONF
-        echo "dhcp-option=vendor:dslforum.org,3,\"$RETRY_MIN\"" >> $LOCAL_DHCP_CONF
-        echo "dhcp-option=vendor:dslforum.org,2,\"$PROV_CODE\"" >> $LOCAL_DHCP_CONF
-        echo "dhcp-option=vendor:dslforum.org,1,\"$ACS_URL\"" >> $LOCAL_DHCP_CONF
-        echo "dhcp-option=acs-id,vi-encap:3561,14,\"$INTERVAL_MULTI\"" >> $LOCAL_DHCP_CONF
-        echo "dhcp-option=acs-id,vi-encap:3561,13,\"$RETRY_MIN\"" >> $LOCAL_DHCP_CONF
-        echo "dhcp-option=acs-id,vi-encap:3561,12,\"$PROV_CODE\"" >> $LOCAL_DHCP_CONF
-        echo "dhcp-option=acs-id,vi-encap:3561,11,\"$ACS_URL\"" >> $LOCAL_DHCP_CONF
-        echo "dhcp-option=cpewan-id,vi-encap:3561,6,\"$PROD_CLASS\"" >> $LOCAL_DHCP_CONF
-        echo "dhcp-option=cpewan-id,vi-encap:3561,5,\"$SERIAL_NUM\"" >> $LOCAL_DHCP_CONF
-        echo "dhcp-option=cpewan-id,vi-encap:3561,4,\"$MFR_OUI\"" >> $LOCAL_DHCP_CONF
        fi
 
       # if we are provisioned to use the wan domain name, the we do so
