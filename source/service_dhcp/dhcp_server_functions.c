@@ -49,6 +49,7 @@
 #define DEFAULT_RESOLV_CONF     "/var/default/resolv.conf"
 #define DEFAULT_CONF_DIR      	"/var/default"
 #define DEFAULT_FILE            "/etc/utopia/system_defaults"
+#define PAM_FILE                "/tmp/pam_initialized"
 //#define LAN_IF_NAME     "brlan0"
 #define XHS_IF_NAME     "brlan1"
 #define ERROR   		-1
@@ -150,6 +151,38 @@ static int isValidLANIP(const char* ipStr)
                 return 0;
         }
         return 1;
+}
+
+static int get_dmcli_value(char *cli, char *out, size_t out_size)
+{
+    char cmd[256];
+    FILE *fp;
+
+    if (!cli || !out)
+        return ERROR;
+
+    snprintf(cmd, sizeof(cmd), "dmcli eRT getv %s %s",cli, " | sed -n -e 's/^.*value: //p'");
+    fprintf(stderr,"DHCP SERVER : %s(%d):: cmd:%s\n",__func__,__LINE__,cmd);
+
+    if((fp = popen(cmd, "r")) == NULL) {
+        fprintf(stderr,"popen %s error\n", cmd);
+        return ERROR;
+    }
+
+    if (fgets(out, out_size, fp) != NULL)
+    {
+        char *pos;
+        if ((pos=strchr(out, ' ')) != NULL) //removing space from the string
+            *pos = '\0';
+
+        if ((pos=strchr(out, '\n')) != NULL) //removing \n from the string
+            *pos = '\0';
+
+        fprintf(stderr,"DHCP SERVER: %s(%d):: out:%s\n",__func__,__LINE__,out);
+    }
+    pclose(fp);
+
+    return SUCCESS;
 }
 
 int prepare_hostname()
@@ -1047,6 +1080,44 @@ int prepare_dhcp_conf (char *input)
                 fprintf(l_fLocal_Dhcp_ConfFile, "resolv-file=%s\n", RESOLV_CONF);
             }
         }
+
+        char cli_cmd[128];
+        char MFR_OUI[128];
+        char SERIAL_NUM[128];
+        char PROD_CLASS[128];
+
+        while (1)
+        {
+            if ((access(PAM_FILE,  F_OK) == 0)) //PAM_FILE file exists
+            {
+               fprintf(stderr,"DHCP SERVER : file pam_initialized exists\n");
+               break;
+            }
+            else
+            {
+               fprintf(stderr,"DHCP SERVER : file pam_initialized doesn't exist wait until the PA is initialised\n");
+               sleep(2);
+            }
+        }
+
+        snprintf(cli_cmd, sizeof(cli_cmd), "Device.DeviceInfo.ManufacturerOUI");
+        memset(MFR_OUI, sizeof(MFR_OUI), 0);
+        if (ERROR == get_dmcli_value(cli_cmd, MFR_OUI, sizeof(MFR_OUI)))
+            fprintf(stderr, "dmcli for ManufacturerOUI failed \n");
+
+        snprintf(cli_cmd, sizeof(cli_cmd), "Device.DeviceInfo.SerialNumber");
+        memset(SERIAL_NUM, sizeof(SERIAL_NUM), 0);
+        if (ERROR == get_dmcli_value(cli_cmd, SERIAL_NUM, sizeof(SERIAL_NUM)))
+            fprintf(stderr, "dmcli for SERIAL_NUM failed \n");
+
+        snprintf(cli_cmd, sizeof(cli_cmd), "Device.DeviceInfo.ProductClass");
+        memset(PROD_CLASS, sizeof(PROD_CLASS), 0);
+        if (ERROR == get_dmcli_value(cli_cmd, PROD_CLASS, sizeof(PROD_CLASS)))
+            fprintf(stderr, "dmcli for PROD_CLASS failed \n");
+
+        fprintf(l_fLocal_Dhcp_ConfFile,"dhcp-option=cpewan-id,vi-encap:3561,6,\"%s\"\n",PROD_CLASS);
+        fprintf(l_fLocal_Dhcp_ConfFile,"dhcp-option=cpewan-id,vi-encap:3561,5,\"%s\"\n",SERIAL_NUM);
+        fprintf(l_fLocal_Dhcp_ConfFile,"dhcp-option=cpewan-id,vi-encap:3561,4,\"%s\"\n",MFR_OUI);
 
         //Propagate Domain
         syscfg_get(NULL, "dhcp_server_propagate_wan_domain", l_cPropagate_Dom, sizeof(l_cPropagate_Dom));
