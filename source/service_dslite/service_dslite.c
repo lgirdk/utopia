@@ -423,8 +423,9 @@ static int dslite_start(struct serv_dslite *sd)
     }
     else
     {
-        sysevent_set(sd->sefd, sd->setok, "dslite_service-status", "error", 0);
-        fprintf(stderr, "%s: DNS resolution failed for unknown reason, EXIT !\n", __FUNCTION__);
+        sysevent_set(sd->sefd, sd->setok, "dslite_service-status", "dns_error", 0);
+        sysevent_set(sd->sefd, sd->setok, "tr_" ER_NETDEVNAME "_dhcpv6_client_v6addr", gw_ipv6, 0);
+        fprintf(stderr, "%s: DNS resolution failed for unknown reason, RETRY\n", __FUNCTION__);
         SEM_POST
         return 1;
     }
