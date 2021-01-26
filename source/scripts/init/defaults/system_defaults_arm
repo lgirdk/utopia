@@ -1560,6 +1560,10 @@ $dns_6::alias=Server12
 $dns_6::enable=0
 $dns_6::if=Device.IP.Interface.1
 $FirstInstallWizard_Enable=true
+
+#FirstInstall_State might have to be handled for each customer seperately
+$FirstInstall_State=true
+
 $dslite_dhcpv6_opt64_enable_dslite=0
 $troubleshoot_wizard_enable=0
 $router_mobile_app_enable=0
