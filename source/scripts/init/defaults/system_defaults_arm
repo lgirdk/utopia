@@ -1494,6 +1494,10 @@ $dns_6::alias=Server12
 $dns_6::enable=0
 $dns_6::if=Device.IP.Interface.1
 $FirstInstallWizard_Enable=true
+
+#FirstInstall_State might have to be handled for each customer seperately
+$FirstInstall_State=true
+
 $dslite_dhcpv6_opt64_enable_dslite=0
 $arfwv4dayofweek_1::v4_dayofweek_block_time_bitmask=111111111111111111111111
 $arfwv4dayofweek_2::v4_dayofweek_block_time_bitmask=111111111111111111111111
