@@ -1330,7 +1330,7 @@ $dslite_addr_fqdn_1=none
 $dslite_addr_ipv6_1=::
 
 #dslite_mss_clamping_enable - Turn on/off (TCP) MSS clamping for ipv6 tunnel
-$dslite_mss_clamping_enable_1=0
+$dslite_mss_clamping_enable_1=1
 
 #dslite_tcpmss - TCP Mss value for ipv6 tunnel
 $dslite_tcpmss_1=1420
