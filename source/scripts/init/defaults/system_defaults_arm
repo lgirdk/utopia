@@ -1255,6 +1255,10 @@ $T2Enable=false
 $T2Version=1
 $T2ConfigURL=
 
+#Device.X_LGI-COM_Telemetry DcmRetryConfig parameters
+$dcm_retry_attemptInterval=60
+$dcm_retry_maxAttempts=3
+
 #RDM Module Default URL
 $CDLModuleUrl=
 #low_queue_reboot_threshold
