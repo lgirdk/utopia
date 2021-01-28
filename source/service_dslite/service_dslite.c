@@ -451,6 +451,15 @@ static int dslite_start(struct serv_dslite *sd)
     snprintf(cmd, sizeof(cmd), "ip -6 addr add %s dev %s", dslite_tnl_ip, TNL_NETDEVNAME);
     vsystem(cmd);
 
+    //set IPv4 address to tunnel interface
+    char tunnel_v4addr[64+1];
+    syscfg_get(NULL, "dslite_tunnel_v4addr_1", tunnel_v4addr, sizeof(tunnel_v4addr));
+    if (tunnel_v4addr[0] != 0) {
+        fprintf(stderr, "%s: Configure Tunnel V4 Address: %s\n", __FUNCTION__, tunnel_v4addr);
+        snprintf(cmd, sizeof(cmd), "ip addr add %s dev %s", tunnel_v4addr, TNL_NETDEVNAME);
+        vsystem(cmd);
+    }
+
     //clear the GW IPv4 address(in case of IPv4 address not released successfully)
     snprintf(cmd, sizeof(cmd), "ip -4 addr flush %s",ER_NETDEVNAME);
     vsystem(cmd);
