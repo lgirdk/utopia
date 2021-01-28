@@ -1283,6 +1283,10 @@ $T2ConfigURL=""
 #Defaults for mTLS in T2
 $T2mTLSEnable=true
 
+#Device.X_LGI-COM_Telemetry DcmRetryConfig parameters
+$dcm_retry_attemptInterval=60
+$dcm_retry_maxAttempts=3
+
 #RDM Module Default URL
 $CDLModuleUrl=""
 #low_queue_reboot_threshold
