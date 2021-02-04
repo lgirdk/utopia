@@ -13098,7 +13098,8 @@ static void do_ipv6_filter_table(FILE *fp){
 
 #if !defined(_PLATFORM_IPQ_)
       // Block the evil routing header type 0
-      fprintf(fp, "-A INPUT -m rt --rt-type 0 -j DROP\n");
+      // let the kernel v6 stack handle it by sending proper reject code
+      fprintf(fp, "-A INPUT -m rt --rt-type 0 -j ACCEPT\n");
 #endif
       fprintf(fp, "-A INPUT -m state --state INVALID -j LOG_INPUT_DROP\n");
 
@@ -13447,7 +13448,8 @@ v6GPFirewallRuleNext:
 
 #if !defined(_PLATFORM_IPQ_)
       // Block the evil routing header type 0
-      fprintf(fp, "-A FORWARD -m rt --rt-type 0 -j LOG_FORWARD_DROP \n");
+      // let the kernel v6 stack handle it by sending proper reject code
+      fprintf(fp, "-A FORWARD -m rt --rt-type 0 -j ACCEPT \n");
 #endif
 #if defined(_COSA_BCM_MIPS_)
       fprintf(fp, "-A FORWARD -m physdev --physdev-in %s -j ACCEPT\n", emta_wan_ifname);
