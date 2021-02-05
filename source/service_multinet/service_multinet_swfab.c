@@ -128,14 +128,14 @@ static int swfab_configVlan(PL2Net net, PMemberControl members, BOOL add) {
     
     int i;
     int j;
-#ifdef MULTILAN_FEATURE
+#if defined (MULTILAN_FEATURE) && defined (INTEL_PUMA7)
     PortConfigControl portConfig;
 #else
     SWFabHALArg args[HAL_MAX_PORTS];
     PortConfigControl portConfigs[MAX_ADD_PORTS] = {{{NULL},0}};
 #endif
     //int numArgs[NUM_HALS] = {0};
-#ifndef MULTILAN_FEATURE
+#if !defined (MULTILAN_FEATURE) || !defined (INTEL_PUMA7)
     int numArgs =0, numConfigs=0;
     PSWFabHAL hal = NULL;
 #endif
@@ -183,7 +183,7 @@ static int swfab_configVlan(PL2Net net, PMemberControl members, BOOL add) {
             if (!platPort || (add && !members->member[i].bReady && members->member[i].interface->dynamic)|| members->handled[i]) continue;
             if (members->member[i].pvid && members->member[i].pvid != bridge_vids[vid_index]) continue;
             //Map member info to port config
-#ifdef MULTILAN_FEATURE
+#if defined (MULTILAN_FEATURE) && defined (INTEL_PUMA7)
             portConfig.config.platPort = platPort;
             portConfig.config.vidParams.vid = net->vid;
             portConfig.config.vidParams.pvid = net->vid;
@@ -258,7 +258,7 @@ static int swfab_configVlan(PL2Net net, PMemberControl members, BOOL add) {
             while ((item = getNext(&portIter))) {
                 trunkPort = (PPlatformPort) item->data;
                 MNET_DBG_CMD(printPlatport(trunkPort)) 
-#ifdef MULTILAN_FEATURE
+#if defined (MULTILAN_FEATURE) && defined (INTEL_PUMA7)
                 portConfig.config.platPort = trunkPort;
                 portConfig.config.vidParams.vid = net->vid;
                 portConfig.config.vidParams.pvid = net->vid;
@@ -278,7 +278,7 @@ static int swfab_configVlan(PL2Net net, PMemberControl members, BOOL add) {
             clearList(&trunkPorts);
         }
 
-#ifndef MULTILAN_FEATURE
+#if !defined(MULTILAN_FEATURE) || !defined (INTEL_PUMA7)
 
         //Now iterate through the ports, and aggregate commands to each hal into a single call
         for (i = 0; i < numConfigs; ++i)
