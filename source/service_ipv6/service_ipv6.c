@@ -68,6 +68,7 @@ const char* const service_ipv6_component_id = "ccsp.ipv6";
 #define PSM_VALUE_GET_INS(name, pIns, ppInsArry) PsmGetNextLevelInstances(bus_handle, CCSP_SUBSYS, name, pIns, ppInsArry)
 #endif
 
+#define BRIDGE_PATH                 "/sys/class/net/%s"
 #define PROVISIONED_V6_CONFIG_FILE  "/tmp/ipv6_provisioned.config"
 #define CLI_RECEIVED_OPTIONS_FILE   "/tmp/.dibbler-info/client_received_options"
 #define DHCPV6_SERVER               "dibbler-server"
@@ -378,7 +379,7 @@ static int get_dhcpv6s_pool_cfg(struct serv_ipv6 *si6, dhcpv6s_pool_cfg_t *cfg)
 #ifdef MULTILAN_FEATURE
     /* get Interface name from data model: Device.IP.Interface.%d.Name*/
     snprintf(dml_path, sizeof(dml_path), "%sName", iface_name);
-    if (mbus_get(dml_path, cfg->interface, sizeof(cfg->interface)) != 0)
+    if ((iface_name[0] == '\0') || (mbus_get(dml_path, cfg->interface, sizeof(cfg->interface)) != 0))
         return -1;
 #endif
 
@@ -550,6 +551,7 @@ static int get_active_lanif(struct serv_ipv6 *si6, unsigned int insts[], unsigne
     int len = 0;
     unsigned int l3net_count = 0;
     unsigned int *l3net_ins = NULL;
+    unsigned char l2status[CMD_BUF_SIZE] = {0};
     unsigned char psm_param[CMD_BUF_SIZE] = {0};
     unsigned char active_if_list[CMD_BUF_SIZE] = {0};
     char *psm_get = NULL;
@@ -609,6 +611,17 @@ static int get_active_lanif(struct serv_ipv6 *si6, unsigned int insts[], unsigne
     if((l_iRet_Val == CCSP_SUCCESS) && (l3net_count > 0)) {
 
         for(idx = 0; (idx < l3net_count) && (i < max_active_if_count); idx++) {
+            snprintf(psm_param, sizeof(psm_param), "%s%d.%s", L3_DM_PREFIX , l3net_ins[idx], "Enable");
+            l_iRet_Val = PSM_VALUE_GET_STRING(psm_param, psm_get);
+            if((l_iRet_Val == CCSP_SUCCESS) && (psm_get != NULL) && ((strcmp(psm_get, "true") == 0) || (strcmp(psm_get, "1") == 0))) {
+                Ansc_FreeMemory_Callback(psm_get);
+                psm_get = NULL;
+            } else {
+                Ansc_FreeMemory_Callback(psm_get);
+                psm_get = NULL;
+                continue;
+            }
+
             snprintf(psm_param, sizeof(psm_param), "%s%d.%s", L3_DM_PREFIX , l3net_ins[idx], L3_DM_IPV6_ENABLE_PREFIX);
             l_iRet_Val = PSM_VALUE_GET_STRING(psm_param, psm_get);
 
@@ -627,7 +640,10 @@ static int get_active_lanif(struct serv_ipv6 *si6, unsigned int insts[], unsigne
                     l_iRet_Val = PSM_VALUE_GET_STRING(psm_param, psm_get);
 
                     if((l_iRet_Val == CCSP_SUCCESS) && (psm_get != NULL)) {
-                        insts[i++] = atoi(psm_get);
+                        snprintf(psm_param, sizeof(psm_param), "multinet_%d-status", atoi(psm_get));
+                        sysevent_get(si6->sefd, si6->setok, psm_param, l2status, sizeof(l2status));
+                        if (!strcmp(l2status, "ready"))
+                            insts[i++] = atoi(psm_get);
                         Ansc_FreeMemory_Callback(psm_get);
                         psm_get = NULL;
                     }
@@ -1292,6 +1308,8 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
     int                 ret = 0;
     int                 colon_count = 0;
     char                bridge_mode[4] = {0};
+    char                iface_path[128];
+    int                 primaryLan = 0;
     unsigned long T1 = 0;
     unsigned long T2 = 0;
     FILE *ifd=NULL;
@@ -1340,12 +1358,21 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
         get_dhcpv6s_pool_cfg(si6, &dhcpv6s_pool_cfg);
 
         if (!dhcpv6s_pool_cfg.enable || dhcpv6s_pool_cfg.ia_prefix[0] == '\0') continue;
+        snprintf(iface_path, sizeof(iface_path), BRIDGE_PATH, dhcpv6s_pool_cfg.interface);
+        if (access(iface_path, F_OK) != 0)
+            continue;
+
+        primaryLan = (strcmp(dhcpv6s_pool_cfg.interface, "brlan0") == 0) ? 1 : 0;
     	syscfg_get(NULL, "bridge_mode", bridge_mode, sizeof(bridge_mode));
-        if (strcmp(bridge_mode, "2") || strcmp(dhcpv6s_pool_cfg.interface, "brlan0")) {
+
+        // if not in bridge mode OR interface != brlan0
+        if ((strcmp(bridge_mode, "2") != 0) || (primaryLan != 1)) {
 
         fprintf(fp, "iface %s {\n", dhcpv6s_pool_cfg.interface);
 
-        if (dhcpv6s_pool_cfg.rapid_enable) fprintf(fp, "   rapid-commit yes\n");
+        if (dhcpv6s_pool_cfg.rapid_enable) {
+            fprintf(fp, "   rapid-commit yes\n");
+        }
 
 #ifdef CONFIG_CISCO_DHCP6S_REQUIREMENT_FROM_DPC3825
         if (dhcpv6s_pool_cfg.unicast_enable) { 
@@ -1404,7 +1431,7 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
 
             fprintf(fp, "   }\n");
         }
-        
+
         if (dhcpv6s_pool_cfg.iapd_enable) {    
             /*pd pool*/
             if(get_pd_pool(si6, &pd_pool) == 0) {
@@ -1427,7 +1454,7 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
                     fprintf(fp, "       T2 %u\n", T2);
                     fprintf(fp, "       prefered-lifetime %s\n", ia_pd.pretm);
                     fprintf(fp, "       valid-lifetime %s\n", ia_pd.vldtm);
-                } 
+                }
 
                 fprintf(fp, "   }\n");
                 printf("%s Fixed prefix_value: %s\n", __func__, prefix_value);
@@ -1454,23 +1481,26 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
                                 ifd = NULL;
                         }
                         else
-                        fprintf(fp, "client duid 01:02:03:04:05:06\n");
+                        {
+                            fprintf(fp, "client duid 01:02:03:04:05:06\n");
+                        }
 
                 fprintf(fp, "   {\n");
+
 		if (colon_count == 5)
                 {
                 	strcat(dummyAddr,":123");
-			dummyAddr[sizeof(dummyAddr)-1] = '\0';
-			fprintf(fp, "   address %s\n",dummyAddr);
-			fprintf(fp, "   prefix %s:/64\n",prefix_value);
+                	dummyAddr[sizeof(dummyAddr)-1] = '\0';
+                	fprintf(fp, "   address %s\n",dummyAddr);
+                	fprintf(fp, "   prefix %s:/64\n",prefix_value);
                 }
                 else
-		{
+                {
                 	strcat(dummyAddr,"123");
-			dummyAddr[sizeof(dummyAddr)-1] = '\0';
-			fprintf(fp, "   address %s\n",dummyAddr);
-			fprintf(fp, "   prefix %s/64\n",prefix_value);
-		}
+                	dummyAddr[sizeof(dummyAddr)-1] = '\0';
+                	fprintf(fp, "   address %s\n",dummyAddr);
+                	fprintf(fp, "   prefix %s/64\n",prefix_value);
+                }
                 fprintf(fp, "   }\n");
             }
         }
