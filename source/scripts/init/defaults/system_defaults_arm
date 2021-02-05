@@ -837,13 +837,15 @@ $ipv6_moca_bridge=true
 # CCSP Defaults
 $dhcpv6s00::serverenable=1
 $dhcpv6s00::servertype=2
-$dhcpv6s00::poolnumber=1
+
+$$dhcpv6s00::poolnumber=5
+
 $dhcpv6spool00::instancenumber=1
 $dhcpv6spool00::bEnabled=1
-$dhcpv6spool00::Interface=Device.IP.Interface.2.
+$$dhcpv6spool00::Interface=Device.IP.Interface.4.
 $dhcpv6spool00::IANAEnable=1
 #$dhcpv6spool00::IANAManualPrefixes=Device.IP.Interface.1.IPv6Prefix.1.
-$dhcpv6spool00::IANAPrefixes=Device.IP.Interface.1.IPv6Prefix.1.
+$$dhcpv6spool00::IANAPrefixes=Device.IP.Interface.4.IPv6Prefix.1.
 $dhcpv6spool00::LeaseTime=604800
 $dhcpv6spool00::PrefixRangeBegin=0:0:0:0001
 $dhcpv6spool00::PrefixRangeEnd=0:0:0:fffe
@@ -880,6 +882,20 @@ $dhcpv6spool1option0::PassthroughClient=Device.DHCPv6.Client.1.
 $dhcpv6spool1option1::bEnabled=1
 $dhcpv6spool1option1::Tag=24
 $dhcpv6spool1option1::PassthroughClient=Device.DHCPv6.Client.1.
+
+# brlan7 start
+$$dhcpv6spool40::instancenumber=5
+$$dhcpv6spool40::bEnabled=1
+$$dhcpv6spool40::Interface=Device.IP.Interface.6.
+$$dhcpv6spool40::IANAEnable=1
+$$dhcpv6spool40::IANAPrefixes=Device.IP.Interface.6.IPv6Prefix.1.
+$$dhcpv6spool40::LeaseTime=3600
+$$dhcpv6spool40::PrefixRangeBegin=0:0:0:0002
+$$dhcpv6spool40::PrefixRangeEnd=0:0:0:fffe
+$$dhcpv6spool40::RapidEnable=1
+$$dhcpv6spool40::IANAAmount=255
+$$dhcpv6spool40::optionnumber=2
+# brlan7 end
 
 #CCSP RECOVERY MONITOR
 $ccsp_recovery_enable=1

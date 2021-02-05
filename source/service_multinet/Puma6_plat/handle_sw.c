@@ -399,7 +399,7 @@ void addVlan(int net_id, int vlan_id, char *ports_add)
 	if (0 == hdl_sw_sysevent_fd)
 		handle_sw_init();
 
-    printf("--SW handler, adding vlan %d on net %d for ports:%s\n", vlan_id, net_id, ports_add);
+    MNET_DEBUG("--SW handler, adding vlan %d on net %d for ports:%s\n" COMMA vlan_id COMMA net_id COMMA ports_add);
 	
 	snprintf(sysevent_cmd, sizeof(sysevent_cmd), "sw_vid_%d_ports",vlan_id);
 	sysevent_get(hdl_sw_sysevent_fd, hdl_sw_sysevent_token, sysevent_cmd, vidPorts, sizeof(vidPorts));
