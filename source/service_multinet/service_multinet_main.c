@@ -71,7 +71,7 @@ FILE *mnetfp = NULL;
      char call[32];
      entryCallback action;
  } EntryCall;
-#ifdef MULTILAN_FEATURE
+#if defined(MULTILAN_FEATURE) && defined(INTEL_PUMA7)
  int handle_lnf_setup(char* argv[], int argc);
  int handle_meshbhaul_setup(char* argv[], int argc);
 #endif
@@ -91,7 +91,7 @@ FILE *mnetfp = NULL;
  // RDKB-15951
  int add_meshbhaul_vlan(char* argv[], int argc);
  EntryCall calls[] = {
-#ifdef MULTILAN_FEATURE
+#if defined(MULTILAN_FEATURE) && defined(INTEL_PUMA7)
 	 {"lnf-setup", handle_lnf_setup},
 	 {"meshbhaul-setup", handle_meshbhaul_setup},
 #endif
@@ -170,7 +170,7 @@ FILE *mnetfp = NULL;
 }
 
 //exeName, eventName, netIdString
-#ifdef MULTILAN_FEATURE
+#if defined(MULTILAN_FEATURE) && defined(INTEL_PUMA7)
  int handle_lnf_setup(char* argv[], int argc) {
      MNET_DEBUG("Main: handle_lnf_setup")
      multinet_bridgeDownInst(atoi(argv[2]));
