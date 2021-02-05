@@ -72,7 +72,7 @@
  */
 #ifdef MULTILAN_FEATURE
 const char* SERVICE_CUSTOM_EVENTS[] = { 
-    "ipv6_prefix|/etc/utopia/service.d/service_ipv6.sh|NULL|"TUPLE_FLAG_EVENT,
+    "ipv6_prefix|/etc/utopia/service.d/service_ipv6.sh",
     "multinet-instances|/etc/utopia/service.d/service_ipv6.sh",
     "multinet_1-status|/etc/utopia/service.d/service_ipv6.sh",
     "erouter_topology-mode|/etc/utopia/service.d/service_ipv6.sh",
@@ -82,6 +82,7 @@ const char* SERVICE_CUSTOM_EVENTS[] = {
     "dhcpv6s-restart|/etc/utopia/service.d/service_ipv6.sh|NULL|"TUPLE_FLAG_EVENT,
     "ipv6_addr-set|/etc/utopia/service.d/service_ipv6.sh|NULL|"TUPLE_FLAG_EVENT,
     "ipv6_addr-unset|/etc/utopia/service.d/service_ipv6.sh|NULL|"TUPLE_FLAG_EVENT,
+    "bridge-status|/etc/utopia/service.d/service_ipv6.sh|NULL|",
     NULL };
 #else
 const char* SERVICE_CUSTOM_EVENTS[] = { 
