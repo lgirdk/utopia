@@ -261,6 +261,8 @@ static int nethelper_bridgeCreateUniqueMac(char* brname, int id) {
     }
 
     /* Bring bridge up */
+    snprintf(cmdBuff, sizeof(cmdBuff), "echo 1 > /proc/sys/net/ipv6/conf/%s/autoconf", brname);
+    system(cmdBuff);
     snprintf(cmdBuff, sizeof(cmdBuff), "ifconfig %s up", brname);
     MNET_DEBUG("SYSTEM CALL: \"%s\"\n" COMMA cmdBuff);
     system(cmdBuff);
@@ -755,7 +757,7 @@ static int resolve_member_diff(PL2Net network,
     for (i = 0; i < *numMembers; ++i ) {
         for (j = 0; j < *numLiveMembers; ++j) {
 
-#if defined (MULTILAN_FEATURE)
+#if defined (MULTILAN_FEATURE) && defined (INTEL_PUMA7)
             memset(temp_ifname, 0, sizeof(temp_ifname));
             if(!strstr(live_members[j].interface->name, "sw_") ||
                   (STATUS_OK != getIfName(temp_ifname, live_members[j].interface->name)))
