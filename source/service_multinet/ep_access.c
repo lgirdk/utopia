@@ -153,14 +153,15 @@ int ep_set_allMembers(PL2Net net, PMember members, int numMembers) {
     iflistbuf[0] = '\0';
     
     for (i = 0; i < numMembers; ++i) {
-#ifdef MULTILAN_FEATURE
+/* bReady flag for enslaved members are not updated by the Puma6_plat hal/map functions */
+#if defined (MULTILAN_FEATURE) && defined (INTEL_PUMA7)
         if (members[i].bReady == STATUS_STARTED) {
             MNET_DEBUG("ep_set_allMembers, Writing Member %d," COMMA i);
                 MNET_DEBUG(" %s\n" COMMA members[i].interface->name);
                 snprintf(ifnamebuf, sizeof(ifnamebuf), "%s%s", members[i].interface->name, members[i].bTagging ? "-t" : "");
                 offset += snprintf(iflistbuf + offset, 
                                    sizeof(iflistbuf) - offset, " "
-                                   MNET_EP_MEMBER_SET_FORMAT(ifnamebuf, members[i].interface->type->name, members[i].bReady));
+                                   MNET_EP_MEMBER_SET_FORMAT(ifnamebuf, members[i].interface->type->name, members[i].bReady, members[i].pvid));
         }
         else
         {
