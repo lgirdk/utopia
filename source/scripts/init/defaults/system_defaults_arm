@@ -398,9 +398,9 @@ $StaticRouteCount=0
 #                          clients a short lease in order to give wan a chance to come up
 $dhcp_nameserver_enabled=0
 $dhcp_server_enabled=1
-$dhcp_start=192.168.0.2
-$dhcp_end=192.168.0.253
-$dhcp_num=252
+$dhcp_start=192.168.0.10
+$dhcp_end=192.168.0.254
+$dhcp_num=245
 $dhcp_lease_time=24h
 $dhcp_server_propagate_wan_domain=1
 $dhcp_server_propagate_wan_nameserver=1
