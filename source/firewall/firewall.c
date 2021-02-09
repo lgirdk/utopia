@@ -7319,6 +7319,7 @@ static int do_device_based_parcon(FILE *natFp, FILE* filterFp)
 /*
 ** XDNS - Route DNS requests from LAN through dnsmasq.
 **/
+#ifdef XDNS_ENABLE
 static int do_dns_route(FILE *nat_fp, int iptype) {
 
 	char xdnsflag[20] = {0};
@@ -7403,6 +7404,7 @@ static int do_dns_route(FILE *nat_fp, int iptype) {
 
 	return 0;
 }
+#endif
 
 
 /*
