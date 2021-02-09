@@ -1147,6 +1147,9 @@ static int lan_addr6_set(struct serv_ipv6 *si6)
                 ipv6_addr, prefix_len, iface_name, iapd_vldtm, iapd_preftm);
 
         vsystem(cmd);
+
+        v_secure_system("ip -6 route add %s dev %s table all_lans", iface_prefix, iface_name);
+
         bzero(ipv6_addr, sizeof(ipv6_addr));
 #else
         if (v_secure_system("ip -6 addr add %s/%d dev %s valid_lft forever preferred_lft forever", 
@@ -1239,6 +1242,8 @@ static int lan_addr6_unset(struct serv_ipv6 *si6)
         }
 #ifdef MULTILAN_FEATURE
         sysevent_set(si6->sefd, si6->setok, evt_name, "", 0);
+
+        v_secure_system("ip -6 route del %s dev %s table all_lans", iface_prefix, if_name);
 #else
         sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/disable_ipv6", if_name, "1"); /*this seems not work*/
 #endif
