@@ -984,7 +984,23 @@ case "$1" in
     ;;
     
     hotspot-restart)
-    
+        if [ "$2" = "NULL" ]; then
+            allGreInst="`psmcli getallinst $HS_PSM_BASE.`"
+            inst=`echo $allGreInst | cut -f 1`
+            if [ x = x$inst ]; then
+                exit 0
+            fi
+        else
+            inst=$2
+        fi
+        TunnelEnable="`sysevent get tunnel_enable_$inst`"
+        CurrentTunnelStatus="`psmcli get $HS_PSM_BASE.$inst.$HS_PSM_ENABLE`"
+        if [ -n "$TunnelEnable" ]; then
+              if [ "$TunnelEnable" != "$CurrentTunnelStatus" ]; then
+                   `dmcli eRT setv Device.X_COMCAST-COM_GRE.Tunnel.$inst.Enable bool $TunnelEnable`
+              fi
+              `sysevent set tunnel_enable_$inst  `
+        fi
     ;;
     
     #args: hotspot gre instance
