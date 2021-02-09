@@ -1517,3 +1517,4 @@ $macflt_block_time_bitmask_type=0
 $macflt_block_time_bitmask=FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7F
 $router_mobile_app_enable=0
 $custom_lan_https_enabled=1
+$user_bridge_mode_allowed=true
