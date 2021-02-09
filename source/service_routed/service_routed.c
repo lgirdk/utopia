@@ -429,7 +429,17 @@ static int route_set(struct serv_routed *sr)
             "if [ \"$gw\" != \"\" ]; then"
             "  ip -6 route add default via $gw dev erouter0 table erouter;"
             "fi") != 0)
-        return -1;
+    {
+        /*
+           Ignore errors. This function is called multiple times and the
+           "ip -6 route add default ..." command fails if the route already
+           exists. There are probably better solutions than ignoring the error,
+           (perhaps copy the MULTILAN_FEATURE version aboove?) however this
+           problem only affects the non-multilan code, which is generally
+           deprecated and buggy anyway and won't be used for much longer, so
+           the simple workaround is OK.
+        */
+    }
     return 0;
 #endif
 }
