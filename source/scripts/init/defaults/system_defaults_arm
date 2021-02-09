@@ -647,10 +647,10 @@ $W2LWellKnownFirewallRuleCount=0
 #Enable additional Security Firewall Parameters
 $v4_BlockFragIPPkts=0
 $v4_PortScanProtect=1
-$v4_IPFloodDetect=0
+$v4_IPFloodDetect=1
 $v6_BlockFragIPPkts=0
-$v6_PortScanProtect=0
-$v6_IPFloodDetect=0
+$v6_PortScanProtect=1
+$v6_IPFloodDetect=1
 
 # IPv6 Section
 
