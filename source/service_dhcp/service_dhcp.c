@@ -62,7 +62,7 @@ FILE* g_fArmConsoleLog = NULL;
 
 int g_iSyseventfd;
 token_t g_tSysevent_token;
-char g_cDhcp_Lease_Time[8] = {0}, g_cTime_File[64] = {0};
+char g_cDhcp_Lease_Time[8] = {0}, g_cTime_File[64] = {0},g_rl_cWanStatus[32] = {0};
 char g_cBox_Type[8] = {0};
 #ifdef XDNS_ENABLE
 char g_cXdns_Enabled[8] = {0};
@@ -419,7 +419,6 @@ int main(int argc, char *argv[])
 
 	if (0 == g_iSyseventfd)
 		sysevent_syscfg_init();
-	
 	fprintf(stderr, "%s case\n", argv[1]);
 	if ((!strncmp(argv[1], "dhcp_server-start", 17)) ||
 		(!strncmp(argv[1], "dhcp_server-restart", 19)))
