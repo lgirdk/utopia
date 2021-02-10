@@ -64,7 +64,7 @@ extern void get_device_props();
 extern int g_iSyseventfd;
 extern token_t g_tSysevent_token;
 
-extern char g_cDhcp_Lease_Time[8], g_cTime_File[64];
+extern char g_cDhcp_Lease_Time[8], g_cTime_File[64],g_rl_cWanStatus[32];
 extern char g_cBox_Type[8];
 #ifdef XDNS_ENABLE
 extern char g_cXdns_Enabled[8];
@@ -514,6 +514,12 @@ int service_dhcp_init()
 
 	// DHCP_LEASE_TIME is the number of seconds or minutes or hours to give as a lease
 	syscfg_get(NULL, "dhcp_lease_time", g_cDhcp_Lease_Time, sizeof(g_cDhcp_Lease_Time));
+	sysevent_get(g_iSyseventfd, g_tSysevent_token,"wan-status", g_rl_cWanStatus, sizeof(g_rl_cWanStatus));
+
+	if(0==strcmp(g_rl_cWanStatus,"stopped")) {////OFW-297: shorten lease time to 120 seconds when modem is offline.
+		strcpy(g_cDhcp_Lease_Time,"120");
+		printf("service_dhcp_server.c adjust dhcp_lease_time to %s because wan-status is %s!!!!!!!!!!!!!\n",g_cDhcp_Lease_Time,g_rl_cWanStatus);
+	}
 
 	if (1 == l_iSlow_Start_Needed)
 	{
