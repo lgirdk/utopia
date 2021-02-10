@@ -69,7 +69,7 @@ FILE* g_fArmConsoleLog = NULL; //Global file pointer
 
 int g_iSyseventfd;
 token_t g_tSysevent_token;
-char g_cDhcp_Lease_Time[8] = {0}, g_cTime_File[64] = {0};
+char g_cDhcp_Lease_Time[8] = {0}, g_cTime_File[64] = {0}, g_rl_cWanStatus[32] = {0};
 char g_cBox_Type[16] = {0};
 #ifdef XDNS_ENABLE
 char g_cXdns_Enabled[8] = {0};
