@@ -65,7 +65,7 @@
                                   
 extern int g_iSyseventfd;
 extern token_t g_tSysevent_token;
-extern char g_cDhcp_Lease_Time[8];
+extern char g_cDhcp_Lease_Time[8],g_rl_cWanStatus[32];
 extern char g_cMfg_Name[8];
 extern char g_cMig_Check[8];
 
@@ -490,25 +490,35 @@ void prepare_dhcp_options_wan_dns()
 
 	if (!strncmp(l_cPropagate_Ns, "1", 1))	
 	{
-		sysevent_get(g_iSyseventfd, g_tSysevent_token, "wan_dhcp_dns", l_cWan_Dhcp_Dns, sizeof(l_cWan_Dhcp_Dns));	
-		if (0 != l_cWan_Dhcp_Dns[0])
-		{
-			l_cToken = strtok(l_cWan_Dhcp_Dns, " ");
-			while (l_cToken != NULL)
-			{
-				if (0 != l_cNs[0])
-				{
-					strcat(l_cNs, ",");
+        if(0 != strcmp(g_rl_cWanStatus,"stopped")) //OFW-297: provide brlan0 interface ip address as dns server when modem is offline.
+        {
+		    sysevent_get(g_iSyseventfd, g_tSysevent_token, "wan_dhcp_dns", l_cWan_Dhcp_Dns, sizeof(l_cWan_Dhcp_Dns));
+		    if (0 != l_cWan_Dhcp_Dns[0])
+		    {
+			    l_cToken = strtok(l_cWan_Dhcp_Dns, " ");
+			    while (l_cToken != NULL)
+			    {
+					if (0 != l_cNs[0])
+					{
+						strcat(l_cNs, ",");
+					}
+					strcat(l_cNs, l_cToken);
+					l_cToken = strtok(NULL, " ");
 				}
-				strcat(l_cNs, l_cToken);
-				l_cToken = strtok(NULL, " ");
+				fprintf(stderr, "l_cNs is:%s\n", l_cNs);
+				fprintf(l_fLocalDhcpOpt, "option:dns-server, %s\n", l_cNs);
 			}
-			fprintf(stderr, "l_cNs is:%s\n", l_cNs);
-			fprintf(l_fLocalDhcpOpt, "option:dns-server, %s\n", l_cNs);	
-		}
-		else
-		{
-			fprintf(stderr, "wan_dhcp_dns is empty, so file:%s will be empty \n", DHCP_OPTIONS_FILE);
+			else
+			{
+				fprintf(stderr, "wan_dhcp_dns is empty, so file:%s will be empty \n", DHCP_OPTIONS_FILE);
+			}
+
+        }
+        else
+        {
+		    syscfg_get(NULL, "lan_ipaddr", l_cNs, sizeof(l_cNs));
+		    fprintf(l_fLocalDhcpOpt, "option:dns-server, %s\n", l_cNs);
+		    printf("dhcp_server_functions.c Adjust dns-server to lan_ipaddr %s because wan-status is stopped!!!!!!!!!!!!!\n",l_cNs);
 		}	
 	}
 	remove_file(DHCP_OPTIONS_FILE);
