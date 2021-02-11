@@ -15032,6 +15032,10 @@ static int do_ip_filter_IpV6_service(FILE *fp)
             {
                 snprintf(srcstartipaddress, sizeof(srcstartipaddress), "-s %s",srcstartip);
             }
+            else
+            {
+                srcstartipaddress[0] = 0;
+            }
         }
         else
         {
@@ -15046,6 +15050,10 @@ static int do_ip_filter_IpV6_service(FILE *fp)
             if ( strlen(dststartip) > 5 )
             {
                 snprintf(dststartipaddress, sizeof(dststartipaddress), "-d %s",dststartip);
+            }
+            else
+            {
+                dststartipaddress[0] = 0;
             }
         }
         else
