@@ -1338,7 +1338,7 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
         return -1;
 
     /*Begin write dibbler configurations*/
-    fprintf(fp, "log-level 4\n");
+    fprintf(fp, "log-level 8\n");
    /*Run scipt to config route */
 #if defined (_CBR_PRODUCT_REQ_) || defined (_BWG_PRODUCT_REQ_)
     fprintf(fp, "script \"/lib/rdk/server-notify.sh\" \n");
