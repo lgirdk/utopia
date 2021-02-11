@@ -270,11 +270,26 @@ static int dslite_start(struct serv_dslite *sd)
     char return_buffer[256] = {0};
     FILE *fptmp = NULL;
     char dslite_ipv6_frag_enable[64] = {0};
-
+    int Cnt;
+    
     memset(val, 0, sizeof(val));
     memset(buf, 0, sizeof(buf));
 
     SEM_WAIT
+    for (Cnt=0;Cnt<18;Cnt++)
+    {
+        syscfg_get(NULL,  "dslite_enable", val, sizeof(val));
+        syscfg_get(NULL,  "dslite_active_1", buf, sizeof(buf));
+        if(strcmp(val, "1") == 0 && strcmp(buf, "1") == 0)
+        {
+            fprintf(stderr, "%s: DSLite is enabled %d *********\n", __FUNCTION__,Cnt);      
+            break;
+        }
+        else
+        {
+            sleep(10);
+        }
+    }
     syscfg_get(NULL,  "dslite_enable", val, sizeof(val));
     syscfg_get(NULL,  "dslite_active_1", buf, sizeof(buf));
     if(strcmp(val, "1")!=0 || strcmp(buf, "1")!=0)//Either DSLite not enabled or tunnel not enabled
