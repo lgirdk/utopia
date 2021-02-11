@@ -1502,6 +1502,8 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
     char                bridge_mode[4] = {0};
     char                iface_path[128];
     int                 primaryLan = 0;
+    char                relayStr[1024];
+    int                 Cnt;
     unsigned long T1 = 0;
     unsigned long T2 = 0;
     FILE *ifd=NULL;
@@ -1528,6 +1530,9 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
     fp = fopen(DHCPV6S_CONF_FILE, "w+");
     if (fp == NULL)
         return -1;
+
+    Cnt = 0;
+    relayStr[0] = 0;
 
     /*Begin write dibbler configurations*/
 
@@ -1563,6 +1568,9 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
 
     get_dhcpv6s_conf(&dhcpv6s_cfg);
     
+    //support relay
+    fprintf(fp, "guess-mode\n");
+
     /*get ia_na & ia_pd info (addr, t1, t2, preftm, vldtm) which passthrough wan*/
     ret = get_ia_info(si6, PROVISIONED_V6_CONFIG_FILE, &ia_na, &ia_pd);
 
@@ -1576,16 +1584,24 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
         if (access(iface_path, F_OK) != 0)
             continue;
 
+        // relay support for primary interface (ie "brlan0") only
         primaryLan = (strcmp(dhcpv6s_pool_cfg.interface, "brlan0") == 0) ? 1 : 0;
     	syscfg_get(NULL, "bridge_mode", bridge_mode, sizeof(bridge_mode));
 
         // if not in bridge mode OR interface != brlan0
         if ((strcmp(bridge_mode, "2") != 0) || (primaryLan != 1)) {
 
+        if(primaryLan) {
+            Cnt += sprintf(relayStr+Cnt,"iface  relay1 {\n");
+            Cnt += sprintf(relayStr+Cnt,"   relay %s\n",  dhcpv6s_pool_cfg.interface);
+        }
+
         fprintf(fp, "iface %s {\n", dhcpv6s_pool_cfg.interface);
 
         if (dhcpv6s_pool_cfg.rapid_enable) {
             fprintf(fp, "   rapid-commit yes\n");
+            if (primaryLan)
+                Cnt += sprintf(relayStr+Cnt,"   rapid-commit yes\n");
         }
 
 #ifdef CONFIG_CISCO_DHCP6S_REQUIREMENT_FROM_DPC3825
@@ -1598,11 +1614,19 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
 
         fprintf(fp, "   preference %d\n", 255);
 
+        if(primaryLan)
+            Cnt += sprintf(relayStr+Cnt,"   preference %d\n", 255);
+
         if (dhcpv6s_pool_cfg.iana_enable) {
 #ifdef MULTILAN_FEATURE
             fprintf(fp, "   subnet %s\n", dhcpv6s_pool_cfg.ia_prefix);
+            if(primaryLan)
+                Cnt += sprintf(relayStr+Cnt,"   subnet %s\n", dhcpv6s_pool_cfg.ia_prefix);
 #endif
             fprintf(fp, "   class {\n");
+            if(primaryLan)
+                Cnt += sprintf(relayStr+Cnt,"   class {\n");
+
 #ifdef CONFIG_CISCO_DHCP6S_REQUIREMENT_FROM_DPC3825
             if (dhcpv6s_pool_cfg.eui64_enable) fprintf(fp, "       share 1000\n");
             fprintf(fp, "       pool %s\n", dhcpv6s_pool_cfg.ia_prefix);
@@ -1624,6 +1648,8 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
 
                 fprintf(fp, "       pool %s%s - %s%s\n", prefix_value, dhcpv6s_pool_cfg.prefix_range_begin,
                         prefix_value, dhcpv6s_pool_cfg.prefix_range_end);
+                if(primaryLan)
+                    Cnt += sprintf(relayStr+Cnt,"       pool %s%s - %s%s\n", prefix_value, dhcpv6s_pool_cfg.prefix_range_begin, prefix_value, dhcpv6s_pool_cfg.prefix_range_end );
                 colon_count = count;
             }
 #endif
@@ -1649,9 +1675,18 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
                 fprintf(fp, "       T2 %lu\n", t2);
                 fprintf(fp, "       prefered-lifetime %lu\n", pref_time);
                 fprintf(fp, "       valid-lifetime %lu\n", valid_time);
+
+                if(primaryLan) {
+                    Cnt += sprintf(relayStr+Cnt, "       T1 %lu\n", t1);
+                    Cnt += sprintf(relayStr+Cnt, "       T2 %lu\n", t2);
+                    Cnt += sprintf(relayStr+Cnt, "       prefered-lifetime %lu\n", pref_time);
+                    Cnt += sprintf(relayStr+Cnt, "       valid-lifetime %lu\n", valid_time);
+                }
             }
 
             fprintf(fp, "   }\n");
+            if(primaryLan)
+                Cnt += sprintf(relayStr+Cnt, "   }\n");
         }
 
         if (dhcpv6s_pool_cfg.iapd_enable) {    
@@ -1676,6 +1711,13 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
                     fprintf(fp, "       T2 %lu\n", T2);
                     fprintf(fp, "       prefered-lifetime %s\n", ia_pd.pretm);
                     fprintf(fp, "       valid-lifetime %s\n", ia_pd.vldtm);
+
+                    if(primaryLan) {
+                        Cnt += sprintf(relayStr+Cnt, "       T1 %lu\n", T1);
+                        Cnt += sprintf(relayStr+Cnt, "       T2 %lu\n", T2);
+                        Cnt += sprintf(relayStr+Cnt, "       prefered-lifetime %s\n", ia_pd.pretm);
+                        Cnt += sprintf(relayStr+Cnt, "       valid-lifetime %s\n", ia_pd.vldtm);
+                    }
                 }
 
                 fprintf(fp, "   }\n");
@@ -1699,6 +1741,8 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
                                 if( fgets( HwAddr, sizeof( HwAddr ), ifd ) != NULL )
                                 {
                                         fprintf(fp, "client duid %s\n",HwAddr);
+                                        if(primaryLan)
+                                            Cnt += sprintf(relayStr+Cnt, "client duid %s\n",HwAddr);
                                 }
                                 fclose(ifd);
                                 ifd = NULL;
@@ -1706,9 +1750,13 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
                         else
                         {
                             fprintf(fp, "client duid 01:02:03:04:05:06\n");
+                            if(primaryLan)
+                                Cnt += sprintf(relayStr+Cnt, "client duid 01:02:03:04:05:06\n");
                         }
 
                 fprintf(fp, "   {\n");
+                if(primaryLan)
+                    Cnt += sprintf(relayStr+Cnt, "   {\n");
 
 		if (colon_count == 5)
                 {
@@ -1716,6 +1764,12 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
                 	ERR_CHK(rc);
 			fprintf(fp, "   address %s\n",dummyAddr);
 			fprintf(fp, "   prefix %s:/64\n",prefix_value);
+
+			if(primaryLan)
+			{
+				Cnt += sprintf(relayStr+Cnt, "   address %s\n",dummyAddr);
+				Cnt += sprintf(relayStr+Cnt, "   prefix %s:/64\n",prefix_value);
+			}
                 }
                 else
 		{
@@ -1723,8 +1777,16 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
                 	ERR_CHK(rc);
 			fprintf(fp, "   address %s\n",dummyAddr);
 			fprintf(fp, "   prefix %s/64\n",prefix_value);
+
+			if(primaryLan)
+			{
+				Cnt += sprintf(relayStr+Cnt, "   address %s\n",dummyAddr);
+				Cnt += sprintf(relayStr+Cnt, "   prefix %s/64\n",prefix_value);
+			}
 		}
                 fprintf(fp, "   }\n");
+                if(primaryLan)
+                    Cnt += sprintf(relayStr+Cnt, "   }\n");
             }
         }
 
@@ -1784,6 +1846,8 @@ OPTIONS:
                     if (dns_str[0] != '\0') { 
                         format_dibbler_option(dns_str);
                         fprintf(fp, "     option %s %s\n", tag_list[tag_index].opt_str, dns_str);
+                        if(primaryLan)
+                            Cnt += sprintf(relayStr+Cnt,"     option %s %s\n", tag_list[tag_index].opt_str, dns_str);
                     }
                 }
                 else if (opt.tag == 24) {//domain
@@ -1792,6 +1856,8 @@ OPTIONS:
                     if (domain_str[0] != '\0') { 
                         format_dibbler_option(domain_str);
                         fprintf(fp, "     option %s %s\n", tag_list[tag_index].opt_str, domain_str);
+                        if(primaryLan)
+                            Cnt += sprintf(relayStr+Cnt, "     option %s %s\n", tag_list[tag_index].opt_str, domain_str);
                     }
                 }
             } else {
@@ -1800,6 +1866,9 @@ OPTIONS:
             }
         } 
         fprintf(fp, "}\n");
+        if(primaryLan)
+            Cnt += sprintf(relayStr+Cnt, "}\n");
+
         } //closing bracket of if (strcmp(bridge_mode, "2") || strcmp(dhcpv6s_pool_cfg.interface, "brlan0")) {
 
         if (dhcpv6s_pool_cfg.opts != NULL) {
@@ -1809,6 +1878,10 @@ OPTIONS:
 	}
     }
 
+    if(relayStr[0] != 0)
+    {
+        fprintf(fp, "\n\n%s", relayStr);
+    }
     fclose(fp);
     if (stat(DHCPV6S_CONF_FILE, &check_ConfigFile) == -1) {
 	sysevent_set(si6->sefd, si6->setok, "dibbler_server_conf-status", "", 0);
