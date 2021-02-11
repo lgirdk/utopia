@@ -1344,6 +1344,9 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
     fprintf(fp, "script \"/lib/rdk/server-notify.sh\" \n");
 #endif
 
+    //strict RFC compliance rfc3315 Section 13
+    fprintf(fp, "drop-unicast\n");
+
 #ifdef MULTILAN_FEATURE
     fprintf(fp, "reconfigure-enabled 1\n");
 #endif
