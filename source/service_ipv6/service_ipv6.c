@@ -1509,7 +1509,36 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
         return -1;
 
     /*Begin write dibbler configurations*/
-    fprintf(fp, "log-level 4\n");
+
+    {
+        char buf[12];
+        int log_level = 0;
+
+        if (syscfg_get( NULL, "dibbler_log_level", buf, sizeof(buf)) == 0)
+        {
+            log_level = atoi(buf);
+        }
+        if (log_level < 1)
+        {
+            log_level = 1;
+        }
+        else if (log_level > 8)
+        {
+            log_level = 4;
+        }
+
+        /*
+            1 : Emergency (not used - logging will be disabled)
+            2 : Alert (not used - logging will be disabled)
+            3 : Critical
+            4 : Error
+            5 : Warning
+            6 : Notice
+            7 : Info
+            8 : Debug
+        */
+        fprintf(fp, "log-level %d\n", log_level);
+    }
 
     /*
        Enable inactive mode: When server begins operation and it detects that
