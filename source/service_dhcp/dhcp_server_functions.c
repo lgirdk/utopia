@@ -491,7 +491,13 @@ void prepare_dhcp_options_wan_dns()
 
 	if (!strncmp(l_cPropagate_Ns, "1", 1))	
 	{
-        if(0 != strcmp(g_rl_cWanStatus,"stopped")) //OFW-297: provide brlan0 interface ip address as dns server when modem is offline.
+        char relay_enable[32];
+
+        syscfg_get(NULL, "dns_relay_enable", relay_enable, sizeof(relay_enable));
+
+        //OFW-297 and OFW-620: use brlan0 interface ip address as dns server when modem is offline or dns relay is enabled
+
+        if ((strcmp(g_rl_cWanStatus, "stopped") != 0) && (strcmp(relay_enable, "1") != 0))
         {
 		    sysevent_get(g_iSyseventfd, g_tSysevent_token, "wan_dhcp_dns", l_cWan_Dhcp_Dns, sizeof(l_cWan_Dhcp_Dns));
 		    if (0 != l_cWan_Dhcp_Dns[0])
@@ -519,7 +525,7 @@ void prepare_dhcp_options_wan_dns()
         {
 		    syscfg_get(NULL, "lan_ipaddr", l_cNs, sizeof(l_cNs));
 		    fprintf(l_fLocalDhcpOpt, "option:dns-server, %s\n", l_cNs);
-		    printf("dhcp_server_functions.c Adjust dns-server to lan_ipaddr %s because wan-status is stopped!!!!!!!!!!!!!\n",l_cNs);
+		    printf("dhcp_server_functions.c Adjust dns-server to lan_ipaddr %s because wan-status is stopped or Relay is enabled!!!!!!!!!!!!!\n",l_cNs);
 		}	
 	}
 	remove_file(DHCP_OPTIONS_FILE);
