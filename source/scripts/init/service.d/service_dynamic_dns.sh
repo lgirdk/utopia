@@ -133,6 +133,15 @@ update_ddns_server() {
    password_error_easydns="NO_AUTH"       
    token_error_easydns=""
 
+   #changeip.com
+   register_success_changeip="Successful Update"
+   update_success_changeip="Successful Update"
+   hostname_error_changeip="Hostname pattern does not exist"
+   username_error_changeip="badauth"
+   password_error_changeip="badauth"
+   token_error_changeip=""
+   service_changeip_com="changeip"
+
    #Set Return status
    ps | grep ez-ipupdate | grep -v grep
    if [ $? -eq 0 ];then
@@ -193,6 +202,13 @@ update_ddns_server() {
               EXTRA_PARAMS="${EXTRA_PARAMS} --url https://${ddns_username_x}:${ddns_password_x_mod}@api.cp.easydns.com/dyn/generic.php"
               EXTRA_PARAMS="${EXTRA_PARAMS}?hostname=${ddns_hostname_x}"
               EXTRA_PARAMS="${EXTRA_PARAMS}&myip=${WanIpAddress} --trace-ascii $GENERAL_FILE"
+         elif [ "$ddns_service_x" == "changeip" ]; then
+              EXTRA_PARAMS="-o /var/tmp/ipupdate.${ddns_service_name_mod}"
+              EXTRA_PARAMS="${EXTRA_PARAMS} --url http://nic.changeip.com/nic/update"
+              EXTRA_PARAMS="${EXTRA_PARAMS}?u=${ddns_username_x}"
+              EXTRA_PARAMS="${EXTRA_PARAMS}&p=${ddns_password_x_mod}"
+              EXTRA_PARAMS="${EXTRA_PARAMS}&hostname=${ddns_hostname_x}"
+              EXTRA_PARAMS="${EXTRA_PARAMS}&ip=${WanIpAddress} --trace-ascii $GENERAL_FILE"
               UPDATE_UTIL="/usr/bin/curl"
          elif [ "$ddns_service_x" == "afraid" ]; then
               EXTRA_PARAMS="-o /var/tmp/ipupdate.${ddns_service_name_mod}"
