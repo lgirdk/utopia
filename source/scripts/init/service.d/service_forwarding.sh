@@ -56,7 +56,7 @@ PID="($$)"
 router_mode () 
 { 
         LAN_STATUS=`sysevent get lan-status` 
-        if [ $LAN_STATUS = "stopped" ] ; then 
+        if [ "$LAN_STATUS" = "stopped" ] ; then 
                 sysevent set lan-start 
         fi 
         ps aux | grep hostapd0 | grep -v grep | awk '{print $1}' | xargs kill -9 
@@ -74,7 +74,7 @@ service_init ()
    SYSCFG_FAILED='false'
    FOO=`utctx_cmd get bridge_mode`
    eval $FOO
-   if [ $SYSCFG_FAILED = 'true' ] ; then
+   if [ "$SYSCFG_FAILED" = 'true' ] ; then
       ulog forwarding status "$PID utctx failed to get some configuration data required by service-forwarding"
       ulog forwarding status "$PID THE SYSTEM IS NOT SANE"
       echo "[utopia] utctx failed to get some configuration data required by service-system" > /dev/console
@@ -119,7 +119,7 @@ service_start ()
            sysevent set lan-stop
            PAUSE=$(($PAUSE+1))
         #fi
-        if [ $PAUSE -gt 0 ] ; then
+        if [ "$PAUSE" -gt 0 ] ; then
            sleep $PAUSE
            wait_till_state wan stopped
            wait_till_state lan stopped
@@ -138,7 +138,7 @@ service_start ()
             STATUS=`sysevent get wan-status`
             if [ "stopped" != "$STATUS" ] ; then
                 ulog forwarding status "stopping wan"
-		if [ $RPI_SPECIFIC != "rpi" ] ; then
+		if [ "$RPI_SPECIFIC" != "rpi" ] ; then
                 	sysevent set wan-stop
 		fi
                 wait_till_state wan stopped
@@ -147,7 +147,7 @@ service_start ()
 	    if [ "true" = "$LANRESTART_STATUS" ] ; then
 		BREAK_LOOP=0
 	        BREAK_COUNT=0
-   		while [ $BREAK_LOOP -eq 0 ]
+   		while [ "$BREAK_LOOP" -eq 0 ]
    		do
         	LAN_STATUS_FWD=`sysevent get lan-status`
         	if [ "$LAN_STATUS_FWD" = "stopped" ] || [ "$BREAK_COUNT" -gt 10 ] ; then
@@ -159,9 +159,9 @@ service_start ()
    	    	done
 
             fi
-	    if [ $RPI_SPECIFIC = "rpi" ] ; then
+	    if [ "$RPI_SPECIFIC" = "rpi" ] ; then
 		    LAN_STATUS=`sysevent get lan-status`
-		    if [ $LAN_STATUS = "stopped" ] ; then
+		    if [ "$LAN_STATUS" = "stopped" ] ; then
 				router_mode
 	    	    fi
 	    fi
@@ -187,7 +187,7 @@ service_start ()
          sysevent set firewall-restart
       else
          ulog forwarding status "starting wan"
-	if [ $RPI_SPECIFIC = "rpi" ] ; then
+	if [ "$RPI_SPECIFIC" = "rpi" ] ; then
 	 	STATUS=`sysevent get wan-status`
 		if [ "started" != "$STATUS" ] ; then
         	    sysevent set wan-start
@@ -196,7 +196,7 @@ service_start ()
 		sysevent set wan-start
 	fi
          STATUS=`sysevent get lan-status`
-         if [ "started" != "$STATUS" ] || [ "true" = $LANRESTART_STATUS ] ; then
+         if [ "started" != "$STATUS" ] || [ "true" = "$LANRESTART_STATUS" ] ; then
             ulog forwarding status "starting lan"
             sysevent set lan-start
          fi
@@ -233,7 +233,7 @@ service_stop ()
    BREAK_COUNT=0
 
 
-   while [ $BREAK_LOOP -eq 0 ]
+   while [ "$BREAK_LOOP" -eq 0 ]
    do
    	LAN_STATUS_FWD=`sysevent get lan-status`
 
