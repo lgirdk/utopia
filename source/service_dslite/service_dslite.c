@@ -276,7 +276,7 @@ static int dslite_start(struct serv_dslite *sd)
     memset(buf, 0, sizeof(buf));
 
     SEM_WAIT
-    for (Cnt=0;Cnt<18;Cnt++)
+    for (Cnt=0;Cnt<48;Cnt++)
     {
         syscfg_get(NULL,  "dslite_enable", val, sizeof(val));
         syscfg_get(NULL,  "dslite_active_1", buf, sizeof(buf));
