@@ -122,13 +122,14 @@ update_ddns_server() {
    general_error_afraid="Unable to locate this record"
    token_error_afraid=""
 
-   #easydns.com
-   register_success_easydns="OK"          
-   update_success_easydns="OK"            
-   hostname_error_easydns=""
-   username_error_easydns="NO_AUTH"       
-   password_error_easydns="NO_AUTH"       
-   token_error_easydns=""
+   #changeip.com
+   register_success_changeip="Successful Update"
+   update_success_changeip="Successful Update"
+   hostname_error_changeip="Hostname pattern does not exist"
+   username_error_changeip="Access Denied - Failed to Authenticate"
+   password_error_changeip="Access Denied - Failed to Authenticate"
+   token_error_changeip=""
+   service_changeip_com="changeip"
 
    #Set Return status
    ps | grep ez-ipupdate | grep -v grep
@@ -185,27 +186,33 @@ update_ddns_server() {
               EXTRA_PARAMS="${EXTRA_PARAMS} --host=${ddns_hostname_x}"
               EXTRA_PARAMS="${EXTRA_PARAMS} --address=${WanIpAddress}"
               UPDATE_UTIL="/usr/bin/ez-ipupdate"
-         elif [ "$ddns_service_x" == "easydns" ]; then
-              EXTRA_PARAMS="-o /var/tmp/ipupdate.${ddns_service_name_mod}"
-              EXTRA_PARAMS="${EXTRA_PARAMS} --url https://${ddns_username_x}:${ddns_password_x_mod}@api.cp.easydns.com/dyn/generic.php"
-              EXTRA_PARAMS="${EXTRA_PARAMS}?hostname=${ddns_hostname_x}"
-              EXTRA_PARAMS="${EXTRA_PARAMS}&myip=${WanIpAddress} --trace-ascii $GENERAL_FILE"
+         elif [ "$ddns_service_x" == "changeip" ]; then
+              EXTRA_PARAMS="--interface erouter0"
+              EXTRA_PARAMS="${EXTRA_PARAMS} -o /var/tmp/ipupdate.${ddns_service_name_mod}"
+              EXTRA_PARAMS="${EXTRA_PARAMS} --url http://nic.changeip.com/nic/update"
+              EXTRA_PARAMS="${EXTRA_PARAMS}?u=${ddns_username_x}"
+              EXTRA_PARAMS="${EXTRA_PARAMS}&p=${ddns_password_x_mod}"
+              EXTRA_PARAMS="${EXTRA_PARAMS}&hostname=${ddns_hostname_x}"
+              EXTRA_PARAMS="${EXTRA_PARAMS}&ip=${WanIpAddress} --trace-ascii $GENERAL_FILE"
               UPDATE_UTIL="/usr/bin/curl"
          elif [ "$ddns_service_x" == "afraid" ]; then
-              EXTRA_PARAMS="-o /var/tmp/ipupdate.${ddns_service_name_mod}"
+              EXTRA_PARAMS="--interface erouter0"
+              EXTRA_PARAMS="${EXTRA_PARAMS} -o /var/tmp/ipupdate.${ddns_service_name_mod}"
               EXTRA_PARAMS="${EXTRA_PARAMS} --user ${ddns_username_x}:${ddns_password_x}"
               EXTRA_PARAMS="${EXTRA_PARAMS} --insecure --url https://freedns.afraid.org/nic/update"
               EXTRA_PARAMS="${EXTRA_PARAMS}?hostname=${ddns_hostname_x}"
               EXTRA_PARAMS="${EXTRA_PARAMS}&myip=${WanIpAddress} --trace-ascii $GENERAL_FILE"
               UPDATE_UTIL="/usr/bin/curl"
           elif [ "$ddns_service_x" == "no-ip" ]; then
-              EXTRA_PARAMS="-o /var/tmp/ipupdate.${ddns_service_name_mod}"
+              EXTRA_PARAMS="--interface erouter0"
+              EXTRA_PARAMS="${EXTRA_PARAMS} -o /var/tmp/ipupdate.${ddns_service_name_mod}"
               EXTRA_PARAMS="${EXTRA_PARAMS} --url http://${ddns_username_x}:${ddns_password_x_mod}@dynupdate.no-ip.com/nic/update"
               EXTRA_PARAMS="${EXTRA_PARAMS}?hostname=${ddns_hostname_x}"
               EXTRA_PARAMS="${EXTRA_PARAMS}&myip=${WanIpAddress} --trace-ascii $GENERAL_FILE"
               UPDATE_UTIL="/usr/bin/curl"
           elif [ "$ddns_service_x" == "duckdns" ]; then
-              EXTRA_PARAMS="-o /var/tmp/ipupdate.${ddns_service_name_mod}"
+              EXTRA_PARAMS="--interface erouter0"
+              EXTRA_PARAMS="${EXTRA_PARAMS} -o /var/tmp/ipupdate.${ddns_service_name_mod}"
               EXTRA_PARAMS="${EXTRA_PARAMS} --url https://www.duckdns.org/update"
               EXTRA_PARAMS="${EXTRA_PARAMS}?domains=${ddns_hostname_x}"
               EXTRA_PARAMS="${EXTRA_PARAMS}&token=${ddns_password_x}"
