@@ -18,8 +18,7 @@
 ##########################################################################
 
 AM_CFLAGS = -I$(top_srcdir)/source/include \
-            -I$(top_srcdir)/source/util \
-            -I$(top_srcdir)/../hal/include
+            -I$(top_srcdir)/source/util
 
 AM_LDFLAGS = $(top_builddir)/source/services/lib/libsrvmgr.la \
              $(top_builddir)/source/sysevent/lib/libsysevent.la \
