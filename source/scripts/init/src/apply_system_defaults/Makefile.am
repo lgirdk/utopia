@@ -19,7 +19,6 @@
 
 AM_CFLAGS = -I$(top_srcdir)/source/include \
             -I$(top_srcdir)/source/util \
-            -I$(top_srcdir)/../hal/include \
             -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/dbus-1.0 \
 	    -I${PKG_CONFIG_SYSROOT_DIR}$(libdir)/dbus-1.0/include
 
