@@ -388,6 +388,12 @@ static int get_dhcpv6s_pool_cfg(struct serv_ipv6 *si6, dhcpv6s_pool_cfg_t *cfg)
 
     DHCPV6S_SYSCFG_GETI(DHCPV6S_NAME, "pool", cfg->index, "", 0, "optionnumber", cfg->opt_num);
     
+    /* No additional option specified for this pool */
+    if (cfg->opt_num == 0) {
+        cfg->opts = NULL;
+        return 0;
+    }
+
     p_opt = (dhcpv6s_pool_opt_t *)calloc(cfg->opt_num, sizeof(*p_opt));
     if (p_opt == NULL) {
         fprintf(stderr, "calloc mem for pool options failed!\n");
@@ -1361,7 +1367,8 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
 
     for (pool_index = 0; pool_index < dhcpv6s_cfg.pool_num; pool_index++) {
         dhcpv6s_pool_cfg.index = pool_index;
-        get_dhcpv6s_pool_cfg(si6, &dhcpv6s_pool_cfg);
+        if (get_dhcpv6s_pool_cfg(si6, &dhcpv6s_pool_cfg) != 0)
+            continue;
 
         if (!dhcpv6s_pool_cfg.enable || dhcpv6s_pool_cfg.ia_prefix[0] == '\0') continue;
         snprintf(iface_path, sizeof(iface_path), BRIDGE_PATH, dhcpv6s_pool_cfg.interface);
@@ -1625,6 +1632,7 @@ OPTIONS:
         if (dhcpv6s_pool_cfg.opts != NULL) {
             free(dhcpv6s_pool_cfg.opts);
 	   dhcpv6s_pool_cfg.opts = NULL; /*RDKB-12965 & CID:-34148*/
+            dhcpv6s_pool_cfg.opt_num = 0;
 	}
     }
 
