@@ -15664,7 +15664,6 @@ static int do_mac_filter(FILE *fp)
                 rc = syscfg_get(namespace, "mac", MACAddress, sizeof(MACAddress));
                 if ( (rc != 0) || ('\0' != MACAddress[0]) )
                 {
-                    fprintf(fp, "-I INPUT -m mac --mac-source %s -j DROP\n", MACAddress);
                     fprintf(fp, "-I FORWARD -m mac --mac-source %s -j DROP\n", MACAddress);
 
                 }
