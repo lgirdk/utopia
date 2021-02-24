@@ -479,12 +479,12 @@ static int dslite_start(struct serv_dslite *sd)
     snprintf(cmd, sizeof(cmd), "ip -4 addr flush %s",ER_NETDEVNAME);
     vsystem(cmd);
 
-    //Delete existing default gateway
-    snprintf(cmd, sizeof(cmd), "ip route del default dev %s",TNL_WANDEVNAME);
-    vsystem(cmd);
+    /* Keeping the default route as wan0 interface for SNMP and any other Docsis traffic.
+     * Updating the default route (table erouter) through the tunnel for the traffic from LAN client(s).
+     */
 
     //set default gateway through the tunnel in GW specific routing table
-    snprintf(cmd, sizeof(cmd), "ip route add default dev %s",TNL_NETDEVNAME);
+    snprintf(cmd, sizeof(cmd), "ip route add default dev %s table erouter",TNL_NETDEVNAME);
     vsystem(cmd);
 
     //save tunnel interface here in case IPv4 functions use it, like IGMP proxy
@@ -659,7 +659,7 @@ static int dslite_stop(struct serv_dslite *sd)
     }
 
     //Restore default gateway route rule
-    snprintf(cmd, sizeof(cmd), "ip route del default dev %s",TNL_NETDEVNAME);
+    snprintf(cmd, sizeof(cmd), "ip route del default dev %s table erouter",TNL_NETDEVNAME);
     vsystem(cmd);
 
     //if GW is the IPv6 only mode, we need to shutdown the LAN to WAN IPv4 function
