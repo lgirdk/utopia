@@ -189,10 +189,10 @@ service_start() {
     echo_t "[utopia] starting ${SERVICE_NAME} service"
 	ulog ${SERVICE_NAME} status "starting ${SERVICE_NAME} service"
 
-	#SSH_ENABLE=`syscfg get mgmt_wan_sshaccess`
+	SSH_ENABLE=`syscfg get mgmt_wan_sshaccess`
 #	CURRENT_WAN_STATE=`sysevent get wan-status`
 
-	#if [ "$SSH_ENABLE" = "0" ]; then
+	if [ "$SSH_ENABLE" = "1" ]; then
 
 		if [ ! -f "$PID_FILE" ] ; then
 			#while [ "started" != "$CURRENT_WAN_STATE" ]
@@ -209,7 +209,7 @@ service_start() {
 		sysevent set ${SERVICE_NAME}-status "started"
 		rm -rf /tmp/.dropbear/*
 
-	#fi
+	fi
 
 }
 
