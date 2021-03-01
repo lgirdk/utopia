@@ -1056,6 +1056,7 @@ int prepare_dhcp_conf (char *input)
     // Dont add resolv-file if in norf captive portal mode
     if(FALSE == l_bRfCp)
     {
+        fprintf(l_fLocal_Dhcp_ConfFile, "bind-interfaces\n");
         fprintf(l_fLocal_Dhcp_ConfFile, "domain-needed\n");
         fprintf(l_fLocal_Dhcp_ConfFile, "bogus-priv\n");
 
