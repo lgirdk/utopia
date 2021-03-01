@@ -231,10 +231,10 @@ service_start() {
         fi
       done
    fi
-	#SSH_ENABLE=`syscfg get mgmt_wan_sshaccess`
+	SSH_ENABLE=`syscfg get mgmt_wan_sshaccess`
 	CURRENT_WAN_STATE=`sysevent get wan-status`
 
-	#if [ "$SSH_ENABLE" = "0" ]; then
+	if [ "$SSH_ENABLE" = "1" ]; then
 
    if ([ "$BOX_TYPE" = "XB6" -a "$MANUFACTURE" = "Arris" ] || [ "$MODEL_NUM" = "INTEL_PUMA" ]) ;then
         if [ -n "$CURRENT_WAN_STATE" -a "started" = "$CURRENT_WAN_STATE" ]; then
@@ -258,7 +258,7 @@ service_start() {
 		sysevent set ${SERVICE_NAME}-status "started"
 		rm -rf /tmp/.dropbear/*
 
-	#fi
+	fi
 
 }
 
