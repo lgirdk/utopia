@@ -545,6 +545,8 @@ static int do_lan2wan_helpers(FILE *raw_fp);
 #ifdef WAN_FAILOVER_SUPPORTED
 static int checkIfULAEnabled();
 #endif
+static int lan2wan_multinet_disable(FILE *fp);
+
 FILE *firewallfp = NULL;
 
 //#define CONFIG_BUILD_TRIGGER 1
@@ -9650,6 +9652,12 @@ static void do_lan2wan_disable(FILE *filter_fp)
 #endif
 
     }
+    else
+    {//outbound packets are not forwarded if the source address is not a prefix of the interior network -> RFC2827
+        fprintf(filter_fp, "-A lan2wan_disable ! -s %s/%s -i %s -j DROP\n", lan_ipaddr, lan_netmask,lan_ifname);
+        lan2wan_multinet_disable(filter_fp);
+    }
+
    FIREWALL_DEBUG("Exiting do_lan2wan_disable\n"); 
 }
 
@@ -16340,4 +16348,52 @@ static void add_dslite_mss_clamping(FILE *fp)
     FIREWALL_DEBUG("Exiting add_dslite_mss_clamping\n");
 }
 #endif
+
+static int lan2wan_multinet_disable (FILE *filter_fp)
+{
+    char *tok;
+    char net_query[MAX_QUERY];
+    char net_resp[MAX_QUERY];
+    char net_resp2[MAX_QUERY];
+    char net_resp3[MAX_QUERY];
+    char inst_resp[MAX_QUERY];
+    char primary_inst[MAX_QUERY];
+
+    inst_resp[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "ipv4-instances", inst_resp, sizeof(inst_resp));
+
+    primary_inst[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "primary_lan_l3net", primary_inst, sizeof(primary_inst));
+
+    tok = strtok(inst_resp, " ");
+
+    if (tok) do {
+        // Skip primary LAN instance
+        if (strcmp(primary_inst, tok) == 0)
+            continue;
+
+        snprintf(net_query, sizeof(net_query), "ipv4_%s-status", tok);
+        net_resp[0] = 0;
+        sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
+        if (strcmp("up", net_resp) != 0)
+            continue;
+
+        snprintf(net_query, sizeof(net_query), "ipv4_%s-ipv4addr", tok);
+        net_resp[0] = 0;
+        sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
+
+        snprintf(net_query, sizeof(net_query), "ipv4_%s-ipv4subnet", tok);
+        net_resp2[0] = 0;
+        sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp2, sizeof(net_resp2));
+
+        snprintf(net_query, sizeof(net_query), "ipv4_%s-ifname", tok);
+        net_resp3[0] = 0;
+        sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp3, sizeof(net_resp3));
+
+        fprintf(filter_fp, "-A lan2wan_disable ! -s %s/%s -i %s -j DROP\n", net_resp, net_resp2, net_resp3);
+    }
+    while ((tok = strtok(NULL, " ")) != NULL);
+
+    return 0;
+}
 
