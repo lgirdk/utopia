@@ -5523,6 +5523,19 @@ static int remote_access_set_proto(FILE *filt_fp, FILE *nat_fp, const char *port
     return 0;
 }
 
+static int remote_access_drop(FILE *filt_fp, FILE *nat_fp, const char *port, const char *src, int family, const char *interface)
+{
+         FIREWALL_DEBUG("Entering remote_access_drop\n");
+    if (family == AF_INET) {
+        fprintf(filt_fp, "-A wan2self_mgmt -i %s %s -p tcp -m tcp --dport %s -j DROP\n", interface, src, port);
+    } else {
+        fprintf(filt_fp, "-A INPUT -i %s %s -p tcp -m tcp --dport %s -j DROP\n", interface, src, port);
+    }
+         FIREWALL_DEBUG("Exiting remote_access_drop\n");
+    return 0;
+}
+
+
 static void do_container_allow(FILE *pFilter, FILE *pMangle, FILE *pNat, int family)
 {
     FIREWALL_DEBUG("Entering do_container_allow\n");
@@ -5601,6 +5614,9 @@ static int do_remote_access_control(FILE *nat_fp, FILE *filter_fp, int family)
     /* global flag */
     rc = syscfg_get(NULL, "mgmt_wan_access", query, sizeof(query));
     if (rc != 0 || atoi(query) != 1) {
+        FIREWALL_DEBUG("drop the packets by default\n");
+        remote_access_drop(filter_fp, nat_fp, "80", srcaddr, family, ecm_wan_ifname);
+        remote_access_drop(filter_fp, nat_fp, "443", srcaddr, family, ecm_wan_ifname);
         return 0;
     }
     
