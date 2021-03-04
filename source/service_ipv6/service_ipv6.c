@@ -293,6 +293,7 @@ static int mbus_get(char *path, char *val, int size)
     if (!path || !val || size < 0)
         return -1;
 
+    val[0] = '\0';
     if (!bus_handle) {
          fprintf(stderr, "DBUS not connected\n");
          return -1;
@@ -1307,6 +1308,9 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
     dhcpv6s_pool_opt_t  opt;
     int                 tag_index;
     char                prefix_value[64] = {0};
+    char                deviceManufacturerOUI[6];
+    char                deviceSerialNumber[128];
+    char                deviceProductClass[64];
     pd_pool_t           pd_pool;
     ia_na_t             ia_na;
     ia_pd_t             ia_pd;
@@ -1345,6 +1349,9 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
     if (fp == NULL)
         return -1;
 
+    mbus_get("Device.DeviceInfo.ManufacturerOUI", deviceManufacturerOUI, sizeof(deviceManufacturerOUI));
+    mbus_get("Device.DeviceInfo.X_LGI-COM_SerialNumber", deviceSerialNumber, sizeof(deviceSerialNumber));
+    mbus_get("Device.DeviceInfo.ProductClass", deviceProductClass, sizeof(deviceProductClass));
     /*Begin write dibbler configurations*/
     fprintf(fp, "log-level 8\n");
    /*Run scipt to config route */
@@ -1624,7 +1631,24 @@ OPTIONS:
                 /*TODO:
                  * the configured option value, which is not passed through wan side*/
             }
-        } 
+        }
+        /* MVXREQ-289: Adding Vendor-Spec Option 17 */
+        if (strlen(deviceManufacturerOUI) > 0) {    /* sub-option 14 */
+            fprintf(fp, "     option vendor-spec 3561-14-\"%s\"\n", deviceManufacturerOUI);
+            if (primaryLan)
+                Cnt += sprintf(relayStr+Cnt, "     option vendor-spec 3561-14-\"%s\"\n", deviceManufacturerOUI);
+        }
+        if (strlen(deviceSerialNumber) > 0) {    /* sub-option 15 */
+            fprintf(fp, "     option vendor-spec 3561-15-\"%s\"\n", deviceSerialNumber);
+            if (primaryLan)
+                Cnt += sprintf(relayStr+Cnt, "     option vendor-spec 3561-15-\"%s\"\n", deviceSerialNumber);
+        }
+        if (strlen(deviceProductClass) > 0) {    /*sub-option 16 */
+            fprintf(fp, "     option vendor-spec 3561-16-\"%s\"\n", deviceProductClass);
+            if (primaryLan)
+                Cnt += sprintf(relayStr+Cnt, "     option vendor-spec 3561-16-\"%s\"\n", deviceProductClass);
+        }
+
         fprintf(fp, "}\n");
         if(primaryLan)
             Cnt += sprintf(relayStr+Cnt, "}\n");
