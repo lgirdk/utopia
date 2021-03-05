@@ -178,6 +178,8 @@ static int proc_mon (const char *proc_name, const char *pid_file, const char *cm
     snprintf(syscmd, sizeof(syscmd), "echo \" RDKB_PROCESS_CRASHED : %s is not running, need restart \" >> /rdklogs/logs/SelfHeal.txt.0 ",proc_name);
 	system(syscmd);
 
+    if( strcmp(proc_name,"dnsmasq") == 0 )
+        system("telemetry2_0_client \"SYS_SH_dnsmasq_restart\" \"1\"");
     
     printf("pmon: attempting to restart '%s' using '%s'\n", proc_name, cmd);
     if (pid_file) {
