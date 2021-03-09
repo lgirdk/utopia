@@ -13375,6 +13375,10 @@ static void do_ipv6_filter_table(FILE *fp){
          {
             fprintf(fp, "-A INPUT -s %s -p tcp --dport 53 -i %s -j ACCEPT\n", prefix, lan_ifname);
          }
+
+         if ((lan_local_ipv6_num == 1) && strlen(lan_local_ipv6[0]) > 0) {
+            fprintf(fp, "-A INPUT -d %s -p tcp --dport 53 -i %s -j ACCEPT\n", lan_local_ipv6[0], lan_ifname);
+         }
       }
 
       fprintf(fp, "-A INPUT -i %s -p udp -m udp --dport 547 -m limit --limit 100/sec -j ACCEPT\n", lan_ifname);
