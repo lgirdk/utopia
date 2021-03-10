@@ -4814,6 +4814,51 @@ static int do_multinet_lan2self_by_wanip (FILE *filter_fp)
 
     return 0;
 }
+
+static int do_lan2self_isolate_lans (FILE *filter_fp)
+{
+    char *tok;
+    char net_query[MAX_QUERY];
+    char net_resp[MAX_QUERY];
+    char net_resp2[MAX_QUERY];
+    char inst_resp[MAX_QUERY];
+    char primary_inst[MAX_QUERY];
+
+    inst_resp[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "ipv4-instances", inst_resp, sizeof(inst_resp));
+
+    primary_inst[0] = 0;
+    sysevent_get(sysevent_fd, sysevent_token, "primary_lan_l3net", primary_inst, sizeof(primary_inst));
+
+    fprintf(filter_fp, "-A isolate_lans ! -i %s -d %s -j DROP\n", lan_ifname, lan_ipaddr);
+
+    tok = strtok(inst_resp, " ");
+
+    if (tok) do {
+        // Skip primary LAN instance, it is handled above
+        if (strcmp(primary_inst,tok) == 0)
+            continue;
+
+        snprintf(net_query, sizeof(net_query), "ipv4_%s-status", tok);
+        net_resp[0] = 0;
+        sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
+        if (strcmp("up", net_resp) != 0)
+            continue;
+
+        snprintf(net_query, sizeof(net_query), "ipv4_%s-ipv4addr", tok);
+        net_resp[0] = 0;
+        sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
+
+        snprintf(net_query, sizeof(net_query), "ipv4_%s-ifname", tok);
+        net_resp2[0] = 0;
+        sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp2, sizeof(net_resp2));
+
+        fprintf(filter_fp, "-A isolate_lans ! -i %s -d %s -j DROP\n", net_resp2, net_resp);
+
+    } while ((tok = strtok(NULL, " ")) != NULL);
+
+    return 0;
+}
 #endif
 
 static int do_lan2self_by_wanip(FILE *filter_fp, int family)
@@ -4973,6 +5018,9 @@ static int do_lan2self(FILE *fp)
 
    do_lan2self_attack(fp);
    do_lan2self_mgmt(fp);
+#if defined (MULTILAN_FEATURE)
+   do_lan2self_isolate_lans(fp);
+#endif
         // FIREWALL_DEBUG("Exiting do_lan2self\n");     
    return(0);
 }
@@ -10016,6 +10064,9 @@ static int prepare_multinet_filter_forward_v6 (FILE *fp)
       lan_prefix[0] = 0;
       sysevent_get(sysevent_fd, sysevent_token, sysevent_query, lan_prefix, sizeof(lan_prefix));
 
+      // Block traffic from private LAN clients to the guest LAN IP
+      fprintf(fp, "-A INPUT -i %s -j isolate_lans\n", multinet_ifname);
+      fprintf(fp, "-A isolate_lans ! -i %s -d %s -j DROP\n", multinet_ifname, lan_prefix);
       // Allow DHCPv6 from LAN clients
       fprintf(fp, "-A INPUT -i %s -p udp -m udp --dport 547 -m limit --limit 100/sec -j ACCEPT\n", multinet_ifname);
 
@@ -11052,6 +11103,9 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(filter_fp, "%s\n", ":host_detect - [0:0]");
    fprintf(filter_fp, "%s\n", ":lanattack - [0:0]");
    fprintf(filter_fp, "%s\n", ":lan2self_plugins - [0:0]");
+#if defined (MULTILAN_FEATURE)
+   fprintf(filter_fp, "%s\n", ":isolate_lans - [0:0]");
+#endif
    fprintf(filter_fp, "%s\n", ":self2lan - [0:0]");
    fprintf(filter_fp, "%s\n", ":self2lan_plugins - [0:0]");
    fprintf(filter_fp, "%s\n", ":moca_isolation - [0:0]");
@@ -11449,6 +11503,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(filter_fp, "-A general_input -i %s -p udp -m udp --dport 161 -j xlog_drop_lan2self\n", lan_ifname);
 #if defined (MULTILAN_FEATURE)
    fprintf(filter_fp, "-A lan2self -j lan2self_by_wanip\n");
+   fprintf(filter_fp, "-A lan2self -j isolate_lans\n");
 #else
    fprintf(filter_fp, "-A lan2self ! -d %s -j lan2self_by_wanip\n", lan_ipaddr);
 #endif
@@ -12942,6 +12997,7 @@ static void do_ipv6_filter_table(FILE *fp){
    fprintf(fp, ":lan2wan_pc_site - [0:0]\n");
    fprintf(fp, ":lan2wan_pc_service - [0:0]\n");
    fprintf(fp, ":wan2lan - [0:0]\n");
+   fprintf(fp, ":isolate_lans - [0:0]\n");
 
    prepare_rabid_rules(fp, IP_V6);
 
@@ -13073,15 +13129,20 @@ static void do_ipv6_filter_table(FILE *fp){
 #endif
 #endif
 
-#ifdef MULTILAN_FEATURE
-   prepare_multinet_filter_forward_v6(fp);
-   prepare_multinet_filter_output_v6(fp);
-#endif
-#if defined (INTEL_PUMA7)
-   //Intel Proposed RDKB Generic Bug Fix from XB6 SDK
-   fprintf(fp, "-A FORWARD -i brlan2 -j ACCEPT\n");
-   fprintf(fp, "-A FORWARD -i brlan3 -j ACCEPT\n");
-#endif
+   {
+      unsigned char sysevent_query[MAX_QUERY];
+      unsigned char lan_prefix[MAX_QUERY];
+
+      fprintf(fp, "-A INPUT -i %s -j isolate_lans\n", lan_ifname);
+      snprintf(sysevent_query, sizeof(sysevent_query), "ipv6_%s-prefix", lan_ifname);
+      lan_prefix[0] = 0;
+      sysevent_get(sysevent_fd, sysevent_token, sysevent_query, lan_prefix, sizeof(lan_prefix));
+
+      if ( '\0' != lan_prefix[0] ) {
+         // Block traffic from guest clients to the private LAN IP
+         fprintf(fp, "-A isolate_lans ! -i %s -d %s -j DROP\n", lan_ifname, lan_prefix);
+      }
+   }
    //ban telnet and ssh from lan side
    lan_telnet_ssh(fp, AF_INET6);
 
