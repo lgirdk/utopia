@@ -44,7 +44,11 @@
 #include <fcntl.h>
 #include "autoconf.h"
 #include "secure_wrapper.h"
+#include "sysevent/sysevent.h"
+#include "syscfg/syscfg.h"
 #include <sys/stat.h>
+#include <unistd.h>
+#include <ctype.h>
 
 #ifdef MULTILAN_FEATURE
 #include "ccsp_psm_helper.h"
@@ -762,7 +766,7 @@ static int divide_ipv6_prefix(struct serv_ipv6 *si6)
     int                 bit_boundary = 0;
     unsigned long long  sub_prefix, tmp_prefix; //64 bits
     char                iface_prefix[INET6_ADDRSTRLEN]; //for iface prefix str
-    char                evt_name[80];
+    char                evt_name[128];
     char                evt_val[64];
     char                iface_name[64];
     int                 used_sub_prefix_num = 0; 
