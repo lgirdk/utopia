@@ -41,7 +41,11 @@
 #include <fcntl.h>
 #include "autoconf.h"
 #include "secure_wrapper.h"
+#include "sysevent/sysevent.h"
+#include "syscfg/syscfg.h"
 #include <sys/stat.h>
+#include <unistd.h>
+#include <ctype.h>
 
 #ifdef MULTILAN_FEATURE
 #include "ccsp_psm_helper.h"
@@ -337,7 +341,6 @@ static int get_dhcpv6s_pool_cfg(struct serv_ipv6 *si6, dhcpv6s_pool_cfg_t *cfg)
     dhcpv6s_pool_opt_t *p_opt = NULL;
     char buf[64] = {0};
 #ifdef MULTILAN_FEATURE
-    FILE *fp = NULL;
     char dml_path[CMD_BUF_SIZE] = {0};
     char iface_name[64] = {0};
 #endif
@@ -545,12 +548,7 @@ static int get_prefix_info(const char *prefix,  char *value, unsigned int val_le
  */
 static int get_active_lanif(struct serv_ipv6 *si6, unsigned int insts[], unsigned int *num)
 {
-    char active_insts[32] = {0};
-    char lan_pd_if[128] = {0};
-    char *p = NULL;
     int i = 0;
-    char if_name[16] = {0};
-    char buf[64] = {0};
 #ifdef MULTILAN_FEATURE
 
     int l_iRet_Val = 0;
@@ -751,7 +749,7 @@ static int divide_ipv6_prefix(struct serv_ipv6 *si6)
     int                 bit_boundary = 0;
     unsigned long long  sub_prefix, tmp_prefix; //64 bits
     char                iface_prefix[INET6_ADDRSTRLEN]; //for iface prefix str
-    char                evt_name[64];
+    char                evt_name[128];
     char                evt_val[64];
     char                iface_name[64];
     int                 used_sub_prefix_num = 0; 
@@ -1463,16 +1461,16 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
                     t2 = (unsigned long)(dhcpv6s_pool_cfg.lease_time * 80.0 /100);
                     pref_time = valid_time = dhcpv6s_pool_cfg.lease_time; 
                 }
-                fprintf(fp, "       T1 %u\n", t1);
-                fprintf(fp, "       T2 %u\n", t2);
-                fprintf(fp, "       prefered-lifetime %u\n", pref_time);
-                fprintf(fp, "       valid-lifetime %u\n", valid_time);
+                fprintf(fp, "       T1 %lu\n", t1);
+                fprintf(fp, "       T2 %lu\n", t2);
+                fprintf(fp, "       prefered-lifetime %lu\n", pref_time);
+                fprintf(fp, "       valid-lifetime %lu\n", valid_time);
 
                 if(primaryLan) {
-                    Cnt += sprintf(relayStr+Cnt, "       T1 %u\n", t1);
-                    Cnt += sprintf(relayStr+Cnt, "       T2 %u\n", t2);
-                    Cnt += sprintf(relayStr+Cnt, "       prefered-lifetime %u\n", pref_time);
-                    Cnt += sprintf(relayStr+Cnt, "       valid-lifetime %u\n", valid_time);
+                    Cnt += sprintf(relayStr+Cnt, "       T1 %lu\n", t1);
+                    Cnt += sprintf(relayStr+Cnt, "       T2 %lu\n", t2);
+                    Cnt += sprintf(relayStr+Cnt, "       prefered-lifetime %lu\n", pref_time);
+                    Cnt += sprintf(relayStr+Cnt, "       valid-lifetime %lu\n", valid_time);
                 }
             }
 
@@ -1499,8 +1497,8 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
                     T2 = T1;
                     T1 = T1/2;
                     T2 = (unsigned long)(T2 * 80.0 /100);
-                    fprintf(fp, "       T1 %u\n", T1);
-                    fprintf(fp, "       T2 %u\n", T2);
+                    fprintf(fp, "       T1 %lu\n", T1);
+                    fprintf(fp, "       T2 %lu\n", T2);
                     fprintf(fp, "       prefered-lifetime %s\n", ia_pd.pretm);
                     fprintf(fp, "       valid-lifetime %s\n", ia_pd.vldtm);
 
@@ -1524,7 +1522,7 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
                 char HwAddr[24];
                 memset( HwAddr, 0, sizeof( HwAddr ) );
                 memset( dummyAddr, 0, sizeof( dummyAddr ) );
-                strncpy(dummyAddr,prefix_value,sizeof(prefix_value));
+                strncpy(dummyAddr,prefix_value,sizeof(dummyAddr));
                 
 		dummyAddr[sizeof(dummyAddr)-1] = '\0';
                 if( ( ifd = fopen( HwAdrrPath, "r" ) ) != NULL )
@@ -1734,8 +1732,7 @@ static int dhcpv6s_restart(struct serv_ipv6 *si6)
 
 static int serv_ipv6_start(struct serv_ipv6 *si6)
 {
-    char status[16], enable[16], rtmod[16];
-    char prefix[INET6_ADDRSTRLEN];
+    char rtmod[16];
 
     /* state check */
     if (!serv_can_start(si6->sefd, si6->setok, "service_ipv6"))
@@ -1821,7 +1818,6 @@ static int serv_ipv6_restart(struct serv_ipv6 *si6)
 
 static int serv_ipv6_init(struct serv_ipv6 *si6)
 {
-    char wan_st[16], lan_st[16];
     char buf[16];
 #ifdef MULTILAN_FEATURE
     int ret = 0;
@@ -1845,7 +1841,7 @@ static int serv_ipv6_init(struct serv_ipv6 *si6)
     if (ret == -1) {
         fprintf(stderr, "%s: DBUS connection failed \n", __FUNCTION__);
         bus_handle = NULL;
-        ret -1;
+        return -1;
     }
 #endif
     syscfg_get(NULL, "last_erouter_mode", buf, sizeof(buf));
