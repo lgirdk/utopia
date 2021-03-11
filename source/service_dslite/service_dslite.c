@@ -251,6 +251,34 @@ dslite_resolve_fqdn_to_ipv6addr(const char *name, unsigned int *dnsttl, const ch
     return in6_addrs;
 }
 
+int get_aftr(char *DSLITE_AFTR, char *dslite_mode, char  *dslite_addr_type, int size_aftr)
+{
+    int retvalue = -1;
+    if(dslite_mode != NULL && dslite_addr_type != NULL)
+    {
+	memset(DSLITE_AFTR, 0, size_aftr);
+        if(strcmp(dslite_mode,"1") == 0)//AFTR got from DCHP mode
+        {
+            syscfg_get(NULL, "dslite_addr_fqdn_1", DSLITE_AFTR, size_aftr);
+            retvalue = 1;
+        }
+        else if(strcmp(dslite_mode,"2") == 0) //AFTR got from static mode
+        {
+            if(strcmp(dslite_addr_type, "1")==0)
+                syscfg_get(NULL, "dslite_addr_fqdn_1", DSLITE_AFTR, sizeof(DSLITE_AFTR));
+            else if(strcmp(dslite_addr_type, "2")==0)
+                syscfg_get(NULL, "dslite_addr_ipv6_1", DSLITE_AFTR, sizeof(DSLITE_AFTR));
+            else
+                fprintf(stderr, "%s: Wrong value of dslite prefered address type\n", __FUNCTION__);
+
+            retvalue = 0;
+        }
+        else
+            fprintf(stderr, "%s: Wrong value of dslite address provision mode\n", __FUNCTION__);
+    }
+    return retvalue;
+}
+
 static int dslite_start(struct serv_dslite *sd)
 {
     char val[64];
@@ -271,6 +299,7 @@ static int dslite_start(struct serv_dslite *sd)
     FILE *fptmp = NULL;
     char dslite_ipv6_frag_enable[64] = {0};
     int Cnt;
+    char dslite_mode[16], dslite_addr_type[16];
     
     memset(val, 0, sizeof(val));
     memset(buf, 0, sizeof(buf));
@@ -338,36 +367,24 @@ static int dslite_start(struct serv_dslite *sd)
     /* do start */
     sysevent_set(sd->sefd, sd->setok, "dslite_service-status", "starting", 0);
 
-    memset(val, 0, sizeof(val));
-    memset(buf, 0, sizeof(buf));
-    syscfg_get(NULL,  "dslite_mode_1", val, sizeof(val));
-    syscfg_get(NULL,  "dslite_addr_type_1", buf, sizeof(buf));
+    memset(dslite_mode, 0, sizeof(dslite_mode));
+    memset(dslite_addr_type, 0, sizeof(dslite_addr_type));
+    syscfg_get(NULL,  "dslite_mode_1", dslite_mode, sizeof(dslite_mode));
+    syscfg_get(NULL,  "dslite_addr_type_1", dslite_addr_type, sizeof(dslite_addr_type));
 
-    if(val != NULL)
+    for (Cnt=0;Cnt<100;Cnt++)
     {
-        memset(DSLITE_AFTR, 0, sizeof(DSLITE_AFTR));
-        if(strcmp(val,"1") == 0)//AFTR got from DCHP mode
-        {
-            dhcp_mode = 1;
-            syscfg_get(NULL, "dslite_addr_fqdn_1", DSLITE_AFTR, sizeof(DSLITE_AFTR));
-        }
-        else if(strcmp(val,"2") == 0) //AFTR got from static mode
-        {
-            dhcp_mode = 0;
-            if(strcmp(buf, "1")==0)
-                syscfg_get(NULL, "dslite_addr_fqdn_1", DSLITE_AFTR, sizeof(DSLITE_AFTR));
-            else if(strcmp(buf, "2")==0)
-                syscfg_get(NULL, "dslite_addr_ipv6_1", DSLITE_AFTR, sizeof(DSLITE_AFTR));
-            else
-                fprintf(stderr, "%s: Wrong value of dslite prefered address type\n", __FUNCTION__);
-        }
-        else
-            fprintf(stderr, "%s: Wrong value of dslite address provision mode\n", __FUNCTION__);
+        dhcp_mode = get_aftr(DSLITE_AFTR, dslite_mode, dslite_addr_type, sizeof(DSLITE_AFTR));
+        if(strncmp(DSLITE_AFTR, "none", sizeof("none")) != 0)
+            break;
+
+	sleep(10);
     }
-    if(strlen(DSLITE_AFTR)==0)
+
+    if(strlen(DSLITE_AFTR)==0 && (strncmp(DSLITE_AFTR, "none", sizeof("none")) == 0))
     {
         sysevent_set(sd->sefd, sd->setok, "dslite_service-status", "error", 0);
-        fprintf(stderr, "%s: AFTR address is NULL, exit!\n", __FUNCTION__);
+        fprintf(stderr, "%s: AFTR address is NULL/None, exit! AFTR = %s\n", __FUNCTION__,DSLITE_AFTR);
         SEM_POST
         return 1;
     }
