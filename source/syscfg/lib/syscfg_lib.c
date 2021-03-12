@@ -56,6 +56,10 @@
 #include "syscfg_mtd.h"   // MTD IO friend sub-class
 #include "syscfg_lib.h"   // internal interface
 #include "syscfg.h"       // external interface used by users
+#include <platform_hal.h>
+
+#define CUSTOMER_SYSCFG_FILE "/etc/utopia/defaults/lg_syscfg_cust_%d.db"
+#define CUSTOMER_BOOT_CONFIG_FILE "/nvram/bootconfig_custindex"
 
 /*
  * Global data structures
@@ -350,6 +354,92 @@ void syscfg_destroy (void)
 }
 
 /*
+ * This function checks if customer index was changed from dml/boot-config
+ *  and loads the customer specific file to syscfg db
+ */
+static int check_bootconfig_customer_index(void)
+{
+    int rc = -1;
+    int customerIndex = 0;
+    char custFile[60];
+
+    if (access(CUSTOMER_BOOT_CONFIG_FILE, F_OK) == 0)
+    {
+        /*
+            This logic is only for testing multiple customer indexes.
+            In the field customer index won't change.
+        */
+        ulog_LOG_Info("Taking customer index from boot config\n");
+        FILE *fpt = fopen(CUSTOMER_BOOT_CONFIG_FILE, "r");
+        if(fpt)
+        {
+            fscanf(fpt, "%d\n",  &customerIndex);
+            snprintf(custFile, sizeof(custFile), CUSTOMER_SYSCFG_FILE, customerIndex);
+            rc = load_from_file(custFile);
+            if(rc == 0)
+                ulog_LOG_Info("Successfully loaded the Customer(%d) specific default values\n", customerIndex);
+            else
+                ulog_LOG_Err("Unable to load the Customer(%d) specific default values\n",customerIndex);
+            /* Set customer-index-changed as True to handle psm db */
+            syscfg_set(NULL, "customer-index-changed", "true");
+            fclose(fpt);
+        }
+        else
+        {
+            ulog_LOG_Err("Unable to open file - %s\n",CUSTOMER_BOOT_CONFIG_FILE);
+        }
+        rc = 0;
+    }
+    return rc;
+}
+
+static int load_from_customer_file (void)
+{
+    char buf[60];
+    int customerIndex;
+    int rc = 0;
+
+    syscfg_get (NULL, "Customer_Index", buf, sizeof(buf));
+    customerIndex = atoi (buf);
+
+    /*
+       Customer_Index can be zero in syscfg db in two scenarios:
+
+         - First upgrade from non-RDKB based firmware
+         - After a factory reset
+
+       In these cases, call platform_hal_GetCustomerIndex() to retrieve any
+       default value which may have been set within the platform specific
+       config etc set when the box was provisioned during manufacturing.
+       Note that if no platform specific value is available then
+       platform_hal_GetCustomerIndex() will return 0.
+    */
+
+    if (customerIndex == 0)
+    {
+        customerIndex = platform_hal_GetCustomerIndex();
+
+        if (customerIndex > 0)
+        {
+            snprintf (buf, sizeof(buf), CUSTOMER_SYSCFG_FILE, customerIndex);
+            rc = load_from_file (buf);
+            if (rc == 0)
+            {
+                ulog_LOG_Info("Successfully loaded the Customer(%d) specific default values\n", customerIndex);
+                /* Set customer-index-changed as True to handle psm db */
+                syscfg_set (NULL, "customer-index-changed", "true");
+            }
+            else
+            {
+                ulog_LOG_Err("Unable to load the Customer(%d) specific default values\n", customerIndex);
+            }
+        }
+    }
+
+    return rc;
+}
+
+/*
  * Procedure     : syscfg_create
  * Purpose       : SYSCFG initialization from persistent storage
  * Parameters    :   
@@ -372,6 +462,7 @@ int syscfg_create (const char *file, long int max_file_sz, const char *mtd_devic
 
     store_info_t store_info;
     int rc, shmid = -1;
+    int res = -1;
 
     if (file) {
         store_info.type = STORE_FILE;
@@ -400,6 +491,17 @@ int syscfg_create (const char *file, long int max_file_sz, const char *mtd_devic
         rc = load_from_mtd(store_info.path);
     } else {
         rc = load_from_file(store_info.path);
+        res = check_bootconfig_customer_index();
+        /*
+            Legacy mv1 devices(which are already in the field)
+            uses CountryId instead of Customer-index so we need to
+            convert the CountryId to Customer-index and load
+            corresponding syscfg file to the memory.
+        */
+        if(res != 0)
+        {
+            rc = load_from_customer_file();
+        }
     }
     if (0 != rc) {
         ulog_LOG_Err("Error loading from store");
@@ -1744,6 +1846,3 @@ int commit_to_file (const char *fname)
    return 0;
 }
 
-int syscfg_load_from_file(char* fname){
-    return load_from_file(fname);
-}
