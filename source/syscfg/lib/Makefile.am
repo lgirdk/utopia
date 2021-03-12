@@ -31,3 +31,5 @@ libsyscfg_la_SOURCES = syscfg_lib.c syscfg_mtd.c
 libsyscfg_la_CPPFLAGS = -I$(top_srcdir)/source/include
 
 libsyscfg_la_LIBADD = $(top_builddir)/source/ulog/libulog.la
+
+libsyscfg_la_LDFLAGS = -lhal_platform
