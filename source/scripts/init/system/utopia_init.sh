@@ -120,6 +120,7 @@ PSM_BAK_XML_CONFIG_FILE_NAME="$SYSCFG_MOUNT/bbhm_bak_cfg.xml"
 PSM_TMP_XML_CONFIG_FILE_NAME="$SYSCFG_MOUNT/bbhm_tmp_cfg.xml"
 XDNS_DNSMASQ_SERVERS_CONFIG_FILE_NAME="$SYSCFG_MOUNT/dnsmasq_servers.conf"
 FACTORY_RESET_REASON=false
+CUSTOMER_BOOT_CONFIG_FILE="/nvram/bootconfig_custindex"
 
 if [ -d $SYSCFG_ENCRYPTED_PATH ]; then
        if [ ! -d $SYSCFG_PERSISTENT_PATH ]; then
@@ -171,7 +172,13 @@ if [ -f $SYSCFG_BKUP_FILE ]; then
    if [ -d $SYSCFG_PERSISTENT_PATH ] && [ ! -f $SYSCFG_NEW_FILE ]; then
         cp $SYSCFG_BKUP_FILE $SYSCFG_NEW_FILE
    fi
-   cp $SYSCFG_BKUP_FILE $SYSCFG_FILE
+
+    if [ -f $CUSTOMER_BOOT_CONFIG_FILE ]; then
+        # If Customer index is set via boot config then remove /nvram/sycfg.db file
+        echo -n > $SYSCFG_BKUP_FILE
+    fi
+    cp $SYSCFG_BKUP_FILE $SYSCFG_FILE
+
    syscfg_create -f $SYSCFG_FILE
    if [ $? != 0 ]; then
 	   CheckAndReCreateDB
@@ -337,6 +344,13 @@ elif [ "$FACTORY_RESET_WIFI" = "$SYSCFG_FR_VAL" ]; then
 fi
 #echo_t "[utopia][init] Cleaning up vendor nvram"
 # /etc/utopia/service.d/nvram_cleanup.sh
+
+# In case customer index and factory reset happens at the same time,
+# syscfg_create is called for two times. So remove bootconfig_custindex file after that.
+if [ -f $CUSTOMER_BOOT_CONFIG_FILE ]; then
+    # Remove /nvram/bootconfig_custindex file. Customer specific values are already added in syscfg.
+    rm -f $CUSTOMER_BOOT_CONFIG_FILE
+fi
 
 #echo_t "[utopia][init] Starting system logging"
 #$UTOPIA_PATH/service_syslog.sh syslog-start
