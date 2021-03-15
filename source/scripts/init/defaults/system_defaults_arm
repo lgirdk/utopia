@@ -1414,7 +1414,7 @@ $son_dfs_enable=1
 $son_native_atm_bs_disable=0
 $smart_wifi_hide=0
 
-$Available_Languages=en,tk,fr,de,nl,ro,it,pl,cz,hu,es,sk
+$Available_Languages=en,tr,fr,de,nl,ro,it,pl,cz,hu,es,sk
 $Current_Language=en
 $version_db=1
 $default_erouter_mode=3
