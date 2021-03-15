@@ -5014,7 +5014,7 @@ static int do_lan2self_by_wanip(FILE *filter_fp, int family)
 #endif
    //Setting wan_mgmt_httpport/httpsport to 12368 will block ATOM dbus connection. Add exception to avoid this situation.
    // TODO: REMOVE THIS EXCEPTION SINCE DBUS WILL BE ON PRIVATE NETWORK
-   fprintf(filter_fp, "-A lan2self_by_wanip -s 192.168.100.3 -d 192.168.100.1 -j RETURN\n");
+   fprintf(filter_fp, "-A lan2self_by_wanip -d 192.168.100.1 -j RETURN\n");
 
    rc = syscfg_get(NULL, "mgmt_wan_httpport", httpport, sizeof(httpport));
 #if defined(CONFIG_CCSP_WAN_MGMT_PORT)
@@ -11750,11 +11750,6 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    }
 
    //fprintf(filter_fp, "-A lan2self -m state --state INVALID -j DROP\n");
-   //Block traffic to lan0. 192.168.100.3 is for ATOM dbus connection.
-   if(isWanServiceReady) {
-       fprintf(filter_fp, "-A general_input -i lan0 ! -s 192.168.100.3 -d 192.168.100.1 -j xlog_drop_lan2self\n");
-       fprintf(filter_fp, "-A general_input -i brlan0 ! -s 192.168.100.3 -d 192.168.100.1 -j xlog_drop_lan2self\n");
-   }
 
    //open port for DHCP
    if(!isBridgeMode) {
