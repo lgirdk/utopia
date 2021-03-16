@@ -339,17 +339,6 @@ fi
 #echo_t "[utopia][init] Cleaning up vendor nvram"
 # /etc/utopia/service.d/nvram_cleanup.sh
 
-echo_t "*** HTTPS root certificate for TR69 ***"
-
-if [ ! -f /etc/cacert.pem ]; then
-	echo_t "HTTPS root certificate for TR69 is missing..."
-
-fi
-if [ -f /nvram/cacert.pem ]; then
-        echo "Remove HTTPS root certificate for TR69 if available in NVRAM to prevent updating cert"
-	rm -f /nvram/cacert.pem
-fi
-
 #echo_t "[utopia][init] Starting system logging"
 #$UTOPIA_PATH/service_syslog.sh syslog-start
 
