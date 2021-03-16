@@ -788,7 +788,7 @@ void resync_instance (int l3_inst)
 	char l_cNv_EthLower[8] = {0}, l_cNv_Ip[16] = {0}, l_cNv_Subnet[16] = {0};
 	char l_cNv_Enabled[8] = {0}, l_cPsm_Parameter[255] = {0}, l_cSysevent_Cmd[255] = {0};
 	char l_cLower[8] = {0}, l_cCur_Ipv4_Addr[16] = {0}, l_cCur_Ipv4_Subnet[16] = {0};
-	char l_cIpv4_Static[16] = {0}, l_cIpv4_Instances[8] = {0}, l_cNv_Lower_Status[16] = {0};
+	char l_cIpv4_Static[16] = {0}, l_cIpv4_Instances[8] = {0}, l_cIpv4_Instances_tmp[8] = {0}, l_cNv_Lower_Status[16] = {0};
 	char l_cNv_Lower[8] = {0};
 	char l_cAsyncId[16] = {0};
 	char l_cEvent_Name[32] = {0}, l_cL3Inst[8] = {0};
@@ -962,8 +962,11 @@ void resync_instance (int l3_inst)
 						 "ipv4-instances", l_cIpv4_Instances, 
 						 sizeof(l_cIpv4_Instances));
 			if (0 != l_cIpv4_Instances[0])
-				snprintf(l_cIpv4_Instances, sizeof(l_cIpv4_Instances), 
+			{
+				snprintf(l_cIpv4_Instances_tmp, sizeof(l_cIpv4_Instances),
 						 "%s %d", l_cIpv4_Instances, l3_inst);
+				strncpy(l_cIpv4_Instances, l_cIpv4_Instances_tmp, sizeof(l_cIpv4_Instances) - 1);
+			}
 			else
 				snprintf(l_cIpv4_Instances, sizeof(l_cIpv4_Instances), 
 						 "%d", l3_inst);
