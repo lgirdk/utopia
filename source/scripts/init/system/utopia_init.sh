@@ -317,17 +317,6 @@ fi
 #echo_t "[utopia][init] Cleaning up vendor nvram"
 # /etc/utopia/service.d/nvram_cleanup.sh
 
-echo_t "*** HTTPS root certificate for TR69 ***"
-
-if [ ! -f /etc/cacert.pem ]; then
-	echo_t "HTTPS root certificate for TR69 is missing..."
-
-fi
-if [ -f /nvram/cacert.pem ]; then
-        echo "Remove HTTPS root certificate for TR69 if available in NVRAM to prevent updating cert"
-	rm -f /nvram/cacert.pem
-fi
-
 #CISCOXB3-6085:Removing current configuration from nvram as a part of PSM migration.
 if [ -f /nvram/bbhm_cur_cfg.xml  ]; then
        mv /nvram/bbhm_cur_cfg.xml $PSM_CUR_XML_CONFIG_FILE_NAME
