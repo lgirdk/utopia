@@ -372,14 +372,7 @@ static int dslite_start(struct serv_dslite *sd)
     syscfg_get(NULL,  "dslite_mode_1", dslite_mode, sizeof(dslite_mode));
     syscfg_get(NULL,  "dslite_addr_type_1", dslite_addr_type, sizeof(dslite_addr_type));
 
-    for (Cnt=0;Cnt<100;Cnt++)
-    {
-        dhcp_mode = get_aftr(DSLITE_AFTR, dslite_mode, dslite_addr_type, sizeof(DSLITE_AFTR));
-        if(strncmp(DSLITE_AFTR, "none", sizeof("none")) != 0)
-            break;
-
-	sleep(10);
-    }
+    dhcp_mode = get_aftr(DSLITE_AFTR, dslite_mode, dslite_addr_type, sizeof(DSLITE_AFTR));
 
     if ((strlen(DSLITE_AFTR) == 0) || (strcmp(DSLITE_AFTR, "none") == 0))
     {
@@ -640,10 +633,9 @@ static int dslite_stop(struct serv_dslite *sd)
         snprintf(cmd, sizeof(cmd), "ps > /var/tmp/process; cat /var/tmp/process | grep zebra");
         _get_shell_output(cmd, buf, sizeof(buf));
         if(strlen(buf) > 0)
-        {
-            vsystem("zebra stop");
-            vsystem("rm -rf /var/tmp/process");
-        }
+            vsystem("killall zebra &");
+
+        vsystem("rm -rf /var/tmp/process");
 
         snprintf(cmd, sizeof(cmd), "ip -6 tunnel del %s mode ip4ip6 remote %s local %s dev %s encaplimit none", TNL_NETDEVNAME, remote_addr, local_addr, ER_NETDEVNAME);
         vsystem(cmd);
@@ -655,10 +647,9 @@ static int dslite_stop(struct serv_dslite *sd)
         snprintf(cmd, sizeof(cmd), "ps > /var/tmp/process; cat /var/tmp/process | grep zebra");
         _get_shell_output(cmd, buf, sizeof(buf));
         if(strlen(buf) == 0)
-        {
-            vsystem("zebra start");
-            vsystem("rm -rf /var/tmp/process");
-        }
+            sysevent_set(sd->sefd, sd->setok, "zebra-restart", "", 0);
+
+        vsystem("rm -rf /var/tmp/process");
     }
     else
     {
