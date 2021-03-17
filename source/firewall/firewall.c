@@ -4886,7 +4886,11 @@ static int do_lan2self_by_wanip(FILE *filter_fp, int family)
 #endif
    //Setting wan_mgmt_httpport/httpsport to 12368 will block ATOM dbus connection. Add exception to avoid this situation.
    // TODO: REMOVE THIS EXCEPTION SINCE DBUS WILL BE ON PRIVATE NETWORK
-   fprintf(filter_fp, "-A lan2self_by_wanip -d 192.168.100.1 -j RETURN\n");
+
+   /* Since lan2self chain is traversed by all the LAN networks including guest network,
+    * so restricting access to 192.168.100.1, only for primary LAN network.
+    */
+   fprintf(filter_fp, "-A lan2self_by_wanip -i %s -d 192.168.100.1 -j RETURN\n", lan_ifname);
 
    rc = syscfg_get(NULL, "mgmt_wan_httpport", httpport, sizeof(httpport));
 #if defined(CONFIG_CCSP_WAN_MGMT_PORT)
