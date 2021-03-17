@@ -513,6 +513,9 @@ void logPrintMain(char* filename, int line, char *fmt,...);
 #define V6_PORTSCANPROTECT  "v6_PortScanProtect"
 #define V6_IPFLOODDETECT    "v6_IPFloodDetect"
 
+#define DEFAULT_FRAG_LOW_THRESH_VALUE	3145728
+#define DEFAULT_FRAG_HIGH_THRESH_VALUE  4194304
+
 #define PORT_SCAN_CHECK_CHAIN "PORT_SCAN_CHK"
 #define PORT_SCAN_DROP_CHAIN  "PORT_SCAN_DROP"
 
@@ -16266,6 +16269,7 @@ static int do_blockfragippktsv4(FILE *fp)
 {
     int enable=0;
     char query[MAX_QUERY]={0};
+    char cfgcmd[128]={0};
 
     syscfg_get(NULL, V4_BLOCKFRAGIPPKT, query, sizeof(query));
     if (query[0] != '\0')
@@ -16274,13 +16278,15 @@ static int do_blockfragippktsv4(FILE *fp)
     }
     if (enable)
     {
-        fprintf(fp, "-N FRAG_DROP\n");
-        fprintf(fp, "-F FRAG_DROP\n");
-        fprintf(fp, "-I FORWARD -m mark --mark 0x0800 -j FRAG_DROP\n");
-        fprintf(fp, "-I INPUT -m mark --mark 0x0800 -j FRAG_DROP\n");
-        fprintf(fp, "-A FRAG_DROP -i %s -j DROP\n", lan_ifname);
-        fprintf(fp, "-A FRAG_DROP -i %s -o %s -j DROP\n",current_wan_ifname, lan_ifname);
-
+	system("echo 0 > /proc/sys/net/ipv4/ipfrag_high_thresh");
+	system("echo 0 > /proc/sys/net/ipv4/ipfrag_low_thresh");
+    } else {
+	sprintf(cfgcmd,"echo %d > /proc/sys/net/ipv4/ipfrag_high_thresh", 
+			DEFAULT_FRAG_HIGH_THRESH_VALUE);
+	system(cfgcmd);
+	sprintf(cfgcmd,"echo %d > /proc/sys/net/ipv4/ipfrag_low_thresh", 
+			DEFAULT_FRAG_LOW_THRESH_VALUE);
+	system(cfgcmd);
     }
     return 0;
 }
@@ -16395,6 +16401,8 @@ static int do_blockfragippktsv6(FILE *fp)
 {
     int enable=0;
     char query[MAX_QUERY]={0};
+    char cfgcmd[128]={0};
+
     syscfg_get(NULL, V6_BLOCKFRAGIPPKT, query, sizeof(query));
     if (query[0] != '\0')
     {
@@ -16402,13 +16410,17 @@ static int do_blockfragippktsv6(FILE *fp)
     }
     if (enable)
     {
-        /* Creating New Chain */
-        fprintf(fp, "-N FRAG_DROP\n");
-        fprintf(fp, "-F FRAG_DROP\n");
-        /*Adding rules in new chain */
-        fprintf(fp, "-I FORWARD -m frag --fragmore --fragid 0x0:0xffffffff -j FRAG_DROP\n");
-        fprintf(fp, "-I INPUT -m frag --fragmore --fragid 0x0:0xffffffff -j FRAG_DROP\n");
-        fprintf(fp, "-A FRAG_DROP -j DROP\n");
+	//Blocking fragments is no more part of ip6tables 
+	//configure frag buffer in kernel to '0' so the frags gets dropped
+	system("echo 0 > /proc/sys/net/netfilter/nf_conntrack_frag6_low_thresh");
+	system("echo 0 > /proc/sys/net/netfilter/nf_conntrack_frag6_high_thresh");
+    } else {
+	sprintf(cfgcmd,"echo %d > /proc/sys/net/netfilter/nf_conntrack_frag6_high_thresh", 
+			DEFAULT_FRAG_HIGH_THRESH_VALUE);
+	system(cfgcmd);
+	sprintf(cfgcmd,"echo %d > /proc/sys/net/netfilter/nf_conntrack_frag6_low_thresh", 
+			DEFAULT_FRAG_LOW_THRESH_VALUE);
+	system(cfgcmd);
     }
     return 0;
 }
