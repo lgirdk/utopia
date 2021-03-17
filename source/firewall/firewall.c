@@ -461,6 +461,8 @@ NOT_DEF:
 #define V4_BLOCKFRAGIPPKT   "v4_BlockFragIPPkts"
 #define V4_PORTSCANPROTECT  "v4_PortScanProtect"
 #define V4_IPFLOODDETECT    "v4_IPFloodDetect"
+#define V4_ICMPFLOODDETECT  "v4_ICMPFloodDetect"
+#define V4_ICMPFLOODDETECTRATE "v4_ICMPFloodDetectRate"
 
 #define V6_BLOCKFRAGIPPKT   "v6_BlockFragIPPkts"
 #define V6_PORTSCANPROTECT  "v6_PortScanProtect"
@@ -510,6 +512,7 @@ static int do_mac_filter(FILE *fp);
 static int do_blockfragippktsv4(FILE *fp);
 static int do_ipflooddetectv4(FILE *fp);
 static int do_portscanprotectv4(FILE *fp);
+static void do_icmpflooddetectv4(FILE *fp);
 
 static int do_blockfragippktsv6(FILE *fp);
 static int do_portscanprotectv6(FILE *fp);
@@ -11487,6 +11490,12 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(filter_fp, "-A INPUT -i %s -j wan2self_mgmt\n", emta_wan_ifname);
 #endif /*_HUB4_PRODUCT_REQ_*/
    fprintf(filter_fp, "-A INPUT -i %s -j lan2self\n", lan_ifname);
+   //positioning DOS_ICMP INPUT rules above wan2self INPUT rule as its blocking the functionality if rules appended last
+   fprintf(filter_fp, "-N DOS_ICMP\n");
+   fprintf(filter_fp, "-F DOS_ICMP\n");
+   fprintf(filter_fp, "-A INPUT -i erouter0 -p icmp -j DOS_ICMP\n");
+   fprintf(filter_fp, "-A INPUT -i wan0 -p icmp -j DOS_ICMP\n");
+   fprintf(filter_fp, "-A INPUT -i mta0 -p icmp -j DOS_ICMP\n");
    fprintf(filter_fp, "-A INPUT -i %s -j wan2self\n", current_wan_ifname);
    if ('\0' != default_wan_ifname[0] && 0 != strlen(default_wan_ifname) && 0 != strcmp(default_wan_ifname, current_wan_ifname)) {
       // even if current_wan_ifname is ppp we still want to consider default wan ifname as an interface
@@ -12423,6 +12432,7 @@ static int prepare_enabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *na
    do_blockfragippktsv4(filter_fp);
    do_portscanprotectv4(filter_fp);
    do_ipflooddetectv4(filter_fp);
+   do_icmpflooddetectv4(filter_fp);
 
    fprintf(raw_fp, "%s\n", "COMMIT");
    fprintf(mangle_fp, "%s\n", "COMMIT");
@@ -14422,20 +14432,22 @@ static int do_ipflooddetectv4(FILE *fp)
         fprintf(fp, "-N DOS_FWD\n");
         fprintf(fp, "-N DOS_TCP\n");
         fprintf(fp, "-N DOS_UDP\n");
-        fprintf(fp, "-N DOS_ICMP\n");
-        fprintf(fp, "-N DOS_ICMP_REQUEST\n");
-        fprintf(fp, "-N DOS_ICMP_REPLY\n");
-        fprintf(fp, "-N DOS_ICMP_OTHER\n");
+
+        /*
+           Note: DOS_ICMP rules have been moved into do_icmpflooddetectv4()
+        */
+
         fprintf(fp, "-N DOS_DROP\n");
 
         fprintf(fp, "-F DOS\n");
         fprintf(fp, "-F DOS_FWD\n");
         fprintf(fp, "-F DOS_TCP\n");
         fprintf(fp, "-F DOS_UDP\n");
-        fprintf(fp, "-F DOS_ICMP\n");
-        fprintf(fp, "-F DOS_ICMP_REQUEST\n");
-        fprintf(fp, "-F DOS_ICMP_REPLY\n");
-        fprintf(fp, "-F DOS_ICMP_OTHER\n");
+
+        /*
+           Note: DOS_ICMP rules have been moved into do_icmpflooddetectv4()
+        */
+
         fprintf(fp, "-F DOS_DROP\n");
         /*Adding Rules in new chain */
         fprintf(fp, "-A DOS  -d 224.0.0.0/4 -j RETURN\n");
@@ -14449,23 +14461,62 @@ static int do_ipflooddetectv4(FILE *fp)
 	fprintf(fp, "-A DOS_UDP ! -i erouter0 -p udp %s -j RETURN\n", LAN_DoS);
         fprintf(fp, "-A DOS_UDP -i erouter0 -p udp %s -j RETURN\n", WAN_DoS);
         fprintf(fp, "-A DOS_UDP -j DOS_DROP\n");
-        fprintf(fp, "-A DOS_ICMP -j DOS_ICMP_REQUEST\n");
-        fprintf(fp, "-A DOS_ICMP -j DOS_ICMP_REPLY\n");
-        fprintf(fp, "-A DOS_ICMP -j DOS_ICMP_OTHER\n");
-        fprintf(fp, "-A DOS_ICMP_REQUEST -p icmp ! --icmp-type echo-request -j RETURN\n");
-        fprintf(fp, "-A DOS_ICMP_REQUEST -p icmp --icmp-type echo-request -m limit --limit 5/s --limit-burst 60 -j RETURN\n");
-        fprintf(fp, "-A DOS_ICMP_REQUEST -j DOS_DROP\n");
-        fprintf(fp, "-A DOS_ICMP_REPLY -p icmp ! --icmp-type echo-reply -j RETURN\n");
-        fprintf(fp, "-A DOS_ICMP_REPLY -p icmp --icmp-type echo-reply -m limit --limit 5/s --limit-burst 60 -j RETURN\n");
-        fprintf(fp, "-A DOS_ICMP_REPLY -j DOS_DROP\n");
-        fprintf(fp, "-A DOS_ICMP_OTHER -p icmp --icmp-type echo-request -j RETURN\n");
-        fprintf(fp, "-A DOS_ICMP_OTHER -p icmp --icmp-type echo-reply -j RETURN\n");
-        fprintf(fp, "-A DOS_ICMP_OTHER -p icmp -m limit --limit 5/s --limit-burst 60 -j RETURN\n");
-        fprintf(fp, "-A DOS_ICMP_OTHER -j DOS_DROP\n");
+
+        /*
+           Note: DOS_ICMP rules have been moved into do_icmpflooddetectv4()
+        */
+
         fprintf(fp, "-A DOS_DROP -j DROP\n");
         fprintf(fp, "-A DOS_FWD -j DOS\n");
         fprintf(fp, "-A FORWARD -j DOS_FWD\n");
         fprintf(fp, "-A INPUT -j DOS\n");
+    }
+}
+
+// Implementation for ICMPFloodDetect Parameter.
+/*
+ * Function to add IP Table rules against ICMP V4 Flooding
+*/
+static void do_icmpflooddetectv4(FILE *fp)
+{
+    char query[MAX_QUERY];
+    int enable;
+    int icmpRate;
+
+    fprintf(fp, "-A DOS_ICMP -i wan0 -m limit --limit 15/second --limit-burst 15 -j RETURN\n");
+    fprintf(fp, "-A DOS_ICMP -i wan0 -m limit --limit 5/min --limit-burst 5 -j LOG --log-prefix \"ICMP Flood: \" --log-level 5\n");
+    fprintf(fp, "-A DOS_ICMP -i wan0 -j DROP\n");
+    fprintf(fp, "-A DOS_ICMP -i mta0 -m limit --limit 15/second --limit-burst 15 -j RETURN\n");
+    fprintf(fp, "-A DOS_ICMP -i mta0 -m limit --limit 5/min --limit-burst 5 -j LOG --log-prefix \"ICMP Flood: \" --log-level 5\n");
+    fprintf(fp, "-A DOS_ICMP -i mta0 -j DROP\n");
+
+    enable = 0;
+
+    syscfg_get (NULL, V4_ICMPFLOODDETECT, query, sizeof(query));
+
+    if (query[0] != 0)
+    {
+        enable = atoi(query);
+    }
+
+    if (enable)
+    {
+        icmpRate = 15;
+
+        syscfg_get (NULL, V4_ICMPFLOODDETECTRATE, query, sizeof(query));
+
+        if (query[0] != 0)
+        {
+            icmpRate = atoi(query);
+        }
+
+        fprintf(fp, "-A DOS_ICMP -i erouter0 -m limit --limit %u/second --limit-burst %u -j RETURN\n", icmpRate, icmpRate);
+        fprintf(fp, "-A DOS_ICMP -i erouter0 -m limit --limit 5/min --limit-burst 5 -j LOG --log-prefix \"ICMP Flood: \" --log-level 5\n");
+        fprintf(fp, "-A DOS_ICMP -i erouter0 -j DROP\n");
+    }
+    else
+    {
+        fprintf(fp, "-A DOS_ICMP -p icmp -i erouter0 -m state --state ESTABLISHED -j ACCEPT\n");
     }
 }
 
