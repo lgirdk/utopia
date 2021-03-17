@@ -513,13 +513,14 @@ void logPrintMain(char* filename, int line, char *fmt,...);
 #define LNF_BRIDGE  "br106"
 #endif
 
-#define V4_BLOCKFRAGIPPKT   "v4_BlockFragIPPkts"
 #define V4_PORTSCANPROTECT  "v4_PortScanProtect"
 #define V4_IPFLOODDETECT    "v4_IPFloodDetect"
 
-#define V6_BLOCKFRAGIPPKT   "v6_BlockFragIPPkts"
 #define V6_PORTSCANPROTECT  "v6_PortScanProtect"
 #define V6_IPFLOODDETECT    "v6_IPFloodDetect"
+
+#define DEFAULT_FRAG_LOW_THRESH_VALUE	3145728
+#define DEFAULT_FRAG_HIGH_THRESH_VALUE  4194304
 
 #define PORT_SCAN_CHECK_CHAIN "PORT_SCAN_CHK"
 #define PORT_SCAN_DROP_CHAIN  "PORT_SCAN_DROP"
@@ -1099,6 +1100,28 @@ static BOOL isServiceNeeded()
 }
 #endif
 
+static int _write_sysctl_file(const char *filename, int value)
+{
+    char buf[12];
+    size_t len;
+    int fd;
+
+    if ((fd = open(filename, O_WRONLY)) < 0) {
+        perror("Failed to open file");
+        return -1;
+    }
+
+    len = sprintf(buf, "%d", value);
+    if (write(fd, buf, len) != (ssize_t) len) {
+        perror("Failed to write to file");
+        close(fd);
+        return -1;
+    }
+
+    close(fd);
+
+    return 0;
+}
 
 static int IsValidIPv6Addr(char* ip_addr_string)
 {
@@ -16753,24 +16776,29 @@ memset(buf,0,200);
  */
 static int do_blockfragippktsv4(FILE *fp)
 {
-    int enable=0;
-    char query[MAX_QUERY]={0};
+    int enable = 0;
 
-    syscfg_get(NULL, V4_BLOCKFRAGIPPKT, query, sizeof(query));
-    if (query[0] != '\0')
+    if (strcasecmp(firewall_level, "None") != 0)
     {
-        enable = atoi(query);
+        char buf[12];
+
+        if (syscfg_get(NULL, "v4_BlockFragIPPkts", buf, sizeof(buf)) == 0)
+        {
+            enable = atoi(buf);
+        }
     }
+
     if (enable)
     {
-        fprintf(fp, "-N FRAG_DROP\n");
-        fprintf(fp, "-F FRAG_DROP\n");
-        fprintf(fp, "-I FORWARD -m mark --mark 0x0800 -j FRAG_DROP\n");
-        fprintf(fp, "-I INPUT -m mark --mark 0x0800 -j FRAG_DROP\n");
-        fprintf(fp, "-A FRAG_DROP -i %s -j DROP\n", lan_ifname);
-        fprintf(fp, "-A FRAG_DROP -i %s -o %s -j DROP\n",current_wan_ifname, lan_ifname);
-
+        _write_sysctl_file("/proc/sys/net/ipv4/ipfrag_low_thresh", 0);
+        _write_sysctl_file("/proc/sys/net/ipv4/ipfrag_high_thresh", 0);
     }
+    else
+    {
+        _write_sysctl_file("/proc/sys/net/ipv4/ipfrag_high_thresh", DEFAULT_FRAG_HIGH_THRESH_VALUE);
+        _write_sysctl_file("/proc/sys/net/ipv4/ipfrag_low_thresh", DEFAULT_FRAG_LOW_THRESH_VALUE);
+    }
+
     return 0;
 }
 
@@ -16882,23 +16910,30 @@ static int do_ipflooddetectv4(FILE *fp)
  */
 static int do_blockfragippktsv6(FILE *fp)
 {
-    int enable=0;
-    char query[MAX_QUERY]={0};
-    syscfg_get(NULL, V6_BLOCKFRAGIPPKT, query, sizeof(query));
-    if (query[0] != '\0')
+    int enable = 0;
+
+    if (strcasecmp(firewall_level, "None") != 0)
     {
-        enable = atoi(query);
+        char buf[12];
+
+        if (syscfg_get(NULL, "v6_BlockFragIPPkts", buf, sizeof(buf)) == 0)
+        {
+            enable = atoi(buf);
+        }
     }
     if (enable)
     {
-        /* Creating New Chain */
-        fprintf(fp, "-N FRAG_DROP\n");
-        fprintf(fp, "-F FRAG_DROP\n");
-        /*Adding rules in new chain */
-        fprintf(fp, "-I FORWARD -m frag --fragmore --fragid 0x0:0xffffffff -j FRAG_DROP\n");
-        fprintf(fp, "-I INPUT -m frag --fragmore --fragid 0x0:0xffffffff -j FRAG_DROP\n");
-        fprintf(fp, "-A FRAG_DROP -j DROP\n");
+        //Blocking fragments is no more part of ip6tables
+        //configure frag buffer in kernel to '0' so the frags gets dropped
+        _write_sysctl_file("/proc/sys/net/netfilter/nf_conntrack_frag6_low_thresh", 0);
+        _write_sysctl_file("/proc/sys/net/netfilter/nf_conntrack_frag6_high_thresh", 0);
     }
+    else
+    {
+        _write_sysctl_file("/proc/sys/net/netfilter/nf_conntrack_frag6_high_thresh", DEFAULT_FRAG_HIGH_THRESH_VALUE);
+        _write_sysctl_file("/proc/sys/net/netfilter/nf_conntrack_frag6_low_thresh", DEFAULT_FRAG_LOW_THRESH_VALUE);
+    }
+
     return 0;
 }
 
