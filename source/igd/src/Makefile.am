@@ -46,4 +46,4 @@ IGD_LDADD = $(top_builddir)/source/services/lib/libsrvmgr.la \
             $(top_builddir)/source/utapi/lib/libutapi.la \
             $(top_builddir)/source/syscfg/lib/libsyscfg.la
 
-IGD_LDFLAGS = -lthreadutil -Bdynamic -lupnp $(PTHREAD_LIBS)
+IGD_LDFLAGS = -lthreadutil -Bdynamic -lupnp -lhal_platform $(PTHREAD_LIBS)
