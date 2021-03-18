@@ -37,4 +37,4 @@ service_dhcp_LDADD = $(top_builddir)/source/util/utils/libutopiautil.la \
                      $(top_builddir)/source/util/print_uptime/libprint_uptime.la \
                      -ltelemetry_msgsender
 
-service_dhcp_LDFLAGS = -lccsp_common -lcimplog $(DBUS_LIBS)
+service_dhcp_LDFLAGS = -lccsp_common -lcimplog -lhal_ethsw $(DBUS_LIBS)
