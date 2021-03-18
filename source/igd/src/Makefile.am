@@ -37,7 +37,7 @@ IGD_CPPFLAGS = -I$(top_srcdir)/source/pal/upnp/include \
                -I$(top_srcdir)/source/include \
                -I$(top_srcdir)/source/include/utapi
 
-IGD_LDFLAGS = -lthreadutil -Bdynamic -lupnp $(PTHREAD_LIBS)
+IGD_LDFLAGS = -lthreadutil -Bdynamic -lupnp -lhal_platform $(PTHREAD_LIBS)
 
 IGD_LDADD = $(top_builddir)/source/services/lib/libsrvmgr.la \
             $(top_builddir)/source/sysevent/lib/libsysevent.la \
