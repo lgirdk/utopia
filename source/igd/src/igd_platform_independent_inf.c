@@ -100,6 +100,7 @@
 #include <utapi/utapi.h>
 #include <ccsp_syslog.h>
 #include "syscfg/syscfg.h"
+#include <platform_hal.h>
 
 #include "pal_log.h"
 #include "igd_platform_independent_inf.h"
@@ -121,14 +122,16 @@ int Utopia_UpdateDynPortMapping_WithoutFirewallRestart (int index, portMapDyn_t 
  *  Return Values: CHAR*
  *	   The serial number of the IGD. NULL if failure.
  ************************************************************/
-CHAR* IGD_pii_get_serial_number(VOID)
+char *IGD_pii_get_serial_number (void)
 {
     static char prodSn[128] = {'\0'};
-    /* TODO: to be implemented by OEM
-	ProductionDb_RetrieveAccess();
-    ProdDb_GetSerialNumber(prodSn);*/
+
+    if (prodSn[0] == 0)
+    {
+        platform_hal_GetSerialNumber(prodSn);
+    }
+
     return prodSn;
-	//return "123456789001";
 }
 
 /************************************************************
