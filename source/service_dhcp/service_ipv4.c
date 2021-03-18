@@ -788,7 +788,7 @@ void resync_instance (int l3_inst)
 	char l_cNv_EthLower[8] = {0}, l_cNv_Ip[16] = {0}, l_cNv_Subnet[16] = {0};
 	char l_cNv_Enabled[8] = {0}, l_cPsm_Parameter[255] = {0}, l_cSysevent_Cmd[255] = {0};
 	char l_cLower[8] = {0}, l_cCur_Ipv4_Addr[16] = {0}, l_cCur_Ipv4_Subnet[16] = {0};
-	char l_cIpv4_Static[16] = {0}, l_cIpv4_Instances[8] = {0}, l_cIpv4_Instances_tmp[8] = {0}, l_cNv_Lower_Status[16] = {0};
+	char l_cIpv4_Static[16] = {0}, l_cNv_Lower_Status[16] = {0};
 	char l_cNv_Lower[8] = {0};
 	char l_cAsyncId[16] = {0};
 	char l_cEvent_Name[32] = {0}, l_cL3Inst[8] = {0};
@@ -958,18 +958,32 @@ void resync_instance (int l3_inst)
     	sysevent_set(g_iSyseventfd, g_tSysevent_token, l_cSysevent_Cmd, l_cNv_Lower, 0);
 		if (0 != l_cNv_Lower[0])
 		{
-			sysevent_get(g_iSyseventfd, g_tSysevent_token, 
-						 "ipv4-instances", l_cIpv4_Instances, 
-						 sizeof(l_cIpv4_Instances));
-			if (0 != l_cIpv4_Instances[0])
+			int len;
+			int available;
+			char l_cIpv4_Instances[20];
+
+			l_cIpv4_Instances[0] = 0;
+			sysevent_get(g_iSyseventfd, g_tSysevent_token, "ipv4-instances", l_cIpv4_Instances, sizeof(l_cIpv4_Instances));
+
+			len = strlen(l_cIpv4_Instances);
+			available = sizeof(l_cIpv4_Instances) - len;
+
+			/*
+			   Sanity check to avoid compiler warnings (the length of
+			   the string in l_cIpv4_Instances is expected to be short
+			   enough that this test always passes at run time).
+			*/
+			if (available > 14)
 			{
-				snprintf(l_cIpv4_Instances_tmp, sizeof(l_cIpv4_Instances),
-						 "%s %d", l_cIpv4_Instances, l3_inst);
-				strncpy(l_cIpv4_Instances, l_cIpv4_Instances_tmp, sizeof(l_cIpv4_Instances) - 1);
+				if (len != 0)
+				{
+					l_cIpv4_Instances[len] = ' ';
+					len++;
+					available--;
+				}
+
+				snprintf(&l_cIpv4_Instances[len], available, "%d", l3_inst);
 			}
-			else
-				snprintf(l_cIpv4_Instances, sizeof(l_cIpv4_Instances), 
-						 "%d", l3_inst);
 
 			fprintf(stderr, "IPv4 instances is:%s\n", l_cIpv4_Instances);
 			sysevent_set(g_iSyseventfd, g_tSysevent_token, 
