@@ -29,6 +29,7 @@
 #include "errno.h"
 #include "dhcp_server_functions.h"
 #include "print_uptime.h"
+#include "ccsp/ccsp_hal_ethsw.h"
 
 #define THIS        "/usr/bin/service_dhcp"
 #define BIN			"dnsmasq"
@@ -71,6 +72,39 @@ extern char g_cXdns_Enabled[8];
 #endif
 extern char g_cAtom_Arping_IP[16];
 
+static void gw_lan_refresh_switch (void)
+{
+    CCSP_HAL_ETHSW_PORT port;
+    uint enablePortBitmap = 0;
+    CCSP_HAL_ETHSW_ADMIN_STATUS  adminStatus = CCSP_HAL_ETHSW_AdminDown;
+
+    for (port = CCSP_HAL_ETHSW_EthPort1; port <= CCSP_HAL_ETHSW_EthPort4; port++)
+    {
+        // Check to see if the port is enabled
+        if (CcspHalEthSwGetPortAdminStatus(port, &adminStatus) == RETURN_OK)
+        {
+            printf("%s(): port %d: admin status = %d\n", __FUNCTION__, port, (adminStatus == CCSP_HAL_ETHSW_AdminUp ? 1 : 0));
+            if (adminStatus == CCSP_HAL_ETHSW_AdminUp)
+            {
+                // Save status into the bitmask
+                enablePortBitmap |= ((adminStatus == CCSP_HAL_ETHSW_AdminUp ? 1 : 0) << port);
+
+                // Disable the port
+                CcspHalEthSwSetPortAdminStatus(port, CCSP_HAL_ETHSW_AdminDown);
+            }
+        }
+    }
+
+    for (port = CCSP_HAL_ETHSW_EthPort1; port <= CCSP_HAL_ETHSW_EthPort4; port++)
+    {
+        // If the port was previously enabled then enable the port
+        if (enablePortBitmap & (1 << port))
+        {
+            printf("%s(): setting admin status up for port %d\n", __FUNCTION__, port);
+            CcspHalEthSwSetPortAdminStatus(port, CCSP_HAL_ETHSW_AdminUp);
+        }
+    }
+}
 
 void getRFC_Value(const char* dnsOption)
 {
@@ -410,7 +444,7 @@ int dhcp_server_start (char *input)
         	if (!strncmp(l_cStart_Misc, "ready", 5))
 			{
                 print_with_uptime("RDKB_SYSTEM_BOOT_UP_LOG : Call gw_lan_refresh_from_dhcpscript:");
-                system("gw_lan_refresh &");
+                gw_lan_refresh_switch();
         	}
 		}
      	else
