@@ -32,6 +32,7 @@
 #include "util.h"
 #include "service_dhcp_server.h"
 #include "safec_lib_common.h"
+#include "ccsp/ccsp_hal_ethsw.h"
 #include "secure_wrapper.h"
 #include "lan_handler.h"
 #include  "safec_lib_common.h"
@@ -99,6 +100,40 @@ unsigned int Get_Device_Mode()
 
 }
 #endif
+
+static void gw_lan_refresh_switch (void)
+{
+    CCSP_HAL_ETHSW_PORT port;
+    uint enablePortBitmap = 0;
+    CCSP_HAL_ETHSW_ADMIN_STATUS  adminStatus = CCSP_HAL_ETHSW_AdminDown;
+
+    for (port = CCSP_HAL_ETHSW_EthPort1; port <= CCSP_HAL_ETHSW_EthPort4; port++)
+    {
+        // Check to see if the port is enabled
+        if (CcspHalEthSwGetPortAdminStatus(port, &adminStatus) == RETURN_OK)
+        {
+            printf("%s(): port %d: admin status = %d\n", __FUNCTION__, port, (adminStatus == CCSP_HAL_ETHSW_AdminUp ? 1 : 0));
+            if (adminStatus == CCSP_HAL_ETHSW_AdminUp)
+            {
+                // Save status into the bitmask
+                enablePortBitmap |= ((adminStatus == CCSP_HAL_ETHSW_AdminUp ? 1 : 0) << port);
+
+                // Disable the port
+                CcspHalEthSwSetPortAdminStatus(port, CCSP_HAL_ETHSW_AdminDown);
+            }
+        }
+    }
+
+    for (port = CCSP_HAL_ETHSW_EthPort1; port <= CCSP_HAL_ETHSW_EthPort4; port++)
+    {
+        // If the port was previously enabled then enable the port
+        if (enablePortBitmap & (1 << port))
+        {
+            printf("%s(): setting admin status up for port %d\n", __FUNCTION__, port);
+            CcspHalEthSwSetPortAdminStatus(port, CCSP_HAL_ETHSW_AdminUp);
+        }
+    }
+}
 
 void _get_shell_output(FILE *fp, char *buf, int len)
 {
@@ -893,10 +928,10 @@ int dhcp_server_start (char *input)
 		#ifdef RDKB_EXTENDER_ENABLED
                    if (Get_Device_Mode() == ROUTER)
                    {
-                      v_secure_system("gw_lan_refresh &");
+                      gw_lan_refresh_switch();
 		   }
                 #else
-		    v_secure_system("gw_lan_refresh &");
+		    gw_lan_refresh_switch();
                 #endif
 
         	}
