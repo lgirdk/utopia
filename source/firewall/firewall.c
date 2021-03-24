@@ -5404,15 +5404,15 @@ static int remote_access_set_proto(FILE *filt_fp, FILE *nat_fp, const char *port
     return 0;
 }
 
-static int remote_access_drop(FILE *filt_fp, FILE *nat_fp, const char *port, const char *src, int family, const char *interface)
+static int do_csr_control(FILE *filt_fp, int family, const char *interface, int wan_access)
 {
-         FIREWALL_DEBUG("Entering remote_access_drop\n");
-    if (family == AF_INET) {
-        fprintf(filt_fp, "-A wan2self_mgmt -i %s %s -p tcp -m tcp --dport %s -j DROP\n", interface, src, port);
-    } else {
-        fprintf(filt_fp, "-A INPUT -i %s %s -p tcp -m tcp --dport %s -j DROP\n", interface, src, port);
+    FIREWALL_DEBUG("Entering do_csr_control\n");
+    //UI only port 80
+    if (wan_access == 1)
+    {
+          fprintf(filt_fp, "-I http2self -i %s -j ACCEPT\n", interface);
     }
-         FIREWALL_DEBUG("Exiting remote_access_drop\n");
+    FIREWALL_DEBUG("Exiting do_csr_control\n");
     return 0;
 }
 
@@ -5496,8 +5496,7 @@ static int do_remote_access_control(FILE *nat_fp, FILE *filter_fp, int family)
     rc = syscfg_get(NULL, "mgmt_wan_access", query, sizeof(query));
     if (rc != 0 || atoi(query) != 1) {
         FIREWALL_DEBUG("drop the packets by default\n");
-        remote_access_drop(filter_fp, nat_fp, "80", srcaddr, family, ecm_wan_ifname);
-        remote_access_drop(filter_fp, nat_fp, "443", srcaddr, family, ecm_wan_ifname);
+        do_csr_control(filter_fp, family, ecm_wan_ifname, atoi(query));
         return 0;
     }
     
@@ -5510,8 +5509,9 @@ static int do_remote_access_control(FILE *nat_fp, FILE *filter_fp, int family)
     {
 #endif
 #if !defined(_PLATFORM_RASPBERRYPI_)
-       remote_access_set_proto(filter_fp, nat_fp, "80", srcaddr, family, ecm_wan_ifname);
-       remote_access_set_proto(filter_fp, nat_fp, "443", srcaddr, family, ecm_wan_ifname);
+//       remote_access_set_proto(filter_fp, nat_fp, "80", srcaddr, family, ecm_wan_ifname);
+//       remote_access_set_proto(filter_fp, nat_fp, "443", srcaddr, family, ecm_wan_ifname);
+        do_csr_control(filter_fp, family, ecm_wan_ifname, atoi(query));
 #endif
 #if defined(_ENABLE_EPON_SUPPORT_)
     }
@@ -11180,6 +11180,13 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
        fprintf(filter_fp, "%s\n", ":tr69_filter - [0:0]");
        fprintf(filter_fp, "-A INPUT -p tcp -m tcp --dport %s -j tr69_filter\n", cwmpPort);
    }
+//Drop any packets to http(s) port by default and allow based on CSR login
+   {
+       fprintf(filter_fp, "%s\n", ":http2self - [0:0]");
+       fprintf(filter_fp, "-A INPUT -p tcp -m tcp --dport 80 -j http2self\n");
+       fprintf(filter_fp, "-A http2self -j DROP\n");
+       fprintf(filter_fp, "-I http2self -i %s -d %s -j ACCEPT\n", lan_ifname, lan_ipaddr);
+   }
 #ifdef _COSA_INTEL_XB3_ARM_
    fprintf(filter_fp, "-A INPUT -p icmp -m state --state ESTABLISHED -m limit --limit 5/sec --limit-burst 10 -j ACCEPT\n");
    fprintf(filter_fp, "-A INPUT -p icmp -m state --state ESTABLISHED -j DROP\n");
@@ -12220,6 +12227,7 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
     * raw
     */
    FIREWALL_DEBUG("Entering prepare_disabled_ipv4_firewall \n"); 
+   // char query[2]; //For CSR Login
    fprintf(raw_fp, "%s\n", "*raw");
    fprintf(raw_fp, "%s\n", ":PREROUTING ACCEPT [0:0]");
    fprintf(raw_fp, "%s\n", ":OUTPUT ACCEPT [0:0]");
@@ -12298,6 +12306,9 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    fprintf(filter_fp, "%s\n", ":lan2self_mgmt - [0:0]");
    fprintf(filter_fp, "%s\n", ":xlog_drop_wan2self - [0:0]");
    fprintf(filter_fp, "%s\n", ":xlog_drop_lan2self - [0:0]");
+   //>>UI Access
+   fprintf(filter_fp, "%s\n", ":http2self - [0:0]");
+   //<<UI Access
    //>>DOS
 #ifdef _COSA_INTEL_XB3_ARM_
    fprintf(filter_fp, "%s\n", ":wandosattack - [0:0]");
@@ -12345,7 +12356,13 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
 #endif
 
    fprintf(filter_fp, "-A INPUT -i %s -j lan2self_mgmt\n", cmdiag_ifname); //lan0 always exist
-
+   fprintf(filter_fp, "-A INPUT -p tcp -m tcp --dport 80 -j http2self\n");
+   fprintf(filter_fp, "-A http2self -j DROP\n");
+   fprintf(filter_fp, "-I http2self -m physdev --physdev-in l2sd0.100 -d 192.168.100.1 -j ACCEPT\n", cmdiag_ifname);
+   /* To be enabled with proper values for CSR login. Right now, CSR Login is always disabled in bridge mode.
+    * syscfg_get(NULL, "mgmt_wan_access", query, sizeof(query));
+    * do_csr_control(filter_fp, AF_INET, ecm_wan_ifname, atoi(query));
+    */
    if (!isBridgeMode) {
        lan_telnet_ssh(filter_fp, AF_INET);
 #if defined(CONFIG_CCSP_LAN_HTTP_ACCESS)
