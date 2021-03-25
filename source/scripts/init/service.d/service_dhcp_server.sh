@@ -517,7 +517,7 @@ dhcp_server_start ()
    if [ $? -eq 0 ]; then
    	echo_t "$SERVER process started successfully"
    else
-   	if [ "$BOX_TYPE" = "XB6" ] || [ "$BOX_TYPE" = "PUMA7_CGP" ]; then
+   	if [ "$BOX_TYPE" = "XB6" ] || [ "$BOX_TYPE" = "PUMA7_CGP" ] || [ "$BOX_TYPE" = "MV2PLUS" ]; then
    
         	COUNTER=0
         	while [ $COUNTER -lt 5 ]; do
@@ -723,7 +723,7 @@ dns_start ()
 	 if [ $? -eq 0 ]; then
    		echo_t "$SERVER process started successfully"
    	 else
-   		if [ "$BOX_TYPE" = "XB6" ] || [ "$BOX_TYPE" = "PUMA7_CGP" ]; then
+   		if [ "$BOX_TYPE" = "XB6" ] || [ "$BOX_TYPE" = "PUMA7_CGP" ] || [ "$BOX_TYPE" = "MV2PLUS" ]; then
    
         		COUNTER=0
         		while [ $COUNTER -lt 5 ]; do
