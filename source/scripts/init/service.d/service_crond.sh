@@ -242,7 +242,7 @@ service_start ()
 	if [ "$rfc_ethwan_status" = "false" ] || [ -z "$rfc_ethwan_status" ]; then
 		if [ "$WAN_TYPE" = "DOCSIS" ] || [ "$MODEL_NUM" = "DPC3941" ] || [ "$MODEL_NUM" = "DPC3941B" ] || [ "$MODEL_NUM" = "DPC3939B" ]; then
 			if [ "$rfc_wanlinkheal_status" = "true" ]; then
-				if [ "$BOX_TYPE" = "XB3" ] || [ "$BOX_TYPE" = "XB6" ] || [ "$BOX_TYPE" = "TCCBR" ]; then
+				if [ "$BOX_TYPE" = "XB3" ] || [ "$BOX_TYPE" = "XB6" ] || [ "$BOX_TYPE" = "TCCBR" ] || [ "$BOX_TYPE" = "MV2PLUS" ]; then
 					echo_t "RFC WANLinkHeal Feature is Enabled"
                                         addCron "2,12,22,32,42,52 * * * * /usr/ccsp/tad/start_gw_heath.sh"
 				else
