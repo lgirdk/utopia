@@ -992,7 +992,7 @@ echo "DHCP SERVER : RF CP is $RF_CP_MODE, RF CP feature state is $RF_CP_FEATURE_
 if [ "$CAPTIVEPORTAL_ENABLED" == "true" ]
 then
     noRf=0
-    if [ "$BOX_TYPE" = "XB6" ]
+    if [ "$BOX_TYPE" = "XB6" ] || [ "$BOX_TYPE" = "MV2PLUS" ]
     then
         if [ "$RF_CP_FEATURE_EN" = "true" ] && [ "$RF_CP_MODE" = "true" ]
         then 
@@ -1127,7 +1127,7 @@ fi
    #fi
 
    #Option for parsing plume vendor code
-   if [ "$BOX_TYPE" = "XB6" ]; then
+   if [ "$BOX_TYPE" = "XB6" ] || [ "$BOX_TYPE" = "MV2PLUS" ]; then
     if [ "$BOX_TYPE" != "TG3482G" ]; then
      echo "dhcp-option=vendor:Plume,43,tag=123" >> $LOCAL_DHCP_CONF 
      echo "dhcp-option=vendor:PP203X,43,tag=123" >> $LOCAL_DHCP_CONF
@@ -1272,7 +1272,7 @@ fi
                 echo "${PREFIX}""dhcp-option=br403,6,$WAN_DHCP_NS" >> $LOCAL_DHCP_CONF
             fi
 
-       elif [ "$BOX_TYPE" = "XB6" ]; then
+       elif [ "$BOX_TYPE" = "XB6" ] || [ "$BOX_TYPE" = "MV2PLUS" ]; then
            echo "interface=ath12" >> $LOCAL_DHCP_CONF
            echo "dhcp-range=169.254.0.5,169.254.0.253,255.255.255.0,infinite" >> $LOCAL_DHCP_CONF
 

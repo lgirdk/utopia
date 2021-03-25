@@ -501,7 +501,7 @@ update_bridge_frag_config () {
         if [ "$AB_SSID_DELIM" = $br ]; then
             continue
         fi
-   if [ "$BOX_TYPE" = "XB6" ] ; then
+   if [ "$BOX_TYPE" = "XB6" ] || [ "$BOX_TYPE" = "MV2PLUS" ]; then
         echo add br=$br mtu=$MTU_VAL icmp=y segment=y gw=$2 > /proc/net/mtu_mod
    fi
     done
@@ -931,7 +931,7 @@ case "$1" in
                        ifconfig gretap0 up
                fi
          fi
-    if [ "$BOX_TYPE" = "XB6" ] ; then
+    if [ "$BOX_TYPE" = "XB6" ] || [ "$BOX_TYPE" = "MV2PLUS" ] ; then
         read_greInst 
     fi
     if [ $recover != "true" ] ; then                            
@@ -956,7 +956,7 @@ case "$1" in
             ifconfig ${GRE_IFNAME} down
             sysevent set if_${GRE_IFNAME}-status $IF_DOWN
         fi
-        if [ "$BOX_TYPE" != "XB6" ] && [ "$BOX_TYPE" != "TCCBR" ]; then
+        if [ "$BOX_TYPE" != "XB6" ] && [ "$BOX_TYPE" != "TCCBR" ] && [ "$BOX_TYPE" != "MV2PLUS" ]; then
            check_ssids
         fi
     ;;
@@ -1044,7 +1044,7 @@ case "$1" in
             if [ xstarted = x$hotspot_started ]; then
                 if [ x != x$curr_tunnel ]; then
                     create_tunnel $curr_tunnel $name
-                    if [ "$BOX_TYPE" = "XB6" ] || [ "$BOX_TYPE" = "TCCBR" ] ; then                                    
+                    if [ "$BOX_TYPE" = "XB6" ] || [ "$BOX_TYPE" = "TCCBR" ] || [ "$BOX_TYPE" = "MV2PLUS" ] ; then
                         read_greInst                                                                    
                         check_ssids 1                                                     
                     fi   
