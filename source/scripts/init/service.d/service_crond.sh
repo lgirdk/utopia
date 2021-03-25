@@ -289,7 +289,7 @@ service_start ()
 	if [ "x$rfc_ethwan_status" == "xfalse" ] || [ "$rfc_ethwan_status" == "" ]; then
 		if [ "x$WAN_TYPE" == "xDOCSIS" ] || [ "x$MODEL_NUM" == "xDPC3941" ] || [ "x$MODEL_NUM" == "xDPC3941B" ] || [ "x$MODEL_NUM" == "xDPC3939B" ]; then
 			if [ "x$rfc_wanlinkheal_status" == "xtrue" ]; then
-				if [ "x$BOX_TYPE" == "xXB3" ] || [ "x$BOX_TYPE" == "xXB6" ] || [ "x$BOX_TYPE" == "xTCCBR" ]; then
+				if [ "x$BOX_TYPE" == "xXB3" ] || [ "x$BOX_TYPE" == "xXB6" ] || [ "x$BOX_TYPE" == "xTCCBR" ] || [ "x$BOX_TYPE" = "xMV2PLUS" ]; then
 					echo_t "RFC WANLinkHeal Feature is Enabled"
 					echo "#! /bin/sh" > /etc/cron/cron.every10minute/start_gw_heath.sh
 					echo "/usr/ccsp/tad/start_gw_heath.sh" >> /etc/cron/cron.every10minute/start_gw_heath.sh

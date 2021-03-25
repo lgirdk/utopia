@@ -212,7 +212,7 @@ apply_config () {
         #sysevent set snmppa_socket_entry add
 	
 	#XB6 Kernel chooses erouter0 as default. Need brlan0 route for XHS (ARRISXB6-5086)
-        if [ "$BOX_TYPE" = "XB6" ]; then
+        if [ "$BOX_TYPE" = "XB6" ] || [ "$BOX_TYPE" = "MV2PLUS" ]; then
 		ip route add 239.255.255.250/32 dev brlan0
 	fi
     fi
@@ -296,7 +296,7 @@ remove_config () {
     if [ xbrlan0 = x${IFNAME} ]; then
 		#sysevent set snmppa_socket_entry delete
 	#XB6 Kernel chooses erouter0 as default. Need brlan0 route for XHS (ARRISXB6-5086)
-        if [ "$BOX_TYPE" = "XB6" ]; then
+        if [ "$BOX_TYPE" = "XB6" ] || [ "$BOX_TYPE" = "MV2PLUS" ]; then
 		ip route delete 239.255.255.250/32 dev brlan0
 	fi
 
