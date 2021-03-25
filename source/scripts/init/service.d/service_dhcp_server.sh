@@ -530,7 +530,7 @@ dhcp_server_start ()
    if [ $? -eq 0 ]; then
    	echo_t "$SERVER process started successfully"
    else
-   	if [ "$BOX_TYPE" = "XB6" ] || [ "$BOX_TYPE" = "PUMA7_CGP" ] || [ "$BOX_TYPE" = "rpi" ] ; then
+   	if [ "$BOX_TYPE" = "XB6" ] || [ "$BOX_TYPE" = "PUMA7_CGP" ] || [ "$BOX_TYPE" = "rpi" ] || [ "$BOX_TYPE" = "MV2PLUS" ]; then
    
         	COUNTER=0
         	while [ $COUNTER -lt 5 ]; do
@@ -737,7 +737,7 @@ dns_start ()
 	 if [ $? -eq 0 ]; then
    		echo_t "$SERVER process started successfully"
    	 else
-   		if [ "$BOX_TYPE" = "XB6" ] || [ "$BOX_TYPE" = "PUMA7_CGP" ]; then
+   		if [ "$BOX_TYPE" = "XB6" ] || [ "$BOX_TYPE" = "PUMA7_CGP" ] || [ "$BOX_TYPE" = "MV2PLUS" ]; then
    
         		COUNTER=0
         		while [ $COUNTER -lt 5 ]; do
@@ -825,7 +825,7 @@ case "$1" in
     ipv4_*-status)
         if [ x"up" = x$2 ]; then
 	        echo_t "SERVICE DHCP : Got ipv4 status"
-            if [ "$BOX_TYPE" = "XB3" ] || [ "$BOX_TYPE" = "MV1" ]; then
+            if [ "$BOX_TYPE" = "XB3" ] || [ "$BOX_TYPE" = "MV1" ] || [ "$BOX_TYPE" = "MV2PLUS" ]; then
 		#setting lan_status-dhcp to started for handling dhcp_server-restart in brige mode
 		sysevent set lan_status-dhcp started
 		echo_t "SERVICE DHCP : $1, calling dhcp_server-restart lan_not_restart event"
