@@ -400,6 +400,21 @@ service_start ()
        kill -9 "`pidof $BIN`" > /dev/null 2>&1
        echo_t "SERVICE_NTPD : Starting NTP Daemon" >> $NTPD_LOG_NAME
        $BIN -c $NTP_CONF_TMP -l $NTPD_LOG_NAME -g
+   elif [ "$BOX_TYPE" = "MV2PLUS" ]; then
+       echo_t "SERVICE_NTPD : Killing All Instances of NTP" >> $NTPD_LOG_NAME
+       killall $BIN
+       sleep 5
+       if [ -n "$QUICK_SYNC_WAN_IP" ]; then
+           echo_t "SERVICE_NTPD : Starting NTP Quick Sync" >> $NTPD_LOG_NAME
+           $BIN -c $NTP_CONF_QUICK_SYNC --interface $QUICK_SYNC_WAN_IP -x -gq -l $NTPD_LOG_NAME & sleep 120
+       else
+           echo_t "SERVICE_NTPD : Quick Sync Not Run" >> $NTPD_LOG_NAME
+       fi
+       echo_t "SERVICE_NTPD : Killing All Instances of NTP" >> $NTPD_LOG_NAME
+       killall $BIN
+       sleep 5
+       echo_t "SERVICE_NTPD : Starting NTP Daemon" >> $NTPD_LOG_NAME
+       $BIN -u ntp:ntp -p /run/ntpd.pid -l $NTPD_LOG_NAME -c $NTP_CONF_TMP -g
    else
        systemctl stop $BIN
 
@@ -446,6 +461,18 @@ service_start ()
        if [ "$BOX_TYPE" = "XB3" ]; then
            echo_t "SERVICE_NTPD : Starting NTP Daemon" >> $NTPD_LOG_NAME
            $BIN -c $NTP_CONF_TMP -l $NTPD_LOG_NAME -g
+       elif [ "$BOX_TYPE" = "MV2PLUS" ]; then
+           if [ -n "$QUICK_SYNC_WAN_IP" ]; then
+               echo_t "SERVICE_NTPD : Starting NTP Quick Sync" >> $NTPD_LOG_NAME
+               $BIN -c $NTP_CONF_QUICK_SYNC --interface $QUICK_SYNC_WAN_IP -x -gq -l $NTPD_LOG_NAME & sleep 120
+           else
+               echo_t "SERVICE_NTPD : Quick Sync Not Run" >> $NTPD_LOG_NAME
+           fi
+           echo_t "SERVICE_NTPD : Killing All Instances of NTP" >> $NTPD_LOG_NAME
+           killall $BIN
+           sleep 5
+           echo_t "SERVICE_NTPD : Starting NTP Daemon" >> $NTPD_LOG_NAME
+           $BIN -u ntp:ntp -p /run/ntpd.pid -l $NTPD_LOG_NAME -c $NTP_CONF_TMP -g
        else
            echo_t "SERVICE_NTPD : Killing All Instances of NTP" >> $NTPD_LOG_NAME
            killall $BIN ### This to ensure there is no instance of NTPD running because of multiple wan-start events
