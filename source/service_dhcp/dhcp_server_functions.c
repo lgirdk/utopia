@@ -1135,9 +1135,9 @@ int prepare_dhcp_conf (char *input)
         if (ERROR == get_dmcli_value(cli_cmd, PROD_CLASS, sizeof(PROD_CLASS)))
             fprintf(stderr, "dmcli for PROD_CLASS failed \n");
 
-        fprintf(l_fLocal_Dhcp_ConfFile,"dhcp-option=cpewan-id,vi-encap:3561,6,\"%s\"\n",PROD_CLASS);
-        fprintf(l_fLocal_Dhcp_ConfFile,"dhcp-option=cpewan-id,vi-encap:3561,5,\"%s\"\n",SERIAL_NUM);
-        fprintf(l_fLocal_Dhcp_ConfFile,"dhcp-option=cpewan-id,vi-encap:3561,4,\"%s\"\n",MFR_OUI);
+        fprintf(l_fLocal_Dhcp_ConfFile,"dhcp-option-force=tag:cpewan-id,vi-encap:3561,6,\"%s\"\n",PROD_CLASS);
+        fprintf(l_fLocal_Dhcp_ConfFile,"dhcp-option-force=tag:cpewan-id,vi-encap:3561,5,\"%s\"\n",SERIAL_NUM);
+        fprintf(l_fLocal_Dhcp_ConfFile,"dhcp-option-force=tag:cpewan-id,vi-encap:3561,4,\"%s\"\n",MFR_OUI);
 
         //Propagate Domain
         syscfg_get(NULL, "dhcp_server_propagate_wan_domain", l_cPropagate_Dom, sizeof(l_cPropagate_Dom));
