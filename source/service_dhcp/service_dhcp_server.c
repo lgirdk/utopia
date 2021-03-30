@@ -59,6 +59,8 @@
 #define DHCP_SLOW_START_2_FILE  "/etc/cron/cron.every5minute/dhcp_slow_start.sh"
 #define DHCP_SLOW_START_3_FILE  "/etc/cron/cron.every10minute/dhcp_slow_start.sh"
 
+#define SLEEP_TIME 4
+
 static char dnsOption[8] = "";
 
 extern void copy_command_output(FILE *, char *, int);
@@ -104,7 +106,6 @@ unsigned int Get_Device_Mode()
 static void gw_lan_refresh_switch (void)
 {
     CCSP_HAL_ETHSW_PORT port;
-    uint enablePortBitmap = 0;
     CCSP_HAL_ETHSW_ADMIN_STATUS  adminStatus = CCSP_HAL_ETHSW_AdminDown;
 
     for (port = CCSP_HAL_ETHSW_EthPort1; port <= CCSP_HAL_ETHSW_EthPort4; port++)
@@ -112,26 +113,20 @@ static void gw_lan_refresh_switch (void)
         // Check to see if the port is enabled
         if (CcspHalEthSwGetPortAdminStatus(port, &adminStatus) == RETURN_OK)
         {
-            printf("%s(): port %d: admin status = %d\n", __FUNCTION__, port, (adminStatus == CCSP_HAL_ETHSW_AdminUp ? 1 : 0));
             if (adminStatus == CCSP_HAL_ETHSW_AdminUp)
             {
-                // Save status into the bitmask
-                enablePortBitmap |= ((adminStatus == CCSP_HAL_ETHSW_AdminUp ? 1 : 0) << port);
-
-                // Disable the port
+                // Disable the ports
                 CcspHalEthSwSetPortAdminStatus(port, CCSP_HAL_ETHSW_AdminDown);
             }
         }
     }
 
+    sleep(SLEEP_TIME);
+
     for (port = CCSP_HAL_ETHSW_EthPort1; port <= CCSP_HAL_ETHSW_EthPort4; port++)
     {
-        // If the port was previously enabled then enable the port
-        if (enablePortBitmap & (1 << port))
-        {
-            printf("%s(): setting admin status up for port %d\n", __FUNCTION__, port);
+            // Enable the ports
             CcspHalEthSwSetPortAdminStatus(port, CCSP_HAL_ETHSW_AdminUp);
-        }
     }
 }
 
