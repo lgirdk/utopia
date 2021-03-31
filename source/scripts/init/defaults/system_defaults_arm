@@ -1018,7 +1018,7 @@ $hostname=Docsis-Gateway
 @parcon_httpv6get_end=14
 #redirection flag
 $redirection_flag=true
-$redirection_url=http://XfinityHomeNetworking.com
+$redirection_url=
 $cloud_capable_flag=1
 $cloud_enable_flag=0
 
