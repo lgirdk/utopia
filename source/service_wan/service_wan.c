@@ -845,6 +845,7 @@ static int wan_start(struct serv_wan *sw)
 	system("touch /var/wan_started");
 	print_uptime("boot_to_wan_uptime",NULL);
     }
+#if 0
     else
     {
 	char  str[100] = {0};
@@ -853,6 +854,7 @@ static int wan_start(struct serv_wan *sw)
 	sprintf(str,"/rdklogger/uploadRDKBLogs.sh \"\" HTTP \"\" false ");
 	system(str);
     }
+#endif
     get_dateanduptime(buffer,&uptime);
 	print_uptime("Waninit_complete", NULL);
 	OnboardLog("Wan_init_complete:%d\n",uptime);
@@ -974,9 +976,11 @@ static int wan_stop(struct serv_wan *sw)
 #if defined (_XB6_PRODUCT_REQ_)
     system("sh /etc/network_response.sh OnlyForNoRf &");
 #endif
+#if 0
 	char  str[100] = {0};
 	sprintf(str,"/rdklogger/backupLogs.sh false \"\" wan-stopped");
     system(str);
+#endif
     return 0;
 }
 
