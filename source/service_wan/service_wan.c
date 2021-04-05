@@ -984,12 +984,14 @@ static int wan_start(struct serv_wan *sw)
 	v_secure_system("touch /var/wan_started");
 	print_uptime("boot_to_wan_uptime",NULL, NULL);
     }
+#if 0
     else
     {
         printf("%s wan_service-status is started again, upload logs\n",__FUNCTION__);
         t2_event_d("RF_ERROR_wan_restart", 1);
         v_secure_system("/rdklogger/uploadRDKBLogs.sh '' HTTP '' false ");
     }
+#endif
     get_dateanduptime(buffer,&uptime);
 	print_uptime("Waninit_complete", NULL, NULL);
 	OnboardLog("Wan_init_complete:%d\n",uptime);
@@ -1133,7 +1135,10 @@ static int wan_stop(struct serv_wan *sw)
 #if defined (_XB6_PRODUCT_REQ_)
     v_secure_system("sh /etc/network_response.sh OnlyForNoRf &");
 #endif
+
+#if 0
     v_secure_system("/rdklogger/backupLogs.sh false '' wan-stopped");
+#endif
 
     // RDKB-37891: To clear Time-offset cache on wan-stop
     sysevent_set(sw->sefd, sw->setok,"ipv4-timeoffset", "", 0);
