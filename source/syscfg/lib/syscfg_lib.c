@@ -360,7 +360,7 @@ void syscfg_destroy (void)
 static int check_bootconfig_customer_index(void)
 {
     int rc = -1;
-    int customerIndex = 0;
+    int customerIndex = -1;
     char custFile[60];
 
     if (access(CUSTOMER_BOOT_CONFIG_FILE, F_OK) == 0)
@@ -374,12 +374,25 @@ static int check_bootconfig_customer_index(void)
         if(fpt)
         {
             fscanf(fpt, "%d\n",  &customerIndex);
-            snprintf(custFile, sizeof(custFile), CUSTOMER_SYSCFG_FILE, customerIndex);
-            rc = load_from_file(custFile);
-            if(rc == 0)
-                ulog_LOG_Info("Successfully loaded the Customer(%d) specific default values\n", customerIndex);
+            if(customerIndex == 0)
+            {
+                /*
+                    If Customer index was changed via dml then just set
+                    the Customer_Index value to zero. No need to load any
+                    customer specific files.
+                */
+                syscfg_set (NULL, "Customer_Index", "0");
+                ulog_LOG_Info("Customer index was changed via dml to zero.\n");
+            }
             else
-                ulog_LOG_Err("Unable to load the Customer(%d) specific default values\n",customerIndex);
+            {
+                snprintf(custFile, sizeof(custFile), CUSTOMER_SYSCFG_FILE, customerIndex);
+                rc = load_from_file(custFile);
+                if(rc == 0)
+                    ulog_LOG_Info("Successfully loaded the Customer(%d) specific default values\n", customerIndex);
+                else
+                    ulog_LOG_Err("Unable to load the Customer(%d) specific default values\n",customerIndex);
+            }
             /* Set customer-index-changed as True to handle psm db */
             syscfg_set(NULL, "customer-index-changed", "true");
             fclose(fpt);
@@ -399,11 +412,10 @@ static int load_from_customer_file (void)
     int customerIndex;
     int rc = 0;
 
-    syscfg_get (NULL, "Customer_Index", buf, sizeof(buf));
-    customerIndex = atoi (buf);
+    int custFound = syscfg_get (NULL, "Customer_Index", buf, sizeof(buf));
 
     /*
-       Customer_Index can be zero in syscfg db in two scenarios:
+       Customer_Index key won't be in syscfg db in two scenarios:
 
          - First upgrade from non-RDKB based firmware
          - After a factory reset
@@ -414,8 +426,7 @@ static int load_from_customer_file (void)
        Note that if no platform specific value is available then
        platform_hal_GetCustomerIndex() will return 0.
     */
-
-    if (customerIndex == 0)
+    if (custFound != 0)
     {
         customerIndex = platform_hal_GetCustomerIndex();
 
@@ -432,8 +443,19 @@ static int load_from_customer_file (void)
             else
             {
                 ulog_LOG_Err("Unable to load the Customer(%d) specific default values\n", customerIndex);
+                /* If not able to load customer specific default file then set it to zero */
+                syscfg_set (NULL, "Customer_Index", "0");
             }
         }
+        else
+        {
+            /* If not able to retrieve customer index from hal then set it to zero */
+            syscfg_set (NULL, "Customer_Index", "0");
+        }
+    }
+    else
+    {
+        ulog_LOG_Info("Customer_Index key is present in syscfg.\n");
     }
 
     return rc;
