@@ -101,6 +101,14 @@ static void gw_lan_refresh_switch()
     }
 }
 
+static void refresh_wifi (void)
+{
+    fprintf (stderr, "%s: Kick assoc device\n", __FUNCTION__);
+
+    system ("dmcli eRT setv Device.WiFi.AccessPoint.1.X_CISCO_COM_KickAssocDevices bool true;"
+            "dmcli eRT setv Device.WiFi.AccessPoint.2.X_CISCO_COM_KickAssocDevices bool true");
+}
+
 void getRFC_Value(const char* dnsOption)
 {
         int result = 0;
@@ -441,6 +449,12 @@ int dhcp_server_start (char *input)
                 print_with_uptime("RDKB_SYSTEM_BOOT_UP_LOG : Call gw_lan_refresh_from_dhcpscript:");
                 //system("gw_lan_refresh &");
                 gw_lan_refresh_switch();
+
+                /*
+                   Refresh WLAN clients to kick them out. Don't worry, they will rejoin.
+                   More details: OFW-969-WiFi client ip is not getting updated after Changing Subnet using TR069
+                */
+                refresh_wifi();
         	}
 		}
      	else
