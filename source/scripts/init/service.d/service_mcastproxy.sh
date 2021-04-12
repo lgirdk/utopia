@@ -43,7 +43,7 @@ source /etc/device.properties
 SERVICE_NAME="mcastproxy"
 SELF_NAME="`basename $0`"
 
-BIN=igmpproxy
+BIN=mcproxy_v4
 
 if [ -f /usr/sbin/smcrouted ]; then
     NEW_SMCROUTE=1
@@ -53,11 +53,11 @@ else
     BIN2=smcroute
 fi
 
-CONF_FILE=/tmp/igmpproxy.conf
+CONF_FILE=/tmp/mcproxy_v4.conf
 CONF_FILE_2=/tmp/smcroute.conf
 
 do_start_igmpproxy () {
-   LOCAL_CONF_FILE=/tmp/igmpproxy.conf$$
+   LOCAL_CONF_FILE=/tmp/mcproxy_v4.conf$$
    INTERFACE_LIST=`ip link show up | cut -d' ' -f2 | sed -e 's/:$//' | sed -e 's/@[_a-zA-Z0-9]*//'`
 
    killall $BIN
@@ -65,31 +65,13 @@ do_start_igmpproxy () {
 
    rm -rf $LOCAL_CONF_FILE
 
+   echo "protocol IGMPv3;" >> $LOCAL_CONF_FILE
    #echo "quickleave" >> $LOCAL_CONF_FILE
    if [ "started" = "`sysevent get wan-status`" ] ; then
-      echo "phyint $WAN_IFNAME upstream" >> $LOCAL_CONF_FILE
+      echo "pinstance v4Proxy: $WAN_IFNAME ==> $SYSCFG_lan_ifname;" >> $LOCAL_CONF_FILE
       #echo "altnet 0.0.0.0/0" >> $LOCAL_CONF_FILE
-   else
-      if [ "$NEW_SMCROUTE" != "1" ]; then
-         echo "phyint $WAN_IFNAME disabled" >> $LOCAL_CONF_FILE
-      fi
    fi
-   echo "phyint $SYSCFG_lan_ifname downstream" >> $LOCAL_CONF_FILE
 
-   # Disable all other interfaces
-   for interface in $INTERFACE_LIST
-   do
-       if [ $interface != $SYSCFG_lan_ifname ] && [ $interface != $WAN_IFNAME ]; then
-         if [ "$interface" = "$MOCA_INTERFACE" ];then
-          echo "phyint $interface downstream" >> $LOCAL_CONF_FILE
-          MOCA_LAN_UP=1
-         else 
-          if [ "$NEW_SMCROUTE" != "1" ]; then
-            echo "phyint $interface disabled" >> $LOCAL_CONF_FILE
-          fi
-         fi
-       fi
-   done
 #HOME_LAN_ISOLATION=`psmcli get dmsb.l2net.HomeNetworkIsolation`
 if [ "$HOME_LAN_ISOLATION" == "1" ]; then
 if [ "$MOCA_LAN_UP" == "1" ]; then
@@ -116,7 +98,7 @@ else
    if [ "$BOX_TYPE" == "HUB4" ] || [ "$BOX_TYPE" == "SR300" ]; then
        $BIN $CONF_FILE &
    else 
-       $BIN -c $CONF_FILE &
+       $BIN -r -f $CONF_FILE &
    fi
 fi
 }
