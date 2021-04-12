@@ -42,21 +42,20 @@ source /etc/utopia/service.d/ulog_functions.sh
 SERVICE_NAME="mldproxy"
 SELF_NAME="`basename $0`"
 
-BIN=mldproxy
-CONF_FILE=/tmp/mldproxy.conf
+BIN=mcproxy_v6
+CONF_FILE=/tmp/mcproxy_v6.conf
 
 do_start_mldproxy () {
-   LOCAL_CONF_FILE=/tmp/mldproxy.conf$$
+   LOCAL_CONF_FILE=/tmp/mcproxy_v6.conf$$
 
    killall $BIN
 
    rm -rf $LOCAL_CONF_FILE
 
    #echo "fastleave" >> $LOCAL_CONF_FILE
+   echo "protocol MLDv2;" >> $LOCAL_CONF_FILE
    if [ "started" = "`sysevent get wan-status`" ] ; then
-      echo "phyint $WAN_IFNAME upstream" >> $LOCAL_CONF_FILE
-   else
-      echo "phyint $WAN_IFNAME disabled" >> $LOCAL_CONF_FILE
+      echo "pinstance v6Proxy: $WAN_IFNAME ==> $SYSCFG_lan_ifname;" >> $LOCAL_CONF_FILE
    fi
 
 #   Commenting brlan0 downstream from mldproxy config (RDKB-10413)
@@ -64,7 +63,7 @@ do_start_mldproxy () {
 
    cat $LOCAL_CONF_FILE > $CONF_FILE
    rm -f $LOCAL_CONF_FILE 
-   $BIN -c $CONF_FILE -f
+   $BIN -r -f $CONF_FILE &
 }
 
 service_init ()
