@@ -126,8 +126,8 @@ update_ddns_server() {
    register_success_changeip="Successful Update"
    update_success_changeip="Successful Update"
    hostname_error_changeip="Hostname pattern does not exist"
-   username_error_changeip="Access Denied - Failed to Authenticate"
-   password_error_changeip="Access Denied - Failed to Authenticate"
+   username_error_changeip="badauth"
+   password_error_changeip="badauth"
    token_error_changeip=""
    service_changeip_com="changeip"
 
