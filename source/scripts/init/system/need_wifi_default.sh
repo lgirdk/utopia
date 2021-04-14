@@ -21,17 +21,16 @@
 
 #zhicheng_qiu@cbale.comcast.com
 
-source  /etc/device.properties
 BUTTON_THRESHOLD=15
 FACTORY_RESET_KEY=factory_reset
 FACTORY_RESET_RGWIFI=y
 FACTORY_RESET_WIFI=w
-SYSCFG_MOUNT=/nvram
 PUNIT_RESET_DURATION=0;
-if [ "$BOX_TYPE" = "XB3" ]; then
+
 SYSCFG_FILE="/nvram/syscfg.db"
-else
-SYSCFG_FILE="/opt/secure/data/syscfg.db"
+SECURE_SYSCFG=$(syscfg get UpdateNvram)
+if [ "$SECURE_SYSCFG" = "false" ]; then
+      SYSCFG_FILE="/opt/secure/data/syscfg.db"
 fi
 
 #first time boot
