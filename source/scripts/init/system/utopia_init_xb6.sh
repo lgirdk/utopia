@@ -300,37 +300,38 @@ CheckAndReCreateDB()
 	fi 
 }
 
+
 if [ -f $SYSCFG_BKUP_FILE ]; then
         echo "[utopia][init] Starting syscfg using file store ($SYSCFG_BKUP_FILE)"
         if [ -d $SYSCFG_PERSISTENT_PATH ] && [ ! -f $SYSCFG_NEW_FILE ]; then
-                cp $SYSCFG_BKUP_FILE $SYSCFG_NEW_FILE
+    	        cp $SYSCFG_BKUP_FILE $SYSCFG_NEW_FILE
         fi
         cp $SYSCFG_BKUP_FILE $SYSCFG_FILE
-        syscfg_create -f $SYSCFG_FILE
+	syscfg_create -f $SYSCFG_FILE
         if [ $? != 0 ]; then
-             CheckAndReCreateDB
-        fi
+	     CheckAndReCreateDB
+	fi
 elif [ -s $SYSCFG_NEW_FILE ]; then
-       echo "[utopia][init] Starting syscfg using file store ($SYSCFG_NEW_FILE)"
-       SECURE_SYSCFG=`grep UpdateNvram $SYSCFG_NEW_FILE | cut -f2 -d=`
-       echo "[utopia][init] UpdateNvram:$SECURE_SYSCFG"
-       if [ "$SECURE_SYSCFG" = "false"  ]; then
-             cp $SYSCFG_NEW_FILE $SYSCFG_FILE
-       else
-             cp $SYSCFG_NEW_FILE $SYSCFG_BKUP_FILE
-             cp $SYSCFG_NEW_FILE $SYSCFG_FILE
-       fi
-       syscfg_create -f $SYSCFG_FILE
-       if [ $? != 0 ]; then
-            CheckAndReCreateDB
-       fi    
+    echo "[utopia][init] Starting syscfg using file store ($SYSCFG_NEW_FILE)"
+    SECURE_SYSCFG=`grep UpdateNvram $SYSCFG_NEW_FILE | cut -f2 -d=`
+    echo "[utopia][init] UpdateNvram:$SECURE_SYSCFG"
+    if [ "$SECURE_SYSCFG" = "false"  ]; then
+          cp $SYSCFG_NEW_FILE $SYSCFG_FILE
+    else
+	  cp $SYSCFG_NEW_FILE $SYSCFG_BKUP_FILE
+	  cp $SYSCFG_NEW_FILE $SYSCFG_FILE
+    fi
+    syscfg_create -f $SYSCFG_FILE
+    if [ $? != 0 ]; then
+         CheckAndReCreateDB
+    fi     
 else
-         echo -n > $SYSCFG_FILE
-         echo -n > $SYSCFG_BKUP_FILE
+	 echo -n > $SYSCFG_FILE
+	 echo -n > $SYSCFG_BKUP_FILE
          echo -n > $SYSCFG_NEW_FILE
    syscfg_create -f $SYSCFG_FILE
    if [ $? != 0 ]; then
-        CheckAndReCreateDB
+	CheckAndReCreateDB
    fi
    #>>zqiu
    echo "[utopia][init] need to reset wifi when ($SYSCFG_BKUP_FILE) and ($SYSCFG_NEW_FILE) files are not available"
@@ -351,11 +352,6 @@ if [ -f $SYSCFG_OLDBKUP_FILE ];then
 fi
 if [ -f $SYSCFG_NEW_BKUP_FILE ]; then
 	rm -rf $SYSCFG_NEW_BKUP_FILE
-fi
-if [ -f $SYSCFG_BKUP_FILE ]; then
-     if [ "$MODEL_NUM" != "TG4482A" ]; then
-          rm -rf $SYSCFG_BKUP_FILE
-     fi 
 fi
 
 SYSCFG_LAN_DOMAIN=`syscfg get lan_domain` 
@@ -473,12 +469,9 @@ fi
       rm -f /nvram/pcs.bin
       rm -f /nvram/pcs.bin.md5
    fi
-   echo "[utopia][init] Retarting syscfg using file store ($SYSCFG_NEW_FILE)"
    touch $SYSCFG_NEW_FILE
+   touch $SYSCFG_BKUP_FILE
    touch $SYSCFG_FILE
-   if [ "$MODEL_NUM" = "TG4482A" ]; then
-         touch $SYSCFG_BKUP_FILE
-   fi
    syscfg_create -f $SYSCFG_FILE
    syscfg_oldDB=$?
    if [ $syscfg_oldDB -ne 0 ];then
@@ -569,15 +562,13 @@ apply_system_defaults
 #ARRISXB6-2998
 changeFilePermissions $SYSCFG_BKUP_FILE 400
 changeFilePermissions $SYSCFG_NEW_FILE 400
-echo "[utopia][init] SEC: Syscfg stored in $SYSCFG_NEW_FILE"
-syscfg unset UpdateNvram
-syscfg commit
-if [ -s /nvram/.secure_mount_failure ]; then
-     if [ `cat /nvram/.secure_mount_failure` -gt 3 ]; then
-           echo "[utopia][init] Device needs to be replaced as it is unable to recover /opt/secure mount issue"
-           rm -f /nvram/.secure_mount_failure
-     fi
+
+SYSCFG_DB_FILE="/nvram/syscfg.db"
+SECURE_SYSCFG=`syscfg get UpdateNvram`
+if [ "$SECURE_SYSCFG" = "false" ]; then
+      SYSCFG_DB_FILE="/opt/secure/data/syscfg.db"
 fi
+echo "[utopia][init] SEC: Syscfg stored in $SYSCFG_DB_FILE"
 
 # Get the syscfg value which indicates whether unit is activated or not.
 # This value is set from network_response.sh based on the return code received.
@@ -714,13 +705,6 @@ elif [ -f /nvram/restore_reboot ]; then
      fi
      rm -f /nvram/restore_reboot
      rm -f /nvram/syscfg.db.prev
-elif [ "$BOX_TYPE" = "XB6" -a "$MANUFACTURE" = "Arris" ]; then
-     if [ -f /tmp/.secure_mount_flag ]; then
-          echo "[utopia][init] Detected last reboot reason as secure-mount failure"
-          syscfg set X_RDKCENTRAL-COM_LastRebootReason "secure-mount-failure"
-          syscfg set X_RDKCENTRAL-COM_LastRebootCounter "1"
-          rm -f /tmp/.secure_mount_flag
-     fi
 elif [ "$COLD_REBOOT" == "true" ]; then
      if [ -e "/usr/bin/onboarding_log" ]; then
          /usr/bin/onboarding_log "[utopia][init] Last reboot reason set as HW or Power-On Reset"
