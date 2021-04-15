@@ -246,7 +246,6 @@ update_ddns_server() {
               fi
 
               if [ "$ddns_service_x" == "dyndns" ]; then
-                  echo "${UPDATE_UTIL} ${EXTRA_PARAMS} > $OUTPUT_FILE 2>&1"
                   ${UPDATE_UTIL} ${EXTRA_PARAMS} > $OUTPUT_FILE 2>&1
                   RET_CODE=$?
 
@@ -302,7 +301,6 @@ update_ddns_server() {
                   fi
               else
 
-                   echo "${UPDATE_UTIL} ${EXTRA_PARAMS} > $OUTPUT_FILE 2>&1"
                    ${UPDATE_UTIL} ${EXTRA_PARAMS} > $OUTPUT_FILE 2>&1
                    RET_CODE=$?
 
@@ -462,6 +460,10 @@ update_ddns_server() {
               fi #end of the provider classify
          fi #end of the un-supported provider
 
+         # Empty the trace file after populating required data
+         if [ -f "$GENERAL_FILE" ]; then
+            cat /dev/null  > $GENERAL_FILE
+         fi
    fi #end of "[ "1" = "$ddns_enable_x" ]"
           
 
