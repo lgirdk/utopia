@@ -212,11 +212,11 @@ update_ddns_server() {
               UPDATE_UTIL="/usr/bin/curl"
           elif [ "$ddns_service_x" == "duckdns" ]; then
               EXTRA_PARAMS="--interface erouter0"
-              EXTRA_PARAMS="${EXTRA_PARAMS} -o /var/tmp/ipupdate.${ddns_service_name_mod}"
-              EXTRA_PARAMS="${EXTRA_PARAMS} --url https://www.duckdns.org/update"
+              EXTRA_PARAMS="${EXTRA_PARAMS} -o /var/tmp/ipupdate.${ddns_service_name_mod} -g"
+              EXTRA_PARAMS="${EXTRA_PARAMS} --insecure --url https://www.duckdns.org/update"
               EXTRA_PARAMS="${EXTRA_PARAMS}?domains=${ddns_hostname_x}"
-              EXTRA_PARAMS="${EXTRA_PARAMS}&token=${ddns_password_x}"
-              EXTRA_PARAMS="${EXTRA_PARAMS}&verbose=true --trace-ascii $GENERAL_FILE"
+              EXTRA_PARAMS="${EXTRA_PARAMS}&token=${ddns_username_x}"
+              EXTRA_PARAMS="${EXTRA_PARAMS}&ip=${WanIpAddress}&verbose=true --trace-ascii $GENERAL_FILE"
               UPDATE_UTIL="/usr/bin/curl"
         fi
 
@@ -440,6 +440,15 @@ update_ddns_server() {
                             syscfg commit
                             continue
                        fi
+                   fi
+
+                   return_str_name="KO"
+                   grep -q "$return_str" /var/tmp/ipupdate.${ddns_service_name_mod}
+                   if [ "0" = "$?" ]; then
+                       syscfg set ddns_client_Status $CLIENT_ERROR
+                       syscfg set ddns_host_status_1 $HOST_ERROR
+                       syscfg set ddns_client_Lasterror $AUTHENTICATION_ERROR
+                       syscfg commit
                    fi
 
                    return_str_name="general_error_${ddns_service_name_mod}"
