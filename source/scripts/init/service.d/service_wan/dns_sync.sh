@@ -102,7 +102,7 @@ else
 			else
 			    echo "scp of resolv.conf failed. trying rpcclient"
 			    FILE_STR=`cat $TMP_RESOLV_FILE`
-			    rpcclient $ATOM_ARPING_IP "echo \"$FILE_STR\" > $RESOLV_CONF"
+			    rpcclient2 "echo \"$FILE_STR\" > $RESOLV_CONF"
 			fi 
 			break	
 		else
