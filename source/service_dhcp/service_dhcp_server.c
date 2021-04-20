@@ -38,7 +38,7 @@
 #define RESOLV_CONF "/etc/resolv.conf"
 #define DHCP_CONF   "/var/dnsmasq.conf"
 #define PID_FILE    "/var/run/dnsmasq.pid"
-#define RPC_CLIENT	"/usr/bin/rpcclient"
+#define RPC_CLIENT	"/usr/bin/rpcclient2"
 #define XHS_IF_NAME "brlan1"
 
 #define ERROR   	-1
@@ -72,7 +72,6 @@ extern char g_cBox_Type[8];
 #ifdef XDNS_ENABLE
 extern char g_cXdns_Enabled[8];
 #endif
-extern char g_cAtom_Arping_IP[16];
 
 static void gw_lan_refresh_switch (void)
 {
@@ -475,7 +474,7 @@ int dhcp_server_start (char *input)
 		print_uptime("boot_to_ETH_uptime",NULL);
        	
 		print_with_uptime("LAN initization is complete notify SSID broadcast");
-		snprintf(l_cRpc_Cmd, sizeof(l_cRpc_Cmd), "rpcclient %s \"/bin/touch /tmp/.advertise_ssids\"", g_cAtom_Arping_IP);
+		snprintf(l_cRpc_Cmd, sizeof(l_cRpc_Cmd), "rpcclient2 \"/bin/touch /tmp/.advertise_ssids\"");
 		executeCmd(l_cRpc_Cmd);
 	}
    
