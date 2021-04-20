@@ -695,9 +695,8 @@ fi
 
 # Remove webconfig_db.bin on factory reset on XB3 platforms,CISCOXB3-6731
 if [ "$FACTORY_RESET_REASON" = "true" ] && [ "$BOX_TYPE" = "XB3" ];then
-        ATOM_RPC_IP=`grep ATOM_ARPING_IP /etc/device.properties | cut -f 2 -d"="`
-        rpcclient $ATOM_RPC_IP "rm -f /nvram/webconfig_db.bin"
-        rpcclient $ATOM_RPC_IP "rm -f /nvram/Blocklist_XB3.txt"
+    rpcclient2 "rm -f /nvram/webconfig_db.bin"
+    rpcclient2 "rm -f /nvram/Blocklist_XB3.txt"
 fi
 
 #set ntp status as unsynchronized on bootup
