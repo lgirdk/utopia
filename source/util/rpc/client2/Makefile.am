@@ -16,4 +16,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ##########################################################################
-SUBDIRS = client server client2
+AM_CFLAGS = -D_ANSC_LINUX -D_ANSC_USER -D_ANSC_LITTLE_ENDIAN_
+AM_CFLAGS += $(PTHREAD_CFLAGS)
+
+ACLOCAL_AMFLAGS = -I m4
+
+bin_PROGRAMS = rpcclient2
+
+rpcclient2_SOURCES = command.c rpc_specification_client.c rpc_specification_clnt.c rpc_specification_xdr.c
+
+rpcclient2_LDFLAGS = $(PTHREAD_LIBS)
