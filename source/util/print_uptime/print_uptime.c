@@ -66,34 +66,31 @@ int getValueFromDeviceProperties(char *value, int size,char *name)
 void print_uptime(char *uptimeLog, char *bootfile, char *uptime)
 {
 #if defined(_COSA_INTEL_USG_ATOM_)
-	char cmd[256]={0};
-	char armArpingIp[128]="";
-	if ( (getValueFromDeviceProperties(armArpingIp, 128,"ARM_ARPING_IP") == 0) && armArpingIp[0] != 0 && strlen(armArpingIp) > 0)
+	char cmd[256];
+
+	if(bootfile != NULL)
 	{
-		if(bootfile != NULL)
+		if(uptime != NULL)
 		{
-			if(uptime != NULL)
-			{
-				snprintf(cmd, 256, "/usr/bin/rpcclient %s \"print_uptime %s %s -u %s\" &", armArpingIp, uptimeLog, bootfile, uptime);
-			}
-			else
-			{
-				snprintf(cmd, 256, "/usr/bin/rpcclient %s \"print_uptime %s %s\" &", armArpingIp, uptimeLog, bootfile);
-			}
+			snprintf(cmd, sizeof(cmd), "/usr/bin/rpcclient2 \"print_uptime %s %s -u %s\" &", uptimeLog, bootfile, uptime);
 		}
 		else
 		{
-			if(uptime != NULL)
-			{
-				snprintf(cmd, 256, "/usr/bin/rpcclient %s \"print_uptime %s -u %s\" &", armArpingIp, uptimeLog, uptime);
-			}
-			else
-			{
-				snprintf(cmd, 256, "/usr/bin/rpcclient %s \"print_uptime %s\" &", armArpingIp, uptimeLog);
-			}
+			snprintf(cmd, sizeof(cmd), "/usr/bin/rpcclient2 \"print_uptime %s %s\" &", uptimeLog, bootfile);
 		}
-		system(cmd);
 	}
+	else
+	{
+		if(uptime != NULL)
+		{
+			snprintf(cmd, sizeof(cmd), "/usr/bin/rpcclient2 \"print_uptime %s -u %s\" &", uptimeLog, uptime);
+		}
+		else
+		{
+			snprintf(cmd, sizeof(cmd), "/usr/bin/rpcclient2 \"print_uptime %s\" &", uptimeLog);
+		}
+	}
+	system(cmd);
 #else
     	struct sysinfo l_sSysInfo;
     	struct tm * l_sTimeInfo;
