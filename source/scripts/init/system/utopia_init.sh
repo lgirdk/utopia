@@ -742,7 +742,7 @@ fi
 # Remove webconfig_db.bin on factory reset on XB3 platforms,CISCOXB3-6731
 if [ "$FACTORY_RESET_REASON" = "true" ] && [ "$BOX_TYPE" = "XB3" ];then
         ATOM_RPC_IP=`grep ATOM_ARPING_IP /etc/device.properties | cut -f 2 -d"="`
-        rpcclient $ATOM_RPC_IP "rm -f /nvram/webconfig_db.bin"
+        rpcclient2 "rm -f /nvram/webconfig_db.bin"
 fi
 #operating rbus based on new naming nomenclature
 if [ -e /nvram/rbus_support_on_pending ]; then
