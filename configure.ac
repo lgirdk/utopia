@@ -178,6 +178,7 @@ AC_CONFIG_FILES(
 	source/util/print_uptime/Makefile
 	source/util/rpc/Makefile
 	source/util/rpc/client/Makefile
+	source/util/rpc/client2/Makefile
 	source/util/rpc/server/Makefile
 	source/util/utils/Makefile
 )
