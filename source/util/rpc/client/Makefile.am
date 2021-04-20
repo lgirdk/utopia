@@ -21,8 +21,8 @@ AM_CFLAGS += $(PTHREAD_CFLAGS)
 
 ACLOCAL_AMFLAGS = -I m4
 
-bin_PROGRAMS = rpcclient
+bin_PROGRAMS = rpcclient2
 
-rpcclient_SOURCES = command.c rpc_specification_client.c rpc_specification_clnt.c rpc_specification_xdr.c
+rpcclient2_SOURCES = command.c rpc_specification_client.c rpc_specification_clnt.c rpc_specification_xdr.c
 
-rpcclient_LDFLAGS = $(PTHREAD_LIBS)
+rpcclient2_LDFLAGS = $(PTHREAD_LIBS)
