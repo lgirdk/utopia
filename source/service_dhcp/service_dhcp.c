@@ -74,7 +74,7 @@ char g_cBox_Type[16] = {0};
 #ifdef XDNS_ENABLE
 char g_cXdns_Enabled[8] = {0};
 #endif
-char g_cMfg_Name[8] = {0}, g_cAtom_Arping_IP[16] = {0};
+char g_cMfg_Name[8] = {0};
 char g_cMig_Check[8] = {0};
 
 static int dbusInit( void )
@@ -166,13 +166,6 @@ void get_device_props()
 		/*CID 71049: Out-of-bounds access (OVERRUN)*/
                 strncpy(g_cMig_Check, property, sizeof(g_cMig_Check)-1);
 		g_cMig_Check[sizeof(g_cMig_Check)-1] = '\0';
-            }
-	    if(NULL != (property = strstr(props, "ATOM_ARPING_IP=")))
-            {
-                property = property + strlen("ATOM_ARPING_IP=");
-		/* CID 74595 : Out-of-bounds access (OVERRUN)*/
-                strncpy(g_cAtom_Arping_IP, property, sizeof(g_cAtom_Arping_IP)-1);
-		g_cAtom_Arping_IP[sizeof(g_cAtom_Arping_IP)-1] = '\0';
             }
 
             memset(props,0,sizeof(props));
