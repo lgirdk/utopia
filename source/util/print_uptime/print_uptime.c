@@ -67,32 +67,30 @@ int getValueFromDeviceProperties(char *value, int size,char *name)
 void print_uptime(char *uptimeLog, char *bootfile, char *uptime)
 {
 #if defined(_COSA_INTEL_USG_ATOM_)
-	char armArpingIp[128]="";
-	if ( (getValueFromDeviceProperties(armArpingIp, 128,"ARM_ARPING_IP") == 0) && armArpingIp[0] != 0 && strlen(armArpingIp) > 0)
+
+	if (bootfile != NULL)
 	{
-		if(bootfile != NULL)
+		if (uptime != NULL)
 		{
-			if(uptime != NULL)
-			{
-				v_secure_system("/usr/bin/rpcclient %s 'print_uptime %s %s -u %s' &", armArpingIp, uptimeLog, bootfile, uptime);
-			}
-			else
-			{
-				v_secure_system("/usr/bin/rpcclient %s 'print_uptime %s %s' &", armArpingIp, uptimeLog, bootfile);
-			}
+			v_secure_system("/usr/bin/rpcclient2 'print_uptime %s %s -u %s' &", uptimeLog, bootfile, uptime);
 		}
 		else
 		{
-			if(uptime != NULL)
-			{
-				v_secure_system("/usr/bin/rpcclient %s 'print_uptime %s -u %s' &", armArpingIp, uptimeLog, uptime);
-			}
-			else
-			{
-		        	v_secure_system("/usr/bin/rpcclient %s 'print_uptime %s' &", armArpingIp, uptimeLog);
-			}
+			v_secure_system("/usr/bin/rpcclient2 'print_uptime %s %s' &", uptimeLog, bootfile);
 		}
 	}
+	else
+	{
+		if (uptime != NULL)
+		{
+			v_secure_system("/usr/bin/rpcclient2 'print_uptime %s -u %s' &", uptimeLog, uptime);
+		}
+		else
+		{
+			v_secure_system("/usr/bin/rpcclient2 'print_uptime %s' &", uptimeLog);
+		}
+	}
+
 #else
     	struct sysinfo l_sSysInfo;
     	struct tm * l_sTimeInfo;
