@@ -43,7 +43,6 @@
 #define RESOLV_CONF "/etc/resolv.conf"
 #define DHCP_CONF   "/var/dnsmasq.conf"
 #define PID_FILE    "/var/run/dnsmasq.pid"
-#define RPC_CLIENT	"/usr/bin/rpcclient"
 #define XHS_IF_NAME "brlan1"
 
 #define DEVICE_PROPERTIES "/etc/device.properties"
@@ -78,7 +77,6 @@ extern char g_cBox_Type[8];
 #ifdef XDNS_ENABLE
 extern char g_cXdns_Enabled[8];
 #endif
-extern char g_cAtom_Arping_IP[16];
 extern int executeCmd(char *);
 extern FILE* g_fArmConsoleLog; //Global file pointer declaration
 
@@ -596,7 +594,7 @@ int dhcp_server_start (char *input)
 	char l_cDhcpServerEnable[16] = {0}, l_cLanStatusDhcp[16] = {0};
 	char l_cSystemCmd[255] = {0}, l_cPsm_Mode[8] = {0}, l_cStart_Misc[8] = {0};
 	char l_cPmonCmd[255] = {0}, l_cDhcp_Tmp_Conf[32] = {0};
-	char l_cCurrent_PID[8] = {0}, l_cRpc_Cmd[64] = {0};
+	char l_cCurrent_PID[8] = {0};
 	char l_cBuf[128] = {0};
     char l_cBridge_Mode[8] = {0};
     char l_cDhcp_Server_Prog[16] = {0};
@@ -927,12 +925,10 @@ int dhcp_server_start (char *input)
             print_uptime("boot_to_ETH_uptime",NULL, NULL);
             print_with_uptime("LAN initization is complete notify SSID broadcast");
             #if (defined _COSA_INTEL_XB3_ARM_)
-                snprintf(l_cRpc_Cmd, sizeof(l_cRpc_Cmd), "rpcclient %s \"/bin/touch /tmp/.advertise_ssids\"", g_cAtom_Arping_IP);
+                executeCmd("rpcclient2 '/bin/touch /tmp/.advertise_ssids'");
             #else
-                snprintf(l_cRpc_Cmd, sizeof(l_cRpc_Cmd), "touch /tmp/.advertise_ssids");
+                executeCmd("touch /tmp/.advertise_ssids");
             #endif
-
-            executeCmd(l_cRpc_Cmd);
         }
         else
         {
