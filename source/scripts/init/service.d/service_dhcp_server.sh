@@ -86,7 +86,7 @@ if [ -f "$DHCP_SLOW_START_3_FILE" ] ; then
 fi
 
 # for leasing file sync
-if [ -f "/usr/bin/rpcclient" ] ; then
+if [ -f "/usr/bin/rpcclient2" ] ; then
 	DHCP_SCRIPT=""
 else
 	DHCP_SCRIPT=""
@@ -558,8 +558,8 @@ dhcp_server_start ()
        print_uptime "boot_to_ETH_uptime"
 
        echo_t "LAN initization is complete notify SSID broadcast"
-       if [ -f "/usr/bin/rpcclient" ] ; then
-           rpcclient $ATOM_ARPING_IP "/bin/touch /tmp/.advertise_ssids"
+       if [ -f "/usr/bin/rpcclient2" ] ; then
+           rpcclient2 "/bin/touch /tmp/.advertise_ssids"
        fi
 
        touch /tmp/dhcp_server_start

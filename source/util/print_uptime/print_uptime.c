@@ -61,20 +61,16 @@ int getValueFromDeviceProperties(char *value, int size,char *name)
 void print_uptime(char *uptimeLog, char *bootfile)
 {
 #if defined(_COSA_INTEL_USG_ATOM_)
-	char cmd[256]={0};
-	char armArpingIp[128]="";
-	if ( (getValueFromDeviceProperties(armArpingIp, 128,"ARM_ARPING_IP") == 0) && armArpingIp[0] != 0 && strlen(armArpingIp) > 0)
-	{
-		if(bootfile != NULL)
-		{
-			snprintf(cmd, 256, "/usr/bin/rpcclient %s \"print_uptime %s %s\" &", armArpingIp, uptimeLog, bootfile);
-		}
-		else
-		{
-			snprintf(cmd, 256, "/usr/bin/rpcclient %s \"print_uptime %s\" &", armArpingIp, uptimeLog);
-		}
-		system(cmd);
-	}
+      char cmd[256]={0};
+      if(bootfile != NULL)
+      { 
+        snprintf(cmd, 256, "/usr/bin/rpcclient2 \"print_uptime %s %s\" &", uptimeLog, bootfile);
+      }
+      else
+      {
+        snprintf(cmd, 256, "/usr/bin/rpcclient2 \"print_uptime %s\" &", uptimeLog);
+      }
+      system(cmd);
 #else
     	struct sysinfo l_sSysInfo;
     	struct tm * l_sTimeInfo;
