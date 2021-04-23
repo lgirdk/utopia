@@ -5918,7 +5918,11 @@ static int do_lan2self_by_wanip(FILE *filter_fp, int family)
 
    fprintf(filter_fp, "-A lan2self_by_wanip -p tcp -m multiport --dports 80,443 -j xlog_drop_lan2self\n"); //GUI on standard ports
    fprintf(filter_fp, "-A lan2self_by_wanip -p udp --dport 161 -j xlog_drop_lan2self\n"); //SNMP
-   fprintf(filter_fp, "-A lan2self_by_wanip ! -d %s -p icmp --icmp-type 8 -j xlog_drop_lan2self\n", current_wan_ipaddr); // ICMP PING request
+   if (isWanReady)
+       fprintf(filter_fp, "-A lan2self_by_wanip ! -d %s -p icmp --icmp-type 8 -j xlog_drop_lan2self\n", current_wan_ipaddr); // ICMP PING request
+   else
+       fprintf(filter_fp, "-A lan2self_by_wanip -p icmp --icmp-type 8 -j xlog_drop_lan2self\n");
+
    FIREWALL_DEBUG("Exiting do_lan2self_by_wanip\n");
    return 0;
 }
