@@ -653,6 +653,8 @@ $v4_ICMPFloodDetectRate=15
 $v6_BlockFragIPPkts=0
 $v6_PortScanProtect=1
 $v6_IPFloodDetect=1
+$v6_ICMPFloodDetect=1
+$v6_ICMPFloodDetectRate=15
 
 # IPv6 Section
 
