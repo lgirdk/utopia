@@ -517,6 +517,7 @@ static void do_icmpflooddetectv4(FILE *fp);
 static int do_blockfragippktsv6(FILE *fp);
 static int do_portscanprotectv6(FILE *fp);
 static int do_ipflooddetectv6(FILE *fp);
+static void do_icmpflooddetectv6(FILE *fp);
 
 static int iseRouter0IPv6AddrReady;
 static int isFirewallEnabledV6;
@@ -13151,6 +13152,7 @@ int prepare_ipv6_firewall(const char *fw_file, char* strBlockTimeCmd)
           do_blockfragippktsv6(filter_fp);
           do_portscanprotectv6(filter_fp);
           do_ipflooddetectv6(filter_fp);
+          do_icmpflooddetectv6(filter_fp);
       }
 	
 	/* XDNS - route dns req though dnsmasq */
@@ -13394,14 +13396,10 @@ static void do_ipv6_filter_table(FILE *fp){
 
    do_openPorts(fp);
 
-   fprintf(fp, "-A LOG_INPUT_DROP -m limit --limit 1/minute -j LOG --log-level %d --log-prefix \"UTOPIA: FW.IPv6 INPUT drop\"\n",syslog_level);
    fprintf(fp, "-A LOG_FORWARD_DROP -m limit --limit 1/minute -j LOG --log-level %d --log-prefix \"UTOPIA: FW.IPv6 FORWARD drop\"\n",syslog_level);
-   fprintf(fp, "-A LOG_INPUT_DROP -j DROP\n"); 
    fprintf(fp, "-A LOG_FORWARD_DROP -j DROP\n"); 
 
    fprintf(fp, "%s\n", ":PING_FLOOD - [0:0]");
-   fprintf(fp, "-A PING_FLOOD -m limit --limit 10/sec -j ACCEPT\n");
-   fprintf(fp, "-A PING_FLOOD -j DROP\n");
 
 #ifdef MULTILAN_FEATURE
    prepare_multinet_filter_forward_v6(fp);
@@ -13645,6 +13643,10 @@ static void do_ipv6_filter_table(FILE *fp){
         fprintf(fp, "-A INPUT -p tcp -m tcp --dport 443 -j ACCEPT\n");
         fprintf(fp, "-A INPUT -p tcp -m tcp --dport 8080 -j ACCEPT\n");
       }
+
+      fprintf(fp, "-N DOS_ICMP\n");
+      fprintf(fp, "-F DOS_ICMP\n");
+      fprintf(fp, "-A INPUT -i erouter0 -p icmpv6 -j DOS_ICMP\n");
 
       // established communication from anywhere is accepted
       fprintf(fp, "-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT\n");
@@ -14621,20 +14623,18 @@ static int do_ipflooddetectv6(FILE *fp)
         fprintf(fp, "-N DOS_FWD\n");
         fprintf(fp, "-N DOS_TCP\n");
         fprintf(fp, "-N DOS_UDP\n");
-        fprintf(fp, "-N DOS_ICMP\n");
-        fprintf(fp, "-N DOS_ICMP_REQUEST\n");
-        fprintf(fp, "-N DOS_ICMP_REPLY\n");
-        fprintf(fp, "-N DOS_ICMP_OTHER\n");
+
+        /* Note: DOS_ICMP rules have now been moved into do_icmpflooddetectv6() */
+
         fprintf(fp, "-N DOS_DROP\n");
 
         fprintf(fp, "-F DOS\n");
         fprintf(fp, "-F DOS_FWD\n");
         fprintf(fp, "-F DOS_TCP\n");
         fprintf(fp, "-F DOS_UDP\n");
-        fprintf(fp, "-F DOS_ICMP\n");
-        fprintf(fp, "-F DOS_ICMP_REQUEST\n");
-        fprintf(fp, "-F DOS_ICMP_REPLY\n");
-        fprintf(fp, "-F DOS_ICMP_OTHER\n");
+
+        /* Note: DOS_ICMP rules have now been moved into do_icmpflooddetectv6() */
+
         fprintf(fp, "-F DOS_DROP\n");
         /*Adding Rules in new chain */
         fprintf(fp, "-A DOS -i lo -j RETURN\n");
@@ -14647,27 +14647,54 @@ static int do_ipflooddetectv6(FILE *fp)
         fprintf(fp, "-A DOS_UDP ! -i erouter0 -p udp %s -j RETURN\n", LAN_DoS);
         fprintf(fp, "-A DOS_UDP -i erouter0 -p udp %s -j RETURN\n", WAN_DoS);
         fprintf(fp, "-A DOS_UDP -j DOS_DROP\n");
-        fprintf(fp, "-A DOS_ICMP -j DOS_ICMP_REQUEST\n");
-        fprintf(fp, "-A DOS_ICMP -j DOS_ICMP_REPLY\n");
-        fprintf(fp, "-A DOS_ICMP -j DOS_ICMP_OTHER\n");
-        fprintf(fp, "-A DOS_ICMP_REQUEST -p ipv6-icmp ! --icmpv6-type echo-request -j RETURN\n");
-        fprintf(fp, "-A DOS_ICMP_REQUEST -p ipv6-icmp --icmpv6-type echo-request -m limit --limit 5/s --limit-burst 60 -j RETURN\n");
-        fprintf(fp, "-A DOS_ICMP_REQUEST -m frag --fragmore --fragid 0x0:0xffffffff -m limit --limit 5/s --limit-burst 60 -j RETURN\n");
-        fprintf(fp, "-A DOS_ICMP_REQUEST -m frag --fraglast --fragid 0x0:0xffffffff -m limit --limit 5/s --limit-burst 60 -j RETURN\n");
-        fprintf(fp, "-A DOS_ICMP_REQUEST -j DOS_DROP\n");
-        fprintf(fp, "-A DOS_ICMP_REPLY -p ipv6-icmp ! --icmpv6-type echo-reply -j RETURN\n");
-        fprintf(fp, "-A DOS_ICMP_REPLY -p ipv6-icmp --icmpv6-type echo-reply -m limit --limit 5/s --limit-burst 60 -j RETURN\n");
-        fprintf(fp, "-A DOS_ICMP_REPLY -m frag --fragmore --fragid 0x0:0xffffffff -m limit --limit 5/s --limit-burst 60 -j RETURN\n");
-        fprintf(fp, "-A DOS_ICMP_REPLY -m frag --fraglast --fragid 0x0:0xffffffff -m limit --limit 5/s --limit-burst 60 -j RETURN\n");
-        fprintf(fp, "-A DOS_ICMP_REPLY -j DOS_DROP\n");
-        fprintf(fp, "-A DOS_ICMP_OTHER -p ipv6-icmp --icmpv6-type echo-request -j RETURN\n");
-        fprintf(fp, "-A DOS_ICMP_OTHER -p ipv6-icmp --icmpv6-type echo-reply -j RETURN\n");
-        fprintf(fp, "-A DOS_ICMP_OTHER -p ipv6-icmp -m limit --limit 5/s --limit-burst 60 -j RETURN\n");
-        fprintf(fp, "-A DOS_ICMP_OTHER -j DOS_DROP\n");
+
+        /* Note: DOS_ICMP rules have now been moved into do_icmpflooddetectv6() */
+
         fprintf(fp, "-A DOS_DROP -j DROP\n");
         fprintf(fp, "-A DOS_FWD -j DOS\n");
         fprintf(fp, "-A FORWARD -j DOS_FWD\n");
         fprintf(fp, "-A INPUT -j DOS\n");
+    }
+}
+
+// Implementation for ICMPFloodDetect Parameter.
+/*
+ * Function to add IP Table rules against ICMP V6 Flooding
+*/
+static void do_icmpflooddetectv6 (FILE *fp)
+{
+    char buf[12];
+    int enable, icmpRate;
+
+    syscfg_get(NULL, "v6_ICMPFloodDetect", buf, sizeof(buf));
+    if (buf[0] != '\0')
+    {
+        enable = atoi(buf);
+    }
+    else
+    {
+        enable = 1;
+    }
+
+    if (enable)
+    {
+        syscfg_get(NULL, "v6_ICMPFloodDetectRate", buf, sizeof(buf));
+        if (buf[0] != '\0')
+        {
+            icmpRate = atoi(buf);
+        }
+        else
+        {
+            icmpRate = 15;
+        }
+
+        fprintf(fp, "-A DOS_ICMP -i erouter0 -m limit --limit %u/second --limit-burst %u -j RETURN\n", icmpRate, icmpRate);
+        fprintf(fp, "-A DOS_ICMP -i erouter0 -m limit --limit 5/min --limit-burst 5 -j LOG --log-prefix \"ICMP Flood: \" --log-level 5\n");
+        fprintf(fp, "-A DOS_ICMP -i erouter0 -j DROP\n");
+    }
+    else
+    {
+        fprintf(fp, "-A DOS_ICMP -p icmpv6 -i erouter0 -m state --state ESTABLISHED -j ACCEPT\n");
     }
 }
 
