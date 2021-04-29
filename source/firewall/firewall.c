@@ -559,7 +559,8 @@ static int checkIfULAEnabled();
 #define LNF_IF_NAME    "br106"
 FILE *firewallfp = NULL;
 
-//#define CONFIG_BUILD_TRIGGER 1
+#define CONFIG_BUILD_TRIGGER 1
+
 /*
  * Service template declarations & definitions
  */
