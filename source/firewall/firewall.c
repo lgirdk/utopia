@@ -529,7 +529,8 @@ static int lan2wan_multinet_disable(FILE *fp);
 
 FILE *firewallfp = NULL;
 
-//#define CONFIG_BUILD_TRIGGER 1
+#define CONFIG_BUILD_TRIGGER 1
+
 /*
  * Service template declarations & definitions
  */
