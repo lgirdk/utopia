@@ -552,7 +552,8 @@ static int checkIfULAEnabled();
 #endif
 FILE *firewallfp = NULL;
 
-//#define CONFIG_BUILD_TRIGGER 1
+#define CONFIG_BUILD_TRIGGER 1
+
 /*
  * Service template declarations & definitions
  */
