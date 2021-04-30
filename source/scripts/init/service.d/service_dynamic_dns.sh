@@ -556,8 +556,8 @@ do_start() {
    ulog ddns status "$PID ddns update required status is $UPDATE_NEEDED"
    if [ "1" = "$UPDATE_NEEDED" ] ; then
       sysevent set ddns_return_status success
-      syscfg set ddns_client_Status 1
-      syscfg set ddns_host_status_1 2
+      syscfg set ddns_client_Status $CLIENT_CONNECTING
+      syscfg set ddns_host_status_1 $HOST_UPDATING
       syscfg commit
       update_ddns_server $CURRENT_WAN_IPADDR
 
@@ -584,18 +584,19 @@ do_start() {
 
 
 update_ddns_if_needed () {
-   WAN_IPADDR=`sysevent get current_wan_ipaddr`
+   WAN_LAST_IPADDR=$SYSCFG_wan_last_ipaddr
+   CURRENT_WAN_IPADDR=`sysevent get current_wan_ipaddr`
    CURRENT_STATE=`sysevent get wan-status`
    if [ "started" != "$CURRENT_STATE" ] ; then
-      WAN_IPADDR="0.0.0.0"
+      CURRENT_WAN_IPADDR="0.0.0.0"
    fi
 
-   case "$WAN_IPADDR" in
+   case "$CURRENT_WAN_IPADDR" in
       0.0.0.0)
         ulog ddns status "$PID wan state is down. No ddns update possible"
            sysevent set ddns_return_status
            syscfg set ddns_client_Status $CLIENT_ERROR_MISCONFIGURED
-           syscfg set dddns_host_status_1 $HOST_ERROR
+           syscfg set ddns_host_status_1 $HOST_ERROR
            syscfg set ddns_client_Lasterror $MISCONFIGURATION_ERROR
            syscfg commit
 
@@ -607,8 +608,10 @@ update_ddns_if_needed () {
          if [ "" = "$PRIORERROR" ] || [ "success" = "$PRIORERROR" ] ; then
             # if the wan ip address changed, then the system requires a few secs to stabilize
             # eg. firewall needs to be reset. Give it a few secs to do so
-            sleep 5
-            ulog ddns status "$PID Current wan ip address is $WAN_IPADDR. Continuing"
+            if [ "$WAN_LAST_IPADDR" != "$CURRENT_WAN_IPADDR" ] ; then
+                sleep 5
+                ulog ddns status "$PID Current wan ip address is $CURRENT_WAN_IPADDR. Continuing"
+            fi
             do_start
          else
             syscfg set ddns_client_Status $CLIENT_ERROR
@@ -710,14 +713,18 @@ service_start ()
       exit 0
    fi
 
+   syscfg set ddns_client_Status $CLIENT_CONNECTING
+   syscfg set ddns_host_status_1 $HOST_UPDATE_NEEDED
+   syscfg commit
    update_ddns_if_needed
 }
 
 service_stop ()
 {
-    syscfg set ddns_client_Status $CLIENT_UPDATED
-    syscfg set ddns_host_status_1 $HOST_REGISTERED
-    syscfg commit
+    ulog ddns status "$PID ddns status update is not required"
+    #syscfg set ddns_client_Status $CLIENT_UPDATED
+    #syscfg set ddns_host_status_1 $HOST_REGISTERED
+    #syscfg commit
 }
 
 
