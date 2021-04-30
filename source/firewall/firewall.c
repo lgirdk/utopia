@@ -13107,6 +13107,8 @@ int prepare_ipv6_firewall(const char *fw_file, char* strBlockTimeCmd)
 // LGI ADD START
       if(BTMASK_ALWAYS == v6_dayofweek_block_time_bit_mask_type) {
          do_ip_filter_IpV6_service(filter_fp);
+         /* IPv6 Macfilter */
+         do_mac_filter(filter_fp);
       }
       else if( (!strBlockTimeCmd) ||
                ((strcmp(strBlockTimeCmd, "v6cron_block_time_start")) &&
@@ -13137,6 +13139,7 @@ int prepare_ipv6_firewall(const char *fw_file, char* strBlockTimeCmd)
                   // See if we have passed the 0th minute already.  If yes, apply the filter here.
                   if(ptm->tm_min >= 0) {
                       do_ip_filter_IpV6_service(filter_fp);
+                      do_mac_filter(filter_fp);
                   }
               }
           }
