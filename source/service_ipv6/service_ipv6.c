@@ -1693,6 +1693,8 @@ OPTIONS:
     }
     fclose(fp);
 
+    system("/etc/utopia/service.d/set_ipv6_dns.sh dibbler");
+
     return 0;
 }
 
