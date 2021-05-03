@@ -1758,6 +1758,9 @@ OPTIONS:
     else {
 	sysevent_set(si6->sefd, si6->setok, "dibbler_server_conf-status", "ready", 0);
     }     
+
+    system("/etc/utopia/service.d/set_ipv6_dns.sh dibbler");
+
     return 0;
 }
 
