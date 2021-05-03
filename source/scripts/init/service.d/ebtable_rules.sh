@@ -109,14 +109,6 @@ set_ebtable_rules() {
         echo "[EBTABLE] Block LAN->WAN_IP in bridge mode"
         block_lan_to_wanip_all
         
-        ATOM_MAC=`arp 192.168.101.3 | awk '{print $4}'`
-        echo $ATOM_MAC | grep ':'
-        if [ $? != 0 ]; then
-            arping -c 1 -I l2sd0.500 192.168.101.3
-            ATOM_MAC=`arp 192.168.101.3 | awk '{print $4}'`
-        fi
-        
-        ebtables -I FORWARD -o lbr0 -s $ATOM_MAC -j DROP
         ebtables -I FORWARD -o lbr0 -p IPv4 --ip-destination 192.168.100.1 -j ACCEPT
         #ebtables -I FORWARD -o lbr0 -p ARP --arp-ip-dst 192.168.100.1 -j DROP
         
