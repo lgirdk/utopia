@@ -464,15 +464,6 @@ echo_t "[utopia][init] Processing registration"
 execute_dir $INIT_DIR&
 #init_inter_subsystem&
 
-#--------Set up private IPC vlan----------------
-vconfig add l2sd0 500
-if [ "$BOX_TYPE" = "XB3" ] || [ "$BOX_TYPE" = "MV1" ];then
-	$UTOPIA_PATH/service_multinet_exec add_ipc_vlan &
-else
-	$SWITCH_HANDLER addVlan 0 500 sw_6
-fi
-ifconfig l2sd0.500 192.168.101.1
-
 export DBUS_SYSTEM_BUS_ADDRESS=unix:path=/var/run/dbus/system_bus_socket
 
 if [ "$BOX_TYPE" = "XB3" ];then
