@@ -1459,6 +1459,7 @@ static int gen_zebra_conf(int sefd, token_t setok)
                     #endif
 				}
 			}
+		}
 
                 if (atoi(valid_lft) <= (3 * ra_interval))
                 {
@@ -1476,8 +1477,6 @@ static int gen_zebra_conf(int sefd, token_t setok)
                     fprintf(fp, "   ipv6 nd dnssl %s %s\n", tok, dnssl_lft);
                 }
 
-
-		}
 	}
     
 
