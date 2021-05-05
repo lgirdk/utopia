@@ -696,7 +696,9 @@ void do_extra_pools (FILE *local_dhcpconf_file, char *prefix, unsigned char bDhc
 	char l_cDhcp_Start_Addr[16] = {0}, l_cDhcp_End_Addr[16] = {0};
 	char l_cLan_Subnet[16] = {0}, l_cDhcp_Lease_Time[8] = {0}, l_cIfName[8] = {0};
 	char l_cPools[64] = {0};
-	char *l_cToken = NULL;	
+	char *l_cToken = NULL;
+	char wanevent[12];
+	char buf[12];
 	int l_iPool, l_iIpv4Inst;
     
 	sysevent_get(g_iSyseventfd, g_tSysevent_token, 
@@ -737,9 +739,22 @@ void do_extra_pools (FILE *local_dhcpconf_file, char *prefix, unsigned char bDhc
     				sysevent_get(g_iSyseventfd, g_tSysevent_token, 
 								 l_cSysevent_Cmd, l_cLan_Subnet, sizeof(l_cLan_Subnet));
 
-					sprintf(l_cSysevent_Cmd, "dhcp_server_%d_leasetime", l_iPool);	
-    				sysevent_get(g_iSyseventfd, g_tSysevent_token, 
-								 l_cSysevent_Cmd, l_cDhcp_Lease_Time, sizeof(l_cDhcp_Lease_Time));
+					sysevent_get(g_iSyseventfd, g_tSysevent_token,
+								 "wan-status", wanevent, sizeof(wanevent));
+					if (strcmp(wanevent, "stopped") == 0)
+					{
+						// when modem is offline, lease time should be 120 seconds.
+						if (syscfg_get(NULL, "dhcp_offline_lease_time", buf, sizeof(buf)) == 0)
+						{
+							strcpy(l_cDhcp_Lease_Time, buf);
+						}
+					}
+					else
+					{
+						sprintf(l_cSysevent_Cmd, "dhcp_server_%d_leasetime", l_iPool);
+						sysevent_get(g_iSyseventfd, g_tSysevent_token,
+									 l_cSysevent_Cmd, l_cDhcp_Lease_Time, sizeof(l_cDhcp_Lease_Time));
+					}
 
 					sprintf(l_cSysevent_Cmd, "ipv4_%d-ifname", l_iIpv4Inst);	
     				sysevent_get(g_iSyseventfd, g_tSysevent_token, 
