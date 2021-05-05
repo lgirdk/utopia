@@ -978,6 +978,7 @@ static int gen_zebra_conf(int sefd, token_t setok)
 						sizeof(name_servs) - strlen(name_servs));
 				}
 			}
+		}
 
                 if (atoi(valid_lft) <= 3*atoi(ra_interval))
                 {
@@ -995,8 +996,6 @@ static int gen_zebra_conf(int sefd, token_t setok)
                     fprintf(fp, "   ipv6 nd dnssl %s %s\n", tok, dnssl_lft);
                 }
 
-
-		}
 	}
     
 
