@@ -133,6 +133,9 @@ case "$1" in
   ipv6_addr-unset)
       service_ipv6 addr-unset
       ;;
+  ipv6_addr-renew)
+      service_ipv6 addr-renew
+      ;;
    *)
       echo "Usage: $SERVICE_NAME [ ${SERVICE_NAME}-start | ${SERVICE_NAME}-stop | ${SERVICE_NAME}-restart]" > /dev/console
       exit 3
