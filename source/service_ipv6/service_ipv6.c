@@ -1905,6 +1905,60 @@ static int serv_ipv6_term(struct serv_ipv6 *si6)
     return 0;
 }
 
+static int lan_addr6_renew(struct serv_ipv6 *si6)
+{
+    unsigned int l2_insts[MAX_LAN_IF_NUM];
+    unsigned int enabled_iface_num = 0;
+    int i = 0;
+    char iface_name[16];
+    char iface_prefix[INET6_ADDRSTRLEN];
+    unsigned int prefix_len = 0;
+    char ipv6_addr[INET6_ADDRSTRLEN];
+    char action[64];
+    char cmd[CMD_BUF_SIZE];
+    char iapd_preftm[64];
+    char iapd_vldtm[64];
+    char evt_name[64];
+
+    get_active_lanif(si6, l2_insts, &enabled_iface_num);
+    if (enabled_iface_num == 0) {
+        fprintf(stderr, "no active lan interface.\n");
+        return -1;
+    }
+
+    for (; i < enabled_iface_num; i++) {
+        snprintf(evt_name, sizeof(evt_name), "multinet_%d-name", l2_insts[i]);
+        sysevent_get(si6->sefd, si6->setok, evt_name, iface_name, sizeof(iface_name));/*interface name*/
+        snprintf(evt_name, sizeof(evt_name), "ipv6_%s-prefix", iface_name);
+        sysevent_get(si6->sefd, si6->setok, evt_name, iface_prefix, sizeof(iface_prefix));
+        snprintf(evt_name, sizeof(evt_name), "ipv6_%s-addr", iface_name);
+        sysevent_get(si6->sefd, si6->setok, evt_name, ipv6_addr, sizeof(ipv6_addr));
+
+        get_prefix_info(iface_prefix, NULL, 0, &prefix_len);
+        sysevent_get(si6->sefd, si6->setok, COSA_DML_DHCPV6C_PREF_PRETM_SYSEVENT_NAME, action, sizeof(action));
+        if(action[0]!='\0') {
+            if(!strcmp(action,"'\\0'"))
+                strncpy(iapd_preftm, "forever", sizeof(iapd_preftm));
+            else
+                strncpy(iapd_preftm, strtok (action,"'"), sizeof(iapd_preftm));
+        }
+
+        sysevent_get(si6->sefd, si6->setok, COSA_DML_DHCPV6C_PREF_VLDTM_SYSEVENT_NAME, action, sizeof(action));
+        if(action[0]!='\0') {
+            if(!strcmp(action,"'\\0'"))
+                strncpy(iapd_vldtm, "forever", sizeof(iapd_vldtm));
+            else
+                strncpy(iapd_vldtm, strtok (action,"'"), sizeof(iapd_vldtm));
+        }
+
+        snprintf(cmd, CMD_BUF_SIZE, "ip -6 addr change %s/%d dev %s valid_lft %s preferred_lft %s",
+					ipv6_addr, prefix_len, iface_name, iapd_vldtm, iapd_preftm);
+        vsystem(cmd);
+
+    }//End of for loop
+    return 0;
+}
+
 struct cmd_op {
     const char  *cmd;
     int         (*exec)(struct serv_ipv6 *si6);
@@ -1920,6 +1974,7 @@ static struct cmd_op cmd_ops[] = {
     {"dhcpv6s-start",  dhcpv6s_start,     "start DHCPv6 Sever"},
     {"dhcpv6s-stop",   dhcpv6s_stop,      "stop DHCPv6 Server"},
     {"dhcpv6s-restart",dhcpv6s_restart,   "restart DHCPv6 Server"},
+    {"addr-renew",     lan_addr6_renew, "renew IPv6 address for lan interface"},
 };
 
 static void usage(void)
