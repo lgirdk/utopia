@@ -79,6 +79,7 @@ const char* SERVICE_CUSTOM_EVENTS[] = {
     "ipv6_addr-set|/etc/utopia/service.d/service_ipv6.sh|NULL|"TUPLE_FLAG_EVENT,
     "ipv6_addr-unset|/etc/utopia/service.d/service_ipv6.sh|NULL|"TUPLE_FLAG_EVENT,
     "bridge-status|/etc/utopia/service.d/service_ipv6.sh|NULL|",
+    "ipv6_addr-renew|/etc/utopia/service.d/service_ipv6.sh|NULL|"TUPLE_FLAG_EVENT,
     NULL };
 #else
 const char* SERVICE_CUSTOM_EVENTS[] = { 
