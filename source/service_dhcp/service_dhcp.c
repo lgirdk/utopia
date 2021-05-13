@@ -414,7 +414,7 @@ int main(int argc, char *argv[])
 
 	if (0 == g_iSyseventfd)
 		sysevent_syscfg_init();
-	fprintf(stderr, "%s case\n", argv[1]);
+	fprintf(stderr, "%s:%d Enter case:%s \n",__FUNCTION__,__LINE__, argv[1]);
 	if ((!strncmp(argv[1], "dhcp_server-start", 17)) ||
 		(!strncmp(argv[1], "dhcp_server-restart", 19)))
 	{
@@ -518,6 +518,7 @@ int main(int argc, char *argv[])
             printf("Insufficient number of arguments for %s\n", argv[1]);
         }
     }
+	fprintf(stderr, "%s:%d Exit case:%s \n",__FUNCTION__,__LINE__, argv[1]);
 	close(g_iSyseventfd); //can be a memory / fd leak if not done
 	fclose(g_fArmConsoleLog);
 	return 0;
