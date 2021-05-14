@@ -131,6 +131,12 @@ update_ddns_server() {
    token_error_changeip=""
    service_changeip_com="changeip"
 
+   while [ -f "/var/tmp/updating_ddns_server.txt" ]
+   do
+      sleep 2
+   done
+   touch "/var/tmp/updating_ddns_server.txt"
+
    #Set Return status
    ps | grep ez-ipupdate | grep -v grep
    if [ $? -eq 0 ];then
@@ -517,6 +523,8 @@ update_ddns_server() {
    if [ "0" = "$RETRY_SONN_NEEDED" ]; then
        rm -f $RETRY_SOON_FILENAME
    fi
+
+   rm "/var/tmp/updating_ddns_server.txt"
 }
 
 #---------------------------------------------------------------------------------------
