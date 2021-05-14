@@ -559,7 +559,14 @@ do_start() {
       syscfg set ddns_client_Status $CLIENT_CONNECTING
       syscfg set ddns_host_status_1 $HOST_UPDATING
       syscfg commit
+      # ----------------------------------------------------------------------
+      # If updating_ddns_server.txt exists then a query to the DDNS server is
+      # already in progress. Wait for it to complete.
+      # ----------------------------------------------------------------------
+      while [ -f "/var/tmp/updating_ddns_server.txt" ]; do sleep 2; done
+      touch "/var/tmp/updating_ddns_server.txt"
       update_ddns_server $CURRENT_WAN_IPADDR
+      rm "/var/tmp/updating_ddns_server.txt"
 
    else
       # if no update needed, consider it as ddns "success"
