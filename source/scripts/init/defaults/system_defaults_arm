@@ -1270,7 +1270,7 @@ $XconfUrl=
 
 #Defaults for Telemetry T2 Enable
 $T2Enable=false
-$T2Version=1
+$T2Version=2.0.1
 $T2ConfigURL=
 
 #Device.X_LGI-COM_Telemetry DcmRetryConfig parameters
