@@ -197,7 +197,9 @@ static int nethelper_bridgeCreate(char* brname) {
     return 0;
 }
 #endif
-#ifdef MULTILAN_FEATURE
+
+#if defined (MULTILAN_FEATURE) && !defined (_PUMA6_ARM_)
+
 /* nethelper_bridgeCreateUniqueMac
  *
  * Creates a bridge with a unique and consistent mac address.
@@ -287,7 +289,27 @@ static int nethelper_bridgeCreateUniqueMac(char* brname, int id) {
 
     return result;
 }
+
+#else
+
+static void nethelper_bridgeCreate (char *brname)
+{
+    char cmdBuff[128];
+
+    snprintf (cmdBuff, sizeof(cmdBuff),
+              "brctl addbr %s; "
+              // Link local is not available to blranX interfaces as autoconf is disabled
+              // Enable autoconf, before making the bridge up
+              "echo 1 > /proc/sys/net/ipv6/conf/%s/autoconf; "
+              "ifconfig %s up",
+              brname, brname, brname);
+
+    MNET_DEBUG("SYSTEM CALL: \"%s\"\n" COMMA cmdBuff)
+    system(cmdBuff);
+}
+
 #endif
+
 static int nethelper_bridgeDestroy(char* brname) {
     
     char cmdBuff[80];
@@ -348,7 +370,7 @@ int multinet_bridgeUp(PL2Net network, int bFirewallRestart){
     MNET_DEBUG("plat_addImplicitMembers for %d complete. \n" COMMA network->inst)
     
     //create bridge
-#ifdef MULTILAN_FEATURE
+#if defined (MULTILAN_FEATURE) && !defined (_PUMA6_ARM_)
     nethelper_bridgeCreateUniqueMac(network->name, network->inst);
 #else
     nethelper_bridgeCreate(network->name);
