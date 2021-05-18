@@ -53,6 +53,7 @@
 #include <net/if.h>
 #include <signal.h>
 #include "util.h"
+#include <syscfg/syscfg.h>
 #include <telemetry_busmessage_sender.h>
 #ifdef _HUB4_PRODUCT_REQ_
 #include "utapi.h"
