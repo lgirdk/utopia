@@ -144,7 +144,7 @@ fi
 
 LOG_FILE_FLAG="$LOG_FOLDER/filescreated"
 
-if [ "$BOX_TYPE" = "XB3" ];then
+if [ "$BOX_TYPE" = "XB3" ] || [ "$BOX_TYPE" = "MV1" ];then
     CONSOLEFILE="$LOG_FOLDER/logs/ArmConsolelog.txt.0"
 else
     CONSOLEFILE="$LOG_FOLDER/logs/Consolelog.txt.0"
