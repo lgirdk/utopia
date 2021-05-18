@@ -69,6 +69,8 @@ static int syscfg_initialized = 0;
 
 static char name_p[MAX_NAME_LEN+1];                      // internal temp name buffer
 
+static int syscfg_init_internal (void);
+
 static int load_from_file (const char *fname);
 static int commit_to_file (const char *fname);
 
@@ -101,7 +103,7 @@ int syscfg_get (const char *ns, const char *name, char *out_val, int outbufsz)
     }
 
     if (syscfg_initialized == 0) {
-        int rc = syscfg_init();
+        int rc = syscfg_init_internal();
         if (rc != 0) {
             out_val[0] = 0;
             return rc;
@@ -148,7 +150,7 @@ int syscfg_get (const char *ns, const char *name, char *out_val, int outbufsz)
 int syscfg_set_ns (const char *ns, const char *name, const char *value)
 {
     if (syscfg_initialized == 0) {
-        int rc = syscfg_init();
+        int rc = syscfg_init_internal();
         if (rc != 0) {
             return rc;
         }
@@ -219,7 +221,7 @@ int syscfg_set_nns_u_commit (const char *name, unsigned long value)
 int syscfg_getall (char *buf, int bufsz, int *outsz)
 {
     if (syscfg_initialized == 0) {
-        int rc = syscfg_init();
+        int rc = syscfg_init_internal();
         if (rc != 0) {
             return rc;
         }
@@ -253,7 +255,7 @@ int syscfg_getall (char *buf, int bufsz, int *outsz)
 int syscfg_unset (const char *ns, const char *name)
 {
     if (syscfg_initialized == 0) {
-        int rc = syscfg_init();
+        int rc = syscfg_init_internal();
         if (rc != 0) {
             return rc;
         }
@@ -280,7 +282,7 @@ int syscfg_unset (const char *ns, const char *name)
 int syscfg_is_match (const char *ns, const char *name, char *value, unsigned int *out_match)
 {
     if (syscfg_initialized == 0) {
-        int rc = syscfg_init();
+        int rc = syscfg_init_internal();
         if (rc != 0) {
             return rc;
         }
@@ -314,7 +316,7 @@ int syscfg_is_match (const char *ns, const char *name, char *value, unsigned int
 int syscfg_getsz (long int *used_sz, long int *max_sz)
 {
     if (syscfg_initialized == 0) {
-        int rc = syscfg_init();
+        int rc = syscfg_init_internal();
         if (rc != 0) {
             return rc;
         }
@@ -343,7 +345,7 @@ int syscfg_commit (void)
     int rc;
 
     if (syscfg_initialized == 0) {
-        int rc = syscfg_init();
+        int rc = syscfg_init_internal();
         if (rc != 0) {
             return rc;
         }
@@ -381,7 +383,7 @@ int syscfg_commit (void)
 void syscfg_destroy (void)
 {
     if (syscfg_initialized == 0) {
-        int rc = syscfg_init();
+        int rc = syscfg_init_internal();
         if (rc != 0) {
             return;
         }
@@ -467,8 +469,12 @@ int syscfg_commit_unlock() {
     return commit_unlock(ctx);
 }
 
+/******************************************************************************
+ *                Internal utility routines
+ *****************************************************************************/
+
 /*
- * Procedure     : syscfg_init
+ * Procedure     : syscfg_init_internal
  * Purpose       : Initialization to attach current process to syscfg
  *                 shared memory based context
  * Parameters    :   
@@ -478,7 +484,7 @@ int syscfg_commit_unlock() {
  *    ERR_IO_FAILURE - syscfg file unavailable
  * Notes         :
  */
-int syscfg_init (void)
+static int syscfg_init_internal (void)
 {
     syscfg_shm_ctx *ctx;
     int rc;
@@ -501,10 +507,6 @@ int syscfg_init (void)
 
     return 0;
 }
-
-/******************************************************************************
- *                Internal utility routines
- *****************************************************************************/
 
 /*
  * Procedure     : syscfg_parse
