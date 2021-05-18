@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #######################################################################
-source /etc/utopia/service.d/service_dhcp_server/dhcp_server_functions.sh
 
 #dibbler_conf=/etc/dibbler/server.conf
 #/etc/dibbler/server.conf is soft link of /var/tmp/dhcp6s.conf
@@ -24,13 +23,49 @@ dibbler_conf=/var/tmp/dhcp6s.conf
 zebra_conf=/var/zebra.conf
 tool=$1
 ips=""
-dns_proxy=`syscfg get dns_relay_enable`
+STATIC_DNS_IPv6=""
+
+eval `utctx_cmd get dns_relay_enable dns_override dns_static_server_count dns_ipv6_preferred dns_ipv6_alternate`
+dns_proxy=$SYSCFG_dns_relay_enable
 dhcp_dns_ips=`sysevent get ipv6_nameserver`
-DNS_OVERRIDE=`syscfg get dns_override`
+DNS_OVERRIDE=$SYSCFG_dns_override
+
+get_static_dns_ips () {
+    ind=1
+    static_ips=""
+    interface="unknown"
+    delim=":"
+
+    if [ "$1" == "wan" ] ; then
+        interface="Device.IP.Interface.1"
+    elif [ "$1" == "lan" ] ; then
+        interface="Device.IP.Interface.3"
+    fi
+
+    count=$SYSCFG_dns_static_server_count
+    if [ -z "$count" ] ; then
+        count="0"
+    fi
+    while [ "$ind" -le "$count" ]
+    do
+        ns=`syscfg get dns_static_server_$ind`
+        enabled=`syscfg get $ns enable`
+        if=`syscfg get $ns if`
+        if [ "$enabled" == "1" ] && [ "$if" == "$interface" ] ; then
+            ip=`syscfg get $ns ip | grep $delim`
+            if [ -n "$ip" ] ; then
+                static_ips=$static_ips""$ip" "
+            fi
+        fi
+        ((ind++))
+    done
+
+    STATIC_DNS_IPv6=$static_ips
+}
 
 if [ "$DNS_OVERRIDE" == "true" ] ; then
-    DNS_IPv6_PREFERRED=`syscfg get dns_ipv6_preferred`
-    DNS_IPv6_ALTERNATE=`syscfg get dns_ipv6_alternate`
+    DNS_IPv6_PREFERRED=$SYSCFG_dns_ipv6_preferred
+    DNS_IPv6_ALTERNATE=$SYSCFG_dns_ipv6_alternate
     if [ -n "$DNS_IPv6_PREFERRED" ] ; then
         ips=$DNS_IPv6_PREFERRED
     fi
@@ -42,10 +77,10 @@ else
         ips=`sysevent get lan_ipaddr_v6`
     else
         # Get LAN static configuration.
-        get_static_dns_ips ipv6 lan
+        get_static_dns_ips lan
         if [ -z "$STATIC_DNS_IPv6" ] ; then
             # Get WAN static configuration.
-            get_static_dns_ips ipv6 wan
+            get_static_dns_ips wan
         fi
 
         if [ -z "$STATIC_DNS_IPv6" ] ; then
