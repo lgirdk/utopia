@@ -59,6 +59,7 @@
 #endif
 
 #include "util.h"
+#include <syscfg/syscfg.h>
 #include <telemetry_busmessage_sender.h>
 #include "syscfg/syscfg.h"
 #ifdef _HUB4_PRODUCT_REQ_
