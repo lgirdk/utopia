@@ -89,19 +89,16 @@
 int syscfg_create(const char *file, long int max_file_sz, const char *mtd_device);
 
 /*
- * Procedure     : syscfg_init
- * Purpose       : Initialization to attach current process to syscfg
- *                 shared memory based context
- * Parameters    :   
- * Return Values :
- *    0              - success
- *    ERR_INVALID_PARAM - invalid arguments
- *    ERR_IO_FAILURE - syscfg file unavailable
- * Notes         :
- *    When both file and mtd_device specified, file based storage takes
- *    precedence 
+ * Historically calling syscfg_init() was the responsibility of any code which
+ * wanted to use syscfg. However, it's now handled internally within
+ * syscfg_lib.c so explicit calls to syscfg_init() are no longer required.
+ * Keep a stub as a temp solution while calls to syscfg_init() are removed
+ * from the code.
  */
-int syscfg_init();
+static int syscfg_init (void)
+{
+    return 0;
+}
 
 /*
  * Procedure     : syscfg_destroy
