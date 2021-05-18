@@ -44,7 +44,6 @@
 #------------------------------------------------------------------
 
 source /etc/utopia/service.d/ut_plat.sh
-source /etc/utopia/service.d/service_dhcp_server/dhcp_server_functions.sh
 source /etc/utopia/service.d/hostname_functions.sh
 source /etc/utopia/service.d/ulog_functions.sh
 source /etc/utopia/service.d/event_handler_functions.sh
@@ -70,8 +69,6 @@ PID=$$
 XCONF_FILE="/etc/Xconf"
 XCONF_DEFAULT_URL="https://xconf.xcal.tv/xconf/swu/stb/"
 CALL_ARG="$1"
-
-CURRENT_LAN_STATE=`sysevent get lan-status`
 
 # For dhcp_server_slow_start we use cron to restart us
 # Just in case it is active, remove those files
@@ -799,8 +796,6 @@ dns_start ()
 
 #-----------------------------------------------------------------------
 #-----------------------------------------------------------------------
-
-service_init
 
 EXT_DHCP_READY=1
 # if device is extender, ipv4_connection_state and mesh_wan_linkstatus should be up 
