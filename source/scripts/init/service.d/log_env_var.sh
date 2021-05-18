@@ -31,19 +31,19 @@ LOG_SYNC_BACK_UP_REBOOT_PATH="/nvram2/logs/"
 . /etc/device.properties
 
 if [ -f /etc/os-release ] || [ -f /etc/device.properties ]; then
-      LOG_FOLDER="/rdklogs"
+    LOG_FOLDER="/rdklogs"
 else
-      LOG_FOLDER="/var/tmp"
+    LOG_FOLDER="/var/tmp"
 fi
 
 LOG_UPLOAD_FOLDER="/tmp"
 RDK_LOGGER_PATH="/rdklogger"
 LOG_PATH="$LOG_FOLDER/logs/"
 TMP_LOG_PATH="$LOG_UPLOAD_FOLDER/logs/"
-
 ATOM_LOG_PATH="/rdklogs/logs/"
 
 backupenable=`syscfg get logbackup_enable`
+
 #dmesg sync
 DMESG_FILE="/rdklogs/logs/messages.txt"
 lastdmesgsync="/tmp/lastdmesgsynctime"
@@ -60,16 +60,16 @@ journal_log="/rdklogs/logs/journal_logs.txt.0"
 
 #if [ "$atom_sync" = "yes" ]
 #then
-   #ATOM_IP=`cat /etc/device.properties | grep ATOM_IP | cut -f2 -d=` 
-#fi	
+   #ATOM_IP=`cat /etc/device.properties | grep ATOM_IP | cut -f2 -d=`
+#fi
 
 #if [ "$NVRAM2_SUPPORTED" = "yes" ] && [ "$backupenable" = "true" ]
 #then
 
 #else
- LOG_BACK_UP_PATH="$LOG_UPLOAD_FOLDER/logbackup/"
- LOGTEMPPATH="$LOG_FOLDER/backuplogs/"
- LOG_BACK_UP_REBOOT="$LOG_UPLOAD_FOLDER/logbackupreboot/"
+LOG_BACK_UP_PATH="$LOG_UPLOAD_FOLDER/logbackup/"
+LOGTEMPPATH="$LOG_FOLDER/backuplogs/"
+LOG_BACK_UP_REBOOT="$LOG_UPLOAD_FOLDER/logbackupreboot/"
 #fi
 
 #If device is having SYNC PATH overrides, it will get applied here.
@@ -88,21 +88,21 @@ journal_log="/rdklogs/logs/journal_logs.txt.0"
 
 #This change is needed for ArrisXB6 to choose sync location dynamically.
 if [ "$BOX_TYPE" = "XB6" -a "$MANUFACTURE" = "Arris" ];then
-	isNvram2Mounted=`grep nvram2 /proc/mounts`
-	if [ "$isNvram2Mounted" == "" ];then
-		LOG_SYNC_PATH="/nvram/logs/"
-		LOG_SYNC_BACK_UP_PATH="/nvram/logs/"
-		LOG_SYNC_BACK_UP_REBOOT_PATH="/nvram/logs/"
-	fi
+    isNvram2Mounted=`grep nvram2 /proc/mounts`
+    if [ "$isNvram2Mounted" == "" ];then
+        LOG_SYNC_PATH="/nvram/logs/"
+        LOG_SYNC_BACK_UP_PATH="/nvram/logs/"
+        LOG_SYNC_BACK_UP_REBOOT_PATH="/nvram/logs/"
+    fi
 fi
 #TCCBBR product is a noMoca product. This nvram file shall be used by cosa_start_rem.sh .
 if [ "$BOX_TYPE" == "TCCBR" ];then
-	touch /nvram/disableCcspMoCA
+    touch /nvram/disableCcspMoCA
 fi
 
 #BCI devices do not support TR069. This nvram file shall be used by cosa_start_rem.sh .
 if [ "$BOX_TYPE" == "TCCBR" ];then
-       touch /nvram/disableCcspTr069PaSsp
+    touch /nvram/disableCcspTr069PaSsp
 fi
 
 HAVECRASH="$LOG_FOLDER/processcrashed"
@@ -121,11 +121,10 @@ HTTP_CODE="/tmp/curl_httpcode"
 S3_URL="https://ssr.ccp.xcal.tv/cgi-bin/rdkb_snmp.cgi"
 WAITINGFORUPLOAD="$LOG_UPLOAD_FOLDER/waitingforupload"
 
-
 if [ -f /etc/os-release ] || [ -f /etc/device.properties ]; then
-      MAXSIZE=1536
+    MAXSIZE=1536
 else
-      MAXSIZE=524288
+    MAXSIZE=524288
 fi
 MAXLINESIZE=2
 
@@ -138,6 +137,7 @@ fi
 if [ -z $LOG_PATH ]; then
     LOG_PATH="$LOG_FOLDER/logs/"
 fi
+
 if [ -z "$PERSISTENT_PATH" ]; then
     PERSISTENT_PATH="/tmp"
 fi
@@ -145,19 +145,22 @@ fi
 LOG_FILE_FLAG="$LOG_FOLDER/filescreated"
 
 if [ "$BOX_TYPE" = "XB3" ];then
-CONSOLEFILE="$LOG_FOLDER/logs/ArmConsolelog.txt.0"
+    CONSOLEFILE="$LOG_FOLDER/logs/ArmConsolelog.txt.0"
 else
-CONSOLEFILE="$LOG_FOLDER/logs/Consolelog.txt.0"
+    CONSOLEFILE="$LOG_FOLDER/logs/Consolelog.txt.0"
 fi
 
 SELFHEALFILE="$LOG_FOLDER/logs/SelfHeal.txt.0"
 SELFHEALFILE_BOOTUP="$LOG_SYNC_PATH/SelfHealBootUp.txt.0"
+
 lockdir=$LOG_FOLDER/rxtx
+
 DCMRESPONSE="/nvram/DCMresponse.txt"
 DCMRESPONSE_TMP="/tmp/DCMresponse.txt"
 DCM_SETTINGS_PARSED="/tmp/DCMSettingsParsedForLogUpload"
 
 TMP_LOG_UPLOAD_PATH="/tmp/log_upload"
+
 RAM_OOPS_FILE_LOCATION="/sys/fs/pstore/"
 RAM_OOPS_FILE="*-ramoops*"
 RAM_OOPS_FILE0="dmesg-ramoops-0"
