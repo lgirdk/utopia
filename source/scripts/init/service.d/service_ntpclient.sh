@@ -182,7 +182,7 @@ service_start ()
    fi
 
    ulog ${SERVICE_NAME} status "updated time" 
-   if [ -n $SYSCFG_InternetAccessPolicyCount ] && [ "0" != "$SYSCFG_InternetAccessPolicyCount" ] ; then
+   if [ -n "$SYSCFG_InternetAccessPolicyCount" ] && [ "0" != "$SYSCFG_InternetAccessPolicyCount" ] ; then
       # if there is an Internet Access Policy then we need to give the firewall a chance to react to the 
       # new known time
        echo "service_ntpclient : Triggering RDKB_FIREWALL_RESTART"
