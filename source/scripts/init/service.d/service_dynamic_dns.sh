@@ -131,12 +131,6 @@ update_ddns_server() {
    token_error_changeip=""
    service_changeip_com="changeip"
 
-   while [ -f "/var/tmp/updating_ddns_server.txt" ]
-   do
-      sleep 2
-   done
-   touch "/var/tmp/updating_ddns_server.txt"
-
    #Set Return status
    ps | grep ez-ipupdate | grep -v grep
    if [ $? -eq 0 ];then
@@ -523,8 +517,6 @@ update_ddns_server() {
    if [ "0" = "$RETRY_SONN_NEEDED" ]; then
        rm -f $RETRY_SOON_FILENAME
    fi
-
-   rm "/var/tmp/updating_ddns_server.txt"
 }
 
 #---------------------------------------------------------------------------------------
@@ -567,7 +559,14 @@ do_start() {
       syscfg set ddns_client_Status $CLIENT_CONNECTING
       syscfg set ddns_host_status_1 $HOST_UPDATING
       syscfg commit
+      # ----------------------------------------------------------------------
+      # If updating_ddns_server.txt exists then a query to the DDNS server is
+      # already in progress. Wait for it to complete.
+      # ----------------------------------------------------------------------
+      while [ -f "/var/tmp/updating_ddns_server.txt" ]; do sleep 2; done
+      touch "/var/tmp/updating_ddns_server.txt"
       update_ddns_server $CURRENT_WAN_IPADDR
+      rm "/var/tmp/updating_ddns_server.txt"
 
    else
       # if no update needed, consider it as ddns "success"
