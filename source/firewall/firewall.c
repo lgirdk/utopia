@@ -588,6 +588,10 @@ static int checkIfULAEnabled();
 #endif
 static int lan2wan_multinet_disable(FILE *fp);
 
+#ifdef _PUMA6_ARM_
+static void set_wifi_flood_protect(void);
+#endif
+
 static int iseRouter0IPv6AddrReady;
 static int isFirewallEnabledV6;
 
@@ -6418,7 +6422,11 @@ static int do_csr_control (FILE *filt_fp, int family, const char *interface, int
     //UI only port 80
     if (wan_access == 1)
     {
+#ifdef _PUMA6_ARM_
+        fprintf(filt_fp, "-I http2self 2 -i %s -j ACCEPT\n", interface);
+#else
         fprintf(filt_fp, "-I http2self -i %s -j ACCEPT\n", interface);
+#endif
     }
 
     FIREWALL_DEBUG("Exiting do_csr_control\n");
@@ -12545,6 +12553,12 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
 #endif
 #endif
    fprintf(filter_fp, "%s\n", ":lan2self - [0:0]");
+#ifdef _PUMA6_ARM_
+   fprintf(filter_fp, "%s\n", ":lan2self_dos - [0:0]");
+   fprintf(filter_fp, "%s\n", ":lan2self_dos_tcp - [0:0]");
+   fprintf(filter_fp, "%s\n", ":lan2self_dos_udp - [0:0]");
+   fprintf(filter_fp, "%s\n", ":lan2self_dos_icmp - [0:0]");
+#endif
    fprintf(filter_fp, "%s\n", ":lan2self_by_wanip - [0:0]");
    fprintf(filter_fp, "%s\n", ":lan2self_mgmt - [0:0]");
    fprintf(filter_fp, "%s\n", ":host_detect - [0:0]");
@@ -12589,6 +12603,13 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
 #endif //HUB4_BFD_FEATURE_ENABLED
 #endif //_HUB4_PRODUCT_REQ_
 
+
+#ifdef _PUMA6_ARM_
+   fprintf(filter_fp, "-A lan2self_dos -p tcp -j lan2self_dos_tcp\n");
+   fprintf(filter_fp, "-A lan2self_dos -p udp -j lan2self_dos_udp\n");
+   fprintf(filter_fp, "-A lan2self_dos -p icmp -j lan2self_dos_icmp\n");
+#endif
+
    {
        char cwmpPort[6];
 
@@ -12602,8 +12623,15 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    {
        fprintf(filter_fp, "%s\n", ":http2self - [0:0]");
        fprintf(filter_fp, "-A INPUT -p tcp -m tcp --dport 80 -j http2self\n");
+#ifdef _PUMA6_ARM_
+       fprintf(filter_fp, "-A http2self -j lan2self_dos\n");
+#endif
        fprintf(filter_fp, "-A http2self -j DROP\n");
+#ifdef _PUMA6_ARM_
+       fprintf(filter_fp, "-I http2self 2 -i %s -d %s -j ACCEPT\n", lan_ifname, lan_ipaddr);
+#else
        fprintf(filter_fp, "-I http2self -i %s -d %s -j ACCEPT\n", lan_ifname, lan_ipaddr);
+#endif
    }
 #ifdef _COSA_INTEL_XB3_ARM_
    fprintf(filter_fp, "-A INPUT -p icmp -m state --state ESTABLISHED -m limit --limit 5/sec --limit-burst 10 -j ACCEPT\n");
@@ -13026,6 +13054,9 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(filter_fp, "-A lan2self -j lan2self_mgmt\n");
    fprintf(filter_fp, "-A lan2self -j lanattack\n");
    fprintf(filter_fp, "-A lan2self -j host_detect\n");
+#ifdef _PUMA6_ARM_
+   fprintf(filter_fp, "-A lan2self -j lan2self_dos\n");
+#endif
    fprintf(filter_fp, "-A lan2self -j lan2self_plugins\n");
    fprintf(filter_fp, "-A lan2self -m state --state NEW -j ACCEPT\n");
    fprintf(filter_fp, "-A lan2self -m state --state RELATED,ESTABLISHED -j ACCEPT\n");
@@ -13990,6 +14021,12 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    fprintf(filter_fp, "%s\n", ":xlog_drop_lan2self - [0:0]");
    //>>UI Access
    fprintf(filter_fp, "%s\n", ":http2self - [0:0]");
+#ifdef _PUMA6_ARM_
+   fprintf(filter_fp, "%s\n", ":lan2self_dos - [0:0]");
+   fprintf(filter_fp, "%s\n", ":lan2self_dos_tcp - [0:0]");
+   fprintf(filter_fp, "%s\n", ":lan2self_dos_udp - [0:0]");
+   fprintf(filter_fp, "%s\n", ":lan2self_dos_icmp - [0:0]");
+#endif
    //<<UI Access
    //>>DOS
 #ifdef _COSA_INTEL_XB3_ARM_
@@ -14021,6 +14058,41 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
        fprintf(filter_fp, "-A OUTPUT -j general_output\n");
        do_filter_table_general_rules(filter_fp);
    }
+  
+#ifdef _PUMA6_ARM_
+    int enable = 0;
+    char query[12];
+
+    syscfg_get(NULL, V4_IPFLOODDETECT, query, sizeof(query));
+    if (query[0] != '\0')
+    {
+        enable = atoi(query);
+    }
+    if (enable)
+    {
+      fprintf(filter_fp, "-A lan2self_dos -p tcp -j lan2self_dos_tcp\n");
+      fprintf(filter_fp, "-A lan2self_dos -p udp -j lan2self_dos_udp\n");
+      fprintf(filter_fp, "-A lan2self_dos -p icmp -j lan2self_dos_icmp\n");
+
+      fprintf(filter_fp, "-A lan2self_dos_tcp -p tcp ! --syn -m state --state NEW -j DROP\n");
+      fprintf(filter_fp, "-A lan2self_dos_tcp -m state --state ESTABLISHED,RELATED -j RETURN\n");
+      fprintf(filter_fp, "-A lan2self_dos_tcp -m recent --set --name lan2self_dos_tcp\n");
+      fprintf(filter_fp, "-A lan2self_dos_tcp -m recent --update --seconds 1 --hitcount 15 --name lan2self_dos_tcp -j DROP\n");
+
+      fprintf(filter_fp, "-A lan2self_dos_udp -m recent --set --name lan2self_dos_udp\n");
+      fprintf(filter_fp, "-A lan2self_dos_udp -m recent --update --seconds 1 --hitcount 15 --name lan2self_dos_udp -j DROP\n");
+
+      fprintf(filter_fp, "-A lan2self_dos_icmp -m recent --set --name lan2self_dos_icmp\n");
+
+      int icmpRate = 15;
+      syscfg_get (NULL, V4_ICMPFLOODDETECTRATE, query, sizeof(query));
+      if (query[0] != 0)
+      {
+        icmpRate = atoi(query);
+      }
+      fprintf(filter_fp, "-A lan2self_dos_icmp -m recent --update --seconds 1 --hitcount %u --name lan2self_dos_icmp -j DROP\n", icmpRate);
+    }
+#endif
    fprintf(filter_fp, "-A xlog_drop_wan2self -j DROP\n");
    fprintf(filter_fp, "-A xlog_drop_lan2self -j DROP\n");
    if(isWanServiceReady) {
@@ -14073,8 +14145,15 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
 
    fprintf(filter_fp, "-A INPUT -i %s -j lan2self_mgmt\n", cmdiag_ifname); //lan0 always exist
    fprintf(filter_fp, "-A INPUT -p tcp -m tcp --dport 80 -j http2self\n");
+#ifdef _PUMA6_ARM_
+   fprintf(filter_fp, "-A http2self -j lan2self_dos\n");
+#endif
    fprintf(filter_fp, "-A http2self -j DROP\n");
+#ifdef _PUMA6_ARM_
+   fprintf(filter_fp, "-I http2self 2 -m physdev --physdev-in l2sd0.100 -d 192.168.100.1 -j ACCEPT\n");
+#else
    fprintf(filter_fp, "-I http2self -m physdev --physdev-in l2sd0.100 -d 192.168.100.1 -j ACCEPT\n");
+#endif
    /* To be enabled with proper values for CSR login. Right now, CSR Login is always disabled in bridge mode.
     * syscfg_get(NULL, "mgmt_wan_access", query, sizeof(query));
     * do_csr_control(filter_fp, AF_INET, ecm_wan_ifname, atoi(query));
@@ -16403,9 +16482,22 @@ static int do_ipflooddetectv4(FILE *fp)
         fprintf(fp, "-A DOS_TCP ! -i erouter0 -p tcp --syn %s -j RETURN\n", LAN_DoS);
         fprintf(fp, "-A DOS_TCP -i erouter0 -p tcp --syn %s -j RETURN\n", WAN_DoS);
         fprintf(fp, "-A DOS_TCP -j DOS_DROP\n");
+
+#ifdef _PUMA6_ARM_
+        fprintf(fp, "-A lan2self_dos_tcp -p tcp ! --syn -m state --state NEW -j DROP\n");
+        fprintf(fp, "-A lan2self_dos_tcp -m state --state ESTABLISHED,RELATED -j RETURN\n");
+        fprintf(fp, "-A lan2self_dos_tcp -m recent --set --name lan2self_dos_tcp\n");
+        fprintf(fp, "-A lan2self_dos_tcp -m recent --update --seconds 1 --hitcount 15 --name lan2self_dos_tcp -j DROP\n");
+#endif
+
 	fprintf(fp, "-A DOS_UDP ! -i erouter0 -p udp %s -j RETURN\n", LAN_DoS);
         fprintf(fp, "-A DOS_UDP -i erouter0 -p udp %s -j RETURN\n", WAN_DoS);
         fprintf(fp, "-A DOS_UDP -j DOS_DROP\n");
+
+#ifdef _PUMA6_ARM_
+        fprintf(fp, "-A lan2self_dos_udp -m recent --set --name lan2self_dos_udp\n");
+        fprintf(fp, "-A lan2self_dos_udp -m recent --update --seconds 1 --hitcount 15 --name lan2self_dos_udp -j DROP\n");
+#endif
 
         /*
            Note: DOS_ICMP rules have been moved into do_icmpflooddetectv4()
@@ -16459,6 +16551,10 @@ static void do_icmpflooddetectv4(FILE *fp)
         fprintf(fp, "-A DOS_ICMP -i erouter0 -m limit --limit %u/second --limit-burst %u -j RETURN\n", icmpRate, icmpRate);
         fprintf(fp, "-A DOS_ICMP -i erouter0 -m limit --limit 5/min --limit-burst 5 -j LOG --log-prefix \"ICMP Flood: \" --log-level 5\n");
         fprintf(fp, "-A DOS_ICMP -i erouter0 -j DROP\n");
+#ifdef _PUMA6_ARM_
+        fprintf(fp, "-A lan2self_dos_icmp -m recent --set --name lan2self_dos_icmp\n");
+        fprintf(fp, "-A lan2self_dos_icmp -m recent --update --seconds 1 --hitcount %u --name lan2self_dos_icmp -j DROP\n", icmpRate);
+#endif
     }
     else
     {
@@ -16523,6 +16619,28 @@ static int do_portscanprotectv6(FILE *fp)
     }
     return 0;
 }
+
+#ifdef _PUMA6_ARM_
+static void set_wifi_flood_protect(void)
+{
+    char buf[128];
+    char *syscfg_enables[4] = { V4_IPFLOODDETECT, V6_IPFLOODDETECT, V4_ICMPFLOODDETECT, "v6_ICMPFloodDetect" };
+    int enable = 0;
+    int i;
+
+    /* Enable filtering if any of the 4 syscfg options are set */
+    for (i = 0; i < 4; i++) {
+        syscfg_get(NULL, syscfg_enables[i], buf, sizeof(buf));
+        if (buf[0] != '\0' && atoi(buf) != 0) {
+            enable = 1;
+            break;
+        }
+    }
+
+    snprintf(buf, sizeof(buf), "rpcclient2 'echo %d > /sys/module/udma_anti_dos/parameters/filtering_enabled'", enable);
+    system(buf);
+}
+#endif
 
 /*
  * Function to add IP Table rules against IPV6 Flooding
@@ -16828,6 +16946,10 @@ static int service_start (char* strBlockTimeCmd)
    /* ipv6 */
    prepare_ipv6_firewall(filename2, strBlockTimeCmd);
    v_secure_system("ip6tables-restore < /tmp/.ipt_v6 2> /tmp/.ipv6table_error");
+
+#ifdef _PUMA6_ARM_
+   set_wifi_flood_protect();
+#endif
 
    #ifdef _PLATFORM_RASPBERRYPI_
        /* Apply Mac Filtering rules for RPI-Device */
