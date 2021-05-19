@@ -551,14 +551,14 @@ static char *syscfg_parse (const char *str, char **name, char **value)
 // dbj2 hash: hash * 33 + str[i]
 static unsigned int hash (const char *str)
 {
-    unsigned int hash = 5381;
+    unsigned int hash = 5381 % SYSCFG_HASH_TABLE_SZ;
     int c;
 
     while ((c = *str++)) {
         hash = ((hash << 5) + hash) + c; 
     }
 
-    return hash;
+    return hash % SYSCFG_HASH_TABLE_SZ;
 }
 
 /******************************************************************************
@@ -921,7 +921,7 @@ static char* _syscfg_get (const char *ns, const char *name)
         snprintf(name_p, sizeof(name_p), "%s", name);
     }
 
-    int index = hash(name_p) % SYSCFG_HASH_TABLE_SZ;
+    int index = hash(name_p);
 
     shmoff_t entryoffset = ctx->ht[index];
 
@@ -1029,8 +1029,7 @@ static int _syscfg_set (const char *ns, const char *name, const char *value, int
         strncpy(name_p, name, sizeof(name_p));
     }
 
-
-    index = hash(name_p) % SYSCFG_HASH_TABLE_SZ;
+    index = hash(name_p);
 
     if (0 == ctx->ht[index]) {
         if (0 == check_decr_store_sz(ctx, name_p, value)) {
@@ -1108,8 +1107,7 @@ static int _syscfg_unset (const char *ns, const char *name, int nolock)
         strncpy(name_p, name, sizeof(name_p));
     }
 
-
-    int index = hash(name_p) % SYSCFG_HASH_TABLE_SZ;
+    int index = hash(name_p);
     if (0 == ctx->ht[index]) {
         // doesn't exist, nothing to do
         if (!nolock) {
