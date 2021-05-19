@@ -258,24 +258,6 @@ if [ -d $SYSCFG_ENCRYPTED_PATH ]; then
        fi
 fi
 
-#syscfg_check -d $MTD_DEVICE
-#if [ $? = 0 ]; then
-#   echo "[utopia][init] Starting syscfg subsystem using flash partition $MTD_DEVICE"
-#   /sbin/syscfg_create -d $MTD_DEVICE
-#else
-#   echo "[utopia][init] Formating flash partition $MTD_DEVICE for syscfg use"
-#   syscfg_format -d $MTD_DEVICE
-#   if [ $? = 0 ]; then
-#      echo "[utopia][init] Starting syscfg subsystem using flash partition $MTD_DEVICE with default settings"
-#      /sbin/syscfg_create -d $MTD_DEVICE
-#   else
-#      echo "[utopia][init] FAILURE: formatting flash partition $MTD_DEVICE for syscfg use"
-#      echo "[utopia][init] Starting syscfg with default settings using file store ($SYSCFG_FILE)"
-#      echo "" > $SYSCFG_FILE
-#      /sbin/syscfg_create -f $SYSCFG_FILE
-#   fi
-#fi
-
 CheckAndReCreateDB()
 {
 	NVRAMFullStatus=`df -h $SYSCFG_MOUNT | grep "100%"`
