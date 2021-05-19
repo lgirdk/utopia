@@ -192,7 +192,7 @@ service_start ()
    sysevent set ${SERVICE_NAME}-status "started"
    syscfg set ntp_status 3
 
-   /* Set FirstUseDate in Syscfg if this is the first time we are doing a successful NTP Sych */
+   # Set FirstUseDate in Syscfg if this is the first time we are doing a successful NTP Sych
    DEVICEFIRSTUSEDATE=`syscfg get device_first_use_date`
    if [ "0" = "$DEVICEFIRSTUSEDATE" ] ; then
       FIRSTUSEDATE=`date +%Y-%m-%dT%H:%M:%S`
