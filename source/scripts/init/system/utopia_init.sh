@@ -464,8 +464,6 @@ syscfg get nat_icmp_timeout > /proc/sys/net/netfilter/nf_conntrack_icmp_timeout
 
 #/sbin/ulogd -c /etc/ulogd.conf -d
 
-echo_t "[utopia][init] Starting lighttpd"
-sh /etc/start_lighttpd.sh start &
 
 echo_t "[utopia][init] Processing registration"
 # run all executables in the sysevent registration directory
