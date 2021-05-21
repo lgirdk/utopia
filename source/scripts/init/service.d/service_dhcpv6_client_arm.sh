@@ -75,16 +75,17 @@ service_init ()
         SYSCFG_ipv6_static_enable=0
    fi
 
+   eval `sysevent batchget wan_ifname lan-status wan-status current_ipv4_link_state ipv6-status dhcpv6c_enabled phylink_wan_state bridge_mode`
    # The more information from SYSEVENT
-   WAN_INTERFACE_NAME=`sysevent get wan_ifname`
-   LAN_STATE=`sysevent get lan-status`
-   WAN_STATE=`sysevent get wan-status`
-   PHY_WAN_STATE=`sysevent get current_ipv4_link_state`
-   IPV6_STATE=`sysevent get ipv6-status`
+   WAN_INTERFACE_NAME=$SYSEVENT_1
+   LAN_STATE=$SYSEVENT_2
+   WAN_STATE=$SYSEVENT_3
+   PHY_WAN_STATE=$SYSEVENT_4
+   IPV6_STATE=$SYSEVENT_5
 
-   DHCPV6C_ENABLED=`sysevent get dhcpv6c_enabled`
-   WAN_LINK_STATUS=`sysevent get phylink_wan_state`
-   BRIDGE_MODE=`sysevent get bridge_mode`
+   DHCPV6C_ENABLED=$SYSEVENT_6
+   WAN_LINK_STATUS=$SYSEVENT_7
+   BRIDGE_MODE=$SYSEVENT_8
 }
 
 service_start()
