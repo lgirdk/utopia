@@ -52,11 +52,15 @@ SELF_NAME="`basename $0`"
 IGD=IGD
 UPNP_TMP=/var/tmp/upnp.ttl
 PRIVATE_LAN_IF="brlan0"
+CURRENT_NETS=""
+IGD_STATUS=""
+LAN_STATUS=""
+RESYNC_PROC_STATUS=""
+IPV4_PROC_STATUS=""
 
 resync_upnp() {
 	sysevent set resync_upnp_process started
 
-    local CURRENT_NETS="`sysevent get ${SERVICE_NAME}_current_nets`"
     local REM_NETS="${CURRENT_NETS}"
     local LOAD_NETS="`psmcli getallinst ${IPV4_NV_PREFIX}.`"
     
@@ -94,8 +98,8 @@ resync_upnp() {
 
 	if [ "$IFName" = "$PRIVATE_LAN_IF" ]
 	then
-			curr_ipv4_proc_status=`sysevent get ipv4_status_process`
-			curr_resync_proc_status=`sysevent get resync_upnp_process`
+			curr_ipv4_proc_status=$IPV4_PROC_STATUS
+			curr_resync_proc_status=$RESYNC_PROC_STATUS
 			if [ -z "$curr_ipv4_proc_status" ] || [ "$curr_ipv4_proc_status" = "completed" ] || [ "$curr_resync_proc_status" = "completed" ]; then
 	    	    handle_ipv4_status ${i} `sysevent get ipv4_${i}-status`
 			fi
@@ -155,7 +159,7 @@ service_start() {
 #    rm -rf /var/IGD
 # 
 #    # start IGD daemon
-    if [ "1" = "$SYSCFG_upnp_igd_enabled" -a x`sysevent get ${SERVICE_NAME}-status` = x"stopped" ] ; then
+    if [ "1" = "$SYSCFG_upnp_igd_enabled" -a x"$IGD_STATUS" = x"stopped" ] ; then
         ulog ${SERVICE_NAME} status "starting ${SERVICE_NAME} service" 
         UPNP_TTL=`syscfg get upnp_igd_advr_ttl`
         touch $UPNP_TMP
@@ -173,7 +177,6 @@ service_start() {
 service_stop () {
    ulog ${SERVICE_NAME} status "stopping ${SERVICE_NAME} service" 
 
-   local CURRENT_NETS="`sysevent get ${SERVICE_NAME}_current_nets`"
    for net in $CURRENT_NETS; do 
         handle_ipv4_status $net $IF_DOWN
    done
@@ -202,6 +205,14 @@ init_once () {
 service_init() {
     FOO=`utctx_cmd get upnp_igd_enabled`
     eval $FOO
+
+    eval `sysevent batchget ${SERVICE_NAME}_current_nets ${SERVICE_NAME}-status lan-status resync_upnp_process ipv4_status_process`
+    CURRENT_NETS=$SYSEVENT_1
+    IGD_STATUS=$SYSEVENT_2
+    CURRENT_LAN_STATUS=$SYSEVENT_3
+    RESYNC_PROC_STATUS=$SYSEVENT_4
+    IPV4_PROC_STATUS=$SYSEVENT_5
+
     init_once
 }
 
@@ -222,7 +233,6 @@ case "$1" in
       service_start
       ;;
   lan-status)
-      CURRENT_LAN_STATUS=`sysevent get lan-status`
       if [ "started" = "$CURRENT_LAN_STATUS" ] ; then
          service_start
       elif [ "stopped" = "$CURRENT_LAN_STATUS" ] ; then 
@@ -243,8 +253,8 @@ case "$1" in
         INST=${1%-*}
         INST=${INST#*_}
 
-		curr_resync_proc_status=`sysevent get resync_upnp_process`
-		curr_ipv4_igd=`sysevent get ipv4_status_process`
+		curr_resync_proc_status=$RESYNC_PROC_STATUS
+		curr_ipv4_igd=$IPV4_PROC_STATUS
 		if [ -z "$curr_resync_proc_status" ] || [ "$curr_resync_proc_status" = "completed" ] || [ "$curr_ipv4_igd" = "completed" ]; then
 			sysevent set ipv4_status_process started	  
 	        handle_ipv4_status $INST $2
