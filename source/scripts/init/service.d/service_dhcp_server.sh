@@ -354,12 +354,18 @@ resync_to_nonvol ()
             async="`sysevent get ${SERVICE_NAME}_${i}-ipv4async`"
             sysevent rm_async $async
         fi
-        eval sysevent set ${SERVICE_NAME}_${i}_startaddr \${DHCP_START_ADDR_${i}}
-        eval sysevent set ${SERVICE_NAME}_${i}_endaddr \${DHCP_END_ADDR_${i}}
-        eval sysevent set ${SERVICE_NAME}_${i}_ipv4inst \${IPV4_INST_${i}}
-        eval sysevent set ${SERVICE_NAME}_${i}_subnet \${SUBNET_${i}}
-        eval sysevent set ${SERVICE_NAME}_${i}_leasetime \${DHCP_LEASE_TIME_${i}} 
-        eval sysevent set ${SERVICE_NAME}_${i}_enabled \${ENABLED_${i}} 
+        eval "start_addr=\${DHCP_START_ADDR_${i}}"
+        eval "end_addr=\${DHCP_END_ADDR_${i}}"
+        eval "ipv4inst=\${IPV4_INST_${i}}"
+        eval "subnet=\${SUBNET_${i}}"
+        eval "leasetime=\${DHCP_LEASE_TIME_${i}}"
+        eval "enabled=\${ENABLED_${i}}"
+        SYSEVENT_SET_CMD+=(${SERVICE_NAME}_${i}_startaddr=$start_addr)
+        SYSEVENT_SET_CMD+=(${SERVICE_NAME}_${i}_endaddr=$end_addr)
+        SYSEVENT_SET_CMD+=(${SERVICE_NAME}_${i}_ipv4inst=$ipv4inst)
+        SYSEVENT_SET_CMD+=(${SERVICE_NAME}_${i}_subnet=$subnet)
+        SYSEVENT_SET_CMD+=(${SERVICE_NAME}_${i}_leasetime=$leasetime)
+        SYSEVENT_SET_CMD+=(${SERVICE_NAME}_${i}_enabled=$enabled)
     done
     
     #for i in $REM_POOLS; do 
@@ -375,13 +381,13 @@ resync_to_nonvol ()
             # skip for xhome, handled directly in dhcp_server binary
 	    else    
                eval async=\"\`sysevent async ipv4_\${IPV4_INST_${i}}-status ${UTOPIAROOT}/service_${SERVICE_NAME}.sh\`\"
-               sysevent set ${SERVICE_NAME}_${i}-ipv4async "$async"
+               SYSEVENT_SET_CMD+=(${SERVICE_NAME}_${i}-ipv4async="$async")
 	    fi
         fi
     done
     
-    sysevent set ${SERVICE_NAME}_current_pools "$CURRENT_POOLS $LOAD_POOLS"
-    
+    SYSEVENT_SET_CMD+=(${SERVICE_NAME}_current_pools="$CURRENT_POOLS $LOAD_POOLS")
+    sysevent batchset "${SYSEVENT_SET_CMD[@]}"
 }
 
 #-----------------------------------------------------------------
@@ -807,6 +813,7 @@ if [ $? = "1" ]; then
     fi
 fi
 
+SYSEVENT_SET_CMD=()
 case "$1" in
    ${SERVICE_NAME}-start)
 	  echo_t "SERVICE DHCP : Got start.. call dhcp_server_start"
