@@ -54,7 +54,7 @@ do_start_mldproxy () {
 
    #echo "fastleave" >> $LOCAL_CONF_FILE
    echo "protocol MLDv2;" >> $LOCAL_CONF_FILE
-   if [ "started" = "`sysevent get wan-status`" ] ; then
+   if [ "started" = "$CURRENT_WAN_STATUS" ] ; then
       echo "pinstance v6Proxy: $WAN_IFNAME ==> $SYSCFG_lan_ifname;" >> $LOCAL_CONF_FILE
    fi
 
@@ -69,7 +69,10 @@ do_start_mldproxy () {
 service_init ()
 {
    eval "`utctx_cmd get mldproxy_enabled lan_ifname`"
-   WAN_IFNAME=`sysevent get current_wan_ifname`
+   eval `sysevent batchget current_wan_ifname wan-status lan-status`
+   WAN_IFNAME=$SYSEVENT_1
+   CURRENT_WAN_STATUS=$SYSEVENT_2
+   CURRENT_LAN_STATUS=$SYSEVENT_3
 }
 
 service_start () 
@@ -110,8 +113,6 @@ case "$1" in
       service_start
       ;;
   wan-status)
-      CURRENT_WAN_STATUS=`sysevent get wan-status`
-      CURRENT_LAN_STATUS=`sysevent get lan-status`
       if [ "started" = "$CURRENT_WAN_STATUS" ] && [ "started" = "$CURRENT_LAN_STATUS" ] ; then
          service_start
       elif [ "stopped" = "$CURRENT_WAN_STATUS" ] || [ "stopped" = "$CURRENT_LAN_STATUS" ] ; then
@@ -119,8 +120,6 @@ case "$1" in
       fi
       ;;
   lan-status)
-      CURRENT_WAN_STATUS=`sysevent get wan-status`
-      CURRENT_LAN_STATUS=`sysevent get lan-status`
       if [ "started" = "$CURRENT_WAN_STATUS" ] && [ "started" = "$CURRENT_LAN_STATUS" ] ; then
          service_start
       elif [ "stopped" = "$CURRENT_WAN_STATUS" ] || [ "stopped" = "$CURRENT_LAN_STATUS" ] ; then
