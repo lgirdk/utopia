@@ -5108,9 +5108,11 @@ static int do_mgmt_override(FILE *nat_fp)
 
 static int remote_access_set_proto(FILE *filt_fp, FILE *nat_fp, const char *port, const char *src, int family, const char *interface)
 {
+#if defined(_COSA_BCM_MIPS_) //Fix  for XF3-5627
 	char IPv6[INET6_ADDRSTRLEN] = "0";
 	memset(IPv6, 0, INET6_ADDRSTRLEN);
 	sysevent_get(sysevent_fd, sysevent_token, "lan_ipaddr_v6", IPv6, sizeof(IPv6));
+#endif
 	
          FIREWALL_DEBUG("Entering remote_access_set_proto\n");    
     if (family == AF_INET) {
