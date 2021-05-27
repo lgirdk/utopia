@@ -55,9 +55,8 @@ DHCPV6_BINARY=/sbin/dhcp6c
 DHCPV6_CONF_FILE=/etc/dhcp6c.conf
 DHCPV6_PID_FILE=/var/run/dhcp6c.pid
 DHCPV6_EXECUTE_UPON_COMPLETION=$0
-eval `utctx_cmd get dhcpv6c_enable ipv6_static_enable lan_ipv6addr wan_ipv6addr dhcpv6c_duid lan_ifname verbose`
 # for development purposes let syscfg verbose ipv6 be a signal for logging
-if [ x"ipv6" = x"$SYSCFG_verbose" ] 
+if [ "ipv6" = "`syscfg get verbose`" ] 
 then
    LOG=/var/log/ipv6.log
 else
@@ -161,6 +160,7 @@ restore_dhcpv6c_duid() {
 service_init ()
 {
    # First some SYSCFG
+   eval `utctx_cmd get dhcpv6c_enable ipv6_static_enable lan_ipv6addr wan_ipv6addr dhcpv6c_duid lan_ifname`
    LAN_INTERFACE_NAME=$SYSCFG_lan_ifname
 
    if [ -z "$SYSCFG_ipv6_static_enable" ]

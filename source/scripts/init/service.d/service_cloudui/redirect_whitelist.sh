@@ -11,10 +11,9 @@ RESOLV_CONF="/etc/resolv.conf"
 # cloud_enable_flag         : Device.X_LGI-COM_General.CloudUIEnable
 # redirection_url           : Device.X_LGI-COM_General.CloudUIUrl
 
-eval `utctx_cmd get FirstInstallWizard_Enable FirstInstall_State CaptivePortal_Enable cloud_enable_flag redirection_url HTTP_Server_I`
-FirstInstall_Enable=${SYSCFG_FirstInstallWizard_Enable}
-FirstInstall_State=${SYSCFG_FirstInstall_State}
-Redirection_Enable=${SYSCFG_CaptivePortal_Enable}
+FirstInstall_Enable=$(syscfg get FirstInstallWizard_Enable)
+FirstInstall_State=$(syscfg get FirstInstall_State)
+Redirection_Enable=$(syscfg get CaptivePortal_Enable)
 
 [ "$FirstInstall_State" != "false" ] && FirstInstall_State="true"
 
@@ -29,11 +28,11 @@ then
 		echo "no-resolv" >> $SERVER4_CONF
 
 		# FirstInstall: Redirection Whitelist
-		Cloud_Enable=${SYSCFG_cloud_enable_flag}
+		Cloud_Enable=$(syscfg get cloud_enable_flag)
 		if [ "$Cloud_Enable" = "1" ]
 		then
 			# Warning: syscfg string may be single quoted
-			Cloud_URL=${SYSCFG_redirection_url//\'}
+			Cloud_URL=$(syscfg get redirection_url | tr -d \')
 			if [ -n "$Cloud_URL" ] && [ "$Cloud_URL" != 'http://127.0.0.1' ]
 			then
 				echo 'FirstInstall: Redirection Whitelist'
@@ -46,7 +45,7 @@ then
 			sed '/server=/d' -i $SERVER4_CONF
 		fi
 
-		HTTP_Server_IP=${SYSCFG_HTTP_Server_I}
+		HTTP_Server_IP=$(syscfg get HTTP_Server_I)
 		DnsmasqIP_Option="address=/#/${HTTP_Server_IP}"
 		echo $DnsmasqIP_Option >> $SERVER4_CONF
 	else

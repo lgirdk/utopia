@@ -219,9 +219,7 @@ else
    echo 204 > /var/tmp/networkresponse.txt
 fi
 
-eval `utctx_cmd get lan_domain factory_reset PartnerID_FR UpdateNvram lan_ipaddr lan_netmask lost_and_found_enable iot_ifname iot_dhcp_start iot_dhcp_end iot_netmask ForwardSSH unit_activated lan_ifname cmdiag_ifname ecm_wan_ifname nat_udp_timeout nat_tcp_timeout nat_icmp_timeout lan_ethernet_physical_ifnames`
-
-SYSCFG_LAN_DOMAIN=$SYSCFG_lan_domain
+SYSCFG_LAN_DOMAIN=`syscfg get lan_domain` 
 
 if [ "$SYSCFG_LAN_DOMAIN" == "utopia.net" ]; then
    echo_t "[utopia][init] Setting lan domain to NULL"
@@ -257,12 +255,12 @@ if test "$BUTTON_THRESHOLD" -le "$PUNIT_RESET_DURATION"; then
    syscfg commit
 fi
 
-SYSCFG_FR_VAL=$SYSCFG_factory_reset
+SYSCFG_FR_VAL="`syscfg get $FACTORY_RESET_KEY`"
 
 if [ "$FACTORY_RESET_RGWIFI" = "$SYSCFG_FR_VAL" ]; then
    echo_t "[utopia][init] Performing factory reset"
 
-SYSCFG_PARTNER_FR=$SYSCFG_PartnerID_FR
+SYSCFG_PARTNER_FR="`syscfg get PartnerID_FR`"
 if [ "1" = "$SYSCFG_PARTNER_FR" ]; then
    echo_t "[utopia][init] Performing factory reset due to PartnerID change"
 fi
@@ -383,35 +381,35 @@ changeFilePermissions $SYSCFG_BKUP_FILE 400
 changeFilePermissions $SYSCFG_NEW_FILE  400
 
 SYSCFG_DB_FILE="/nvram/syscfg.db"
-SECURE_SYSCFG=$SYSCFG_UpdateNvram
+SECURE_SYSCFG=`syscfg get UpdateNvram`
 if [ "$SECURE_SYSCFG" = "false" ]; then
       SYSCFG_DB_FILE="/opt/secure/data/syscfg.db"
 fi
 echo "[utopia][init] SEC: Syscfg stored in $SYSCFG_DB_FILE"
 
 #Added log to check the DHCP range corruption after system defaults applied.
-lan_ipaddr=$SYSCFG_lan_ipaddr
-lan_netmask=$SYSCFG_lan_netmask
+lan_ipaddr=`syscfg get lan_ipaddr`
+lan_netmask=`syscfg get lan_netmask`
 echo_t "[utopia][init] lan_ipaddr = $lan_ipaddr lan_netmask = $lan_netmask"
 
-lost_and_found_enable=$SYSCFG_lost_and_found_enable
+lost_and_found_enable=`syscfg get lost_and_found_enable`
 echo_t "[utopia][init] lost_and_found_enable = $lost_and_found_enable"
 if [ "$lost_and_found_enable" == "true" ]
 then
-    iot_ifname=$SYSCFG_iot_ifname
+    iot_ifname=`syscfg get iot_ifname`
     if [ "$iot_ifname" == "l2sd0.106" ]; then
      echo_t "[utopia][init] changing over to new LnF bridge: br106"
      syscfg set iot_brname br106
      syscfg commit
     fi
-    iot_dhcp_start=$SYSCFG_iot_dhcp_start
-    iot_dhcp_end=$SYSCFG_iot_dhcp_end
-    iot_netmask=$SYSCFG_iot_netmask
+    iot_dhcp_start=`syscfg get iot_dhcp_start`
+    iot_dhcp_end=`syscfg get iot_dhcp_end`
+    iot_netmask=`syscfg get iot_netmask`
     echo_t "[utopia][init] [DHCPCORRUPT_TRACE] configuring for IOT iot_ifname = $iot_ifname "
     echo_t "[utopia][init] [DHCPCORRUPT_TRACE] iot_dhcp_start = $iot_dhcp_start iot_dhcp_end=$iot_dhcp_end iot_netmask=$iot_netmask"
 fi
 
-ForwardSSH=$SYSCFG_ForwardSSH
+ForwardSSH=`syscfg get ForwardSSH`
 Log_file="/rdklogs/logs/FirewallDebug.txt"
 if $ForwardSSH;then
    echo "SSH: Forward SSH changed to enabled" >> $Log_file
@@ -421,7 +419,7 @@ fi
 
 # Get the syscfg value which indicates whether unit is activated or not.
 # This value is set from network_response.sh based on the return code received.
-activated=$SYSCFG_unit_activated
+activated=`syscfg get unit_activated`
 echo_t "[utopia][init] Value of unit_activated got is : $activated"
 if [ "$activated" = "1" ]
 then
@@ -431,10 +429,10 @@ fi
 
 echo_t "[utopia][init] Applying iptables settings"
 
-lan_ifname=$SYSCFG_lan_ifname
-cmdiag_ifname=$SYSCFG_cmdiag_ifname
-ecm_wan_ifname=$SYSCFG_ecm_wan_ifname
-wan_ifname=$SYSCFG_wan_ifname
+lan_ifname=`syscfg get lan_ifname`
+cmdiag_ifname=`syscfg get cmdiag_ifname`
+ecm_wan_ifname=`syscfg get ecm_wan_ifname`
+wan_ifname=`sysevent get wan_ifname`
 
 #disable telnet / ssh ports
 iptables -A INPUT -i $lan_ifname -p tcp --dport 23 -j DROP
@@ -460,9 +458,9 @@ echo 20 > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_close_wait
 echo 400 > /proc/sys/net/netfilter/nf_conntrack_expect_max
 echo 8192 > /proc/sys/net/netfilter/nf_conntrack_max
 
-echo $SYSCFG_nat_udp_timeout > /proc/sys/net/netfilter/nf_conntrack_udp_timeout
-echo $SYSCFG_nat_tcp_timeout > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_established
-echo $SYSCFG_nat_icmp_timeout > /proc/sys/net/netfilter/nf_conntrack_icmp_timeout
+syscfg get nat_udp_timeout > /proc/sys/net/netfilter/nf_conntrack_udp_timeout
+syscfg get nat_tcp_timeout > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_established
+syscfg get nat_icmp_timeout > /proc/sys/net/netfilter/nf_conntrack_icmp_timeout
 
 #/sbin/ulogd -c /etc/ulogd.conf -d
 
@@ -596,7 +594,7 @@ fi
 
 # ------ Creating trunk port for ext switch ports of primary LAN --------------------
 if [ "$BOX_TYPE" = "MV1" ]; then
-    l2switchPort=$SYSCFG_lan_ethernet_physical_ifnames
+    l2switchPort=$(syscfg get lan_ethernet_physical_ifnames)
     vconfig add ${l2switchPort%%.*} ${l2switchPort##*.}
     ip link set dev ${l2switchPort} up
 fi
