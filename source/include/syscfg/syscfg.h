@@ -36,6 +36,8 @@
 #ifndef _SYSCFG_H_
 #define _SYSCFG_H_
 
+#include <stddef.h>
+
 #define SYSCFG_SZ (60 * 1024)
 
 #define ERR_INVALID_PARAM     -1
@@ -138,7 +140,24 @@ int syscfg_getall(char *buf, int count, int *outsz);
  *    Only changes syscfg hash table, persistent store contents
  *    not changed until 'commit' operation
  */
-int syscfg_set(const char *ns, const char *name, const char *value);
+
+int syscfg_set_ns             (const char *ns, const char *name, const char *value);
+int syscfg_set_ns_commit      (const char *ns, const char *name, const char *value);
+int syscfg_set_ns_int         (const char *ns, const char *name, int value);
+int syscfg_set_ns_int_commit  (const char *ns, const char *name, int value);
+
+int syscfg_set2               (const char *name, const char *value);
+int syscfg_set_commit         (const char *name, const char *value);
+int syscfg_set_int            (const char *name, int value);
+int syscfg_set_int_commit     (const char *name, int value);
+
+static int syscfg_set (const char *ns, const char *name, const char *value)
+{
+    if (ns == NULL)
+        return syscfg_set2 (name, value);
+
+    return syscfg_set_ns (ns, name, value);
+}
 
 /*
  * Procedure     : syscfg_unset

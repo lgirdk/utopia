@@ -173,7 +173,7 @@ int syscfg_get (const char *ns, const char *name, char *out_val, int outbufsz)
  *    Only changes syscfg hash table, persistent store contents
  *    not changed until 'commit' operation
  */
-int syscfg_set (const char *ns, const char *name, const char *value)
+int syscfg_set_ns (const char *ns, const char *name, const char *value)
 {
     if (syscfg_initialized == 0) {
         int rc = syscfg_init_internal();
@@ -183,6 +183,54 @@ int syscfg_set (const char *ns, const char *name, const char *value)
     }
 
     return _syscfg_set(ns, name, value, 0);
+}
+
+int syscfg_set_ns_commit (const char *ns, const char *name, const char *value)
+{
+    int result = syscfg_set_ns (ns, name, value);
+    if (result == 0)
+        result = syscfg_commit();
+    return result;
+}
+
+int syscfg_set_ns_int (const char *ns, const char *name, int value)
+{
+    char buf[12];
+    sprintf (buf, "%d", value);
+    return syscfg_set_ns (ns, name, value);
+}
+
+int syscfg_set_ns_int_commit (const char *ns, const char *name, int value)
+{
+    int result = syscfg_set_ns_int (ns, name, value);
+    if (result == 0)
+        result = syscfg_commit();
+    return result;
+}
+
+/*
+   Ideally with the new naming scheme this would be syscfg_set(), however call
+   it somethng else to prevent syscfg_set() being a valid symbol (to help catch
+   any code which calls syscfg_set() without including syscfg.h).
+*/
+int syscfg_set2 (const char *name, const char *value)
+{
+    return syscfg_set_ns (NULL, name, value);
+}
+
+int syscfg_set_commit (const char *name, const char *value)
+{
+    return syscfg_set_ns_commit (NULL, name, value);
+}
+
+int syscfg_set_int (const char *name, int value)
+{
+    return syscfg_set_ns_int (NULL, name, value);
+}
+
+int syscfg_set_int_commit (const char *name, int value)
+{
+    return syscfg_set_ns_int_commit (NULL, name, value);
 }
 
 /*
