@@ -910,17 +910,18 @@ static void _syscfg_destroy (void)
 
 static char* _syscfg_get (const char *ns, const char *name)
 {
+    int index;
     syscfg_shm_ctx *ctx = syscfg_ctx;
 
     rw_lock(ctx);
 
     if (ns) {
-        snprintf(name_p, sizeof(name_p), "%s%s%s", ns, NS_SEP, name);
+        snprintf(name_p, sizeof(name_p), "%s" NS_SEP "%s", ns, name);
     } else {
         snprintf(name_p, sizeof(name_p), "%s", name);
     }
 
-    int index = hash(name_p);
+    index = hash(name_p);
 
     shmoff_t entryoffset = ctx->ht[index];
 
@@ -1023,9 +1024,9 @@ static int _syscfg_set (const char *ns, const char *name, const char *value, int
     }
 
     if (ns) {
-        snprintf(name_p, sizeof(name_p), "%s%s%s", ns, NS_SEP, name);
+        snprintf(name_p, sizeof(name_p), "%s" NS_SEP "%s", ns, name);
     } else {
-        strncpy(name_p, name, sizeof(name_p));
+        snprintf(name_p, sizeof(name_p), "%s", name);
     }
 
     index = hash(name_p);
@@ -1093,20 +1094,21 @@ static int _syscfg_set (const char *ns, const char *name, const char *value, int
  */
 static int _syscfg_unset (const char *ns, const char *name, int nolock)
 {
+    int index;
     syscfg_shm_ctx *ctx = syscfg_ctx;
-
 
     if (!nolock) {
         rw_lock(ctx);
     }
 
     if (ns) {
-        snprintf(name_p, sizeof(name_p), "%s%s%s", ns, NS_SEP, name);
+        snprintf(name_p, sizeof(name_p), "%s" NS_SEP "%s", ns, name);
     } else {
-        strncpy(name_p, name, sizeof(name_p));
+        snprintf(name_p, sizeof(name_p), "%s", name);
     }
 
-    int index = hash(name_p);
+    index = hash(name_p);
+
     if (0 == ctx->ht[index]) {
         // doesn't exist, nothing to do
         if (!nolock) {
