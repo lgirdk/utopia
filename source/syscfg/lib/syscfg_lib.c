@@ -304,7 +304,7 @@ int syscfg_getsz (long int *used_sz, long int *max_sz)
  *    Persistent store location specified during syscfg_create() is cached 
  *    in syscfg shared memory and used as the target for commit
  */
-int syscfg_commit (void)
+int syscfg_commit2 (void)
 {
     syscfg_shm_ctx *ctx;
     int rc;
