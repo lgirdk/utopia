@@ -173,7 +173,14 @@ int syscfg_unset(const char *ns, const char *name);
  *    Persistent store location specified during syscfg_create() is cached 
  *    in syscfg shared memory and used as the target for commit
  */
-int syscfg_commit();
+int syscfg_commit2 (void);
+
+static int syscfg_commit (void)
+{
+    syscfg_commit2();
+
+    return 0;
+}
 
 /*
  * Procedure     : syscfg_is_match
