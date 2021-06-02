@@ -29,7 +29,3 @@ lib_LTLIBRARIES = libsysevent.la
 libsysevent_la_SOURCES = libsysevent.c
 
 libsysevent_la_CPPFLAGS = -I$(top_srcdir)/source/include
-
-libsysevent_ladir = $(top_builddir)/source/include/sysevent
-
-libsysevent_la_HEADERS = libsysevent_internal.h
