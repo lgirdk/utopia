@@ -38,7 +38,7 @@
 
 #include <stddef.h>
 
-#define SYSCFG_SZ (100 * 1024)
+#define SYSCFG_SZ (60 * 1024)
 
 #define ERR_INVALID_PARAM     -1
 #define ERR_NOT_INITIALIZED   -2
