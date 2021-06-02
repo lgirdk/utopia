@@ -34,7 +34,3 @@ libutapi_la_CPPFLAGS = -I$(top_srcdir)/source/include \
 libutapi_la_LIBADD = $(top_builddir)/source/ulog/libulog.la
 
 libutapi_la_LDFLAGS = -lsecure_wrapper -ltelemetry_msgsender
-
-libutapi_ladir = $(top_builddir)/source/include/utapi
-
-libutapi_la_HEADERS = utapi_wlan.h
