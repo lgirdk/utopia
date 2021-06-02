@@ -69,7 +69,7 @@
 /*
  * Note: values of DEFAULT_MAX_FILE_SZ and SYSCFG_SZ should match.
  */
-#define DEFAULT_MAX_FILE_SZ   (100 * 1024)
+#define DEFAULT_MAX_FILE_SZ   (60 * 1024)
 
 #define LOG_FILE "/rdklogs/logs/Consolelog.txt.0"
 
