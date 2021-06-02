@@ -36,12 +36,7 @@
 #ifndef _SYSCFG_H_
 #define _SYSCFG_H_
 
-// increasing sysconfig size to 100kb for non XB3 platforms
-#ifdef _COSA_INTEL_XB3_ARM_
-	#define SYSCFG_SZ (50 * (1024))       /* max file size - 50kb */
-#else
-	#define SYSCFG_SZ (100 * (1024))       /* max file size - 100kb */
-#endif
+#define SYSCFG_SZ (60 * 1024)
 
 #define ERR_INVALID_PARAM     -1
 #define ERR_NOT_INITIALIZED   -2
