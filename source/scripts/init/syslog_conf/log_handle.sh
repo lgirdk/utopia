@@ -34,6 +34,12 @@
 #   limitations under the License.
 #######################################################################
 
+UPTIME=$(cut -d. -f1 /proc/uptime)
+if [ "$UPTIME" -lt 600 ]
+then
+    exit 0
+fi
+
 . /etc/device.properties
 
 #source /etc/utopia/service.d/log_env_var.sh
