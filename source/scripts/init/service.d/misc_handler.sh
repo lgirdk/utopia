@@ -85,7 +85,7 @@ then
 
     if [ x"$STARTED_FLG" != x"started" ]; then
 	#l2sd0 interface only applicable for XB3 box.TCXB6-5310
-	if [ "$BOX_TYPE" = "XB3" ]; then
+	if [ "$BOX_TYPE" = "XB3" ] || [ "$BOX_TYPE" = "MV1" ]; then
 	    BRLAN0_MAC=`ifconfig l2sd0 | grep HWaddr | awk '{print $5}'`
 	    ( ( nfq_handler 4 "$BRLAN0_MAC" & ) & )
 	    ( ( nfq_handler 6 "$BRLAN0_MAC" & ) & )
