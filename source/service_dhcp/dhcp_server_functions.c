@@ -531,8 +531,6 @@ void prepare_dhcp_options_wan_dns()
 	    fprintf(stderr, "Propagate NS is set from block_nat_redirection value is:%s\n", l_cPropagate_Ns);
 	}		
 
-	if (!strncmp(l_cPropagate_Ns, "1", 1))	
-	{
         char relay_enable[32];
 
         syscfg_get(NULL, "dns_relay_enable", relay_enable, sizeof(relay_enable));
@@ -541,6 +539,31 @@ void prepare_dhcp_options_wan_dns()
 
         if ((strcmp(g_rl_cWanStatus, "stopped") != 0) && (strcmp(relay_enable, "1") != 0))
         {
+            char l_cDnsOverride[8];
+
+            syscfg_get(NULL, "dns_override", l_cDnsOverride, sizeof(l_cDnsOverride));
+            if (strcmp(l_cDnsOverride, "true") == 0)
+            {
+                char l_cDnsIpv4Preferred[16], l_cDnsIpv4Alternate[16];
+                char l_cDhcpOptionString[128];
+
+                syscfg_get(NULL, "dns_ipv4_preferred", l_cDnsIpv4Preferred, sizeof(l_cDnsIpv4Preferred));
+                if (l_cDnsIpv4Preferred[0] != 0)
+                {
+                    strcpy(l_cDhcpOptionString, l_cDnsIpv4Preferred);
+
+                    syscfg_get(NULL, "dns_ipv4_alternate", l_cDnsIpv4Alternate, sizeof(l_cDnsIpv4Alternate));
+                    if (l_cDnsIpv4Alternate[0] != 0)
+                    {
+                        strcat(l_cDhcpOptionString, ",");
+                        strcat(l_cDhcpOptionString, l_cDnsIpv4Alternate);
+                    }
+
+                    fprintf(l_fLocalDhcpOpt, "option:dns-server, %s\n",l_cDhcpOptionString);
+                }
+            }
+            else if (!strncmp(l_cPropagate_Ns, "1", 1))
+            {
 		    sysevent_get(g_iSyseventfd, g_tSysevent_token, "wan_dhcp_dns", l_cWan_Dhcp_Dns, sizeof(l_cWan_Dhcp_Dns));
 		    if (0 != l_cWan_Dhcp_Dns[0])
 		    {
@@ -561,6 +584,7 @@ void prepare_dhcp_options_wan_dns()
 			{
 				fprintf(stderr, "wan_dhcp_dns is empty, so file:%s will be empty \n", DHCP_OPTIONS_FILE);
 			}
+            }
 
         }
         else
@@ -569,7 +593,6 @@ void prepare_dhcp_options_wan_dns()
 		    fprintf(l_fLocalDhcpOpt, "option:dns-server, %s\n", l_cNs);
 		    printf("dhcp_server_functions.c Adjust dns-server to lan_ipaddr %s because wan-status is stopped or Relay is enabled!!!!!!!!!!!!!\n",l_cNs);
 		}	
-	}
 	remove_file(DHCP_OPTIONS_FILE);
 	fclose(l_fLocalDhcpOpt);
 	copy_file(l_cLocalDhcpOpt, DHCP_OPTIONS_FILE);
