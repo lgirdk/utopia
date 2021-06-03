@@ -82,8 +82,11 @@ service_start ()
       mkdir -p $CRONTAB_DIR
    
       echo "* * * * *  execute_dir /etc/cron/cron.everyminute" > $CRONTAB_FILE
+
       echo "1,6,11,16,21,26,31,36,41,46,51,56 * * * *  execute_dir /etc/cron/cron.every5minute" >> $CRONTAB_FILE
+
       echo "2,12,22,32,42,52 * * * *  execute_dir /etc/cron/cron.every10minute" >> $CRONTAB_FILE
+
       num1=$RANDOM
       rand1=`expr "$num1" % 60`
       rand4=`expr "$RANDOM" \* 2`
@@ -91,17 +94,43 @@ service_start ()
       echo "$rand1 * * * * execute_dir /etc/cron/cron.hourly" >> $CRONTAB_FILE
       echo "$rand4 * * * * /usr/ccsp/tad/xfinity_health_test.sh" >> $CRONTAB_FILE
       echo "1 */1 * * *  /usr/bin/RxTx100" >> $CRONTAB_FILE
+
+      num1=$RANDOM
+      num2=$RANDOM
+      rand1=`expr $num1 % 60`
+      rand2=`expr $num2 % 24`
+      echo "$rand1 $rand2 * * * execute_dir /etc/cron/cron.daily" >> $CRONTAB_FILE
+
+      num1=$RANDOM
+      num2=$RANDOM
+      num3=$RANDOM
+      rand1=`expr $num1 % 60`
+      rand2=`expr $num2 % 24`
+      rand3=`expr $num3 % 7`
+      echo "$rand1 $rand2 * * $rand3 execute_dir /etc/cron/cron.weekly" >> $CRONTAB_FILE
+
+      num1=$RANDOM
+      num2=$RANDOM
+      num3=$RANDOM
+      rand1=`expr $num1 % 60`
+      rand2=`expr $num2 % 24`
+      rand3=`expr $num3 % 28`
+      echo "$rand1 $rand2 $rand3 * * execute_dir /etc/cron/cron.monthly" >> $CRONTAB_FILE
+      
       echo "10 */6 * * *  /usr/ccsp/tad/getSsidNames.sh" >> $CRONTAB_FILE
+
 #rdkb-4297 Runs on the 1st minute of every 12th hour
       echo "1 */12 * * *  /usr/ccsp/pam/moca_status.sh" >> $CRONTAB_FILE
+
 #RDKB-17984: Runs every 12 hours and prints mesh status
-      if [ "$BOX_TYPE" != "XB3" ]; then
+      if [ "$BOX_TYPE" != "XB3" ] && [ "$BOX_TYPE" != "MV1" ]; then
        echo "1 */12 * * *  /usr/ccsp/wifi/mesh_status.sh" >> $CRONTAB_FILE
       fi
 
       if [ "$BOX_TYPE" == "XB3" ]; then
        echo "*/10 * * * * /rdklogger/log_ps_cpu_mem_host.sh" >> $CRONTAB_FILE
       fi
+
       #zqiu: monitor lan client traffic
       echo "* * * * *   /usr/ccsp/tad/rxtx_lan.sh" >> $CRONTAB_FILE
 
@@ -115,26 +144,6 @@ service_start ()
       fi
 
       echo "1 */12 * * *   /usr/ccsp/tad/log_twice_day.sh" >> $CRONTAB_FILE
-      
-      num1=$RANDOM
-      num2=$RANDOM
-      rand1=`expr "$num1" % 60`
-      rand2=`expr "$num2" % 24`
-      echo "$rand1 $rand2 * * * execute_dir /etc/cron/cron.daily" >> $CRONTAB_FILE
-      num1=$RANDOM
-      num2=$RANDOM
-      num3=$RANDOM
-      rand1=`expr "$num1" % 60`
-      rand2=`expr "$num2" % 24`
-      rand3=`expr "$num3" % 7`
-      echo "$rand1 $rand2 * * $rand3 execute_dir /etc/cron/cron.weekly" >> $CRONTAB_FILE
-      num1=$RANDOM
-      num2=$RANDOM
-      num3=$RANDOM
-      rand1=`expr "$num1" % 60`
-      rand2=`expr "$num2" % 24`
-      rand3=`expr "$num3" % 28`
-      echo "$rand1 $rand2 $rand3 * * execute_dir /etc/cron/cron.monthly" >> $CRONTAB_FILE
       
       # update mso potd every midnight at 00:05
       echo "5 0 * * * sysevent set potd-start" >> $CRONTAB_FILE 
@@ -183,15 +192,15 @@ service_start ()
       fi
 
       # Add Unique Telemetry ID if enabled
-      telemtery_enable=`syscfg get unique_telemetry_enable`
-      telemtery_time_interval=`syscfg get unique_telemetry_interval`
-      telemtery_tag=`syscfg get unique_telemetry_tag`
+      telemetry_enable=`syscfg get unique_telemetry_enable`
+      telemetry_time_interval=`syscfg get unique_telemetry_interval`
+      telemetry_tag=`syscfg get unique_telemetry_tag`
 
       if [ "$telemtery_enable" = "true" ] && [ 0"$telemtery_time_interval" -gt 0 ] && [ ! -z "$telemtery_tag" -a "$telemtery_tag" != " " ] ; then
         #Convert time interval(in minutes) to days, hours and minutes
-        d=$(($telemtery_time_interval / (60*24)))
-        h=$((($telemtery_time_interval % (60*24)) / 60))
-        m=$((($telemtery_time_interval % (60*24)) % 60))
+        d=$(($telemetry_time_interval / (60*24)))
+        h=$((($telemetry_time_interval % (60*24)) / 60))
+        m=$((($telemetry_time_interval % (60*24)) % 60))
 
         if [ $d -gt 0 ] ; then
           day="*/$d"
@@ -240,7 +249,7 @@ service_start ()
 	if [ "$rfc_ethwan_status" = "false" ] || [ "$rfc_ethwan_status" == "" ]; then
 		if [ "$WAN_TYPE" = "DOCSIS" ] || [ "$MODEL_NUM" = "DPC3941" ] || [ "$MODEL_NUM" = "DPC3941B" ] || [ "$MODEL_NUM" = "DPC3939B" ]; then
 			if [ "$rfc_wanlinkheal_status" = "true" ]; then
-				if [ "$BOX_TYPE" = "XB3" ] || [ "$BOX_TYPE" = "XB6" ] || [ "$BOX_TYPE" = "TCCBR" ] || [ "$BOX_TYPE" = "MV2PLUS" ]; then
+				if [ "$BOX_TYPE" = "XB3" ] || [ "$BOX_TYPE" = "MV1" ] || [ "$BOX_TYPE" = "XB6" ] || [ "$BOX_TYPE" = "TCCBR" ] || [ "$BOX_TYPE" = "MV2PLUS" ]; then
 					echo_t "RFC WANLinkHeal Feature is Enabled"
                                         addCron "2,12,22,32,42,52 * * * * /usr/ccsp/tad/start_gw_heath.sh"
 				else
