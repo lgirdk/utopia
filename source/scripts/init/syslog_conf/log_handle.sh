@@ -20,13 +20,13 @@
 
 #######################################################################
 #   Copyright [2014] [Cisco Systems, Inc.]
-# 
+#
 #   Licensed under the Apache License, Version 2.0 (the \"License\");
 #   you may not use this file except in compliance with the License.
 #   You may obtain a copy of the License at
-# 
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 #   Unless required by applicable law or agreed to in writing, software
 #   distributed under the License is distributed on an \"AS IS\" BASIS,
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,9 +34,16 @@
 #   limitations under the License.
 #######################################################################
 
+UPTIME=$(cut -d. -f1 /proc/uptime)
+if [ "$UPTIME" -lt 600 ]
+then
+    exit 0
+fi
+
+
 if [ -f /etc/device.properties ]
 then
-	. /etc/device.properties
+    . /etc/device.properties
 fi
 
 #source /etc/utopia/service.d/log_env_var.sh
@@ -68,7 +75,8 @@ SORT_FW_LOG_FILE=/nvram/log/sortLog.txt
 # In R1.3, Log path is under /nvram/log
 # > R1.4 Log path is under /nvram2/log
 # Move txt file into tar package
-old_sysevtlog_handle(){
+old_sysevtlog_handle()
+{
     if [ -e "$1"".0" ] || [  -e "$1" ]
     then
         FILE=""
@@ -117,23 +125,24 @@ old_sysevtlog_handle(){
         else
              ZIP_SZ=0;
         fi
-        $COMPRESS_CMD $NEW_ZIP ./* 
+        $COMPRESS_CMD $NEW_ZIP ./*
         $WT_LOCK $ZIP mv $NEW_ZIP $ZIP
         for oldfile in $FILE ;
         do
-		echo "$WT_LOCK $oldfile rm -r $oldfile"
-		$WT_LOCK $oldfile rm -r $oldfile
+        echo "$WT_LOCK $oldfile rm -r $oldfile"
+        $WT_LOCK $oldfile rm -r $oldfile
         done;
 
-        rm -rf $DIR     
+        rm -rf $DIR
     fi
 }
 
-old_fwlog_handle(){
-    MERGE=0 
+old_fwlog_handle()
+{
+    MERGE=0
     # find old log path
     if [ -e "$1" ]
-    then 
+    then
         for filename in `ls $1`;
         do
             if [ "$filename" != "fwlog.$POSTFIX" ]
@@ -150,7 +159,7 @@ old_fwlog_handle(){
                 if [ "$filename" != "fwlog.$POSTFIX" ]
                 then
                     tmp_file="$1/${filename##*/}"
-                    cat $2/$filename >> $tmp_file 
+                    cat $2/$filename >> $tmp_file
                 fi
             done
             echo "Move all txt log to new location"
@@ -166,7 +175,8 @@ old_fwlog_handle(){
     fi
 }
 
-start_syslog(){
+start_syslog()
+{
     if [ -e $SYSLOG_CONF_FILE ]
     then
         rm $SYSLOG_CONF_FILE
@@ -180,13 +190,13 @@ start_syslog(){
     fi
 
     if [ -e $LOG_LEVEL_FILE ]
-    then 
+    then
         level=`awk '$1 <= 8 && $1 >= 1' $LOG_LEVEL_FILE`
     else
         level=6
     fi
 
-    SYSTEMLOG=$(grep -e "systemlog" /etc/syslog.conf | awk '{print $2}') 
+    SYSTEMLOG=$(grep -e "systemlog" /etc/syslog.conf | awk '{print $2}')
     EVENTLOG=$(grep -e "eventlog" /etc/syslog.conf | awk '{print $2}')
 
     SYSTEMLOG_DIR=${SYSTEMLOG%/*}
@@ -198,34 +208,34 @@ start_syslog(){
     EVENTLOG_DIR=${EVENTLOG%/*}
     if [ ! -d $EVENTLOG_DIR ]
     then
-	echo "mkdir -p $EVENTLOG_DIR"
+    echo "mkdir -p $EVENTLOG_DIR"
         mkdir -p $EVENTLOG_DIR
     fi
 
     echo "klogd -c $level"
-    klogd -c $level    
+    klogd -c $level
     if [ "$MODEL_NUM" != "TG3482G" ] && [ "$MODEL_NUM" != "TG4482A" ]; then
-    	echo "syslogd -l $level"
-    	syslogd -l $level
+        echo "syslogd -l $level"
+        syslogd -l $level
     fi
 }
 
 get_log_file()
 {
-#TEMP=`syscfg get $1`
-TEMP=`sysevent get $1`
-if [ "$TEMP" == "" ]
-then
-    TEMP=$(grep -e $2 /etc/syslog.conf | awk '{print $2}')
-    if [ "$TEMP" != "" ]
+    #TEMP=`syscfg get $1`
+    TEMP=`sysevent get $1`
+    if [ "$TEMP" == "" ]
     then
-        #syscfg set $1 $TEMP
-        #syscfg commit
-        sysevent set $1 $TEMP
+        TEMP=$(grep -e $2 /etc/syslog.conf | awk '{print $2}')
+        if [ "$TEMP" != "" ]
+        then
+            #syscfg set $1 $TEMP
+            #syscfg commit
+            sysevent set $1 $TEMP
+        fi
     fi
-fi
-# !
-echo $TEMP 
+    # !
+    echo $TEMP
 }
 
 remove_log()
@@ -248,7 +258,7 @@ compress()
 {
     if [ "$1" == "syslog" ]
     then
-        FILE="$V_SYS_LOG_FILE.0" 
+        FILE="$V_SYS_LOG_FILE.0"
         NEW_NAME=`syscfg get SYS_LOG_F_INSTANCE`
         if [ -z $NEW_NAME ]
         then
@@ -270,14 +280,13 @@ compress()
         then
             exit 0;
         fi
-
     elif [ "$1" == "evtlog" ]
     then
         FILE="$V_EVT_LOG_FILE.0"
-        NEW_NAME=`syscfg get EVT_LOG_F_INSTANCE`   
+        NEW_NAME=`syscfg get EVT_LOG_F_INSTANCE`
         if [ -z $NEW_NAME ]
         then
-            syscfg set EVT_LOG_F_INSTANCE 1 
+            syscfg set EVT_LOG_F_INSTANCE 1
             syscfg commit
             NEW_NAME=1
         else
@@ -309,7 +318,7 @@ compress()
                 FILE="$FILE""$V_FW_LOG_FILE_PATH/$filename "
             fi
         done
-        NEW_NAME="./"  
+        NEW_NAME="./"
         ZIP="$V_FW_LOG_FILE_PATH/fwlog.$POSTFIX"
         NEW_ZIP="fwlog.$POSTFIX"
         ZIP_SZ_MAX=`syscfg get FW_LOG_COMPRESSED_FILE_SIZE`
@@ -319,61 +328,60 @@ compress()
         then
             exit 0;
         fi
-
     fi
 
-        DIR=/tmp/`date +%Y%m%d%H%M%s`_$1
-        mkdir -p $DIR
-        cd $DIR
-        cp $FILE $NEW_NAME
-         FILE_SZ=$(ls -l | awk 'BEGIN {SUM=0}{SUM+=$5}END {print SUM}')
-        #un-compress log file
-        if [ -e $ZIP ]
-        then
-            $RD_LOCK $ZIP $UNCOMPRESS_CMD $ZIP
-             ZIP_SZ=$(ls -l $ZIP | awk '{print $5}')
-        else
-            ZIP_SZ=0;
-        fi
+    DIR=/tmp/`date +%Y%m%d%H%M%s`_$1
+    mkdir -p $DIR
+    cd $DIR
+    cp $FILE $NEW_NAME
+     FILE_SZ=$(ls -l | awk 'BEGIN {SUM=0}{SUM+=$5}END {print SUM}')
+    #un-compress log file
+    if [ -e $ZIP ]
+    then
+        $RD_LOCK $ZIP $UNCOMPRESS_CMD $ZIP
+         ZIP_SZ=$(ls -l $ZIP | awk '{print $5}')
+    else
+        ZIP_SZ=0;
+    fi
 
-        OLD_FILE=""
-        # clean old log file
-        if [ $(expr $(($FILE_SZ + 9)) / 10 + $ZIP_SZ) -ge $(expr $ZIP_SZ_MAX \* 1024) ]
-        then
-            OLD_FILE_SIZE=0
-            for filename in `ls ./`;
-            do
-                 let "OLD_FILE_SIZE=$OLD_FILE_SIZE + $(ls -l $filename | awk '{print $5}')"
-                OLD_FILE="$OLD_FILE $filename"
-                if [ $OLD_FILE_SIZE -ge $FILE_SZ  ]
-                then
-                    break;
-                fi
-            done;
-        else
-            find . -mtime +90 -exec rm {} \;
-        fi
-
-        if [ ! -z "$OLD_FILE" ]
-        then
-            rm $OLD_FILE
-            # Remove old R1.3 log under /nvram
-	    # Old log is symbolic link to new log dir, no need to remove the old dir.
-          #  if [ -e $OLD_LOG_DIR_13 ]
-          # then
-                #rm -rf $OLD_LOG_DIR_13
-           #fi
-        fi
-
-        $COMPRESS_CMD $NEW_ZIP ./* 
-        $WT_LOCK $ZIP mv $NEW_ZIP $ZIP
-        for oldfile in $FILE ;
+    OLD_FILE=""
+    # clean old log file
+    if [ $(expr $(($FILE_SZ + 9)) / 10 + $ZIP_SZ) -ge $(expr $ZIP_SZ_MAX \* 1024) ]
+    then
+        OLD_FILE_SIZE=0
+        for filename in `ls ./`;
         do
-            echo "$WT_LOCK $oldfile rm -r $oldfile"
-            $WT_LOCK $oldfile rm -r $oldfile
+            let "OLD_FILE_SIZE=$OLD_FILE_SIZE + $(ls -l $filename | awk '{print $5}')"
+            OLD_FILE="$OLD_FILE $filename"
+            if [ $OLD_FILE_SIZE -ge $FILE_SZ  ]
+            then
+                break;
+            fi
         done;
+    else
+        find . -mtime +90 -exec rm {} \;
+    fi
 
-        rm -rf $DIR       
+    if [ ! -z "$OLD_FILE" ]
+    then
+        rm $OLD_FILE
+        # Remove old R1.3 log under /nvram
+        # Old log is symbolic link to new log dir, no need to remove the old dir.
+        # if [ -e $OLD_LOG_DIR_13 ]
+        # then
+            #rm -rf $OLD_LOG_DIR_13
+        #fi
+    fi
+
+    $COMPRESS_CMD $NEW_ZIP ./*
+    $WT_LOCK $ZIP mv $NEW_ZIP $ZIP
+    for oldfile in $FILE ;
+    do
+        echo "$WT_LOCK $oldfile rm -r $oldfile"
+        $WT_LOCK $oldfile rm -r $oldfile
+    done;
+
+    rm -rf $DIR
 }
 
 uncompress()
@@ -404,20 +412,19 @@ fi
 V_HANDLE_OLD_LOG_13_FLG=`sysevent get R13_LOG_HANDLE_FLG`
 if [ -z $V_HANDLE_OLD_LOG_13_FLG ]
 then
-    old_sysevtlog_handle $DPC3939_OLD_SYSTERMLOG SYS_LOG_F_INSTANCE 
+    old_sysevtlog_handle $DPC3939_OLD_SYSTERMLOG SYS_LOG_F_INSTANCE
     old_sysevtlog_handle $DPC3939_OLD_EVTLOG EVT_LOG_F_INSTANCE
     #ARRISXB6-1518 - No Action Needed if Paths are the same
     if [ "$V_FW_LOG_FILE_PATH" != "$DPC3939_OLD_FWLOG_FILE_PATH" ]; then
         old_fwlog_handle $DPC3939_OLD_FWLOG_FILE_PATH $V_FW_LOG_FILE_PATH
     fi
     sysevent set R13_LOG_HANDLE_FLG 1
-fi 
-
+fi
 
 if [ "$1" == "reset" ]
-then 
+then
     # kill syslog server, in case they are writting log file when delete
-    killall syslogd  >/dev/null 2>/dev/null  
+    killall syslogd  >/dev/null 2>/dev/null
     killall klogd >/dev/null 2>/dev/null
     killall GenFWLog >/dev/null 2>/dev/null
     #delete log file
@@ -444,13 +451,13 @@ then
         echo "remove syslog_level file"
         rm -rf /nvram/syslog_level
     fi
-    
-    start_syslog 
+
+    start_syslog
 fi
 
 if [ "$1" == "compress_syslog" ]
 then
-    compress syslog    
+    compress syslog
 fi
 
 if [ "$1" == "uncompress_syslog" ]
@@ -461,18 +468,18 @@ fi
 
 if [ "$1" == "compress_evtlog" ]
 then
-    compress evtlog    
+    compress evtlog
 fi
 
 if [ "$1" == "uncompress_evtlog" ]
 then
-    uncompress "$DPC3939_OLD_EVTLOG.tar.bz2" $2 
+    uncompress "$DPC3939_OLD_EVTLOG.tar.bz2" $2
     uncompress "$V_EVT_LOG_FILE.tar.bz2" $2
 fi
 
 if [ "$1" == "compress_fwlog" ]
 then
-    compress fwlog    
+    compress fwlog
 fi
 
 if [ "$1" == "uncompress_fwlog" ]
@@ -501,10 +508,10 @@ then
     if [ ! -f /nvram/cleanup_done ]; then
         sed -i '/.*T3 time-out.*/d' /nvram/log/critlog*
         sed -i '/.*T4 time out.*/d' /nvram/log/critlog*
-	sed -i '/.*Ranging Request Retries exhausted.*/d' /nvram/log/critlog*
-	sed -i '/.*Unicast Maintenance Ranging attempted - No response - Retries exhausted.*/d' /nvram/log/critlog*
+        sed -i '/.*Ranging Request Retries exhausted.*/d' /nvram/log/critlog*
+        sed -i '/.*Unicast Maintenance Ranging attempted - No response - Retries exhausted.*/d' /nvram/log/critlog*
 
-	touch /nvram/cleanup_done
+        touch /nvram/cleanup_done
     fi
 
     evt="$V_EVT_LOG_FILE.0"
@@ -527,7 +534,7 @@ then
     for fw in `ls $V_FW_LOG_FILE_PATH`;
     do
         if [ "$fw" != "fwlog.$POSTFIX" -a "$fw" != `date +%Y%m%d` ];
-        then            
+        then
             log_handle.sh compress_fwlog &
             break
         fi
