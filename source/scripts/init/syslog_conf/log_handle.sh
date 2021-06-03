@@ -34,6 +34,12 @@
 #   limitations under the License.
 #######################################################################
 
+UPTIME=$(cut -d. -f1 /proc/uptime)
+if [ "$UPTIME" -lt 600 ]
+then
+    exit 0
+fi
+
 if [ -f /etc/device.properties ]
 then
 	. /etc/device.properties

@@ -85,7 +85,7 @@ do_check_process() {
 	UPTIME=$(cut -d. -f1 /proc/uptime)
 	if [ "$UPTIME" -lt 600 ]
 	then
-		echo "Uptime is less than 10 mins, exiting from pmon."
+		# echo "Uptime is less than 10 mins, exiting from pmon."
 		exit 0
 	fi
 
@@ -132,7 +132,7 @@ do_register()
 {
 	if [ -z "$1" ]
 	then
-		echo "pmon-register: invalid parameter [$1]" > /dev/console
+		# echo "pmon-register: invalid parameter [$1]" > /dev/console
 		return 1
 	fi
 
