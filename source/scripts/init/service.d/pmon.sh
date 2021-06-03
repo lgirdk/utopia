@@ -35,7 +35,7 @@
 #######################################################################
 
 #------------------------------------------------------------------
-# This script is used to monitor process that are suppose to be
+# This script is used to monitor process that are supposed to be
 # running and, if not they are restarted
 #
 # There are many ways to use this script
@@ -73,162 +73,160 @@
 #------------------------------------------------------------------
 #
 # Config file format
-#	<process-name> <pid-file | none> <restart-cmd>
+#   <process-name> <pid-file | none> <restart-cmd>
 # For eg:
-#	"mini_httpd /var/run/mini_httpd.pid /etc/init.d/httpd.sh restart"
-#	"samba		none					/etc/init.d/samba restart
+#   "mini_httpd /var/run/mini_httpd.pid /etc/init.d/httpd.sh restart"
+#   "samba      none                    /etc/init.d/samba restart
 #
 #------------------------------------------------------------------
 
 do_check_process() {
+    UPTIME=$(cut -d. -f1 /proc/uptime)
+    if [ "$UPTIME" -lt 600 ]
+    then
+        exit 0
+    fi
 
-	UPTIME=$(cut -d. -f1 /proc/uptime)
-	if [ "$UPTIME" -lt 600 ]
-	then
-		echo "Uptime is less than 10 mins, exiting from pmon."
-		exit 0
-	fi
+    # echo "[utopia] Running process monitor" > /dev/console
 
-	# echo "[utopia] Running process monitor" > /dev/console
+    LOCAL_CONF_FILE=/tmp/pmon.conf$$
 
-	LOCAL_CONF_FILE=/tmp/pmon.conf$$
+    # Add static pmon entries
+    echo "syseventd /var/run/syseventd.pid /etc/utopia/service.d/syseventd_restart.sh" > $LOCAL_CONF_FILE
 
-	# Add static pmon entries
-	echo "syseventd	/var/run/syseventd.pid /etc/utopia/service.d/syseventd_restart.sh" > $LOCAL_CONF_FILE
+    # Add dynamic pmon entries stashed in sysevent
+    # by various modules
+    COUNT=$(sysevent get pmon_feature_count)
+    if [ -z "$COUNT" ]
+    then
+        COUNT=0
+    fi
 
-	# Add dynamic pmon entries stashed in sysevent
-	# by various modules
-	COUNT=$(sysevent get pmon_feature_count)
-	if [ -z "$COUNT" ]
-	then
-		COUNT=0
-	fi
+    for ct in $(seq 1 $COUNT)
+    do
+        feature=$(sysevent get pmon_feature_$ct)
+        if [ -n "$feature" ]
+        then
+            PROC_ENTRY=$(sysevent get pmon_proc_$feature)
+            if [ -n "$PROC_ENTRY" ]
+            then
+                process_name=$(echo $PROC_ENTRY | cut -d' ' -f1)
+                pid=$(echo $PROC_ENTRY | cut -d' ' -f2)
+                restartcmd=$(echo $PROC_ENTRY | cut -d' ' -f3-)
+                if [ -n "$process_name" ] && [ -n "$pid" ] && [ -n "$restartcmd" ]
+                then
+                    echo "$process_name $pid $restartcmd" >> $LOCAL_CONF_FILE
+                fi
+            fi
+        fi
+    done
 
-	for ct in $(seq 1 $COUNT)
-	do
-		feature=$(sysevent get pmon_feature_$ct)
-		if [ -n "$feature" ]
-		then
-			PROC_ENTRY=$(sysevent get pmon_proc_$feature)
-			if [ -n "$PROC_ENTRY" ]
-			then
-				process_name=$(echo $PROC_ENTRY | cut -d' ' -f1)
-				pid=$(echo $PROC_ENTRY | cut -d' ' -f2)
-				restartcmd=$(echo $PROC_ENTRY | cut -d' ' -f3-)
-				if [ -n "$process_name" ] && [ -n "$pid" ] && [ -n "$restartcmd" ]
-				then
-					echo "$process_name $pid $restartcmd" >> $LOCAL_CONF_FILE
-				fi
-			fi
-		fi
-	done
-
-	cat $LOCAL_CONF_FILE > /tmp/pmon.conf
-	rm -f $LOCAL_CONF_FILE
-	pmon /tmp/pmon.conf
+    cat $LOCAL_CONF_FILE > /tmp/pmon.conf
+    rm -f $LOCAL_CONF_FILE
+    pmon /tmp/pmon.conf
 }
 
 do_register()
 {
-	if [ -z "$1" ]
-	then
-		echo "pmon-register: invalid parameter [$1]" > /dev/console
-		return 1
-	fi
+    if [ -z "$1" ]
+    then
+        # echo "pmon-register: invalid parameter [$1]" > /dev/console
+        return 1
+    fi
 
-	# echo "[utopia] process monitor register feature [$1]" > /dev/console
+    # echo "[utopia] process monitor register feature [$1]" > /dev/console
 
-	COUNT=$(sysevent get pmon_feature_count)
-	if [ -z "$COUNT" ]
-	then
-		COUNT=0
-	fi
+    COUNT=$(sysevent get pmon_feature_count)
+    if [ -z "$COUNT" ]
+    then
+        COUNT=0
+    fi
 
-	FREE_SLOT=0
+    FREE_SLOT=0
 
-	for ct in $(seq 1 $COUNT)
-	do
-		FEATURE=$(sysevent get pmon_feature_$ct)
-		if [ -z "$FEATURE" ]
-		then
-			FREE_SLOT=$ct
-		else
-			if [ "$FEATURE" = "$1" ]
-			then
-				# echo "pmon-register: already monitoring $FEATURE, nothing to do" > /dev/console
-				return
-			fi
-		fi
-	done
+    for ct in $(seq 1 $COUNT)
+    do
+        FEATURE=$(sysevent get pmon_feature_$ct)
+        if [ -z "$FEATURE" ]
+        then
+            FREE_SLOT=$ct
+        else
+            if [ "$FEATURE" = "$1" ]
+            then
+                # echo "pmon-register: already monitoring $FEATURE, nothing to do" > /dev/console
+                return
+            fi
+        fi
+    done
 
-	if [ "$FREE_SLOT" != "0" ]
-	then
-		SLOT=$FREE_SLOT
-	else
-		COUNT=$((COUNT+1))
-		SLOT=$COUNT
-		sysevent set pmon_feature_count $COUNT
-	fi
+    if [ "$FREE_SLOT" != "0" ]
+    then
+        SLOT=$FREE_SLOT
+    else
+        COUNT=$((COUNT+1))
+        SLOT=$COUNT
+        sysevent set pmon_feature_count $COUNT
+    fi
 
-	sysevent set pmon_feature_$SLOT "$1"
+    sysevent set pmon_feature_$SLOT "$1"
 }
 
 do_unregister()
 {
-	if [ -z "$1" ]
-	then
-		# echo "pmon-unregister: invalid parameter [$1]" > /dev/console
-		return 1
-	fi
+    if [ -z "$1" ]
+    then
+        # echo "pmon-unregister: invalid parameter [$1]" > /dev/console
+        return 1
+    fi
 
-	# echo "[utopia] process monitor unregister feature [$1]" > /dev/console
+    # echo "[utopia] process monitor unregister feature [$1]" > /dev/console
 
-	COUNT=$(sysevent get pmon_feature_count)
-	if [ -z "$COUNT" ]
-	then
-		COUNT=0
-	fi
+    COUNT=$(sysevent get pmon_feature_count)
+    if [ -z "$COUNT" ]
+    then
+        COUNT=0
+    fi
 
-	for ct in $(seq 1 $COUNT)
-	do
-		feature=$(sysevent get pmon_feature_$ct)
-		if [ "$feature" = "$1" ]
-		then
-			sysevent set pmon_feature_$ct
-			sysevent set pmon_proc_$feature
-			return
-		fi
-	done
+    for ct in $(seq 1 $COUNT)
+    do
+        feature=$(sysevent get pmon_feature_$ct)
+        if [ "$feature" = "$1" ]
+        then
+            sysevent set pmon_feature_$ct
+            sysevent set pmon_proc_$feature
+            return
+        fi
+    done
 
-	# echo "pmon-unregister: entry for $1 not found" > /dev/console
+    # echo "pmon-unregister: entry for $1 not found" > /dev/console
 }
 
 do_setproc ()
 {
-	if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ] || [ -z "$4" ]
-	then
-		echo "pmon-setproc: invalid parameter(s) " > /dev/console
-		return 1
-	fi
+    if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ] || [ -z "$4" ]
+    then
+        echo "pmon-setproc: invalid parameter(s) " > /dev/console
+        return 1
+    fi
 
-	sysevent set pmon_proc_$1 "$2 $3 $4"
+    sysevent set pmon_proc_$1 "$2 $3 $4"
 }
 
 do_unsetproc ()
 {
-	if [ -z "$1" ]
-	then
-		echo "pmon-unsetproc: invalid parameter " > /dev/console
-		return 1
-	fi
+    if [ -z "$1" ]
+    then
+        echo "pmon-unsetproc: invalid parameter " > /dev/console
+        return 1
+    fi
 
-	sysevent set pmon_proc_$1
+    sysevent set pmon_proc_$1
 }
 
 case "$1" in
-	register)	do_register $2 $3 "$4" ;;
-	unregister)	do_unregister $2 ;;
-	setproc)	do_setproc $2 $3 $4 "$5" ;;
-	unsetproc)	do_unsetproc $2 ;;
-	*)		do_check_process ;;
+    register)   do_register $2 $3 "$4" ;;
+    unregister) do_unregister $2 ;;
+    setproc)    do_setproc $2 $3 $4 "$5" ;;
+    unsetproc)  do_unsetproc $2 ;;
+    *)      do_check_process ;;
 esac
