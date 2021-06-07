@@ -31,6 +31,8 @@
 #include "lan_handler.h"
 #include "util.h"
 #include "dhcp_server_functions.h"
+#include "ccsp_base_api.h"
+#include "ccsp_memory.h"
 #include <telemetry_busmessage_sender.h>
 
 #define HOSTS_FILE              "/etc/hosts"
@@ -64,6 +66,8 @@
                                   (byte == 248) || (byte == 240) || (byte == 224) || \
                                   (byte == 192) || (byte == 128)) ? 1 : 0)
                                   
+static char *pDestComponentName = "eRT.com.cisco.spvtg.ccsp.pam";
+static char *pDestComponentPath = "/com/cisco/spvtg/ccsp/pam";
 extern int g_iSyseventfd;
 extern token_t g_tSysevent_token;
 extern char g_cDhcp_Lease_Time[8],g_rl_cWanStatus[32];
@@ -154,34 +158,28 @@ static int isValidLANIP(const char* ipStr)
         return 1;
 }
 
-static int get_dmcli_value(char *cli, char *out, size_t out_size)
+static int get_dmcli_value(char *param, char *out, size_t out_size, void* bus_handle)
 {
-    char cmd[128];
-    FILE *fp;
-    size_t len;
+    int valNum = 0;
+    parameterValStruct_t **parameterVal = NULL;
+    char *paramNames[1];
+
+    if (!param || !out)
+        return ERROR;
 
     out[0] = 0;
-
-    snprintf(cmd, sizeof(cmd), "dmcli eRT getv %s | sed -n -e 's/^.*value: //p'", cli);
-
-//  fprintf(stderr, "DHCP SERVER: %s:: %s:%s\n", __func__, "cmd", cmd);
-
-    if ((fp = popen(cmd, "r")) == NULL) {
-        fprintf(stderr, "popen %s error\n", cmd);
+    paramNames[0] = param;
+    if(CcspBaseIf_getParameterValues(bus_handle, pDestComponentName, pDestComponentPath, paramNames, 1, &valNum, &parameterVal) != CCSP_SUCCESS)
+    {
+        fprintf("DHCP SERVER %d: failed get parameter value for %s\n", __LINE__, param);
         return ERROR;
     }
 
-    fgets(out, out_size, fp);
-    pclose(fp);
-
-    len = strlen(out);
-    while ((len > 0) && ((out[len - 1] == ' ') || (out[len - 1] == '\n')))
-    {
-        out[len - 1] = 0;
-        len--;
+    if (valNum > 0) {
+        strncpy(out, parameterVal[0]->parameterValue, out_size);
+        free_parameterValStruct_t(bus_handle, valNum, parameterVal);
     }
-
-//  fprintf(stderr, "DHCP SERVER: %s:: %s:%s\n", __func__, "out", (out[0] == 0) ? "EMPTY" : out);
+//    fprintf("DHCP SERVER %d: out:%s\n",__LINE__,out);
 
     return SUCCESS;
 }
@@ -192,36 +190,36 @@ static int get_dmcli_value(char *cli, char *out, size_t out_size)
    is very bad for performance). Fixme: maybe better to fix these at compile
    time and avoid the overhead of dmcli completely?
 */
-static char *get_dmcli_value_ProductClass (void)
+static char *get_dmcli_value_ProductClass (void* bus_handle)
 {
     static char buf[32];
 
     if (buf[0] == 0)
-        get_dmcli_value ("Device.DeviceInfo.ProductClass", buf, sizeof(buf));
+        get_dmcli_value ("Device.DeviceInfo.ProductClass", buf, sizeof(buf), bus_handle);
     if (buf[0] != 0)
         return buf;
 
     return "LG5678"; /* Fallback default value */
 }
 
-static char *get_dmcli_value_SerialNumber (void)
+static char *get_dmcli_value_SerialNumber (void* bus_handle)
 {
     static char buf[32];
 
     if (buf[0] == 0)
-        get_dmcli_value ("Device.DeviceInfo.SerialNumber", buf, sizeof(buf));
+        get_dmcli_value ("Device.DeviceInfo.SerialNumber", buf, sizeof(buf), bus_handle);
     if (buf[0] != 0)
         return buf;
 
     return "001234"; /* Fallback default value */
 }
 
-static char *get_dmcli_value_ManufacturerOUI (void)
+static char *get_dmcli_value_ManufacturerOUI (void* bus_handle)
 {
     static char buf[32];
 
     if (buf[0] == 0)
-        get_dmcli_value ("Device.DeviceInfo.ManufacturerOUI", buf, sizeof(buf));
+        get_dmcli_value ("Device.DeviceInfo.ManufacturerOUI", buf, sizeof(buf), bus_handle);
     if (buf[0] != 0)
         return buf;
 
@@ -825,7 +823,7 @@ void do_extra_pools (FILE *local_dhcpconf_file, char *prefix, unsigned char bDhc
 
 //Input to this function
 //1st Input Lan IP Address and 2nd Input LAN Subnet Mask
-int prepare_dhcp_conf (char *input)
+int prepare_dhcp_conf (char *input, void *bus_handle)
 {
     char l_cNetwork_Res[8] = {0}, l_cLocalDhcpConf[32] = {0};
     char l_cLanIPAddress[16] = {0}, l_cLanNetMask[16] = {0}, l_cLan_if_name[16] = {0};
@@ -1195,9 +1193,12 @@ int prepare_dhcp_conf (char *input)
             }
         }
 
-        fprintf(l_fLocal_Dhcp_ConfFile,"dhcp-option-force=tag:cpewan-id,vi-encap:3561,6,\"%s\"\n", get_dmcli_value_ProductClass());
-        fprintf(l_fLocal_Dhcp_ConfFile,"dhcp-option-force=tag:cpewan-id,vi-encap:3561,5,\"%s\"\n", get_dmcli_value_SerialNumber());
-        fprintf(l_fLocal_Dhcp_ConfFile,"dhcp-option-force=tag:cpewan-id,vi-encap:3561,4,\"%s\"\n", get_dmcli_value_ManufacturerOUI());
+        if (bus_handle)
+        {
+            fprintf(l_fLocal_Dhcp_ConfFile,"dhcp-option-force=tag:cpewan-id,vi-encap:3561,6,\"%s\"\n", get_dmcli_value_ProductClass(bus_handle));
+            fprintf(l_fLocal_Dhcp_ConfFile,"dhcp-option-force=tag:cpewan-id,vi-encap:3561,5,\"%s\"\n", get_dmcli_value_SerialNumber(bus_handle));
+            fprintf(l_fLocal_Dhcp_ConfFile,"dhcp-option-force=tag:cpewan-id,vi-encap:3561,4,\"%s\"\n", get_dmcli_value_ManufacturerOUI(bus_handle));
+        }
 
         //Propagate Domain
         syscfg_get(NULL, "dhcp_server_propagate_wan_domain", l_cPropagate_Dom, sizeof(l_cPropagate_Dom));
