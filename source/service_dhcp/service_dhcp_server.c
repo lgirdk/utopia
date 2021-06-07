@@ -24,6 +24,8 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include "ccsp_base_api.h"
+#include "ccsp_memory.h"
 #include "sysevent/sysevent.h"
 #include "syscfg/syscfg.h"
 #include "errno.h"
@@ -103,12 +105,26 @@ static void gw_lan_refresh_switch (void)
     }
 }
 
-static void refresh_wifi (void)
+static void refresh_wifi (void* bus_handle)
 {
     fprintf (stderr, "%s: Kick assoc device\n", __FUNCTION__);
 
-    system ("dmcli eRT setv Device.WiFi.AccessPoint.1.X_CISCO_COM_KickAssocDevices bool true;"
-            "dmcli eRT setv Device.WiFi.AccessPoint.2.X_CISCO_COM_KickAssocDevices bool true");
+    /*since this function is specific to wifi parameter,
+     * using hardcoded component name and dbus path
+     * intead of CcspBaseIf_discComponentSupportingNamespace*/
+    char *component  = "eRT.com.cisco.spvtg.ccsp.wifi";
+    char *bus_path   = "/com/cisco/spvtg/ccsp/wifi";
+    char *faultParam = NULL;
+    int ret;
+
+    parameterValStruct_t param_val[] = {
+	    {"Device.WiFi.AccessPoint.1.X_CISCO_COM_KickAssocDevices", "true", ccsp_boolean},
+	    {"Device.WiFi.AccessPoint.2.X_CISCO_COM_KickAssocDevices", "true", ccsp_boolean}
+    };
+
+    ret = CcspBaseIf_setParameterValues(bus_handle, component, bus_path, 0, 0x0, param_val, sizeof(param_val)/sizeof(*param_val), TRUE, &faultParam);
+
+    //fprintf (stderr, "%s: Kick assoc device, return status - %d\n", __FUNCTION__, ret);
 }
 
 void getRFC_Value(const char* dnsOption)
@@ -173,6 +189,19 @@ int dnsmasq_server_start()
 	return system(l_cSystemCmd);
 }
 
+static void *message_bus_init()
+{
+    void *bus_handle = NULL;
+    if (CCSP_Message_Bus_Init("ccsp.dhcpServer", CCSP_MSG_BUS_CFG, &bus_handle, Ansc_AllocateMemory_Callback, Ansc_FreeMemory_Callback) != 0)
+        fprintf(stderr, "DHCP SERVER : %d, message_bus init failed.\n", __LINE__);
+    return bus_handle;
+}
+
+static void message_bus_close(void *bus_handle)
+{
+    if (bus_handle)
+        CCSP_Message_Bus_Exit(bus_handle);
+}
 void dhcp_server_stop()
 {
         char l_cDhcp_Status[16] = {0}, l_cSystemCmd[255] = {0};
@@ -203,8 +232,9 @@ void dhcp_server_stop()
 #endif
 
 	//dns is always running
+        void *bus_handle = message_bus_init();
    	prepare_hostname();
-   	prepare_dhcp_conf("dns_only");
+   	prepare_dhcp_conf("dns_only", bus_handle);
 	
 	safec_rc = sprintf_s(l_cSystemCmd, sizeof(l_cSystemCmd),"%s unsetproc dhcp_server", PMON);
     if(safec_rc < EOK){
@@ -233,6 +263,8 @@ void dhcp_server_stop()
 	{
         fprintf(stderr, "dns-server didnt start\n");
 	}
+
+	message_bus_close(bus_handle);
 }
 
 BOOL IsDhcpConfHasInterface(void)
@@ -343,8 +375,9 @@ int dhcp_server_start (char *input)
 	strncpy(l_cDhcp_Tmp_Conf, "/tmp/dnsmasq.conf.orig", sizeof(l_cDhcp_Tmp_Conf));
 	copy_file(DHCP_CONF, l_cDhcp_Tmp_Conf);
 
+    void *bus_handle = message_bus_init();
     prepare_hostname();
-    prepare_dhcp_conf();
+    prepare_dhcp_conf(NULL, bus_handle);
 	//Not calling this function as we are not doing anything here
 	//sanitize_leases_file(); 
 
@@ -419,6 +452,7 @@ int dhcp_server_start (char *input)
 		sysevent_set(g_iSyseventfd, g_tSysevent_token, "dhcp_server-status", "started", 0);
         sysevent_set(g_iSyseventfd, g_tSysevent_token, "dhcp_server-progress", "completed", 0);
 		remove_file("/var/tmp/lan_not_restart");
+		message_bus_close(bus_handle);
 		return 0;
 	}
 
@@ -458,6 +492,7 @@ int dhcp_server_start (char *input)
 		sysevent_set(g_iSyseventfd, g_tSysevent_token, "dhcp_server-status", "stopped", 0);
         sysevent_set(g_iSyseventfd, g_tSysevent_token, "dhcp_server-progress", "completed", 0);
 		remove_file("/var/tmp/lan_not_restart");
+        message_bus_close(bus_handle);
         return 0;
     }
 #if defined _BWG_NATIVE_TO_RDKB_REQ_
@@ -523,7 +558,7 @@ int dhcp_server_start (char *input)
                    Refresh WLAN clients to kick them out. Don't worry, they will rejoin.
                    More details: OFW-969-WiFi client ip is not getting updated after Changing Subnet using TR069
                 */
-                refresh_wifi();
+                refresh_wifi(bus_handle);
         	}
 		}
      	else
@@ -585,6 +620,8 @@ int dhcp_server_start (char *input)
    	print_with_uptime("DHCP SERVICE :dhcp_server-progress_is_set_to_completed:");
    	fprintf(stderr, "RDKB_DNS_INFO is : -------  resolv_conf_dump  -------\n");
 	print_file(RESOLV_CONF);
+	
+	message_bus_close(bus_handle);
 	return 0;
 }
 
@@ -723,6 +760,7 @@ void lan_status_change(char *input)
 {
 	char l_cLan_Status[16] = {0}, l_cDhcp_Server_Enabled[8] = {0};
 	int l_iSystem_Res;
+	void *bus_handle = message_bus_init();
 
 	sysevent_get(g_iSyseventfd, g_tSysevent_token, "lan-status", l_cLan_Status, sizeof(l_cLan_Status));
 	fprintf(stderr, "SERVICE DHCP : Inside lan status change with lan-status:%s\n", l_cLan_Status);
@@ -735,7 +773,7 @@ void lan_status_change(char *input)
         prepare_hostname();
 
         //also prepare dns part of dhcp conf cause we are the dhcp server too
-        prepare_dhcp_conf("dns_only");
+        prepare_dhcp_conf("dns_only", bus_handle);
 
         fprintf(stderr, "SERVICE DHCP : Start dhcp-server from lan status change");
            
@@ -764,4 +802,6 @@ void lan_status_change(char *input)
             dhcp_server_start(input);
 		}
 	}
+
+	message_bus_close(bus_handle);
 }
