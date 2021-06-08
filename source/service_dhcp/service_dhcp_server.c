@@ -964,7 +964,13 @@ int dhcp_server_start (char *input)
 		{
         	if (!strncmp(l_cStart_Misc, "ready", 5))
 			{
+			char l_cRefresh_Switch[8];
+
                 print_with_uptime("RDKB_SYSTEM_BOOT_UP_LOG : Call gw_lan_refresh_from_dhcpscript:");
+
+                sysevent_get(g_iSyseventfd, g_tSysevent_token, "refresh-switch", l_cRefresh_Switch, sizeof(l_cRefresh_Switch));
+                if (strcmp(l_cRefresh_Switch, "true") == 0)
+                {
 		#ifdef RDKB_EXTENDER_ENABLED
                    if (Get_Device_Mode() == ROUTER)
                    {
@@ -974,11 +980,14 @@ int dhcp_server_start (char *input)
 		    gw_lan_refresh_switch();
                 #endif
 
-                /*
-                   Refresh WLAN clients to kick them out. Don't worry, they will rejoin.
-                   More details: OFW-969-WiFi client ip is not getting updated after Changing Subnet using TR069
-                */
-                refresh_wifi(bus_handle);
+                    /*
+                       Refresh WLAN clients to kick them out. Don't worry, they will rejoin.
+                       More details: OFW-969-WiFi client ip is not getting updated after Changing Subnet using TR069
+                    */
+                    refresh_wifi(bus_handle);
+
+                    sysevent_set(g_iSyseventfd, g_tSysevent_token, "refresh-switch", "false", 0);
+                }
         	}
 		}
      	else
