@@ -265,6 +265,7 @@ int dhcp_server_start (char *input)
 	char l_cCurrent_PID[8] = {0}, l_cRpc_Cmd[64] = {0};
 	char l_cCommand[128] = {0}, l_cBuf[128] = {0};
     char l_cBridge_Mode[8] = {0};
+    char l_cRefresh_Switch[8] = {0};
     char l_cDhcp_Server_Prog[16] = {0};
     int dhcp_server_progress_count = 0;
 
@@ -481,13 +482,17 @@ int dhcp_server_start (char *input)
         	if (!strncmp(l_cStart_Misc, "ready", 5))
 			{
                 print_with_uptime("RDKB_SYSTEM_BOOT_UP_LOG : Call gw_lan_refresh_from_dhcpscript:");
-                gw_lan_refresh_switch();
-
-                /*
-                   Refresh WLAN clients to kick them out. Don't worry, they will rejoin.
-                   More details: OFW-969-WiFi client ip is not getting updated after Changing Subnet using TR069
-                */
-                refresh_wifi(bus_handle);
+                sysevent_get(g_iSyseventfd, g_tSysevent_token, "refresh-switch", l_cRefresh_Switch, sizeof(l_cRefresh_Switch));
+                if (strcmp(l_cRefresh_Switch, "true") == 0)
+                {
+                    gw_lan_refresh_switch();
+                    /*
+                       Refresh WLAN clients to kick them out. Don't worry, they will rejoin.
+                       More details: OFW-969-WiFi client ip is not getting updated after Changing Subnet using TR069
+                    */
+                    refresh_wifi(bus_handle);
+                    sysevent_set(g_iSyseventfd, g_tSysevent_token, "refresh-switch", "false", 0);
+                }
         	}
 		}
      	else
