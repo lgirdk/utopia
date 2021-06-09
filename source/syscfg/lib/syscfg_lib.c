@@ -33,6 +33,10 @@
    limitations under the License.
 **********************************************************************/
 
+/* _GNU_SOURCE is needed for strchrnul() and program_invocation_short_name */
+
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -147,7 +151,7 @@ int syscfg_get (const char *ns, const char *name, char *out_val, int outbufsz)
     len = strlen(val);
 
     if (len >= outbufsz) {
-        fprintf(stderr, "syscfg_get: %s outbufsz too small (%d < %d) (lr %p)\n", name, outbufsz, len + 1, __builtin_extract_return_addr (__builtin_return_address (0)));
+        fprintf(stderr, "syscfg_get: %s outbufsz too small (%d < %d) (%s: lr %p)\n", name, outbufsz, (int) len + 1, program_invocation_short_name, __builtin_extract_return_addr (__builtin_return_address (0)));
         dump_maps();
         fflush(NULL);
         len = outbufsz - 1;
