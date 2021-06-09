@@ -1606,10 +1606,8 @@ static int make_mm_items (syscfg_shm_ctx *ctx, shm_free_table *ft)
         return 0;
     }
 
-    mm_item *p_mm_item;
     for(ct=0; (ct < ft->mf) && ((ctx->mm.db_cur + ft->size) < ctx->mm.db_end); ct++) {
         item = ctx->mm.db_cur;
-        p_mm_item = MM_ITEM(ctx,item);
         MM_ITEM_SIZE(ctx, item) = ft->size;
         MM_ITEM_NEXT(ctx, item) = ft->head;
         ctx->mm.db_cur += ft->size;
