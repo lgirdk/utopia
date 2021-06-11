@@ -155,14 +155,6 @@ int main (int argc, char **argv)
 
         return rc;
     }
-    else if (strcmp(cmd[0], "destroy") == 0)
-    {
-        printf("WARNING!!! Are you sure you want to do this?\nPress CTRL-C to abort or ENTER to proceed\n");
-
-        syscfg_destroy();
-
-        return 0;
-    }
     else if (strcmp(cmd[0], "show") == 0)
     {
         size_t sz;
