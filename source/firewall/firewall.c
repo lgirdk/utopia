@@ -15841,15 +15841,25 @@ static int do_ip_filter_IpV4_service(FILE *fp)
             strcat(iptableRule, " -I FORWARD -j ACCEPT ");
         }
 
+        int iSrcStart = atoi(srcstartport);
+        int iSrcEnd = 65535;
+        int iDstStart = atoi(dststartport);
+        int iDstEnd = 65535;
+
+        if (0 != strcmp(srcendport, "0"))
+            iSrcEnd = atoi(srcendport);
+        if (0 != strcmp(dstendport, "0"))
+            iDstEnd = atoi(dstendport);
+
         if (PROTOCOL_BOTH == proto || PROTOCOL_TCP ==  proto)
         {
             //Inserting IP Table rule for protocol TCP
-            fprintf(fp, " %s -p tcp --sport %s:%s --dport %s:%s \n", iptableRule, srcstartport, srcendport, dststartport, dstendport);
+            fprintf(fp, " %s -p tcp --sport %d:%d --dport %d:%d \n", iptableRule, iSrcStart, iSrcEnd, iDstStart, iDstEnd);
         }
         if (PROTOCOL_BOTH == proto || PROTOCOL_UDP ==  proto)
         {
             //Inserting IP Table rule for protocol UDP
-            fprintf(fp, " %s -p udp --sport %s:%s --dport %s:%s \n", iptableRule, srcstartport, srcendport, dststartport, dstendport);
+            fprintf(fp, " %s -p udp --sport %d:%d --dport %d:%d \n", iptableRule, iSrcStart, iSrcEnd, iDstStart, iDstEnd);
         }
         if (PROTOCOL_ALL == proto )
         {
