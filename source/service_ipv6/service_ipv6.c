@@ -867,10 +867,17 @@ static int divide_ipv6_prefix(struct serv_ipv6 *si6)
         /*set related sysevent*/
         snprintf(evt_name, sizeof(evt_name), "multinet_%d-name", l2_insts[i]);
         sysevent_get(si6->sefd, si6->setok, evt_name, iface_name, sizeof(iface_name));/*interface name*/
+        char currentPrefix[64] = {0};
         snprintf(evt_name, sizeof(evt_name), "ipv6_%s-prefix", iface_name);
+        sysevent_get(si6->sefd, si6->setok, evt_name, currentPrefix, sizeof(currentPrefix));
         sysevent_set(si6->sefd, si6->setok, evt_name, iface_prefix, 0);
 
         fprintf(stderr, "interface-prefix %s:%s\n", iface_name, iface_prefix);
+        if(strlen(currentPrefix) > 0)
+        { 
+          snprintf(evt_name, sizeof(evt_name), "previous_ipv6_%s-prefix", iface_name);
+          sysevent_set(si6->sefd, si6->setok, evt_name, currentPrefix, 0);   
+        }
 
 #ifdef MULTILAN_FEATURE
         tmp_prefix += htobe64(1);
@@ -1252,7 +1259,15 @@ static int lan_addr6_unset(struct serv_ipv6 *si6)
         snprintf(evt_name, sizeof(evt_name), "ipv6_%s-prefix", if_name);
         sysevent_get(si6->sefd, si6->setok, evt_name, iface_prefix, sizeof(iface_prefix));
 #ifdef MULTILAN_FEATURE
+        char currentPrefix[64] = {0};
+        snprintf(evt_name, sizeof(evt_name), "ipv6_%s-prefix", if_name);
+        sysevent_get(si6->sefd, si6->setok, evt_name, currentPrefix, sizeof(currentPrefix));
         sysevent_set(si6->sefd, si6->setok, evt_name, "", 0);
+        if(strlen(currentPrefix) > 0)
+        {
+          snprintf(evt_name, sizeof(evt_name), "previous_ipv6_%s-prefix", if_name);
+          sysevent_set(si6->sefd, si6->setok, evt_name, currentPrefix, 0);
+        }
 #endif
         
         /*del v6 addr*/
