@@ -45,7 +45,6 @@ typedef enum {
     CMD_COMMIT,
     CMD_ISMATCH,
     CMD_SHOW,
-    CMD_DESTROY,
     CMD_UNKNOWN,
 } cmd_t;
 
@@ -87,7 +86,6 @@ static int get_cmd (const char *cmdstr)
     if (0 == strcasecmp(cmdstr, "unset"))       { return CMD_UNSET; }
     if (0 == strcasecmp(cmdstr, "commit"))      { return CMD_COMMIT; }
     if (0 == strcasecmp(cmdstr, "show"))        { return CMD_SHOW; }
-    if (0 == strcasecmp(cmdstr, "destroy"))     { return CMD_DESTROY; }
 
     return CMD_UNKNOWN;
 }
@@ -240,10 +238,6 @@ int main(int argc, char **argv)
        rc = syscfg_commit();
        print_commit_error(rc);
        return rc;
-   case CMD_DESTROY:
-       printf("WARNING!!! Are you sure you want to do this?\nPress CTRL-C to abort or ENTER to proceed\n");
-       syscfg_destroy();
-       break;
    case CMD_SHOW:
        {
        int len, sz;
