@@ -377,7 +377,7 @@ if [ "1" = "$SYSCFG_PARTNER_FR" ]; then
 fi
 # Remove log file first because it need get log file path from syscfg   
    /usr/sbin/log_handle.sh reset
-   echo -e "\n" | syscfg_destroy 
+   syscfg_destroy -f
 
 # Remove syscfg and PSM storage files
 #mark the factory reset flag 'on'
