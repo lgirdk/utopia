@@ -80,6 +80,7 @@
 #include "secure_wrapper.h"
 #include "print_uptime.h"
 #include "safec_lib_common.h"
+#include "platform_hal.h"
 
 #if defined (_PROPOSED_BUG_FIX_)
 #include <syslog.h>
@@ -114,6 +115,17 @@ char DHCPC_PID_FILE[100]="";
 #define OPENVSWITCH_LOADED "/sys/module/openvswitch"
 
 #define WAN_STARTED "/var/wan_started"
+
+#ifndef CONFIG_VENDOR_NAME
+#define CONFIG_VENDOR_NAME "Undefined Vendor"
+#endif
+#ifndef CONFIG_VENDOR_ID
+#define CONFIG_VENDOR_ID "123456"
+#endif
+#ifndef CONFIG_MODEL_ID
+#define CONFIG_MODEL_ID "ABC2000"
+#endif
+
 enum wan_prot {
     WAN_PROT_DHCP,
     WAN_PROT_STATIC,
@@ -285,7 +297,7 @@ static int dhcp_stop(const char *ifname)
 
 
 #define VENDOR_SPEC_FILE "/etc/udhcpc.vendor_specific"
-#define VENDOR_OPTIONS_LENGTH 100
+#define VENDOR_OPTIONS_LENGTH 512
 
 /***
  * Parses a file containing vendor specific options
@@ -293,29 +305,69 @@ static int dhcp_stop(const char *ifname)
  * options:  buffer containing the returned parsed options
  * length:   length of options
  *
+ * Option code 43 - DHCPv4 Vendor- Vendor Specific Information Options
+ *            Sub-option code 2,  <Device type> - EROUTER
+ *            Sub-option code 3,  ECM:<eSAFE1:eSAFE2...eSAFEn>
+ *            Sub-option code 4,  <device serial number>
+ *            Sub-option code 5,  <Hardware version>
+ *            Sub-option code 6,  <Software version>
+ *            Sub-option code 7,  <Boot ROM version>  <-- Boot ROM version is mostly meaningless, assume this actually means Bootloader version.
+ *            Sub-option code 8,  <OUI>
+ *            Sub-option code 9,  <Model Number>
+ *            Sub-option code 10, <Vendor name>
+ *            Sub-option code 15, eSAFEs with cfg file encapsulation: <eSAFE1:eSAFE2...eSAFEn>
+ *
+ *      Code    Type   Len   Val   Type Len      Val    Type
+ *     +-----+-------+-----+-----+----+----+-----------+----+--------
+ *     | 43  |   2   |  3  | ECM |  3 |  8 |  ECM:EMTA |  4 | . . . .
+ *     +-----+-------+-----+-----+----+----+-----------+----+---------
+ *
+ *
  * returns:  0 on successful parsing, else -1
  ***/
+
+static int verifyBufferSpace(const int length, int opt_len, int size)
+{
+    if (length - opt_len <= size) {
+        fprintf(stderr, "%s: Too many options\n", __FUNCTION__);
+        return 0;
+    }
+
+    return 1;
+}
+
+static int writeTOHexFromAscii(char *options, const int length, int opt_len, char *value)
+{
+    char *ptr;
+
+    for (ptr = value; *ptr != 0; ptr++) {
+        if (!verifyBufferSpace(length, opt_len, 2)) {
+            return 0;
+        }
+        opt_len += sprintf(options + opt_len, "%02x", *ptr);
+    }
+
+    return opt_len;
+}
+
+/*
+   Warning: This function should be kept aligned with prepare_dhcp43_optvalue() in ccsp-misc/source/dhcp_client_utils/dhcpv4_client_utils.c
+*/
 static int dhcp_parse_vendor_info( char *options, const int length, char *ethWanMode )
 {
     FILE *fp;
     char subopt_num[12] ={0}, subopt_value[64] = {0} , mode[8] = {0} ;
     int num_read;
-    errno_t rc = -1; 
- 
+    char buf[64];
+    int opt_len = 0;   //Total characters read
+    int subopt;
+    size_t len;
+
+    //Start the string off with "43:"
+    opt_len = sprintf(options, "43:");
+
     if ((fp = fopen(VENDOR_SPEC_FILE, "ra")) != NULL) {
-        int opt_len = 0;   //Total characters read
-        
-        //Start the string off with "43:"
-        rc =  sprintf_s(options, length, "43:");
-        if(rc < EOK)
-        {
-           ERR_CHK(rc);
-        }
-        opt_len = rc;
-
         while ((num_read = fscanf(fp, "%7s %11s %63s", mode, subopt_num, subopt_value)) == 3) {
-            char *ptr;
-
             if (length - opt_len < 6) {
                 fprintf( stderr, "%s: Too many options\n", __FUNCTION__ );
                 fclose(fp);   //CID 61631 : Resource leak
@@ -341,20 +393,18 @@ static int dhcp_parse_vendor_info( char *options, const int length, char *ethWan
 
             //Print the option number
             if (strcmp(subopt_num, "SUBOPTION2") == 0) {
-                rc = sprintf_s(options + opt_len, (length - opt_len), "02");
-                if(rc < EOK)
-                {
-                   ERR_CHK(rc);
+                if (!verifyBufferSpace(length, opt_len, 2)) {
+                    fclose(fp);
+                    return -1;
                 }
-                opt_len += rc;
+                opt_len += sprintf(options + opt_len, "02");
             }
             else if (strcmp(subopt_num, "SUBOPTION3") == 0) {
-                rc = sprintf_s(options + opt_len, (length - opt_len), "03");
-                if(rc < EOK)
-                {
-                   ERR_CHK(rc);
+                if (!verifyBufferSpace(length, opt_len, 2)) {
+                    fclose(fp);
+                    return -1;
                 }
-                opt_len += rc;
+                opt_len += sprintf(options + opt_len, "03");
             }
             else {
                 fprintf( stderr, "%s: Invalid suboption\n", __FUNCTION__ );
@@ -363,26 +413,17 @@ static int dhcp_parse_vendor_info( char *options, const int length, char *ethWan
             }
 
             //Print the length of the sub-option value
-            rc = sprintf_s(options + opt_len, (length - opt_len), "%02x", strlen(subopt_value));
-            if(rc < EOK)
-            {
-                ERR_CHK(rc);
+            if (!verifyBufferSpace(length, opt_len, 2)) {
+                fclose(fp);
+                return -1;
             }
-            opt_len += rc;
+            opt_len += sprintf(options + opt_len, "%02x", strlen(subopt_value));
 
             //Print the sub-option value in hex
-            for (ptr=subopt_value; (char)*ptr != (char)0; ptr++) {
-                if (length - opt_len <= 2) {
-                    fprintf( stderr, "%s: Too many options\n", __FUNCTION__ );
-                    fclose(fp);
-                    return -1;
-                }
-                rc = sprintf_s(options + opt_len, (length - opt_len), "%02x", *ptr);
-                if(rc < EOK)
-                {
-                    ERR_CHK(rc);
-                }
-                opt_len += rc;
+            opt_len = writeTOHexFromAscii(options, length, opt_len, subopt_value);
+            if (opt_len == 0) {
+                fclose(fp);
+                return -1;
             }
         } //while
 
@@ -396,6 +437,133 @@ static int dhcp_parse_vendor_info( char *options, const int length, char *ethWan
     else {
         fprintf(stderr, "%s: Cannot read %s\n", __FUNCTION__, VENDOR_SPEC_FILE);
         return -1;
+    }
+
+    /*
+       Sub-option code 4 - serial number
+    */
+    if (platform_hal_GetSerialNumber (buf) == RETURN_OK)
+    {
+        subopt = 4;
+        len = strlen (buf);
+        if (len > 0)
+        {
+            if ((len > 0xFF) || !verifyBufferSpace(length, opt_len, 2 + 2 + (2 * len))) {
+                return -1;
+            }
+            opt_len += sprintf(options + opt_len, "%02x%02x", subopt, len);
+            opt_len = writeTOHexFromAscii(options, length, opt_len, buf);
+        }
+    }
+
+    /*
+       Sub-option code 5 - Hardware version
+    */
+    if (platform_hal_GetHardwareVersion (buf) == RETURN_OK)
+    {
+        subopt = 5;
+        len = strlen (buf);
+        if (len > 0)
+        {
+            if ((len > 0xFF) || !verifyBufferSpace(length, opt_len, 2 + 2 + (2 * len))) {
+                return -1;
+            }
+            opt_len += sprintf(options + opt_len, "%02x%02x", subopt, len);
+            opt_len = writeTOHexFromAscii(options, length, opt_len, buf);
+        }
+    }
+
+    /*
+       Sub-option code 6 - Software version (must match SW version field in SNMP MIB object sysDescr)
+    */
+    if (platform_hal_GetSoftwareVersion (buf, sizeof(buf)) == RETURN_OK)
+    {
+        subopt = 6;
+        len = strlen (buf);
+        if (len > 0)
+        {
+            if ((len > 0xFF) || !verifyBufferSpace(length, opt_len, 2 + 2 + (2 * len))) {
+                return -1;
+            }
+            opt_len += sprintf(options + opt_len, "%02x%02x", subopt, len);
+            opt_len = writeTOHexFromAscii(options, length, opt_len, buf);
+        }
+    }
+
+    /*
+       Sub-option code 7 - Boot ROM version (aka Bootloader version)
+    */
+    if (platform_hal_GetBootloaderVersion (buf, sizeof(buf)) == RETURN_OK)
+    {
+        subopt = 7;
+        len = strlen (buf);
+        if (len > 0)
+        {
+            if ((len > 0xFF) || !verifyBufferSpace(length, opt_len, 2 + 2 + (2 * len))) {
+                return -1;
+            }
+            opt_len += sprintf(options + opt_len, "%02x%02x", subopt, len);
+            opt_len = writeTOHexFromAscii(options, length, opt_len, buf);
+        }
+    }
+
+    /*
+       Sub-option code 8 - OUI
+    */
+    subopt = 8;
+    len = strlen (CONFIG_VENDOR_ID);
+    if (len > 0)
+    {
+        if ((len > 0xFF) || !verifyBufferSpace(length, opt_len, 2 + 2 + (2 * len))) {
+            return -1;
+        }
+        opt_len += sprintf(options + opt_len, "%02x%02x", subopt, len);
+        opt_len = writeTOHexFromAscii(options, length, opt_len, CONFIG_VENDOR_ID);
+    }
+
+    /*
+       Sub-option code 9 - Model Number
+    */
+    if (platform_hal_GetModelName(buf) == RETURN_OK)
+    {
+        subopt = 9;
+        len = strlen (buf);
+        if (len > 0)
+        {
+            if ((len > 0xFF) || !verifyBufferSpace(length, opt_len, 2 + 2 + (2 * len))) {
+              return -1;
+        }
+            opt_len += sprintf(options + opt_len, "%02x%02x", subopt, len);
+            opt_len = writeTOHexFromAscii(options, length, opt_len, buf);
+        }
+    }
+
+    /*
+       Sub-option code 10 - Vendor Name
+    */
+    subopt = 10;
+    len = strlen (CONFIG_VENDOR_NAME);
+    if (len > 0)
+    {
+        if ((len > 0xFF) || !verifyBufferSpace(length, opt_len, 2 + 2 + (2 * len))) {
+            return -1;
+        }
+        opt_len += sprintf(options + opt_len, "%02x%02x", subopt, len);
+        opt_len = writeTOHexFromAscii(options, length, opt_len, CONFIG_VENDOR_NAME);
+    }
+
+    /*
+       Sub-option code 15 - device eSAFE with cfg file encapsulation
+    */
+    subopt = 15;
+    len = strlen ("EROUTER");
+    if (len > 0)
+    {
+        if ((len > 0xFF) || !verifyBufferSpace(length, opt_len, 2 + 2 + (2 * len))) {
+            return -1;
+        }
+        opt_len += sprintf(options + opt_len, "%02x%02x", subopt, len);
+        opt_len = writeTOHexFromAscii(options, length, opt_len, "EROUTER");
     }
 
     return 0;
