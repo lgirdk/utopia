@@ -1372,6 +1372,7 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
     /*get ia_na & ia_pd info (addr, t1, t2, preftm, vldtm) which passthrough wan*/
     ret = get_ia_info(si6, PROVISIONED_V6_CONFIG_FILE, &ia_na, &ia_pd);
 
+    fprintf(stderr, "%s:%d dhcpv6s_cfg.pool_num:%d\n",__func__,__LINE__, dhcpv6s_cfg.pool_num);
     for (pool_index = 0; pool_index < dhcpv6s_cfg.pool_num; pool_index++) {
         dhcpv6s_pool_cfg.index = pool_index;
         if (get_dhcpv6s_pool_cfg(si6, &dhcpv6s_pool_cfg) != 0)
@@ -1530,6 +1531,8 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
                                 if( fgets( HwAddr, sizeof( HwAddr ), ifd ) != NULL )
                                 {
                                         fprintf(fp, "client duid %s\n",HwAddr);
+                                        fprintf(stderr, "%s:%d HwAddr:%s \n",__func__,__LINE__,HwAddr);
+
                                         if(primaryLan)
                                             Cnt += sprintf(relayStr+Cnt, "client duid %s\n",HwAddr);
                                 }
@@ -1547,6 +1550,7 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
                 if(primaryLan)
                     Cnt += sprintf(relayStr+Cnt, "   {\n");
 
+		fprintf(stderr, "%s:%d colon_count:%d \n",__func__,__LINE__,colon_count);
 		if (colon_count == 5)
                 {
                 	strcat(dummyAddr,":123");
@@ -1690,10 +1694,12 @@ static int dhcpv6s_start(struct serv_ipv6 *si6)
     #endif
 #endif
 
+    fprintf(stderr, "%s:%d call gen_dibbler_conf \n",__func__,__LINE__);
     if (gen_dibbler_conf(si6) != 0) {
         fprintf(stderr, "%s: fail to generate dibbler config\n", __FUNCTION__);
         return -1;
     }
+    fprintf(stderr, "%s:%d gen_dibbler_conf done \n",__func__,__LINE__);
 #ifdef MULTILAN_FEATURE
     daemon_stop(DHCPV6S_PID_FILE, DHCPV6_SERVER);
 #else
@@ -1708,6 +1714,7 @@ static int dhcpv6s_start(struct serv_ipv6 *si6)
     }
 #endif
     sleep(1);
+    fprintf(stderr, "%s:%d calling dibbler-server start \n",__func__,__LINE__);
     v_secure_system("%s start", DHCPV6_SERVER);
     return 0;
 }
