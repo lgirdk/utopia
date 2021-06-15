@@ -384,10 +384,7 @@ static int get_dhcpv6s_pool_cfg(struct serv_ipv6 *si6, dhcpv6s_pool_cfg_t *cfg)
     /* get Interface name from data model: Device.IP.Interface.%d.Name*/
     snprintf(dml_path, sizeof(dml_path), "%sName", iface_name);
     if ((iface_name[0] == '\0') || (mbus_get(dml_path, cfg->interface, sizeof(cfg->interface)) != 0))
-    { 
-        fprintf(stderr, "%s %d get dml_path name:%s from data model failed \n",__func__,__LINE__,dml_path);
         return -1;
-    }
 #endif
 
     /*get interface prefix*/
@@ -399,7 +396,6 @@ static int get_dhcpv6s_pool_cfg(struct serv_ipv6 *si6, dhcpv6s_pool_cfg_t *cfg)
     /* No additional option specified for this pool */
     if (cfg->opt_num == 0) {
         cfg->opts = NULL;
-	    fprintf(stderr, "No additional option specified for this pool \n");
         return 0;
     }
 
@@ -409,7 +405,6 @@ static int get_dhcpv6s_pool_cfg(struct serv_ipv6 *si6, dhcpv6s_pool_cfg_t *cfg)
         return -1;
     }
 
-    fprintf(stderr, " %s %d cfg->opt_num:%d \n ",__FUNCTION__,__LINE__,cfg->opt_num);
     for(; i < cfg->opt_num; i++) {
         DHCPV6S_SYSCFG_GETI(DHCPV6S_NAME, "pool", cfg->index, "option", i, "bEnabled", (p_opt + i)->enable);
         DHCPV6S_SYSCFG_GETI(DHCPV6S_NAME, "pool", cfg->index, "option", i, "Tag", (p_opt + i)->tag);
@@ -1380,26 +1375,13 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
     fprintf(stderr, "%s:%d dhcpv6s_cfg.pool_num:%d\n",__func__,__LINE__, dhcpv6s_cfg.pool_num);
     for (pool_index = 0; pool_index < dhcpv6s_cfg.pool_num; pool_index++) {
         dhcpv6s_pool_cfg.index = pool_index;
-	fprintf(stderr, "\n %s:%d  calling get_dhcpv6s_pool_cfg() for pool_index:%d\n",__func__,__LINE__, pool_index);
         if (get_dhcpv6s_pool_cfg(si6, &dhcpv6s_pool_cfg) != 0)
-        {
-           fprintf(stderr, "%s:%d can't get config for pool_index:%d.. contine\n",__func__,__LINE__, pool_index);
-           continue;
-        }
-
-        fprintf(stderr, "%s:%d dhcpv6s_pool_cfg.enable:%d,dhcpv6s_pool_cfg.ia_prefix:%s dhcpv6s_pool_cfg.interface:%s \n",__func__,__LINE__, dhcpv6s_pool_cfg.enable,dhcpv6s_pool_cfg.ia_prefix,dhcpv6s_pool_cfg.interface);
-        if (!dhcpv6s_pool_cfg.enable || dhcpv6s_pool_cfg.ia_prefix[0] == '\0')
-        {
-          fprintf(stderr, "%s:%d dhcpv6s_pool_cfg not enabled or ia_prefix is empty pool_index:%d..continue .\n",__func__,__LINE__,pool_index);
-          continue;	  
-        }
-        snprintf(iface_path, sizeof(iface_path), BRIDGE_PATH, dhcpv6s_pool_cfg.interface);
-        fprintf(stderr, "%s:%d iface_path:%s\n",__func__,__LINE__,iface_path);	
-        if (access(iface_path, F_OK) != 0)
-        {
-            fprintf(stderr, "%s:%d can't access iface_path:%s  pool_index:%d ...continue \n",__func__,__LINE__, iface_path,pool_index);
             continue;
-	}
+
+        if (!dhcpv6s_pool_cfg.enable || dhcpv6s_pool_cfg.ia_prefix[0] == '\0') continue;
+        snprintf(iface_path, sizeof(iface_path), BRIDGE_PATH, dhcpv6s_pool_cfg.interface);
+        if (access(iface_path, F_OK) != 0)
+            continue;
 
         // relay support for primary interface (ie "brlan0") only
         primaryLan = (strcmp(dhcpv6s_pool_cfg.interface, "brlan0") == 0) ? 1 : 0;
@@ -1412,7 +1394,6 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
             Cnt += sprintf(relayStr+Cnt,"iface  relay1 {\n");
             Cnt += sprintf(relayStr+Cnt,"   relay %s\n",  dhcpv6s_pool_cfg.interface);
         }
-        fprintf(stderr, "%s:%d dhcpv6s_pool_cfg.interface:%s ,pool_index:%d \n",__func__,__LINE__, dhcpv6s_pool_cfg.interface,pool_index);
 
         fprintf(fp, "iface %s {\n", dhcpv6s_pool_cfg.interface);
 
@@ -1655,19 +1636,16 @@ OPTIONS:
         }
         /* MVXREQ-289: Adding Vendor-Spec Option 17 */
         if (strlen(deviceManufacturerOUI) > 0) {    /* sub-option 14 */
-            fprintf(stderr, "%s:%d deviceManufacturerOUI:%s \n",__func__,__LINE__,deviceManufacturerOUI);
             fprintf(fp, "     option vendor-spec 3561-14-\"%s\"\n", deviceManufacturerOUI);
             if (primaryLan)
                 Cnt += sprintf(relayStr+Cnt, "     option vendor-spec 3561-14-\"%s\"\n", deviceManufacturerOUI);
         }
         if (strlen(deviceSerialNumber) > 0) {    /* sub-option 15 */
-            fprintf(stderr, "%s:%d deviceSerialNumber:%s \n",__func__,__LINE__,deviceSerialNumber);
             fprintf(fp, "     option vendor-spec 3561-15-\"%s\"\n", deviceSerialNumber);
             if (primaryLan)
                 Cnt += sprintf(relayStr+Cnt, "     option vendor-spec 3561-15-\"%s\"\n", deviceSerialNumber);
         }
         if (strlen(deviceProductClass) > 0) {    /*sub-option 16 */
-            fprintf(stderr, "%s:%d deviceProductClass:%s \n",__func__,__LINE__,deviceProductClass);
             fprintf(fp, "     option vendor-spec 3561-16-\"%s\"\n", deviceProductClass);
             if (primaryLan)
                 Cnt += sprintf(relayStr+Cnt, "     option vendor-spec 3561-16-\"%s\"\n", deviceProductClass);
@@ -1686,7 +1664,6 @@ OPTIONS:
 	}
     }
 
-    fprintf(stderr, "%s:%d  Cnt:%d \n",__func__,__LINE__,Cnt);
     if(strlen(relayStr) > 0)
     {
         fprintf(fp, "\n\n");
