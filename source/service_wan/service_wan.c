@@ -79,6 +79,7 @@
 #endif
 #include "secure_wrapper.h"
 #include "print_uptime.h"
+#include "platform_hal.h"
 
 #if defined (_PROPOSED_BUG_FIX_)
 #include <syslog.h>
@@ -290,9 +291,14 @@ static int dhcp_stop(const char *ifname)
  * Option code 43 - DHCPv4 Vendor- Vendor Specific Information Options
  *            Sub-option code 2,  <Device type> - EROUTER
  *            Sub-option code 3,  ECM:<eSAFE1:eSAFE2...eSAFEn>
+ *            Sub-option code 4,  <device serial number>
+ *            Sub-option code 5,  <Hardware version>
+ *            Sub-option code 6,  <Software version>
+ *            Sub-option code 7,  <Boot ROM version>  <-- Boot ROM version is mostly meaningless, assume this actually means Bootloader version.
  *            Sub-option code 8,  <OUI>
  *            Sub-option code 9,  <Model Number>
  *            Sub-option code 10, <Vendor name>
+ *            Sub-option code 15, eSAFEs with cfg file encapsulation: <eSAFE1:eSAFE2...eSAFEn>
  *
  *      Code    Type   Len   Val   Type Len      Val    Type
  *     +-----+-------+-----+-----+----+----+-----------+----+--------
@@ -332,6 +338,7 @@ static int dhcp_parse_vendor_info( char *options, const int length, char *ethWan
     FILE *fp;
     char subopt_num[12] ={0}, subopt_value[64] = {0} , mode[8] = {0} ;
     int num_read;
+    char buf[64];
     int opt_len = 0;   //Total characters read
     int subopt;
     size_t len;
@@ -406,6 +413,74 @@ static int dhcp_parse_vendor_info( char *options, const int length, char *ethWan
     }
 
     /*
+       Sub-option code 4 - serial number
+    */
+    if (platform_hal_GetSerialNumber (buf) == RETURN_OK)
+    {
+        subopt = 4;
+        len = strlen (buf);
+        if (len > 0)
+        {
+            if ((len > 0xFF) || !verifyBufferSpace(length, opt_len, 2 + 2 + (2 * len))) {
+                return -1;
+            }
+            opt_len += sprintf(options + opt_len, "%02x%02x", subopt, len);
+            opt_len = writeTOHexFromAscii(options, length, opt_len, buf);
+        }
+    }
+
+    /*
+       Sub-option code 5 - Hardware version
+    */
+    if (platform_hal_GetHardwareVersion (buf) == RETURN_OK)
+    {
+        subopt = 5;
+        len = strlen (buf);
+        if (len > 0)
+        {
+            if ((len > 0xFF) || !verifyBufferSpace(length, opt_len, 2 + 2 + (2 * len))) {
+                return -1;
+            }
+            opt_len += sprintf(options + opt_len, "%02x%02x", subopt, len);
+            opt_len = writeTOHexFromAscii(options, length, opt_len, buf);
+        }
+    }
+
+    /*
+       Sub-option code 6 - Software version
+    */
+    if (platform_hal_GetSoftwareVersion (buf, sizeof(buf)) == RETURN_OK)
+    {
+        subopt = 6;
+        len = strlen (buf);
+        if (len > 0)
+        {
+            if ((len > 0xFF) || !verifyBufferSpace(length, opt_len, 2 + 2 + (2 * len))) {
+                return -1;
+            }
+            opt_len += sprintf(options + opt_len, "%02x%02x", subopt, len);
+            opt_len = writeTOHexFromAscii(options, length, opt_len, buf);
+        }
+    }
+
+    /*
+       Sub-option code 7 - Boot ROM version (aka Bootloader version)
+    */
+    if (platform_hal_GetBootloaderVersion (buf, sizeof(buf)) == RETURN_OK)
+    {
+        subopt = 7;
+        len = strlen (buf);
+        if (len > 0)
+        {
+            if ((len > 0xFF) || !verifyBufferSpace(length, opt_len, 2 + 2 + (2 * len))) {
+                return -1;
+            }
+            opt_len += sprintf(options + opt_len, "%02x%02x", subopt, len);
+            opt_len = writeTOHexFromAscii(options, length, opt_len, buf);
+        }
+    }
+
+    /*
        Sub-option code 8 - OUI
     */
     subopt = 8;
@@ -445,6 +520,20 @@ static int dhcp_parse_vendor_info( char *options, const int length, char *ethWan
         }
         opt_len += sprintf(options + opt_len, "%02x%02x", subopt, len);
         opt_len = writeTOHexFromAscii(options, length, opt_len, CONFIG_VENDOR_NAME);
+    }
+
+    /*
+       Sub-option code 15 - device eSAFE with cfg file encapsulation
+    */
+    subopt = 15;
+    len = strlen ("EROUTER");
+    if (len > 0)
+    {
+        if ((len > 0xFF) || !verifyBufferSpace(length, opt_len, 2 + 2 + (2 * len))) {
+            return -1;
+        }
+        opt_len += sprintf(options + opt_len, "%02x%02x", subopt, len);
+        opt_len = writeTOHexFromAscii(options, length, opt_len, "EROUTER");
     }
 
     return 0;
