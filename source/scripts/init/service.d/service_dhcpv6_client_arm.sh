@@ -60,7 +60,7 @@ if ([ "$BOX_TYPE" = "XB3" ] || [ "$BOX_TYPE" = "XB6" -a "$MANUFACTURE" = "Arris"
         DHCPV6_PID_FILE=/var/run/erouter_dhcp6c.pid
 else
 	DHCPV6_BINARY=dibbler-client
-	DHCPV6_PID_FILE=/tmp/dibbler/client.pid
+	DHCPV6_PID_FILE=/var/lib/dibbler/client.pid
 fi
 DHCPV6_CONF_FILE=/etc/dhcp6c.conf
 
