@@ -54,7 +54,7 @@ source /etc/utopia/service.d/log_capture_path.sh
 SERVICE_NAME="dhcpv6_client"
 
 DHCPV6_BINARY=dibbler-client
-DHCPV6_PID_FILE=/tmp/dibbler/client.pid
+DHCPV6_PID_FILE=/var/lib/dibbler/client.pid
 DHCPV6_CONF_FILE=/etc/dhcp6c.conf
 
 DHCPV6_REGISTER_FILE=/tmp/dhcpv6_registered_events
