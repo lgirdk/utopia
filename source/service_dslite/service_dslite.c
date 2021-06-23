@@ -504,6 +504,10 @@ static int dslite_start(struct serv_dslite *sd)
     snprintf(cmd, sizeof(cmd), "ip route add default dev %s table erouter",TNL_NETDEVNAME);
     vsystem(cmd);
 
+    //set default gateway through the tunnel in routing table 14 (?)
+    snprintf(cmd, sizeof(cmd), "ip route add default dev %s table 14",TNL_NETDEVNAME);
+    vsystem(cmd);
+
     //save tunnel interface here in case IPv4 functions use it, like IGMP proxy
     syscfg_set(NULL,  "dslite_tunnel_interface_1", TNL_NETDEVNAME);
     syscfg_set(NULL,  "dslite_tunneled_interface_1", ER_NETDEVNAME);
@@ -674,6 +678,9 @@ static int dslite_stop(struct serv_dslite *sd)
 
     //Restore default gateway route rule
     snprintf(cmd, sizeof(cmd), "ip route del default dev %s table erouter",TNL_NETDEVNAME);
+    vsystem(cmd);
+
+    snprintf(cmd, sizeof(cmd), "ip route del default dev %s table 14",TNL_NETDEVNAME);
     vsystem(cmd);
 
     //if GW is the IPv6 only mode, we need to shutdown the LAN to WAN IPv4 function
