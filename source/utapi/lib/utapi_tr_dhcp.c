@@ -158,8 +158,8 @@ int Utopia_GetDhcpV4ServerPoolCfg(UtopiaContext *ctx, void *pCfg)
     {
         cfg_t->IPRouters[0].Value = inet_addr(lan.ipaddr);
         cfg_t->SubnetMask.Value = inet_addr(lan.netmask);
-        strcpy(cfg_t->DomainName,lan.domain);
-        strcpy(cfg_t->Interface,lan.ifname);
+        strncpy(cfg_t->DomainName,lan.domain,sizeof(cfg_t->DomainName)-1);
+        strncpy(cfg_t->Interface,lan.ifname,sizeof(cfg_t->Interface)-1);
     }
  
     /* strip out the last octet of LAN IP*/
@@ -167,7 +167,7 @@ int Utopia_GetDhcpV4ServerPoolCfg(UtopiaContext *ctx, void *pCfg)
     if(pch) {
         /* copies the first three numbers of the IP */
         *pch=0;
-        strcpy(prefixIP, lan.ipaddr);
+        strncpy(prefixIP, lan.ipaddr,sizeof(prefixIP)-1);
     }
 
     rc = Utopia_GetDHCPServerSettings (ctx, &dhcps);
@@ -181,7 +181,7 @@ int Utopia_GetDhcpV4ServerPoolCfg(UtopiaContext *ctx, void *pCfg)
     }else
     {
         if(strlen(dhcps.DHCPIPAddressStart) <= 3){        /* just last octet */
-            sprintf(completeIP,"%s.%s",prefixIP,dhcps.DHCPIPAddressStart);
+            snprintf(completeIP,sizeof(completeIP),"%s.%s",prefixIP,dhcps.DHCPIPAddressStart);
             cfg_t->MinAddress.Value = inet_addr(completeIP);
 
             /* We only have MaxNum's in syscfg - We need to derive Max Address from that */
@@ -192,7 +192,7 @@ int Utopia_GetDhcpV4ServerPoolCfg(UtopiaContext *ctx, void *pCfg)
             iVal = (iVal + dhcps.DHCPMaxUsers) - 1; /* Max user includes start and end address */
             sprintf(strVal,"%d",iVal);
             memset(completeIP,0,IPADDR_SZ);
-            sprintf(completeIP,"%s.%s",prefixIP,strVal);
+            snprintf(completeIP,sizeof(completeIP),"%s.%s",prefixIP,strVal);
             cfg_t->MaxAddress.Value = inet_addr(completeIP);
         }else{
             cfg_t->MinAddress.Value = inet_addr(dhcps.DHCPIPAddressStart);
