@@ -172,10 +172,8 @@ int Utopia_GetDhcpV4ServerPoolCfg(UtopiaContext *ctx, void *pCfg)
     {
         cfg_t->IPRouters[0].Value = inet_addr(lan.ipaddr);
         cfg_t->SubnetMask.Value = inet_addr(lan.netmask);
-        safec_rc = strcpy_s(cfg_t->DomainName, sizeof(cfg_t->DomainName), lan.domain);
-        ERR_CHK(safec_rc);
-        safec_rc = strcpy_s(cfg_t->Interface, sizeof(cfg_t->Interface), lan.ifname);
-        ERR_CHK(safec_rc);
+        strncpy(cfg_t->DomainName,lan.domain,sizeof(cfg_t->DomainName)-1);
+        strncpy(cfg_t->Interface,lan.ifname,sizeof(cfg_t->Interface)-1);
     }
  
     /* strip out the last octet of LAN IP*/
@@ -183,8 +181,7 @@ int Utopia_GetDhcpV4ServerPoolCfg(UtopiaContext *ctx, void *pCfg)
     if(pch) {
         /* copies the first three numbers of the IP */
         *pch=0;
-        safec_rc = strcpy_s(prefixIP, sizeof(prefixIP), lan.ipaddr);
-        ERR_CHK(safec_rc);
+        strncpy(prefixIP, lan.ipaddr,sizeof(prefixIP)-1);
     }
 
     rc = Utopia_GetDHCPServerSettings (ctx, &dhcps);
@@ -197,11 +194,7 @@ int Utopia_GetDhcpV4ServerPoolCfg(UtopiaContext *ctx, void *pCfg)
     }else
     {
         if(strlen(dhcps.DHCPIPAddressStart) <= 3){        /* just last octet */
-            safec_rc = sprintf_s(completeIP, sizeof(completeIP), "%s.%s",prefixIP,dhcps.DHCPIPAddressStart);
-            if(safec_rc < EOK)
-            {
-                ERR_CHK(safec_rc);
-            }
+            snprintf(completeIP,sizeof(completeIP),"%s.%s",prefixIP,dhcps.DHCPIPAddressStart);
             cfg_t->MinAddress.Value = inet_addr(completeIP);
 
             /* We only have MaxNum's in syscfg - We need to derive Max Address from that */
@@ -215,11 +208,7 @@ int Utopia_GetDhcpV4ServerPoolCfg(UtopiaContext *ctx, void *pCfg)
             {
                 ERR_CHK(safec_rc);
             }
-            safec_rc = sprintf_s(completeIP, sizeof(completeIP),"%s.%s",prefixIP,strVal);
-            if(safec_rc < EOK)
-            {
-                ERR_CHK(safec_rc);
-            }
+            snprintf(completeIP,sizeof(completeIP),"%s.%s",prefixIP,strVal);
             cfg_t->MaxAddress.Value = inet_addr(completeIP);
         }else{
             cfg_t->MinAddress.Value = inet_addr(dhcps.DHCPIPAddressStart);
