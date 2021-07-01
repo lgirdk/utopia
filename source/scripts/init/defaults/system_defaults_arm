@@ -738,6 +738,9 @@ $router_adv_provisioning_enable=1
 # Router Advertisement Transmission Interval
 $ra_interval=3
 
+# Router Advertisement Lifetime
+$ra_lifetime=180
+
 $last_router_reboot_time=0
 $router_reboot_Interval=28800
 #Threshold value of reinitMac
