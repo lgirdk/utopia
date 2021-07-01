@@ -1069,7 +1069,12 @@ static int gen_zebra_conf(int sefd, token_t setok)
 #ifdef WAN_FAILOVER_SUPPORTED
             if (strcmp(default_wan_interface, wan_interface) != 0)
             {
-                fprintf(fp, "   ipv6 nd ra-lifetime 180\n");
+                int ra_lifetime;
+                syscfg_get(NULL, "ra_lifetime", buf, sizeof(buf));
+                ra_lifetime = atoi(buf);
+                if (ra_lifetime <= 0)
+                    ra_lifetime = 180;
+                fprintf(fp, "   ipv6 nd ra-lifetime %d\n", ra_lifetime);
             }
             else
 #endif
@@ -1082,7 +1087,12 @@ static int gen_zebra_conf(int sefd, token_t setok)
                 }
                 else
                 {
-                    fprintf(fp, "   ipv6 nd ra-lifetime 180\n");
+                    int ra_lifetime;
+                    syscfg_get(NULL, "ra_lifetime", buf, sizeof(buf));
+                    ra_lifetime = atoi(buf);
+                    if (ra_lifetime <= 0)
+                        ra_lifetime = 180;
+                    fprintf(fp, "   ipv6 nd ra-lifetime %d\n", ra_lifetime);
                 }
             }
 #else
