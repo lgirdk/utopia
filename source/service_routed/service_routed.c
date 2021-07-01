@@ -670,7 +670,7 @@ static int gen_zebra_conf(int sefd, token_t setok)
     }
     FILE *fp = NULL;
     char rtmod[16], ra_en[16], dh6s_en[16];
-    char ra_interval[8] = {0};
+    int ra_interval;
     char name_servs[1024] = {0};
     char dnssl[2560] = {0};
     char dnssl_lft[16];
@@ -683,7 +683,7 @@ static int gen_zebra_conf(int sefd, token_t setok)
 #endif
     char m_flag[16], o_flag[16], ra_mtu[16], a_flag[16];
     char rec[256], val[512];
-    char buf[6];
+    char buf[12];
     FILE *responsefd = NULL;
     char *networkResponse = "/var/tmp/networkresponse.txt";
     int iresCode = 0;
@@ -792,7 +792,6 @@ static int gen_zebra_conf(int sefd, token_t setok)
 #endif
 #endif
 
-    syscfg_get(NULL, "ra_interval", ra_interval, sizeof(ra_interval));
 #ifdef CISCO_CONFIG_DHCPV6_PREFIX_DELEGATION
     sysevent_get(sefd, setok, "previous_ipv6_prefix", orig_prefix, sizeof(orig_prefix));
     sysevent_get(sefd, setok, "ipv6_prefix_prdtime", preferred_lft, sizeof(preferred_lft));
@@ -1036,18 +1035,21 @@ static int gen_zebra_conf(int sefd, token_t setok)
 #if defined (INTEL_PUMA7)
             //Intel Proposed RDKB Generic Bug Fix from XB6 SDK
             // Use ra_interval from syscfg.db
-            if (strlen(ra_interval) > 0)
-            {
-                fprintf(fp, "   ipv6 nd ra-interval %s\n", ra_interval);
-            } else
-            {
-                fprintf(fp, "   ipv6 nd ra-interval 30\n"); //Set ra-interval to default 30 secs as per Erouter Specs.
-            }
+            syscfg_get(NULL, "ra_interval", buf, sizeof(buf));
+            ra_interval = atoi(buf);
+            if (ra_interval <= 0)
+                ra_interval = 30;   // Use default 30 secs as per Erouter Specs.
+            fprintf(fp, "   ipv6 nd ra-interval %d\n", ra_interval);
 #else
 #if !defined (_HUB4_PRODUCT_REQ_) || defined (_WNXL11BWL_PRODUCT_REQ_)
-        fprintf(fp, "   ipv6 nd ra-interval 3\n");
+            syscfg_get(NULL, "ra_interval", buf, sizeof(buf));
+            ra_interval = atoi(buf);
+            if (ra_interval <= 0)
+                ra_interval = 3;
+            fprintf(fp, "   ipv6 nd ra-interval %d\n", ra_interval);
 #else
-        fprintf(fp, "   ipv6 nd ra-interval 180\n");
+            ra_interval = 180;
+            fprintf(fp, "   ipv6 nd ra-interval %d\n", ra_interval);
 #endif //_HUB4_PRODUCT_REQ_
 #endif
 
@@ -1258,10 +1260,10 @@ static int gen_zebra_conf(int sefd, token_t setok)
 				}
 			}
 
-                if (atoi(valid_lft) <= 3*atoi(ra_interval))
+                if (atoi(valid_lft) <= (3 * ra_interval))
                 {
-                    // According to RFC8106 section 5.2 dnssl lifttime must be atleast 3 time MaxRtrAdvInterval.
-                    dnssllft = 3*atoi(ra_interval);
+                    // According to RFC8106 section 5.2 dnssl lifetime must be atleast 3 time MaxRtrAdvInterval.
+                    dnssllft = (3 * ra_interval);
                     snprintf(dnssl_lft, sizeof(dnssl_lft), "%d", dnssllft);
                 }
                 else
