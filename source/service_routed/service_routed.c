@@ -741,6 +741,7 @@ static int gen_zebra_conf(int sefd, token_t setok)
     int ipv6_enable = 0;
     int ula_enable = 0;
 #endif
+    char syscfgName[36];
 #ifdef WAN_FAILOVER_SUPPORTED
     char default_wan_interface[64] = {0};
     char wan_interface[64] = {0};
@@ -1044,17 +1045,21 @@ static int gen_zebra_conf(int sefd, token_t setok)
 #endif
 
 #endif//_HUB4_PRODUCT_REQ_
+            if(i == 0)
+               strcpy(syscfgName, "ra_interval");
+            else
+               sprintf(syscfgName, "ra_interval_%d",i+1);
 #if defined (INTEL_PUMA7)
             //Intel Proposed RDKB Generic Bug Fix from XB6 SDK
             // Use ra_interval from syscfg.db
-            syscfg_get(NULL, "ra_interval", buf, sizeof(buf));
+            syscfg_get(NULL, syscfgName, buf, sizeof(buf));
             ra_interval = atoi(buf);
             if (ra_interval <= 0)
                 ra_interval = 30;   // Use default 30 secs as per Erouter Specs.
             fprintf(fp, "   ipv6 nd ra-interval %d\n", ra_interval);
 #else
 #if !defined (_HUB4_PRODUCT_REQ_) || defined (_WNXL11BWL_PRODUCT_REQ_)
-            syscfg_get(NULL, "ra_interval", buf, sizeof(buf));
+            syscfg_get(NULL, syscfgName, buf, sizeof(buf));
             ra_interval = atoi(buf);
             if (ra_interval <= 0)
                 ra_interval = 3;
@@ -1070,7 +1075,11 @@ static int gen_zebra_conf(int sefd, token_t setok)
             if (strcmp(default_wan_interface, wan_interface) != 0)
             {
                 int ra_lifetime;
-                syscfg_get(NULL, "ra_lifetime", buf, sizeof(buf));
+                if(i == 0)
+                   strcpy(syscfgName, "ra_lifetime");
+                else
+                   sprintf(syscfgName, "ra_lifetime_%d", i+1);
+                syscfg_get(NULL, syscfgName, buf, sizeof(buf));
                 ra_lifetime = atoi(buf);
                 if (ra_lifetime <= 0)
                     ra_lifetime = 180;
@@ -1088,7 +1097,11 @@ static int gen_zebra_conf(int sefd, token_t setok)
                 else
                 {
                     int ra_lifetime;
-                    syscfg_get(NULL, "ra_lifetime", buf, sizeof(buf));
+                    if(i == 0)
+                       strcpy(syscfgName, "ra_lifetime");
+                    else
+                       sprintf(syscfgName, "ra_lifetime_%d", i+1);
+                    syscfg_get(NULL, syscfgName, buf, sizeof(buf));
                     ra_lifetime = atoi(buf);
                     if (ra_lifetime <= 0)
                         ra_lifetime = 180;
@@ -1102,7 +1115,11 @@ static int gen_zebra_conf(int sefd, token_t setok)
         fprintf(fp, "   ipv6 nd ra-lifetime 540\n");
 #endif //_HUB4_PRODUCT_REQ_
 
-        syscfg_get(NULL, "router_managed_flag", m_flag, sizeof(m_flag));
+        if(i == 0)
+            strcpy(syscfgName, "router_managed_flag");
+        else
+            sprintf(syscfgName, "router_managed_flag_%d", i+1);	
+        syscfg_get(NULL, syscfgName, m_flag, sizeof(m_flag));
         if (strcmp(m_flag, "1") == 0)
             fprintf(fp, "   ipv6 nd managed-config-flag\n");
 #if defined (_HUB4_PRODUCT_REQ_) && !defined (_WNXL11BWL_PRODUCT_REQ_)
@@ -1110,7 +1127,11 @@ static int gen_zebra_conf(int sefd, token_t setok)
                 fprintf(fp, "   no ipv6 nd managed-config-flag\n");
 #endif
 
-        syscfg_get(NULL, "router_other_flag", o_flag, sizeof(o_flag));
+        if(i == 0)
+            strcpy(syscfgName, "router_other_flag");
+        else
+            sprintf(syscfgName, "router_other_flag_%d", i+1);	
+        syscfg_get(NULL, syscfgName, o_flag, sizeof(o_flag));
         if (strcmp(o_flag, "1") == 0)
             fprintf(fp, "   ipv6 nd other-config-flag\n");
 #if defined (_HUB4_PRODUCT_REQ_) && !defined (_WNXL11BWL_PRODUCT_REQ_)
