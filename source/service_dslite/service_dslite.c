@@ -716,8 +716,6 @@ int main(int argc, char *argv[])
     int i;
     struct serv_dslite sd;
 
-    fprintf(stderr, "[%s] -- IN\n", PROG_NAME);
-
     if (argc < 2) {
         usage();
         exit(1);
@@ -733,8 +731,6 @@ int main(int argc, char *argv[])
         if (strcmp(argv[1], cmd_ops[i].cmd) != 0 || !cmd_ops[i].exec)
             continue;
 
-        fprintf(stderr, "[%s] exec: %s\n", PROG_NAME, cmd_ops[i].cmd);
-
         if (cmd_ops[i].exec(&sd) != 0)
             fprintf(stderr, "[%s]: fail to exec `%s'\n", PROG_NAME, cmd_ops[i].cmd);
 
@@ -746,6 +742,5 @@ int main(int argc, char *argv[])
     if (serv_dslite_term(&sd) != 0)
         exit(1);
 
-    fprintf(stderr, "[%s] -- OUT\n", PROG_NAME);
     exit(0);
 }
