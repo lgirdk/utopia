@@ -98,7 +98,7 @@ DHCP_START=`syscfg get dhcp_start`
 #if [ -z "$DHCP_NUM" ] ; then
 #   DHCP_NUM=0
 #fi
-
+CURRENT_WANSTATUS=`sysevent get wan-status`
 # are we propagating the nameserver learned from wan dhcp client to our lan clients
 PROPAGATE_NS=`syscfg get dhcp_server_propagate_wan_nameserver`
 # if Filter Internet NAT Redirection is enabled then we need to make sure that
@@ -1283,7 +1283,10 @@ fi
 	  if [ $DHCP_LEASE_TIME == -1 ]; then
 	      echo "$PREFIX""dhcp-range=$DHCP_START_ADDR,$DHCP_END_ADDR,$LAN_NETMASK,infinite" >> $LOCAL_DHCP_CONF
 	  else
-  	      echo "$PREFIX""dhcp-range=$DHCP_START_ADDR,$DHCP_END_ADDR,$LAN_NETMASK,$DHCP_LEASE_TIME" >> $LOCAL_DHCP_CONF
+	      if [ "$CURRENT_WANSTATUS" == "stopped" ]; then
+                   DHCP_LEASE_TIME=`syscfg get dhcp_offline_lease_time`
+              fi
+              echo "$PREFIX""dhcp-range=$DHCP_START_ADDR,$DHCP_END_ADDR,$LAN_NETMASK,$DHCP_LEASE_TIME" >> $LOCAL_DHCP_CONF
 	  fi
 	  if [ "1" = "$NAMESERVERENABLED" ]; then
 		  DHCP_OPTION_FOR_LAN=`get_dhcp_option_for_brlan0`
@@ -1622,7 +1625,12 @@ do_extra_pools () {
             echo_t "DHCP_SERVER : Subnet not available for pool $i"
         fi
 
-        m_DHCP_LEASE_TIME=`sysevent get "${SERVICE_NAME}"_"${i}"_leasetime`
+        if [ "$CURRENT_WANSTATUS" == "stopped" ]; then
+             m_DHCP_LEASE_TIME=`syscfg get dhcp_offline_lease_time`
+        else
+             m_DHCP_LEASE_TIME=`sysevent get "${SERVICE_NAME}"_"${i}"_leasetime`
+        fi
+
         if [ x"$m_DHCP_LEASE_TIME" = x ]; then
             echo_t "DHCP_SERVER : Leasetime not available for pool $i"
         fi
