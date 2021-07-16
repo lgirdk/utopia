@@ -1777,7 +1777,12 @@ static int apply_partnerId_default_values (char *data, char *PartnerID)
 		{
 			int isThisComcastPartner = 0;
 			//Check whether this is comcast partner or not
-			if( 0 == strcmp( "comcast", PartnerID ) )
+			// Note that in this context, RDKM is counted as Comcast since we want
+			// generic builds (which default to Comcast) and Mv2+ builds (which set
+			// Partner ID to RDKM) to have the same behaviour. Fixme: To be
+			// reviewed... the solution is probably that generic builds should default
+			// to Partner ID RDKM rather than Comcast ?
+			if ((strcmp( "RDKM", PartnerID) == 0) || (strcmp( "comcast", PartnerID) == 0))
 			{
 				isThisComcastPartner = 1;
 			}
