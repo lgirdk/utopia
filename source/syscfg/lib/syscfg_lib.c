@@ -206,14 +206,14 @@ int syscfg_set_ns_commit (const char *ns, const char *name, const char *value)
     return result;
 }
 
-int syscfg_set_ns_u (const char *ns, const char *name, unsigned int value)
+int syscfg_set_ns_u (const char *ns, const char *name, unsigned long value)
 {
-    char buf[12];
-    sprintf (buf, "%u", value);
+    char buf[sizeof(long)*3];
+    sprintf (buf, "%lu", value);
     return syscfg_set_ns (ns, name, buf);
 }
 
-int syscfg_set_ns_u_commit (const char *ns, const char *name, unsigned int value)
+int syscfg_set_ns_u_commit (const char *ns, const char *name, unsigned long value)
 {
     int result = syscfg_set_ns_u (ns, name, value);
     if (result == 0)
@@ -231,12 +231,12 @@ int syscfg_set_nns_commit (const char *name, const char *value)
     return syscfg_set_ns_commit (NULL, name, value);
 }
 
-int syscfg_set_nns_u (const char *name, unsigned int value)
+int syscfg_set_nns_u (const char *name, unsigned long value)
 {
     return syscfg_set_ns_u (NULL, name, value);
 }
 
-int syscfg_set_nns_u_commit (const char *name, unsigned int value)
+int syscfg_set_nns_u_commit (const char *name, unsigned long value)
 {
     return syscfg_set_ns_u_commit (NULL, name, value);
 }
