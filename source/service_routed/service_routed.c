@@ -440,8 +440,15 @@ static int route_set(struct serv_routed *sr)
         snprintf(evt_name, sizeof(evt_name), "multinet_%d-name", l2_insts[i]);
         sysevent_get(sr->sefd, sr->setok, evt_name, lan_if, sizeof(lan_if));
 
-        v_secure_system("ip -6 rule add iif %s table all_lans", lan_if);
-        v_secure_system("ip -6 rule add iif %s table erouter", lan_if);
+        /*
+           This may run multipe times, so remove existing rules before
+           adding them again.
+        */
+        v_secure_system("ip -6 rule del iif %s table all_lans" "; "
+                        "ip -6 rule add iif %s table all_lans" "; "
+                        "ip -6 rule del iif %s table erouter" "; "
+                        "ip -6 rule add iif %s table erouter",
+                        lan_if, lan_if, lan_if, lan_if);
     }
 #endif
 
