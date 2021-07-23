@@ -403,8 +403,8 @@ static int route_set(struct serv_routed *sr)
         snprintf(evt_name, sizeof(evt_name), "multinet_%d-name", l2_insts[i]);
         sysevent_get(sr->sefd, sr->setok, evt_name, lan_if, sizeof(lan_if));
 
-        v_secure_system("ip -6 rule add iif %s table all_lans", lan_if);
         v_secure_system("ip -6 rule add iif %s table erouter", lan_if);
+        v_secure_system("ip -6 rule add iif %s table all_lans", lan_if);
     }
 #endif
 
