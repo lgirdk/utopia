@@ -466,11 +466,24 @@ static int route_set(struct serv_routed *sr)
            This may run multipe times, so remove existing rules before
            adding them again.
         */
+#if defined (_LG_MV2_PLUS_) || defined(_LG_MV3_)
+        /*
+           Fixme: On Mv1 newly added rules have lower piority than existing
+           ones and on Mv2+ they have a higher priority. It's not clear why
+           but for now use platform specific ordering as a workaround...
+        */
+        v_secure_system("ip -6 rule del iif %s table erouter" "; "
+                        "ip -6 rule add iif %s table erouter" "; "
+                        "ip -6 rule del iif %s table all_lans" "; "
+                        "ip -6 rule add iif %s table all_lans",
+                        lan_if, lan_if, lan_if, lan_if);
+#else
         v_secure_system("ip -6 rule del iif %s table all_lans" "; "
                         "ip -6 rule add iif %s table all_lans" "; "
                         "ip -6 rule del iif %s table erouter" "; "
                         "ip -6 rule add iif %s table erouter",
                         lan_if, lan_if, lan_if, lan_if);
+#endif
     }
 #endif
 
