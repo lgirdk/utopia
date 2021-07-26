@@ -436,13 +436,10 @@ static int dslite_start(struct serv_dslite *sd)
         }
 
         /*Store the time of DNS resolution and TTL value for dns_refresh process*/
-        memset(buf, 0, sizeof(buf));
-        memset(val, 0, sizeof(val));
         syscfg_set(NULL, "dslite_aftr_resolved_1", resolved_ipv6);
         sprintf(buf, "%u", time(NULL));
         syscfg_set(NULL, "dslite_dns_time_1", buf);
-        sprintf(val, "%u", dnsttl);
-        syscfg_set(NULL, "dslite_dns_ttl_1", val);
+        syscfg_set_u(NULL, "dslite_dns_ttl_1", dnsttl);
 
         fprintf(stderr, "%s: Resolved AFTR address is %s, time=%s DNS-TTL=%d\n", __FUNCTION__, resolved_ipv6, buf, dnsttl);
     }
