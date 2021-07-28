@@ -412,7 +412,7 @@ service_start ()
          PSM_MODE=`sysevent get system_psm_mode`
          if [ "$PSM_MODE" != "1" ]; then
             # It is not a good practice to force all physical links to refresh -- should have used arguments to specify which ports/links
-            gw_lan_refresh
+            sysevent set refresh-switch "true"
          fi
          #set hostname            
          prepare_hostname
