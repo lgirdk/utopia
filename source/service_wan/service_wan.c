@@ -126,6 +126,9 @@ char DHCPC_PID_FILE[100]="";
 #define CONFIG_MODEL_ID "ABC2000"
 #endif
 
+#define SVC_WAN_LOG "/rdklogs/logs/svc_wan_dbg.txt"
+static FILE *fp_wan_dbg;
+
 enum wan_prot {
     WAN_PROT_DHCP,
     WAN_PROT_STATIC,
@@ -329,7 +332,7 @@ static int dhcp_stop(const char *ifname)
 static int verifyBufferSpace(const int length, int opt_len, int size)
 {
     if (length - opt_len <= size) {
-        fprintf(stderr, "%s: Too many options\n", __FUNCTION__);
+        fprintf(fp_wan_dbg, "%s: Too many options\n", __FUNCTION__);
         return 0;
     }
 
@@ -369,7 +372,7 @@ static int dhcp_parse_vendor_info( char *options, const int length, char *ethWan
     if ((fp = fopen(VENDOR_SPEC_FILE, "ra")) != NULL) {
         while ((num_read = fscanf(fp, "%7s %11s %63s", mode, subopt_num, subopt_value)) == 3) {
             if (length - opt_len < 6) {
-                fprintf( stderr, "%s: Too many options\n", __FUNCTION__ );
+                fprintf(fp_wan_dbg, "%s: Too many options\n", __FUNCTION__ );
                 fclose(fp);   //CID 61631 : Resource leak
                 return -1;
             }
@@ -407,7 +410,7 @@ static int dhcp_parse_vendor_info( char *options, const int length, char *ethWan
                 opt_len += sprintf(options + opt_len, "03");
             }
             else {
-                fprintf( stderr, "%s: Invalid suboption\n", __FUNCTION__ );
+                fprintf(fp_wan_dbg, "%s: Invalid suboption\n", __FUNCTION__ );
                 fclose(fp);
                 return -1;
             }
@@ -430,12 +433,12 @@ static int dhcp_parse_vendor_info( char *options, const int length, char *ethWan
         fclose(fp);
 
         if ((num_read != EOF) && (num_read != 3)) {
-            fprintf(stderr, "%s: Error parsing file\n", __FUNCTION__);
+            fprintf(fp_wan_dbg, "%s: Error parsing file\n", __FUNCTION__);
             return -1;
         }
     }
     else {
-        fprintf(stderr, "%s: Cannot read %s\n", __FUNCTION__, VENDOR_SPEC_FILE);
+        fprintf(fp_wan_dbg, "%s: Cannot read %s\n", __FUNCTION__, VENDOR_SPEC_FILE);
         return -1;
     }
 
@@ -666,7 +669,7 @@ static int dhcp_start(struct serv_wan *sw)
               ifname, DHCPC_PID_FILE);
 */
 	if (err != 0)
-                   fprintf(stderr, "%s: fail to launch erouter plugin\n", __FUNCTION__);
+                   fprintf(fp_wan_dbg, "%s: fail to launch erouter plugin\n", __FUNCTION__);
    }
     return err == 0 ? 0 : -1;
 }
@@ -778,12 +781,12 @@ static int Is_Dslite_Dhcpv6option64_received(struct serv_wan *sw)
             {
                 memset(endpointname,0,sizeof(endpointname));
                 sysevent_get(sw->sefd, sw->setok, "dslite_dhcpv6_endpointname", endpointname, sizeof(endpointname));
-                fprintf(stderr, "DHCP DS-Lite Option 64 received ok value: %s\n",endpointname);
+                fprintf(fp_wan_dbg, "DHCP DS-Lite Option 64 received ok value: %s\n",endpointname);
                 //If dslite_addr_fqdn_1 is not set, dslite would have failed to start, adding a restart to create a tunnel
                 system("service_dslite restart &");
                 return 1;
             }
-            fprintf(stderr, "DHCP DS-Lite Option 64 Error\n");
+            fprintf(fp_wan_dbg, "DHCP DS-Lite Option 64 Error\n");
         }
     }
     return 0;
@@ -807,7 +810,7 @@ static int start_dhcpv6_client(struct serv_wan *sw)
                     sleep(5);
                     sysevent_set(sw->sefd, sw->setok, "wan-status", "starting", 0);
                     sysevent_set(sw->sefd, sw->setok, "dslite_option64-status", "", 0);
-                    fprintf(stderr, "Starting DHCPv6 Client now\n");
+                    fprintf(fp_wan_dbg, "Starting DHCPv6 Client now\n");
                     system("/etc/utopia/service.d/service_dhcpv6_client.sh enable");
                     break;
                 case WAN_PROT_STATIC:
@@ -838,7 +841,7 @@ static int wait_till_dhcpv6_client_reply(struct serv_wan *sw)
 
             for (count=0; count < DSLITE_DHCPREPLY_MAX_TIME; ++count)
             {
-                fprintf(stderr, "Waiting for DHCP DS-Lite Option 64 reply\n");
+                fprintf(fp_wan_dbg, "Waiting for DHCP DS-Lite Option 64 reply\n");
                 sysevent_get(sw->sefd, sw->setok, "dslite_option64-status", status, sizeof(status));
                 if (!strncmp(status,ok_s,strlen(ok_s)) || !strncmp(status,nok_s,strlen(nok_s)))
                 {
@@ -902,10 +905,10 @@ static int wan_start(struct serv_wan *sw)
     /* state check */
     sysevent_get(sw->sefd, sw->setok, "wan_service-status", status, sizeof(status));
     if (strcmp(status, "starting") == 0 || strcmp(status, "started") == 0) {
-        fprintf(stderr, "%s: service wan has already %s !\n", __FUNCTION__, status);
+        fprintf(fp_wan_dbg, "%s: service wan has already %s !\n", __FUNCTION__, status);
         return 0;
     } else if (strcmp(status, "stopping") == 0) {
-        fprintf(stderr, "%s: cannot start in status %s !\n", __FUNCTION__, status);
+        fprintf(fp_wan_dbg, "%s: cannot start in status %s !\n", __FUNCTION__, status);
         return -1;
     }
 
@@ -1003,7 +1006,7 @@ static int wan_start(struct serv_wan *sw)
 
 #if !defined(_WAN_MANAGER_ENABLED_)
     if (wan_iface_up(sw) != 0) {
-        fprintf(stderr, "%s: wan_iface_up error\n", __FUNCTION__);
+        fprintf(fp_wan_dbg, "%s: wan_iface_up error\n", __FUNCTION__);
         sysevent_set(sw->sefd, sw->setok, "wan_service-status", "error", 0);
         return -1;
     }
@@ -1022,7 +1025,7 @@ static int wan_start(struct serv_wan *sw)
     {
             #if !defined(_WAN_MANAGER_ENABLED_)
                 if (wan_addr_set(sw) != 0) {
-                    fprintf(stderr, "%s: wan_addr_set error\n", __FUNCTION__);
+                    fprintf(fp_wan_dbg, "%s: wan_addr_set error\n", __FUNCTION__);
                     sysevent_set(sw->sefd, sw->setok, "wan_service-status", "error", 0);
                     return -1;
                 }
@@ -1039,7 +1042,7 @@ static int wan_start(struct serv_wan *sw)
 #endif
 
                 if (route_config(sw->ifname) != 0) {
-                    fprintf(stderr, "%s: route_config error\n", __FUNCTION__);
+                    fprintf(fp_wan_dbg, "%s: route_config error\n", __FUNCTION__);
                     sysevent_set(sw->sefd, sw->setok, "wan_service-status", "error", 0);
                     return -1;
                 }
@@ -1079,7 +1082,7 @@ static int wan_start(struct serv_wan *sw)
              }
 #endif
 
-                   fprintf(stderr, "Starting DHCPv6 Client now\n");
+                   fprintf(fp_wan_dbg, "Starting DHCPv6 Client now\n");
                     /* In IPv6 or dual mode, raise wan-status event here */
                    if (sw->rtmod == WAN_RTMOD_IPV6 || sw->rtmod == WAN_RTMOD_DS)
                         sysevent_set(sw->sefd, sw->setok, "wan-status", "starting", 0);
@@ -1091,16 +1094,16 @@ static int wan_start(struct serv_wan *sw)
                    break;
              case WAN_PROT_STATIC:
                    if (wan_static_start_v6(sw) != 0) {
-                           fprintf(stderr, "%s: wan_static_start error\n", __FUNCTION__);
+                           fprintf(fp_wan_dbg, "%s: wan_static_start error\n", __FUNCTION__);
                            return -1;
                    }
                    break;
             default:
-              fprintf(stderr, "%s: unknow wan protocol\n", __FUNCTION__);
+              fprintf(fp_wan_dbg, "%s: unknow wan protocol\n", __FUNCTION__);
        }
 
        if (route_config_v6(sw->ifname) != 0) {
-               fprintf(stderr, "%s: route_config_v6 error\n", __FUNCTION__);
+               fprintf(fp_wan_dbg, "%s: route_config_v6 error\n", __FUNCTION__);
                sysevent_set(sw->sefd, sw->setok, "wan_service-status", "error", 0);
                return -1;
        }
@@ -1115,14 +1118,14 @@ static int wan_start(struct serv_wan *sw)
     {
             #if !defined(_WAN_MANAGER_ENABLED_)
                 if (wan_addr_set(sw) != 0) {
-                    fprintf(stderr, "%s: wan_addr_set error\n", __FUNCTION__);
+                    fprintf(fp_wan_dbg, "%s: wan_addr_set error\n", __FUNCTION__);
                     sysevent_set(sw->sefd, sw->setok, "wan_service-status", "error", 0);
                     return -1;
                 }
             #endif /*_WAN_MANAGER_ENABLED_*/
 
                 if (route_config(sw->ifname) != 0) {
-                    fprintf(stderr, "%s: route_config error\n", __FUNCTION__);
+                    fprintf(fp_wan_dbg, "%s: route_config error\n", __FUNCTION__);
                     sysevent_set(sw->sefd, sw->setok, "wan_service-status", "error", 0);
                     return -1;
                 }
@@ -1143,7 +1146,7 @@ static int wan_start(struct serv_wan *sw)
 
     if (access(POSTD_START_FILE, F_OK) != 0)
     {
-            fprintf(stderr, "[%s] Restarting post.d from service_wan\n", __FUNCTION__);
+            fprintf(fp_wan_dbg, "[%s] Restarting post.d from service_wan\n", __FUNCTION__);
             v_secure_system("touch " POSTD_START_FILE "; execute_dir /etc/utopia/post.d/");
     }
 
@@ -1151,7 +1154,7 @@ static int wan_start(struct serv_wan *sw)
     sysevent_set(sw->sefd, sw->setok, "current_wan_state", "up", 0);
     sysevent_set(sw->sefd, sw->setok, "wan-status", "started", 0);
 
-    fprintf(stderr, "[%s] start firewall fully\n", PROG_NAME);
+    fprintf(fp_wan_dbg, "[%s] start firewall fully\n", PROG_NAME);
 
 /*XB6 brlan0 comes up earlier so ned to find the way to restart the firewall
  IPv6 not yet supported so we can't restart in service routed  because of missing zebra.conf*/
@@ -1224,10 +1227,10 @@ static int wan_stop(struct serv_wan *sw)
     /* state check */
     sysevent_get(sw->sefd, sw->setok, "wan_service-status", status, sizeof(status));
     if (strcmp(status, "stopping") == 0 || strcmp(status, "stopped") == 0) {
-        fprintf(stderr, "%s: service wan has already %s !\n", __FUNCTION__, status);
+        fprintf(fp_wan_dbg, "%s: service wan has already %s !\n", __FUNCTION__, status);
         return 0;
     } else if (strcmp(status, "starting") == 0) {
-        fprintf(stderr, "%s: cannot start in status %s !\n", __FUNCTION__, status);
+        fprintf(fp_wan_dbg, "%s: cannot start in status %s !\n", __FUNCTION__, status);
         return -1;
     }
  
@@ -1271,7 +1274,7 @@ static int wan_stop(struct serv_wan *sw)
         sw->rtmod = WAN_RTMOD_DS;
         break;
     default:
-        fprintf(stderr, "%s: unknow RT mode (last_erouter_mode)\n", __FUNCTION__);
+        fprintf(fp_wan_dbg, "%s: unknow RT mode (last_erouter_mode)\n", __FUNCTION__);
         sw->rtmod = WAN_RTMOD_UNKNOW;
         break;
     }
@@ -1291,16 +1294,16 @@ static int wan_stop(struct serv_wan *sw)
 
     if (sw->rtmod == WAN_RTMOD_IPV6 || sw->rtmod == WAN_RTMOD_DS) {
        if (sw->prot == WAN_PROT_DHCP) {
-               fprintf(stderr, "Disabling DHCPv6 Client\n");
+               fprintf(fp_wan_dbg, "Disabling DHCPv6 Client\n");
                v_secure_system("/etc/utopia/service.d/service_dhcpv6_client.sh disable");
        } else if (sw->prot == WAN_PROT_STATIC) {
                if (wan_static_stop_v6(sw) != 0) {
-                       fprintf(stderr, "%s: wan_static_stop_v6 error\n", __FUNCTION__);
+                       fprintf(fp_wan_dbg, "%s: wan_static_stop_v6 error\n", __FUNCTION__);
                        return -1;
                }
        }
         if (route_deconfig_v6(sw->ifname) != 0) {
-               fprintf(stderr, "%s: route_deconfig_v6 error\n", __FUNCTION__);
+               fprintf(fp_wan_dbg, "%s: route_deconfig_v6 error\n", __FUNCTION__);
                sysevent_set(sw->sefd, sw->setok, "wan_service-status", "error", 0);
                return -1;
         }
@@ -1315,13 +1318,13 @@ static int wan_stop(struct serv_wan *sw)
 
     if (sw->rtmod == WAN_RTMOD_IPV4 || sw->rtmod == WAN_RTMOD_DS) {
         if (route_deconfig(sw->ifname) != 0) {
-            fprintf(stderr, "%s: route_deconfig error\n", __FUNCTION__);
+            fprintf(fp_wan_dbg, "%s: route_deconfig error\n", __FUNCTION__);
             sysevent_set(sw->sefd, sw->setok, "wan_service-status", "error", 0);
             return -1;
         }
 
         if (wan_addr_unset(sw) != 0) {
-            fprintf(stderr, "%s: wan_addr_unset error\n", __FUNCTION__);
+            fprintf(fp_wan_dbg, "%s: wan_addr_unset error\n", __FUNCTION__);
             sysevent_set(sw->sefd, sw->setok, "wan_service-status", "error", 0);
             return -1;
         }
@@ -1329,7 +1332,7 @@ static int wan_stop(struct serv_wan *sw)
 
 #if !defined(_PLATFORM_IPQ_) && !defined(_WAN_MANAGER_ENABLED_) && !defined(_PROPOSED_BUG_FIX_)
     if (wan_iface_down(sw) != 0) {
-        fprintf(stderr, "%s: wan_iface_down error\n", __FUNCTION__);
+        fprintf(fp_wan_dbg, "%s: wan_iface_down error\n", __FUNCTION__);
         sysevent_set(sw->sefd, sw->setok, "wan_service-status", "error", 0);
         return -1;
     }
@@ -1358,14 +1361,14 @@ static int wan_restart(struct serv_wan *sw)
     sysevent_set(sw->sefd, sw->setok, "wan-restarting", "1", 0);
 
     if (wan_stop(sw) != 0)
-        fprintf(stderr, "%s: wan_stop error\n", __FUNCTION__);
+        fprintf(fp_wan_dbg, "%s: wan_stop error\n", __FUNCTION__);
 
 
     //Intel Proposed RDKB Bug Fix
     /* Do not try to start WAN if mode is unknown */
     if (sw->rtmod != WAN_RTMOD_UNKNOW) {
         if ((err = wan_start(sw)) != 0)
-            fprintf(stderr, "%s: wan_start error\n", __FUNCTION__);
+            fprintf(fp_wan_dbg, "%s: wan_start error\n", __FUNCTION__);
     }
 
     sysevent_set(sw->sefd, sw->setok, "wan-restarting", "0", 0);
@@ -1521,7 +1524,7 @@ static int wan_addr_set(struct serv_wan *sw)
     case WAN_PROT_DHCP:
         #if !defined (FEATURE_RDKB_DHCP_MANAGER)
         if (wan_dhcp_start(sw) != 0) {
-            fprintf(stderr, "%s: wan_dhcp_start error\n", __FUNCTION__);
+            fprintf(fp_wan_dbg, "%s: wan_dhcp_start error\n", __FUNCTION__);
             return -1;
         }
         #else
@@ -1531,13 +1534,13 @@ static int wan_addr_set(struct serv_wan *sw)
         break;
     case WAN_PROT_STATIC:
         if (wan_static_start(sw) != 0) {
-            fprintf(stderr, "%s: wan_static_start error\n", __FUNCTION__);
+            fprintf(fp_wan_dbg, "%s: wan_static_start error\n", __FUNCTION__);
             return -1;
         }
 
         break;
     default:
-        fprintf(stderr, "%s: unknow wan protocol\n", __FUNCTION__);
+        fprintf(fp_wan_dbg, "%s: unknow wan protocol\n", __FUNCTION__);
         return -1;
     }
 #endif /*_WAN_MANAGER_ENABLED_*/
@@ -1548,7 +1551,7 @@ static int wan_addr_set(struct serv_wan *sw)
      * from Gateway provisioning App. This is done to save the delay in getting
      * the configuration done, and to support the WAN restart functionality.
      */
-    fprintf(stderr, "[%s] start waiting for protocol ...\n", PROG_NAME);
+    fprintf(fp_wan_dbg, "[%s] start waiting for protocol ...\n", PROG_NAME);
     for (timo = sw->timo; timo > 0; timo--) {
         sysevent_get(sw->sefd, sw->setok, "current_ipv4_link_state", state, sizeof(state));
         if (strcmp(state, "up") == 0)
@@ -1556,9 +1559,9 @@ static int wan_addr_set(struct serv_wan *sw)
         sleep(1);
     }
     if (timo == 0)
-        fprintf(stderr, "[%s] wait for protocol TIMEOUT !\n", PROG_NAME);
+        fprintf(fp_wan_dbg, "[%s] wait for protocol TIMEOUT !\n", PROG_NAME);
     else
-        fprintf(stderr, "[%s] wait for protocol SUCCESS !\n", PROG_NAME);
+        fprintf(fp_wan_dbg, "[%s] wait for protocol SUCCESS !\n", PROG_NAME);
 
 #endif /*_PLATFORM_IPQ_ && _WAN_MANAGER_ENABLED_*/
 
@@ -1660,8 +1663,8 @@ static int wan_addr_set(struct serv_wan *sw)
     sysevent_get(sw->sefd, sw->setok,"lan-status", lanstatus, sizeof(lanstatus));
 
     if (strcmp(val, "ready") != 0 && strlen(ipaddr) && strcmp(ipaddr, "0.0.0.0") != 0) {
-        fprintf(stderr, "%s: start-misc: %s current_lan_ipaddr %s\n", __FUNCTION__, val, ipaddr);
-        fprintf(stderr, "[%s] start firewall partially\n", PROG_NAME);
+        fprintf(fp_wan_dbg, "%s: start-misc: %s current_lan_ipaddr %s\n", __FUNCTION__, val, ipaddr);
+        fprintf(fp_wan_dbg, "[%s] start firewall partially\n", PROG_NAME);
 
         sysevent_get(sw->sefd, sw->setok, "parcon_nfq_status", val, sizeof(val));
         if (strcmp(val, "started") != 0) {
@@ -1683,7 +1686,7 @@ static int wan_addr_set(struct serv_wan *sw)
     	{
     		//only for first time
     #if !defined(_PLATFORM_RASPBERRYPI_) && !defined(_PLATFORM_TURRIS_)
-    		fprintf(stderr, "[%s] ready is set from misc handler. Doing gw_lan_refresh\n", PROG_NAME);
+    		fprintf(fp_wan_dbg, "[%s] ready is set from misc handler. Doing gw_lan_refresh\n", PROG_NAME);
     		v_secure_system("firewall && gw_lan_refresh");
     #endif
     		sysevent_set(sw->sefd, sw->setok, "misc-ready-from-mischandler", "false", 0);
@@ -1697,7 +1700,7 @@ static int wan_addr_set(struct serv_wan *sw)
     sysevent_set(sw->sefd, sw->setok, "firewall_flush_conntrack", "1", 0);
 
 #if !defined(_WAN_MANAGER_ENABLED_)
-    fprintf(stderr, "[%s] Synching DNS to ATOM...\n", PROG_NAME);
+    fprintf(fp_wan_dbg, "[%s] Synching DNS to ATOM...\n", PROG_NAME);
     system("/etc/utopia/service.d/service_wan/dns_sync.sh &");
 #endif /*_WAN_MANAGER_ENABLED_*/
 
@@ -1750,7 +1753,7 @@ static int wan_addr_unset(struct serv_wan *sw)
     case WAN_PROT_DHCP:
         #if !defined (FEATURE_RDKB_DHCP_MANAGER)
         if (wan_dhcp_stop(sw) != 0) {
-            fprintf(stderr, "%s: wan_dhcp_stop error\n", __FUNCTION__);
+            fprintf(fp_wan_dbg, "%s: wan_dhcp_stop error\n", __FUNCTION__);
             return -1;
         }
         #else
@@ -1760,13 +1763,13 @@ static int wan_addr_unset(struct serv_wan *sw)
         break;
     case WAN_PROT_STATIC:
         if (wan_static_stop(sw) != 0) {
-            fprintf(stderr, "%s: wan_static_stop error\n", __FUNCTION__);
+            fprintf(fp_wan_dbg, "%s: wan_static_stop error\n", __FUNCTION__);
             return -1;
         }
 
         break;
     default:
-        fprintf(stderr, "%s: unknow wan protocol\n", __FUNCTION__);
+        fprintf(fp_wan_dbg, "%s: unknow wan protocol\n", __FUNCTION__);
         return -1;
     }
 
@@ -1819,7 +1822,7 @@ static int wan_dhcp_start(struct serv_wan *sw)
         has_pid_file = 1;
 
     if (pid > 0 && has_pid_file) {
-        fprintf(stderr, "%s: DHCP client has already running as PID %d\n", __FUNCTION__, pid);
+        fprintf(fp_wan_dbg, "%s: DHCP client has already running as PID %d\n", __FUNCTION__, pid);
         return 0;
     }
     
@@ -1858,7 +1861,7 @@ static int wan_dhcp_stop(struct serv_wan *sw)
 static int wan_dhcp_restart(struct serv_wan *sw)
 {
     if (dhcp_stop(sw->ifname) != 0)
-        fprintf(stderr, "%s: dhcp_stop error\n", __FUNCTION__);
+        fprintf(fp_wan_dbg, "%s: dhcp_stop error\n", __FUNCTION__);
 
     return dhcp_start(sw);
 }
@@ -1921,7 +1924,7 @@ static int resolv_static_config(struct serv_wan *sw)
 
     if((fp = fopen(RESOLV_CONF_FILE, "w+")) == NULL)
     {
-        fprintf(stderr, "%s: Open %s error!\n", __FUNCTION__, RESOLV_CONF_FILE);
+        fprintf(fp_wan_dbg, "%s: Open %s error!\n", __FUNCTION__, RESOLV_CONF_FILE);
         return -1;
     }
 
@@ -1953,7 +1956,7 @@ static int resolv_static_deconfig(struct serv_wan *sw)
     FILE *fp = NULL;
 
     if((fp = fopen(RESOLV_CONF_FILE, "w+")) == NULL) {
-        fprintf(stderr, "%s: Open %s error!\n", __FUNCTION__, RESOLV_CONF_FILE);
+        fprintf(fp_wan_dbg, "%s: Open %s error!\n", __FUNCTION__, RESOLV_CONF_FILE);
         return -1;
     }
 
@@ -1968,7 +1971,7 @@ static int wan_static_start(struct serv_wan *sw)
     char wan_default_gw[16] = {0};
 
     if(resolv_static_config(sw) != 0) {
-        fprintf(stderr, "%s: Config resolv file failed!\n", __FUNCTION__);
+        fprintf(fp_wan_dbg, "%s: Config resolv file failed!\n", __FUNCTION__);
     }
 
     /*get static config*/
@@ -1977,19 +1980,19 @@ static int wan_static_start(struct serv_wan *sw)
     syscfg_get(NULL, "wan_default_gateway", wan_default_gw, sizeof(wan_default_gw));
 
     if(v_secure_system("ip -4 addr add %s/%s broadcast + dev %s", wan_ipaddr, wan_netmask, sw->ifname) != 0) {
-        fprintf(stderr, "%s: Add address to interface %s failed!\n", __FUNCTION__, sw->ifname);
+        fprintf(fp_wan_dbg, "%s: Add address to interface %s failed!\n", __FUNCTION__, sw->ifname);
 	return -1;
     }
 
     if(v_secure_system("ip -4 link set %s up", sw->ifname) != 0) {
-        fprintf(stderr, "%s: Set interface %s up failed!\n", __FUNCTION__, sw->ifname);
+        fprintf(fp_wan_dbg, "%s: Set interface %s up failed!\n", __FUNCTION__, sw->ifname);
 	return -1;
     }
 
     if(v_secure_system("ip -4 route add table erouter default dev %s via %s && "
                 "ip rule add from %s lookup erouter", sw->ifname, wan_default_gw, wan_ipaddr) != 0)
     {
-        fprintf(stderr, "%s: router related config failed!\n", __FUNCTION__);
+        fprintf(fp_wan_dbg, "%s: router related config failed!\n", __FUNCTION__);
 	return -1;
     }
 
@@ -2008,7 +2011,7 @@ static int wan_static_stop(struct serv_wan *sw)
     char wan_ipaddr[16] = {0};
 
     if(resolv_static_deconfig(sw) != 0) {
-        fprintf(stderr, "%s: deconfig resolv file failed!\n", __FUNCTION__);
+        fprintf(fp_wan_dbg, "%s: deconfig resolv file failed!\n", __FUNCTION__);
     }
 
     sysevent_set(sw->sefd, sw->setok, "ipv4_wan_ipaddr", "0.0.0.0", 0);
@@ -2083,7 +2086,7 @@ static int serv_wan_init(struct serv_wan *sw, const char *ifname, const char *pr
 
     if ((sw->sefd = sysevent_open(SE_SERV, SE_SERVER_WELL_KNOWN_PORT, 
                     SE_VERSION, PROG_NAME, &sw->setok)) < 0) {
-        fprintf(stderr, "%s: fail to open sysevent\n", __FUNCTION__);
+        fprintf(fp_wan_dbg, "%s: fail to open sysevent\n", __FUNCTION__);
         return -1;
     }
 
@@ -2093,7 +2096,7 @@ static int serv_wan_init(struct serv_wan *sw, const char *ifname, const char *pr
         syscfg_get(NULL, "wan_physical_ifname", sw->ifname, sizeof(sw->ifname));
 
     if (!strlen(sw->ifname)) {
-        fprintf(stderr, "%s: fail to get ifname\n", __FUNCTION__);
+        fprintf(fp_wan_dbg, "%s: fail to get ifname\n", __FUNCTION__);
         return -1;
     }
 
@@ -2109,7 +2112,7 @@ static int serv_wan_init(struct serv_wan *sw, const char *ifname, const char *pr
     else if (strcasecmp(buf, "static") == 0)
         sw->prot = WAN_PROT_STATIC;
     else {
-        fprintf(stderr, "%s: fail to get wan protocol\n", __FUNCTION__);
+        fprintf(fp_wan_dbg, "%s: fail to get wan protocol\n", __FUNCTION__);
         return -1;
     }
 
@@ -2139,7 +2142,7 @@ static int serv_wan_init(struct serv_wan *sw, const char *ifname, const char *pr
 #endif
         break;
     default:
-        fprintf(stderr, "%s: unknow RT mode (last_erouter_mode)\n", __FUNCTION__);
+        fprintf(fp_wan_dbg, "%s: unknow RT mode (last_erouter_mode)\n", __FUNCTION__);
         sw->rtmod = WAN_RTMOD_UNKNOW;
         break;
     }
@@ -2201,7 +2204,6 @@ int main(int argc, char *argv[])
     int i;
     struct serv_wan sw;
 
-    fprintf(stderr, "[%s] -- IN\n", PROG_NAME);
 	
 	/* When syseventd use the system() API internally, these calls were returning -1. 
 	 * Reason: system() expects to get the SIGCHLD event when the forked process finishes, 
@@ -2221,27 +2223,36 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    if (serv_wan_init(&sw, (argc > 2 ? argv[2] : NULL), (argc > 3 ? argv[3] : NULL)) != 0)
+    if ((fp_wan_dbg=fopen(SVC_WAN_LOG,"a+"))==NULL) {
+       fprintf(stderr,"service_wan, File(%s) Open Error\n", SVC_WAN_LOG);
+       exit(1);
+    }
+
+    if (serv_wan_init(&sw, (argc > 2 ? argv[2] : NULL), (argc > 3 ? argv[3] : NULL)) != 0) {
+	fclose(fp_wan_dbg);
         exit(1);
+    }
 
     /* execute commands */
     for (i = 0; i < NELEMS(cmd_ops); i++) {
         if (strcmp(argv[1], cmd_ops[i].cmd) != 0 || !cmd_ops[i].exec)
             continue;
 
-        fprintf(stderr, "[%s] exec: %s\n", PROG_NAME, cmd_ops[i].cmd);
+        fprintf(fp_wan_dbg, "[%s] exec: %s\n", PROG_NAME, cmd_ops[i].cmd);
 
         if (cmd_ops[i].exec(&sw) != 0)
-            fprintf(stderr, "[%s]: fail to exec `%s'\n", PROG_NAME, cmd_ops[i].cmd);
+            fprintf(fp_wan_dbg, "[%s]: fail to exec `%s'\n", PROG_NAME, cmd_ops[i].cmd);
 
         break;
     }
     if (i == NELEMS(cmd_ops))
-        fprintf(stderr, "[%s] unknown command: %s\n", PROG_NAME, argv[1]);
+        fprintf(fp_wan_dbg, "[%s] unknown command: %s\n", PROG_NAME, argv[1]);
 
-    if (serv_wan_term(&sw) != 0)
+    if (serv_wan_term(&sw) != 0) {
+	fclose(fp_wan_dbg);
         exit(1);
+    }
 
-    fprintf(stderr, "[%s] -- OUT\n", PROG_NAME);
+    fclose(fp_wan_dbg);
     exit(0);
 }
