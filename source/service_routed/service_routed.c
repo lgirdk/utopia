@@ -105,6 +105,7 @@ static int getULAAddressFromInterface(char *ulaAddress);
 #define COSA_DML_DHCPV6C_PREF_PRETM_SYSEVENT_NAME     "tr_"COSA_DML_DHCPV6_CLIENT_IFNAME"_dhcpv6_client_pref_pretm"
 #define COSA_DML_DHCPV6C_PREF_VLDTM_SYSEVENT_NAME     "tr_"COSA_DML_DHCPV6_CLIENT_IFNAME"_dhcpv6_client_pref_vldtm"
 #endif
+
 struct serv_routed {
     int         sefd;
     int         setok;
@@ -135,9 +136,9 @@ static int IsFileExists(char *file_name)
     return (stat(file_name, &file));
 }
 #endif
-#define LOG_FILE_NAME "/rdklogs/logs/Consolelog.txt.0"
-FILE *logfptr=NULL;
 
+#define LOG_FILE_NAME "/rdklogs/logs/svc_routed_dbg.txt"
+static FILE *logfptr=NULL;
 
 #ifdef WAN_FAILOVER_SUPPORTED
 enum ipv6_mode {
@@ -929,7 +930,7 @@ static int gen_zebra_conf(int sefd, token_t setok)
 #else
     result = getLanIpv6Info(&ipv6_enable, &ula_enable);
     if(result != 0) {
-        fprintf(stderr, "getLanIpv6Info failed");
+        fprintf(logfptr, "getLanIpv6Info failed");
         fclose(fp);
         return -1;
     }
@@ -1415,7 +1416,7 @@ static int gen_zebra_conf(int sefd, token_t setok)
 #endif
 					syscfg_get(NULL, "dhcpv6spool00::X_RDKCENTRAL_COM_DNSServers", name_servs, sizeof(name_servs));
 
-				fprintf(stderr,"%s %d - DNSServersEnabled:%d DNSServers:%s\n", __FUNCTION__, 
+				fprintf(logfptr,"%s %d - DNSServersEnabled:%d DNSServers:%s\n", __FUNCTION__, 
 																			   __LINE__,
 																			   StaticDNSServersEnabled,
 																			   name_servs );
@@ -1636,7 +1637,7 @@ if(!strncmp(out,"true",strlen(out)))
                         {
                                 memset( name_servs, 0, sizeof( name_servs ) );
                                 syscfg_get(NULL, "dhcpv6spool00::X_RDKCENTRAL_COM_DNSServers", name_servs, sizeof(name_servs));
-                                fprintf(stderr,"%s %d - DNSServersEnabled:%d DNSServers:%s\n", __FUNCTION__,
+                                fprintf(logfptr,"%s %d - DNSServersEnabled:%d DNSServers:%s\n", __FUNCTION__,
                                                                                                                                                            __LINE__,
                                                                                                                                                            StaticDNSServersEnabled,
                                                                                                                                                            name_servs );
@@ -1788,12 +1789,12 @@ static int radv_start(struct serv_routed *sr)
 
     syscfg_get(NULL, "last_erouter_mode", rtmod, sizeof(rtmod));
     if (atoi(rtmod) != 2 && atoi(rtmod) != 3) { /* IPv6 or Dual-Stack */
-        fprintf(stderr, "%s: last_erouter_mode %s\n", __FUNCTION__, rtmod);
+        fprintf(logfptr, "%s: last_erouter_mode %s\n", __FUNCTION__, rtmod);
         return 0;
     }
 
     if (!sr->lan_ready || !sr->wan_ready) {
-        fprintf(stderr, "%s: LAN or WAN is not ready !\n", __FUNCTION__);
+        fprintf(logfptr, "%s: LAN or WAN is not ready !\n", __FUNCTION__);
         return -1;
     }
 #else
@@ -2073,7 +2074,7 @@ static int serv_routed_init(struct serv_routed *sr)
 
     /* Restore Router Forwarding state based on value in syscfg */
     if (route_enable() != 0) {
-        fprintf(stderr, "%s: failed to restore Routing Enabled state\n", __FUNCTION__);
+        fprintf(logfptr, "%s: failed to restore Routing Enabled state\n", __FUNCTION__);
     }
 
     sysevent_get(sr->sefd, sr->setok, "wan-status", wan_st, sizeof(wan_st));
@@ -2363,6 +2364,7 @@ int main(int argc, char *argv[])
     }
 #endif
     if (serv_routed_init(&sr) != 0){
+        fclose(logfptr);
         exit(1);
     }
     for (i = 0; i < NELEMS(cmd_ops); i++) {
