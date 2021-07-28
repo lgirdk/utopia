@@ -41,6 +41,9 @@
 #define TNL_NETDEVNAME  "ipip6tun0"
 #define TNL_WANDEVNAME  "wan0"
 
+#define SVC_DSLITE_LOG "/rdklogs/logs/svc_dslite_dbg.txt"
+static FILE *fp_dslt_dbg;
+
 /*
  * XXX:
  * no idea why COSA_DML_DEVICE_MODE_DeviceMode is 1, and 2, 3, 4 for IPv4/IPv6/DS
@@ -134,7 +137,7 @@ static int serv_dslite_init (struct serv_dslite *sd)
     char buf[12];
 
     if ((sd->sefd = sysevent_open (SE_SERV, SE_SERVER_WELL_KNOWN_PORT, SE_VERSION, PROG_NAME, &sd->setok)) < 0) {
-        fprintf (stderr, "%s: fail to open sysevent\n", __FUNCTION__);
+        fprintf (fp_dslt_dbg, "%s: fail to open sysevent\n", __FUNCTION__);
         return -1;
     }
 
@@ -155,7 +158,7 @@ static int serv_dslite_init (struct serv_dslite *sd)
             break;
 
         default:
-            fprintf (stderr, "%s: unknow RT mode (last_erouter_mode)\n", __FUNCTION__);
+            fprintf (fp_dslt_dbg, "%s: unknow RT mode (last_erouter_mode)\n", __FUNCTION__);
             sd->rtmod = WAN_RTMOD_UNKNOW;
             break;
     }
@@ -184,7 +187,7 @@ static void dns_cb (int result, char type, int count, int ttl, void *addresses, 
     {
         in6_addrs = NULL;
 #ifdef DEBUG
-        fprintf(stderr, "Unexpected result %d \n", result);
+        fprintf(fp_dslt_dbg, "Unexpected result %d \n", result);
 #endif
         goto OUT;
     }
@@ -198,7 +201,7 @@ static void dns_cb (int result, char type, int count, int ttl, void *addresses, 
     else
     {
 #ifdef DEBUG
-        fprintf (stderr, "Bad type %d \n", type);
+        fprintf (fp_dslt_dbg, "Bad type %d \n", type);
 #endif
     }
 
@@ -250,13 +253,13 @@ static int get_aftr (char *DSLITE_AFTR, char *dslite_mode, char *dslite_addr_typ
         else if (strcmp (dslite_addr_type, "2") == 0)
             syscfg_get (NULL, "dslite_addr_ipv6_1", DSLITE_AFTR, size_aftr);
         else
-            fprintf (stderr, "%s: Wrong value of dslite prefered address type\n", __FUNCTION__);
+            fprintf (fp_dslt_dbg, "%s: Wrong value of dslite prefered address type\n", __FUNCTION__);
 
         retvalue = 0;
     }
     else
     {
-        fprintf (stderr, "%s: Wrong value of dslite address provision mode\n", __FUNCTION__);
+        fprintf (fp_dslt_dbg, "%s: Wrong value of dslite address provision mode\n", __FUNCTION__);
     }
 
     return retvalue;
@@ -284,7 +287,7 @@ static int dslite_start (struct serv_dslite *sd)
     
     if ((sd->rtmod != WAN_RTMOD_IPV6) && (sd->rtmod != WAN_RTMOD_DS))
     {
-        fprintf (stderr, "%s: GW mode is not correct, DSLite can't be started\n", __FUNCTION__);
+        fprintf (fp_dslt_dbg, "%s: GW mode is not correct, DSLite can't be started\n", __FUNCTION__);
         return 1;
     }
 
@@ -314,13 +317,13 @@ static int dslite_start (struct serv_dslite *sd)
             continue;
         }
 
-        fprintf(stderr, "%s: DSLite is enabled %d *********\n", __FUNCTION__, Cnt);
+        fprintf(fp_dslt_dbg, "%s: DSLite is enabled %d *********\n", __FUNCTION__, Cnt);
         break;
     }
 
     if ((strcmp (val, "1") != 0) || (strcmp (buf, "1") != 0)) // Either DSLite not enabled or tunnel not enabled
     {
-        fprintf(stderr, "%s: DSLite not enabled, can't be started\n", __FUNCTION__);
+        fprintf(fp_dslt_dbg, "%s: DSLite not enabled, can't be started\n", __FUNCTION__);
         SEM_POST;
         return 1;
     }
@@ -329,7 +332,7 @@ static int dslite_start (struct serv_dslite *sd)
     sysevent_get(sd->sefd, sd->setok, "dslite_service-status", val, sizeof(val));
     if (strcmp (val, "started") == 0)
     {
-        fprintf(stderr, "%s: DSLite is already started, exit without doing anything !\n", __FUNCTION__);
+        fprintf(fp_dslt_dbg, "%s: DSLite is already started, exit without doing anything !\n", __FUNCTION__);
         SEM_POST;
         return 0;
     }
@@ -337,7 +340,7 @@ static int dslite_start (struct serv_dslite *sd)
     /* get the WAN side IPv6 global address */
     gw_ipv6[0] = 0;
     sysevent_get (sd->sefd, sd->setok, "tr_" ER_NETDEVNAME "_dhcpv6_client_v6addr", gw_ipv6, sizeof(gw_ipv6));
-    fprintf (stderr, "%s: The GW IPv6 address is %s\n", __FUNCTION__, gw_ipv6);
+    fprintf (fp_dslt_dbg, "%s: The GW IPv6 address is %s\n", __FUNCTION__, gw_ipv6);
 
     /*
        Confirm that the string is not empty, but also that it's long enough to
@@ -346,7 +349,7 @@ static int dslite_start (struct serv_dslite *sd)
     len = strlen (gw_ipv6);
     if (len < 2)
     {
-        fprintf (stderr, "%s: GW IPv6 address is not ready, DSLite can't be started\n", __FUNCTION__);
+        fprintf (fp_dslt_dbg, "%s: GW IPv6 address is not ready, DSLite can't be started\n", __FUNCTION__);
         SEM_POST;
         return 1;
     }
@@ -356,7 +359,7 @@ static int dslite_start (struct serv_dslite *sd)
     dslite_tnl_ipv6[1] = '0';
     memcpy (&dslite_tnl_ipv6[2], &gw_ipv6[2], (len + 1) - 2);
 
-    fprintf (stderr, "%s: The dslite tunnel interface IPv6 address is %s\n", __FUNCTION__, dslite_tnl_ipv6);
+    fprintf (fp_dslt_dbg, "%s: The dslite tunnel interface IPv6 address is %s\n", __FUNCTION__, dslite_tnl_ipv6);
 
     /* do start */
     sysevent_set (sd->sefd, sd->setok, "dslite_service-status", "starting", 0);
@@ -369,11 +372,11 @@ static int dslite_start (struct serv_dslite *sd)
     if ((strlen (DSLITE_AFTR) == 0) || (strcmp (DSLITE_AFTR, "none") == 0))
     {
         sysevent_set (sd->sefd, sd->setok, "dslite_service-status", "error", 0);
-        fprintf (stderr, "%s: AFTR address is NULL/None, exit! AFTR = %s\n", __FUNCTION__, DSLITE_AFTR);
+        fprintf (fp_dslt_dbg, "%s: AFTR address is NULL/None, exit! AFTR = %s\n", __FUNCTION__, DSLITE_AFTR);
         SEM_POST;
         return 1;
     }
-    fprintf (stderr, "%s: AFTR address is %s\n", __FUNCTION__, DSLITE_AFTR);
+    fprintf (fp_dslt_dbg, "%s: AFTR address is %s\n", __FUNCTION__, DSLITE_AFTR);
 
     /* Filter and store the WAN public IPv6 DNS server to a separate file */
     vsystem ("cat /etc/resolv.conf | grep nameserver | grep : | grep -v \"nameserver ::1\" | awk '/nameserver/{print $2}' > /tmp/ipv6_dns_server.conf");
@@ -381,7 +384,7 @@ static int dslite_start (struct serv_dslite *sd)
     if (fptmp == NULL)
     {
         sysevent_set (sd->sefd, sd->setok, "dslite_service-status", "error", 0);
-        fprintf (stderr, "%s: IPv6 DNS server isn't present !\n", __FUNCTION__);
+        fprintf (fp_dslt_dbg, "%s: IPv6 DNS server isn't present !\n", __FUNCTION__);
         SEM_POST;
         return 1;
     }
@@ -426,7 +429,7 @@ static int dslite_start (struct serv_dslite *sd)
         if (strcmp (resolved_ipv6, "::") == 0)
         {
             sysevent_set (sd->sefd, sd->setok, "dslite_service-status", "error", 0);
-            fprintf (stderr, "%s: AFTR DNSv6 resolution failed as got NULL IPv6 address(::), EXIT !\n", __FUNCTION__);
+            fprintf (fp_dslt_dbg, "%s: AFTR DNSv6 resolution failed as got NULL IPv6 address(::), EXIT !\n", __FUNCTION__);
             SEM_POST;
             return 1;
         }
@@ -437,13 +440,13 @@ static int dslite_start (struct serv_dslite *sd)
         syscfg_set (NULL, "dslite_dns_time_1", buf);
         syscfg_set_u (NULL, "dslite_dns_ttl_1", dnsttl);
 
-        fprintf (stderr, "%s: Resolved AFTR address is %s, time=%s DNS-TTL=%d\n", __FUNCTION__, resolved_ipv6, buf, dnsttl);
+        fprintf (fp_dslt_dbg, "%s: Resolved AFTR address is %s, time=%s DNS-TTL=%d\n", __FUNCTION__, resolved_ipv6, buf, dnsttl);
     }
     else
     {
         sysevent_set (sd->sefd, sd->setok, "dslite_service-status", "dns_error", 0);
         sysevent_set (sd->sefd, sd->setok, "tr_" ER_NETDEVNAME "_dhcpv6_client_v6addr", gw_ipv6, 0);
-        fprintf (stderr, "%s: DNS resolution failed for unknown reason, RETRY\n", __FUNCTION__);
+        fprintf (fp_dslt_dbg, "%s: DNS resolution failed for unknown reason, RETRY\n", __FUNCTION__);
         SEM_POST;
         return 1;
     }
@@ -591,7 +594,7 @@ static int dslite_stop (struct serv_dslite *sd)
     sysevent_get (sd->sefd, sd->setok, "dslite_service-status", val, sizeof(val));
     if (strcmp (val, "stopped") == 0)
     {
-        fprintf(stderr, "%s: DSLite is already stopped, exit without doing anything!\n", __FUNCTION__);
+        fprintf(fp_dslt_dbg, "%s: DSLite is already stopped, exit without doing anything!\n", __FUNCTION__);
         SEM_POST;
         return 0;
     }
@@ -603,8 +606,8 @@ static int dslite_stop (struct serv_dslite *sd)
     _get_shell_output ("ip -6 tunnel show | grep " TNL_NETDEVNAME " | awk '/remote/{print $4}'", remote_addr, sizeof(remote_addr));
     _get_shell_output ("ip -6 tunnel show | grep " TNL_NETDEVNAME " | awk '/remote/{print $6}'", local_addr, sizeof(local_addr));
 
-    fprintf (stderr, "%s: Remote address is %s\n", __FUNCTION__, remote_addr);
-    fprintf (stderr, "%s: Local address is %s\n", __FUNCTION__, local_addr);
+    fprintf (fp_dslt_dbg, "%s: Remote address is %s\n", __FUNCTION__, remote_addr);
+    fprintf (fp_dslt_dbg, "%s: Local address is %s\n", __FUNCTION__, local_addr);
 
     if ((strlen (remote_addr) != 0) && (strlen (local_addr) != 0))
     {
@@ -632,7 +635,7 @@ static int dslite_stop (struct serv_dslite *sd)
     else
     {
         sysevent_set (sd->sefd, sd->setok, "dslite_service-status", "stopped", 0);
-        fprintf (stderr, "%s: The tunnel is already deleted\n", __FUNCTION__);
+        fprintf (fp_dslt_dbg, "%s: The tunnel is already deleted\n", __FUNCTION__);
         SEM_POST;
         return 0;
     }
@@ -759,6 +762,11 @@ int main (int argc, char *argv[])
         return -1;
     }
 
+    if ((fp_dslt_dbg=fopen(SVC_DSLITE_LOG,"a+"))==NULL) {
+       fprintf(stderr,"service_dslite, File(%s) Open Error\n", SVC_DSLITE_LOG);
+       exit(1);
+    }
+
     /*
        Treat the clear command as a special case: since it only clears
        syscfg values, as an optimisation it can be run without
@@ -767,6 +775,7 @@ int main (int argc, char *argv[])
     if (strcmp(argv[1], "clear") == 0)
     {
         dslite_clear_status (NULL);
+	fclose(fp_dslt_dbg);
         return 0;
     }
 
@@ -783,24 +792,28 @@ int main (int argc, char *argv[])
 
     if (i == NELEMS(cmd_ops))
     {
-        fprintf (stderr, "[%s] unknown command: %s\n", PROG_NAME, argv[1]);
+        fprintf (fp_dslt_dbg, "[%s] unknown command: %s\n", PROG_NAME, argv[1]);
+	fclose(fp_dslt_dbg);
         exit (1);
     }
 
     if (serv_dslite_init (&sd) != 0)
     {
+	fclose(fp_dslt_dbg);
         exit (1);
     }
 
     if (cmd_ops[i].exec (&sd) != 0)
     {
-        fprintf (stderr, "[%s]: fail to exec `%s'\n", PROG_NAME, cmd_ops[i].cmd);
+        fprintf (fp_dslt_dbg, "[%s]: fail to exec `%s'\n", PROG_NAME, cmd_ops[i].cmd);
     }
 
     if (serv_dslite_term (&sd) != 0)
     {
+	fclose(fp_dslt_dbg);
         exit (1);
     }
 
+    fclose(fp_dslt_dbg);
     return 0;
 }
