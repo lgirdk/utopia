@@ -384,7 +384,6 @@ case "$1" in
                 sysevent set lan_handler_async "$async"
                 sysevent set primary_lan_l2net ${L2INST}
                 sysevent set primary_lan_brport ${BRPORT}
-                sysevent set homesecurity_lan_l3net ${HSINST}
                 sysevent set primary_lan_l3net ${INST}
 	#BRLAN0 ISSUE : Manually invoking lan-start to fix brlan0 failure during intial booting. Root cause for event has to be identified
 	   	if [ "$RPI_SPECIFIC" = "rpi" ]; then
