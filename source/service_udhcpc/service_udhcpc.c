@@ -413,13 +413,10 @@ int update_ipv4dns(udhcpc_script_t *pinfo)
     if (NULL == fp)
         return -1;
 
-    printf ("\n update resolv confg dns :%s \n", dns);
-
     dns = strdup(dns);
     tok = strtok(dns, " ");
     while (NULL != tok)
     {
-        printf ("\n tok :%s \n",tok);
         fprintf(fp,"%s\n",tok);
         tok = strtok(NULL, " ");
     }
@@ -832,11 +829,9 @@ int update_resolveconf(udhcpc_script_t *pinfo)
         }
 
     fprintf(fp,"domain %s\n",getenv("domain"));
-    printf ("\n update resolv confg dns :%s \n", pinfo->dns);
     tok = strtok(dns, " ");
     while (NULL != tok)
     {
-        printf ("\n tok :%s \n",tok);
         fprintf(fp,"nameserver %s\n",tok);
         tok = strtok(NULL, " ");
     }
@@ -1263,7 +1258,7 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
             char dns[256];
             char *tok = NULL;
             snprintf(dns, sizeof(dns), "%s", pinfo->dns);
-            fprintf(stderr, "[%s][%s] \n", dns, getenv(DHCP_DNS_SERVER)); 
+            //fprintf(stderr, "[%s][%s] \n", dns, getenv(DHCP_DNS_SERVER)); 
 
             /** dns server1 */
             tok = strtok (dns, " ");
@@ -1450,7 +1445,6 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    printf ("\n service_udhcpc arg %s \n",argv[1]);
     if (sysevent_init() < 0)
     {
         return -1;
