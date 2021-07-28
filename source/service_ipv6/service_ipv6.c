@@ -114,6 +114,8 @@ const char* const service_ipv6_component_id = "ccsp.ipv6";
 #define COSA_DML_DHCPV6C_ADDR_PRETM_SYSEVENT_NAME     "tr_"COSA_DML_DHCPV6_CLIENT_IFNAME"_dhcpv6_client_addr_pretm"
 #define COSA_DML_DHCPV6C_ADDR_VLDTM_SYSEVENT_NAME     "tr_"COSA_DML_DHCPV6_CLIENT_IFNAME"_dhcpv6_client_addr_vldtm"
 
+#define SVC_IPV6_LOG "/rdklogs/logs/svc_ipv6_dbg.txt"
+static FILE *fp_v6_dbg;
 
 /*erouter topology mode*/
 enum tp_mod {
@@ -303,12 +305,12 @@ static int mbus_get(char *path, char *val, int size)
 
     val[0] = '\0';
     if (!bus_handle) {
-         fprintf(stderr, "DBUS not connected\n");
+         fprintf(fp_v6_dbg, "DBUS not connected\n");
          return -1;
     }
 
     if (CcspBaseIf_discComponentSupportingNamespace(bus_handle, CCSP_CR_COMPONENT_ID, path, CCSP_SUBSYS, &ppComponents, &compNum) != CCSP_SUCCESS) {
-        fprintf(stderr, "failed to find component for %s \n", path);
+        fprintf(fp_v6_dbg, "failed to find component for %s \n", path);
         return -1;
     }
     ppDestComponentName = ppComponents[0]->componentName;
@@ -316,7 +318,7 @@ static int mbus_get(char *path, char *val, int size)
     paramNames[0] = path;
 
     if(CcspBaseIf_getParameterValues(bus_handle, ppDestComponentName, ppDestPath, paramNames, 1, &valNum, &parameterVal) != CCSP_SUCCESS) {
-        fprintf(stderr, "failed to get value for %s \n", path);
+        fprintf(fp_v6_dbg, "failed to get value for %s \n", path);
         free_componentStruct_t(bus_handle, compNum, ppComponents);
         return -1;
     }
@@ -410,7 +412,7 @@ static int get_dhcpv6s_pool_cfg(struct serv_ipv6 *si6, dhcpv6s_pool_cfg_t *cfg)
 
     p_opt = (dhcpv6s_pool_opt_t *)calloc(cfg->opt_num, sizeof(*p_opt));
     if (p_opt == NULL) {
-        fprintf(stderr, "calloc mem for pool options failed!\n");
+        fprintf(fp_v6_dbg, "calloc mem for pool options failed!\n");
         return -1;
     }
 
@@ -470,7 +472,7 @@ static int get_ia_info(struct serv_ipv6 *si6, char *config_file, ia_na_t *iana, 
     fd = open(config_file, O_RDWR);
 	
     if (fd < 0) {
-        fprintf(stderr, "open file %s failed!\n", config_file);
+        fprintf(fp_v6_dbg, "open file %s failed!\n", config_file);
         return -1;
     }
 
@@ -492,13 +494,13 @@ static int get_ia_info(struct serv_ipv6 *si6, char *config_file, ia_na_t *iana, 
         if (sscanf(p, "%63s %63s %s %s %s %s %s %63s %d %s %s %s %s %s", 
                     action, iana->value.v6addr, iana->iaid, iana->t1, iana->t2, iana->pretm, iana->vldtm,
                     iapd->value.v6pref, &iapd->len, iapd->iaid, iapd->t1, iapd->t2, iapd->pretm, iapd->vldtm ) == 14) {
-            fprintf(stderr, "Get the IA_NA and IA_PD info: ");
-            fprintf(stderr, "IA_NA:%s %s %s %s %s %s, IA_PD:%s %d %s %s %s %s\n",
+            fprintf(fp_v6_dbg, "Get the IA_NA and IA_PD info: ");
+            fprintf(fp_v6_dbg, "IA_NA:%s %s %s %s %s %s, IA_PD:%s %d %s %s %s %s\n",
                     iana->value.v6addr, iana->iaid, iana->t1, iana->t2, iana->pretm, iana->vldtm,
                     iapd->value.v6pref, iapd->len, iapd->t1, iapd->t2, iapd->pretm, iapd->vldtm);
 					
         } else {
-            fprintf(stderr, "Get the IA_NA and IA_PD failed.\n");
+            fprintf(fp_v6_dbg, "Get the IA_NA and IA_PD failed.\n");
 	    close(fd); /*RDKB-12965 & CID:-34141*/
             return -1;
         }
@@ -536,7 +538,7 @@ static int get_prefix_info(const char *prefix,  char *value, unsigned int val_le
     while((prefix[i-1] != '/') && (i > 0)) i--;
 
     if (i == 0) {
-        fprintf(stderr, "[%s] error, there is not '/' in prefix:%s\n", __FUNCTION__, prefix);
+        fprintf(fp_v6_dbg, "[%s] error, there is not '/' in prefix:%s\n", __FUNCTION__, prefix);
         return -1;
     }
 
@@ -605,7 +607,7 @@ static int get_active_lanif(struct serv_ipv6 *si6, unsigned int insts[], unsigne
 #else
     /* Get active bridge count from PSM */
     if (!bus_handle) {
-        fprintf(stderr, "DBUS not connected, returning \n");
+        fprintf(fp_v6_dbg, "DBUS not connected, returning \n");
         bus_handle = NULL;
         *num = 0;
         return *num;
@@ -778,23 +780,23 @@ static int divide_ipv6_prefix(struct serv_ipv6 *si6)
     }
     
     if ((delta_bits = 64 - mso_prefix.len) < 0) {
-        fprintf(stderr, "invalid prefix.\n");
+        fprintf(fp_v6_dbg, "invalid prefix.\n");
         return -1;
     }
 
     if (inet_pton(AF_INET6, mso_prefix.value, prefix) <= 0) {
-        fprintf(stderr, "prefix inet_pton error!.\n");
+        fprintf(fp_v6_dbg, "prefix inet_pton error!.\n");
         return -1;
     }
 
     get_active_lanif(si6, l2_insts, &enabled_iface_num);
     if (enabled_iface_num == 0) {
-        fprintf(stderr, "no enabled lan interfaces.\n");
+        fprintf(fp_v6_dbg, "no enabled lan interfaces.\n");
         return -1;
     }
 
     if (enabled_iface_num > (1 << delta_bits)) {
-        fprintf(stderr, "mso prefix is too small to address all of its interfaces.\n");
+        fprintf(fp_v6_dbg, "mso prefix is too small to address all of its interfaces.\n");
         return -1;
     }
 
@@ -829,7 +831,7 @@ static int divide_ipv6_prefix(struct serv_ipv6 *si6)
     sub_prefix_num = 1 << bit_boundary;
     sub_prefixes = (ipv6_prefix_t *)calloc(sub_prefix_num, sizeof(ipv6_prefix_t));
     if (sub_prefixes == NULL) {
-        fprintf(stderr, "calloc mem for sub-prefixes failed.\n");
+        fprintf(fp_v6_dbg, "calloc mem for sub-prefixes failed.\n");
         return -1;
     }
 
@@ -857,7 +859,7 @@ static int divide_ipv6_prefix(struct serv_ipv6 *si6)
         p_prefix->len = mso_prefix.len + bit_boundary;
         //p_prefix->b_used = 0;
 
-        fprintf(stderr, "sub-prefix:%s/%d\n", p_prefix->value, p_prefix->len);
+        fprintf(fp_v6_dbg, "sub-prefix:%s/%d\n", p_prefix->value, p_prefix->len);
 
         p_prefix++;
     }
@@ -889,7 +891,7 @@ static int divide_ipv6_prefix(struct serv_ipv6 *si6)
         sysevent_get(si6->sefd, si6->setok, evt_name, currentPrefix, sizeof(currentPrefix));
         sysevent_set(si6->sefd, si6->setok, evt_name, iface_prefix, 0);
 
-        fprintf(stderr, "interface-prefix %s:%s\n", iface_name, iface_prefix);
+        fprintf(fp_v6_dbg, "interface-prefix %s:%s\n", iface_name, iface_prefix);
         if(strlen(currentPrefix) > 0)
         { 
           snprintf(evt_name, sizeof(evt_name), "previous_ipv6_%s-prefix", iface_name);
@@ -952,14 +954,14 @@ int compute_global_ip(char *prefix, char *if_name, char *ipv6_addr, unsigned int
     while((globalIP[i-1] != '/') && (i>0)) i--;
 
     if (i == 0) {
-        fprintf(stderr, "[%s] error, there is not '/' in prefix:%s\n", __FUNCTION__, prefix);
+        fprintf(fp_v6_dbg, "[%s] error, there is not '/' in prefix:%s\n", __FUNCTION__, prefix);
         return -1;
     }
 
     length = atoi(&globalIP[i]);
 
     if (length > 64) {
-        fprintf(stderr, "[%s] error, length is bigger than 64. prefix:%s, length:%d\n", __FUNCTION__, prefix, length);
+        fprintf(fp_v6_dbg, "[%s] error, length is bigger than 64. prefix:%s, length:%d\n", __FUNCTION__, prefix, length);
         return -1;
     }
 
@@ -968,7 +970,7 @@ int compute_global_ip(char *prefix, char *if_name, char *ipv6_addr, unsigned int
     i = i-1;
 
     if ((globalIP[i-1]!=':') && (globalIP[i-2]!=':')) {
-        fprintf(stderr, "[%s] error, there is not '::' in prefix:%s\n", __FUNCTION__, prefix);
+        fprintf(fp_v6_dbg, "[%s] error, there is not '::' in prefix:%s\n", __FUNCTION__, prefix);
         return -1;
     }
 
@@ -989,7 +991,7 @@ int compute_global_ip(char *prefix, char *if_name, char *ipv6_addr, unsigned int
 
     /* prepare second part */
     if (iface_get_hwaddr(if_name, mac, sizeof(mac)) != 0) {
-        fprintf(stderr, "get the mac of %s error!\n", if_name);
+        fprintf(fp_v6_dbg, "get the mac of %s error!\n", if_name);
         return -1;
     }
 
@@ -1025,7 +1027,7 @@ int compute_global_ip(char *prefix, char *if_name, char *ipv6_addr, unsigned int
 
     globalIP[i-1] = '\0';
 
-    fprintf(stderr, "the global ipv6 address is:%s\n", globalIP);
+    fprintf(fp_v6_dbg, "the global ipv6 address is:%s\n", globalIP);
 #ifdef MULTILAN_FEATURE
     inet_pton(AF_INET6, globalIP, inet_v6Address);
     inet_ntop(AF_INET6, inet_v6Address, ipv6_addr, addr_len);
@@ -1097,20 +1099,20 @@ static int lan_addr6_set(struct serv_ipv6 *si6)
      * divide the Operator-delegated prefix to sub-prefixes
      */
     if (divide_ipv6_prefix(si6) != 0) {
-        fprintf(stderr, "divide the operator-delegated prefix to sub-prefix error.\n");
+        fprintf(fp_v6_dbg, "divide the operator-delegated prefix to sub-prefix error.\n");
         sysevent_set(si6->sefd, si6->setok, "service_ipv6-status", "error", 0);
         return -1;
     }
  
     sysevent_get(si6->sefd, si6->setok, "ipv6_prefix-divided", evt_val, sizeof(evt_val));
     if (strcmp(evt_val, "ready")) {
-        fprintf(stderr, "[%s] ipv6 prefix is not divided.\n", __FUNCTION__);
+        fprintf(fp_v6_dbg, "[%s] ipv6 prefix is not divided.\n", __FUNCTION__);
         return -1;
     }
 
     get_active_lanif(si6, l2_insts, &enabled_iface_num);
     if (enabled_iface_num == 0) {
-        fprintf(stderr, "no active lan interface.\n");
+        fprintf(fp_v6_dbg, "no active lan interface.\n");
         return -1;
     }
 
@@ -1200,7 +1202,7 @@ static int lan_addr6_set(struct serv_ipv6 *si6)
 #else
         if (v_secure_system("ip -6 addr add %s/%d dev %s valid_lft forever preferred_lft forever", 
                     ipv6_addr, prefix_len, iface_name) != 0) {
-            fprintf(stderr, "%s set ipv6 addr error.\n", iface_name);
+            fprintf(fp_v6_dbg, "%s set ipv6 addr error.\n", iface_name);
             return -1;
         }
 #endif
@@ -1242,7 +1244,7 @@ static int lan_addr6_unset(struct serv_ipv6 *si6)
 #else
     get_active_lanif(si6, l2_insts, &if_num);
     if (if_num == 0) {
-        fprintf(stderr, "no active lan interface.\n");
+        fprintf(fp_v6_dbg, "no active lan interface.\n");
         return -1;
     }
 #endif
@@ -1366,7 +1368,7 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
         * If not, then divide the Operator-delegated prefix to sub-prefixes.
         */
         if (divide_ipv6_prefix(si6) != 0) {
-            fprintf(stderr, "divide the operator-delegated prefix to sub-prefix error.\n");
+            fprintf(fp_v6_dbg, "divide the operator-delegated prefix to sub-prefix error.\n");
             sysevent_set(si6->sefd, si6->setok, "service_ipv6-status", "error", 0);
 #if defined (MULTILAN_FEATURE)
             report_no_lan_prefixes(si6);
@@ -1393,7 +1395,7 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
         7 : Info
         8 : Debug
     */
-    fprintf(fp, "log-level 5\n");
+    fprintf(fp, "log-level 3\n");
 
    /*Run scipt to config route */
 #if defined (_CBR_PRODUCT_REQ_) || defined (_BWG_PRODUCT_REQ_)
@@ -1415,7 +1417,7 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
     /*get ia_na & ia_pd info (addr, t1, t2, preftm, vldtm) which passthrough wan*/
     ret = get_ia_info(si6, PROVISIONED_V6_CONFIG_FILE, &ia_na, &ia_pd);
 
-    fprintf(stderr, "%s:%d dhcpv6s_cfg.pool_num:%d\n",__func__,__LINE__, dhcpv6s_cfg.pool_num);
+    fprintf(fp_v6_dbg, "%s:%d dhcpv6s_cfg.pool_num:%d\n",__func__,__LINE__, dhcpv6s_cfg.pool_num);
     for (pool_index = 0; pool_index < dhcpv6s_cfg.pool_num; pool_index++) {
         dhcpv6s_pool_cfg.index = pool_index;
         if (get_dhcpv6s_pool_cfg(si6, &dhcpv6s_pool_cfg) != 0)
@@ -1582,7 +1584,7 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
                                 if( fgets( HwAddr, sizeof( HwAddr ), ifd ) != NULL )
                                 {
                                         fprintf(fp, "client duid %s\n",HwAddr);
-                                        fprintf(stderr, "%s:%d HwAddr:%s \n",__func__,__LINE__,HwAddr);
+                                        fprintf(fp_v6_dbg, "%s:%d HwAddr:%s \n",__func__,__LINE__,HwAddr);
 
                                         if(primaryLan)
                                             Cnt += sprintf(relayStr+Cnt, "client duid %s\n",HwAddr);
@@ -1601,7 +1603,7 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
                 if(primaryLan)
                     Cnt += sprintf(relayStr+Cnt, "   {\n");
 
-		fprintf(stderr, "%s:%d colon_count:%d \n",__func__,__LINE__,colon_count);
+		fprintf(fp_v6_dbg, "%s:%d colon_count:%d \n",__func__,__LINE__,colon_count);
 		if (colon_count == 5)
                 {
                 	strcat(dummyAddr,":123");
@@ -1660,7 +1662,7 @@ OPTIONS:
 					{
 						memset( dns_str, 0, sizeof( dns_str ) );
 						strcpy( dns_str, dhcpv6s_pool_cfg.X_RDKCENTRAL_COM_DNSServers );
-						fprintf(stderr,"%s %d - DNSServersEnabled:%d DNSServers:%s\n", __FUNCTION__, 
+						fprintf(fp_v6_dbg,"%s %d - DNSServersEnabled:%d DNSServers:%s\n", __FUNCTION__, 
 																						  __LINE__,
 																						  dhcpv6s_pool_cfg.X_RDKCENTRAL_COM_DNSServersEnabled,
 																						  dhcpv6s_pool_cfg.X_RDKCENTRAL_COM_DNSServers );
@@ -1766,12 +1768,12 @@ static int dhcpv6s_start(struct serv_ipv6 *si6)
     #endif
 #endif
 
-    fprintf(stderr, "%s:%d call gen_dibbler_conf \n",__func__,__LINE__);
+    fprintf(fp_v6_dbg, "%s:%d call gen_dibbler_conf \n",__func__,__LINE__);
     if (gen_dibbler_conf(si6) != 0) {
-        fprintf(stderr, "%s: fail to generate dibbler config\n", __FUNCTION__);
+        fprintf(fp_v6_dbg, "%s: fail to generate dibbler config\n", __FUNCTION__);
         return -1;
     }
-    fprintf(stderr, "%s:%d gen_dibbler_conf done \n",__func__,__LINE__);
+    fprintf(fp_v6_dbg, "%s:%d gen_dibbler_conf done \n",__func__,__LINE__);
 #ifdef MULTILAN_FEATURE
     daemon_stop(DHCPV6S_PID_FILE, DHCPV6_SERVER);
 #else
@@ -1781,12 +1783,12 @@ static int dhcpv6s_start(struct serv_ipv6 *si6)
     syscfg_get(NULL, "dhcpv6s00::serverenable", dhcpv6Enable , sizeof(dhcpv6Enable));
     if (!strncmp(dhcpv6Enable, "0", 1))
     {
-       fprintf(stderr, "%s: DHCPv6 Disabled. Dibbler start not required !\n", __FUNCTION__);
+       fprintf(fp_v6_dbg, "%s: DHCPv6 Disabled. Dibbler start not required !\n", __FUNCTION__);
        return 0;
     }
 #endif
     sleep(1);
-    fprintf(stderr, "%s:%d calling dibbler-server start \n",__func__,__LINE__);
+    fprintf(fp_v6_dbg, "%s:%d calling dibbler-server start \n",__func__,__LINE__);
     v_secure_system("%s start", DHCPV6_SERVER);
     return 0;
 }
@@ -1803,7 +1805,7 @@ static int dhcpv6s_stop(struct serv_ipv6 *si6)
 static int dhcpv6s_restart(struct serv_ipv6 *si6)
 {
     if (dhcpv6s_stop(si6) != 0)
-        fprintf(stderr, "%s: dhcpv6s_stop error\n", __FUNCTION__);
+        fprintf(fp_v6_dbg, "%s: dhcpv6s_stop error\n", __FUNCTION__);
 
     return dhcpv6s_start(si6);
 }
@@ -1821,7 +1823,7 @@ static int serv_ipv6_start(struct serv_ipv6 *si6)
     syscfg_get(NULL, "last_erouter_mode", rtmod, sizeof(rtmod));
     if (atoi(rtmod) != 1) { /* IPv6-only or Dual-Stack */
         if (!si6->wan_ready) {
-            fprintf(stderr, "%s: IPv6-WAN is not ready !\n", __FUNCTION__);
+            fprintf(fp_v6_dbg, "%s: IPv6-WAN is not ready !\n", __FUNCTION__);
             return -1;
         }
     } else {/* IPv4-only */
@@ -1840,7 +1842,7 @@ static int serv_ipv6_start(struct serv_ipv6 *si6)
 	/* For CBR product the lan(brlan0) v6 address set is done as part of PandM process*/
 #if !defined(_CBR_PRODUCT_REQ_) && !defined(_BWG_PRODUCT_REQ_)
     if (lan_addr6_set(si6) !=0) {
-        fprintf(stderr, "assign IPv6 address for lan interfaces error!\n");
+        fprintf(fp_v6_dbg, "assign IPv6 address for lan interfaces error!\n");
         sysevent_set(si6->sefd, si6->setok, "service_ipv6-status", "error", 0);
         return -1;
     }
@@ -1851,7 +1853,7 @@ static int serv_ipv6_start(struct serv_ipv6 *si6)
     sysevent_set(si6->sefd, si6->setok, "zebra-restart", NULL, 0);
 	
     if (dhcpv6s_start(si6) != 0) {
-        fprintf(stderr, "start dhcpv6 server error.\n");
+        fprintf(fp_v6_dbg, "start dhcpv6 server error.\n");
         sysevent_set(si6->sefd, si6->setok, "service_ipv6-status", "error", 0);
         return -1;
     }
@@ -1872,13 +1874,13 @@ static int serv_ipv6_stop(struct serv_ipv6 *si6)
     sysevent_set(si6->sefd, si6->setok, "service_ipv6-status", "stopping", 0);
 
     if (dhcpv6s_stop(si6) != 0) {
-        fprintf(stderr, "stop dhcpv6 server error.\n");
+        fprintf(fp_v6_dbg, "stop dhcpv6 server error.\n");
         sysevent_set(si6->sefd, si6->setok, "service_ipv6-status", "error", 0);
         return -1;
     }
 #if !defined(_CBR_PRODUCT_REQ_) && !defined(_BWG_PRODUCT_REQ_)
     if (lan_addr6_unset(si6) !=0) {
-        fprintf(stderr, "unset IPv6 address for lan interfaces error!\n");
+        fprintf(fp_v6_dbg, "unset IPv6 address for lan interfaces error!\n");
         sysevent_set(si6->sefd, si6->setok, "service_ipv6-status", "error", 0);
         return -1;
     }
@@ -1890,7 +1892,7 @@ static int serv_ipv6_stop(struct serv_ipv6 *si6)
 static int serv_ipv6_restart(struct serv_ipv6 *si6)
 {
     if (serv_ipv6_stop(si6) != 0)
-        fprintf(stderr, "%s: serv_ipv6_stop error\n", __FUNCTION__);
+        fprintf(fp_v6_dbg, "%s: serv_ipv6_stop error\n", __FUNCTION__);
 
     return serv_ipv6_start(si6);
 }
@@ -1907,24 +1909,24 @@ static int serv_ipv6_init(struct serv_ipv6 *si6)
 
     if ((si6->sefd = sysevent_open(SE_SERV, SE_SERVER_WELL_KNOWN_PORT, 
                     SE_VERSION, PROG_NAME, &si6->setok)) < 0) {
-        fprintf(stderr, "%s: fail to open sysevent\n", __FUNCTION__);
+        fprintf(fp_v6_dbg, "%s: fail to open sysevent\n", __FUNCTION__);
         return -1;
     }
 
     if (syscfg_init() != 0) {
-        fprintf(stderr, "%s: fail to init syscfg\n", __FUNCTION__);
+        fprintf(fp_v6_dbg, "%s: fail to init syscfg\n", __FUNCTION__);
         return -1;
     }
 #ifdef MULTILAN_FEATURE
     ret = CCSP_Message_Bus_Init((char *)service_ipv6_component_id, pCfg, &bus_handle, (CCSP_MESSAGE_BUS_MALLOC)Ansc_AllocateMemory_Callback, Ansc_FreeMemory_Callback);
     if (ret == -1) {
-        fprintf(stderr, "%s: DBUS connection failed \n", __FUNCTION__);
+        fprintf(fp_v6_dbg, "%s: DBUS connection failed \n", __FUNCTION__);
         bus_handle = NULL;
     }
 #endif
     syscfg_get(NULL, "last_erouter_mode", buf, sizeof(buf));
     if(atoi(buf) == 1) {/*v4 only*/
-        fprintf(stderr, "IPv6 not enabled on board!\n");
+        fprintf(fp_v6_dbg, "IPv6 not enabled on board!\n");
 #if defined (_PROPOSED_BUG_FIX_)
         //Intel Proposed RDKB Bug Fix
         si6->mso_prefix[0] = '\0';
@@ -1949,10 +1951,10 @@ static int serv_ipv6_init(struct serv_ipv6 *si6)
             break;
         default:
 #ifdef MULTILAN_FEATURE
-            fprintf(stderr, "%s: unknown erouter topology mode, settinf default mode to FAVOR_WIDTH \n", __FUNCTION__);
+            fprintf(fp_v6_dbg, "%s: unknown erouter topology mode, settinf default mode to FAVOR_WIDTH \n", __FUNCTION__);
             si6->tpmod = FAVOR_WIDTH;
 #else
-            fprintf(stderr, "%s: unknown erouter topology mode.\n", __FUNCTION__);
+            fprintf(fp_v6_dbg, "%s: unknown erouter topology mode.\n", __FUNCTION__);
             si6->tpmod = TPMOD_UNKNOWN;
 #endif
             break;
@@ -1966,7 +1968,7 @@ static int serv_ipv6_term(struct serv_ipv6 *si6)
     sysevent_close(si6->sefd, si6->setok);
 #ifdef MULTILAN_FEATURE
     if (bus_handle != NULL) {
-        fprintf(stderr, "Closing DBUS connection \n");
+        fprintf(fp_v6_dbg, "Closing DBUS connection \n");
         CCSP_Message_Bus_Exit(bus_handle);
     }
 #endif
@@ -1990,7 +1992,7 @@ static int lan_addr6_renew(struct serv_ipv6 *si6)
 
     get_active_lanif(si6, l2_insts, &enabled_iface_num);
     if (enabled_iface_num == 0) {
-        fprintf(stderr, "no active lan interface.\n");
+        fprintf(fp_v6_dbg, "no active lan interface.\n");
         return -1;
     }
 
@@ -2061,34 +2063,41 @@ int main(int argc, char *argv[])
     int i;
     struct serv_ipv6 si6;
 
-    fprintf(stderr, "[%s] -- IN\n", PROG_NAME);
-
     if (argc < 2) {
         usage();
         exit(1);
     }
 
-    if (serv_ipv6_init(&si6) != 0)
+    if ((fp_v6_dbg=fopen(SVC_IPV6_LOG,"a+"))==NULL) {
+       fprintf(stderr,"service_ipv6, File(%s) Open Error\n", SVC_IPV6_LOG);
+       exit(1);
+    }
+
+    if (serv_ipv6_init(&si6) != 0) {
+	fclose(fp_v6_dbg);
         exit(1);
+    }
 
     for (i = 0; i < NELEMS(cmd_ops); i++) {
         if (strcmp(argv[1], cmd_ops[i].cmd) != 0 || !cmd_ops[i].exec)
             continue;
 
-        fprintf(stderr, "[%s] EXEC: %s\n", PROG_NAME, cmd_ops[i].cmd);
+        fprintf(fp_v6_dbg, "[%s] EXEC: %s\n", PROG_NAME, cmd_ops[i].cmd);
 
         if (cmd_ops[i].exec(&si6) != 0)
-            fprintf(stderr, "[%s]: fail to exec `%s'\n", PROG_NAME, cmd_ops[i].cmd);
+            fprintf(fp_v6_dbg, "[%s]: fail to exec `%s'\n", PROG_NAME, cmd_ops[i].cmd);
 
         break;
     }
     if (i == NELEMS(cmd_ops))
-        fprintf(stderr, "[%s] unknown command: %s\n", PROG_NAME, argv[1]);
+        fprintf(fp_v6_dbg, "[%s] unknown command: %s\n", PROG_NAME, argv[1]);
 
-    if (serv_ipv6_term(&si6) != 0)
+    if (serv_ipv6_term(&si6) != 0) {
+	fclose(fp_v6_dbg);
         exit(1);
+    }
 
-    fprintf(stderr, "[%s] -- OUT\n", PROG_NAME);
+    fclose(fp_v6_dbg);
     exit(0);
 }
 
