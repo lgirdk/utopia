@@ -722,6 +722,8 @@ $ipv6_static_enable=0
 $router_adv_enable=1
 $router_managed_flag=0
 $router_other_flag=1
+$router_managed_flag_2=0
+$router_other_flag_2=1
 $router_autonomous_flag=1
 
 # allow wan interface to be provisioned using router advertisement
