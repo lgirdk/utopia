@@ -91,26 +91,31 @@ fi
 
 dnsmasq_server_start ()
 {
+	# we use dhcp-authoritative flag to indicate that this is
+	# the only dhcp server on the local network. This allows
+	# the dns server to give out a _requested_ lease even if
+	# that lease is not found in the dnsmasq.leases file
+
          if [ "$XDNS_ENABLE" = "true" ]; then
                 SYSCFG_XDNS_FLAG=`syscfg get X_RDKCENTRAL-COM_XDNS`
                 SYSCFG_DNSSEC_FLAG=`syscfg get XDNS_DNSSecEnable`
                 SYSCFG_XDNSREFAC_FLAG=`syscfg get XDNS_RefacCodeEnable`
                 if ([ "$MODEL_NUM" = "CGA4131COM" ] || [ "$MODEL_NUM" = "CGA4332COM" ]) && [ "$SYSCFG_XDNS_FLAG" != "" ] && [ "$SYSCFG_XDNS_FLAG" = "1" ] && [ "$SYSCFG_DNSSEC_FLAG" = "1" ] ; then
                         if [ "$SYSCFG_XDNSREFAC_FLAG" = "1" ] ; then
-                                $SERVER -q --clear-on-reload --bind-dynamic --add-mac --add-cpe-id=abcdefgh -P 4096 -C $DHCP_CONF $DNS_ADDITIONAL_OPTION --proxy-dnssec --cache-size=0 --xdns-refac-code  #--enable-dbus
+                                $SERVER -q --clear-on-reload --bind-dynamic --add-mac --add-cpe-id=abcdefgh --dhcp-authoritative -P 4096 -C $DHCP_CONF $DNS_ADDITIONAL_OPTION --proxy-dnssec --cache-size=0 --xdns-refac-code  #--enable-dbus
                         else
-                                $SERVER -q --clear-on-reload --bind-dynamic --add-mac --add-cpe-id=abcdefgh -P 4096 -C $DHCP_CONF $DNS_ADDITIONAL_OPTION --proxy-dnssec --cache-size=0  #--enable-dbus
+                                $SERVER -q --clear-on-reload --bind-dynamic --add-mac --add-cpe-id=abcdefgh --dhcp-authoritative -P 4096 -C $DHCP_CONF $DNS_ADDITIONAL_OPTION --proxy-dnssec --cache-size=0  #--enable-dbus
                         fi
 
                 else
                         if [ "$SYSCFG_XDNSREFAC_FLAG" = "1" ] ; then
-                                $SERVER -q --clear-on-reload --bind-dynamic --add-mac --add-cpe-id=abcdefgh -P 4096 -C $DHCP_CONF $DNS_ADDITIONAL_OPTION --xdns-refac-code  #--enable-dbus
+                                $SERVER -q --clear-on-reload --bind-dynamic --add-mac --add-cpe-id=abcdefgh --dhcp-authoritative -P 4096 -C $DHCP_CONF $DNS_ADDITIONAL_OPTION --xdns-refac-code  #--enable-dbus
                         else
-                                $SERVER -q --clear-on-reload --bind-dynamic --add-mac --add-cpe-id=abcdefgh -P 4096 -C $DHCP_CONF $DNS_ADDITIONAL_OPTION  #--enable-dbus
+                                $SERVER -q --clear-on-reload --bind-dynamic --add-mac --add-cpe-id=abcdefgh --dhcp-authoritative -P 4096 -C $DHCP_CONF $DNS_ADDITIONAL_OPTION  #--enable-dbus
                         fi
                 fi
          else
-                $SERVER -P 4096 -C $DHCP_CONF  #--enable-dbus
+                $SERVER --dhcp-authoritative -P 4096 -C $DHCP_CONF  #--enable-dbus
          fi
 
 }
@@ -261,11 +266,6 @@ restart_request ()
         dnsmasq_server_start
 	sysevent set dns-status started
    else
-      # we use dhcp-authoritative flag to indicate that this is
-      # the only dhcp server on the local network. This allows 
-      # the dns server to give out a _requested_ lease even if
-      # that lease is not found in the dnsmasq.leases file
-      # Get the DNS strict order option
       dnsmasq_server_start
 
       if [ "1" = "$DHCP_SLOW_START_NEEDED" ] && [ -n "$TIME_FILE" ] ; then
@@ -467,11 +467,6 @@ dhcp_server_start ()
         rm -f /var/tmp/lan_not_restart
         return 0
    fi
-
-   # we use dhcp-authoritative flag to indicate that this is
-   # the only dhcp server on the local network. This allows
-   # the dns server to give out a _requested_ lease even if
-   # that lease is not found in the dnsmasq.leases file
 
    # Get the DNS strict order option
    DNSSTRICT_ORDER_ENABLE=`syscfg get DNSStrictOrder`
@@ -682,10 +677,6 @@ dns_start ()
          echo "RFC DNSTRICT ORDER is not defined or Enabled"
    fi
 
-   # we use dhcp-authoritative flag to indicate that this is
-   # the only dhcp server on the local network. This allows
-   # the dns server to give out a _requested_ lease even if
-   # that lease is not found in the dnsmasq.leases file
    if [ "stopped" = "$DHCP_STATE" ]; then
 	dnsmasq_server_start
    else
