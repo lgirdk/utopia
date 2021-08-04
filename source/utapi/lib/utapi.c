@@ -2941,6 +2941,7 @@ int Utopia_DeleteDynPortMappingIndex (int index)
 		if( UT_SUCCESS == rc_del ) 
 		{
 			Utopia_IPRule_ephemeral_port_forwarding( &pmap, FALSE );
+			v_secure_system("conntrack_flush &");
 		}
 #endif /* 0 */
     }
@@ -3024,7 +3025,7 @@ int Utopia_InvalidateDynPortMappings (void)
             } */
             // ulogf(ULOG_CONFIG, UL_UTAPI, "dynamic port map: time check(%d): last_update+lease %ld, curtime %ld", i, (long)(pmap.last_updated + pmap.lease), (long)curtime);
 
-            pmap.lease -= 3600; /*30 - Modified invalidate iterations once in one hour instead previous iteration */
+            pmap.lease -= 10; /* lease time validation in every 10 sec */
             if (pmap.lease <= 0){
                 ulogf(ULOG_CONFIG, UL_UTAPI, "dynamic port map: lease time expired for entry %d (%s:%d<->%s:%d)",
                         i, pmap.external_host, pmap.external_port, pmap.internal_host, pmap.internal_port);

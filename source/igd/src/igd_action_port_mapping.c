@@ -639,9 +639,16 @@ INT32 IGD_add_PortMapping(INOUT struct action_event *event)
             strncpy(pii_pmEntry.description, portmapEntry.pmDescription, sizeof(pii_pmEntry.description)-1);
         }
 
-	// Setting the lease time for Port Mapping entry , once lease expires rule will get deleted from iptable
-	portmapEntry.pmLeaseTime = 86400;
+        // Setting the lease time for Port Mapping entry, once lease expires rule will get deleted from iptable
+        // According to the description in RFC 6970 the value 0 means infinite [IGD1] and
+        // is remapped to the IGD maximum of 604800 seconds [IGD2].
+        if (portmapEntry.pmLeaseTime == 0)
+        {
+            portmapEntry.pmLeaseTime = 604800;
+        }
+
         pii_pmEntry.leaseTime = portmapEntry.pmLeaseTime;
+
         ret = IGD_pii_add_portmapping_entry(pIndex->wan_device_index,
                                  pIndex->wan_connection_device_index,
                                  pIndex->wan_connection_service_index,
