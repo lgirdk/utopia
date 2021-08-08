@@ -556,6 +556,8 @@ INT32 IGD_add_PortMapping(INOUT struct action_event *event)
     PORT_MAP_ENTRY portmapEntry;
     struct in_addr addr;
     INT32 ret;
+    struct sockaddr_in* src_addr;
+    char buf[INET_ADDRSTRLEN];
 
     PAL_XML2S_TABLE tableAddPorMap[] = {
         {PM_SET[REMOTE_HOST],                       PAL_XML2S_STRING,   XML2S_MSIZE(PORT_MAP_ENTRY, remoteHost),    NULL, MASK_OF_ENTRY_REMOTE_HOST},
@@ -595,6 +597,10 @@ INT32 IGD_add_PortMapping(INOUT struct action_event *event)
     bzero(&portmapEntry, sizeof(portmapEntry));
     ret = PAL_xml2s_process(event->request->action_request, tableAddPorMap, &portmapEntry);
 
+    src_addr = (struct sockaddr_in*)(&(event->request->cp_addr));
+    strncpy(buf,inet_ntoa(src_addr->sin_addr),INET_ADDRSTRLEN);
+    buf[INET_ADDRSTRLEN-1] = '\0';
+
     if (ret < 0){
         PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_FAILURE, "PAL_xml2s_process error: %d", ret);
 
@@ -606,7 +612,8 @@ INT32 IGD_add_PortMapping(INOUT struct action_event *event)
     } else if (((portmapEntry.remoteHost != NULL)
                 &&(0 == inet_pton(AF_INET, portmapEntry.remoteHost, &addr)))
                 ||(portmapEntry.internalClient == NULL) /* WANIpConnection v1: internalClient can not be wildcard (i.e. empty string) */
-                ||(0 == inet_pton(AF_INET, portmapEntry.internalClient, &addr)) 
+                ||(0 == inet_pton(AF_INET, portmapEntry.internalClient, &addr))
+                ||(0 != strncmp(buf,portmapEntry.internalClient,INET_ADDRSTRLEN)) 
                 ||(!chkPortMappingClient(portmapEntry.internalClient))){ 
         PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_DEBUG, "remoteHost or internalClient format error: x.x.x.x");
 
