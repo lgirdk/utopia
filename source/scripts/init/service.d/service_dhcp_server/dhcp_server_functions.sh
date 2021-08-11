@@ -1219,6 +1219,20 @@ fi
    echo "expand-hosts" >> $LOCAL_DHCP_CONF
    echo "address=/.c.f.ip6.arpa/" >> $LOCAL_DHCP_CONF
 
+   #Fill vendor option details
+   MFC_OUI=`dmcli eRT retv Device.DeviceInfo.ManufacturerOUI`
+   if [ $? -eq 0 ]; then
+      echo "dhcp-option-force=tag:cpewan-id,vi-encap:3561,4,\"${MFC_OUI}\"" >> $LOCAL_DHCP_CONF
+   fi
+   SRNUM=`dmcli eRT retv Device.DeviceInfo.SerialNumber`
+   if [ $? -eq 0 ]; then
+      echo "dhcp-option-force=tag:cpewan-id,vi-encap:3561,5,\"${SRNUM}\"" >> $LOCAL_DHCP_CONF
+   fi
+   PRD_CLASS=`dmcli eRT retv Device.DeviceInfo.ProductClass`
+   if [ $? -eq 0 ]; then
+      echo "dhcp-option-force=tag:cpewan-id,vi-encap:3561,6,\"${PRD_CLASS}\"" >> $LOCAL_DHCP_CONF
+   fi
+
       LOG_LEVEL=`syscfg get log_level`
    if [ -z "$LOG_LEVEL" ] ; then
        LOG_LEVEL=1
