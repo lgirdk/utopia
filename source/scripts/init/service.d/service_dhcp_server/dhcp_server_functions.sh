@@ -1097,6 +1097,20 @@ fi
    #echo "interface=$LAN_IFNAME" >> $LOCAL_DHCP_CONF
    echo "expand-hosts" >> $LOCAL_DHCP_CONF
 
+   #Fill vendor option details
+   MFC_OUI=`dmcli eRT getv Device.DeviceInfo.ManufacturerOUI | grep value | cut -f3 -d :`
+   if [ $? -eq 0 ]; then
+      echo "dhcp-option-force=tag:cpewan-id,vi-encap:3561,4,\"${MFC_OUI}\"" >> $LOCAL_DHCP_CONF
+   fi
+   SRNUM=`dmcli eRT getv Device.DeviceInfo.SerialNumber | grep value | cut -f3 -d :`
+   if [ $? -eq 0 ]; then
+      echo "dhcp-option-force=tag:cpewan-id,vi-encap:3561,5,\"${SRNUM}\"" >> $LOCAL_DHCP_CONF
+   fi
+   PRD_CLASS=`dmcli eRT getv Device.DeviceInfo.ProductClass | grep value | cut -f3 -d :`
+   if [ $? -eq 0 ]; then
+      echo "dhcp-option-force=tag:cpewan-id,vi-encap:3561,6,\"${PRD_CLASS}\"" >> $LOCAL_DHCP_CONF
+   fi
+
       LOG_LEVEL=`syscfg get log_level`
    if [ "" = "$LOG_LEVEL" ] ; then
        LOG_LEVEL=1
