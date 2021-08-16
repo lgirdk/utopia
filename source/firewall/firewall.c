@@ -4929,9 +4929,8 @@ if(status_http_ert == 0){
       case(0):
          if (isNatReady &&
              strcmp(tohost, "0.0.0.0") != 0) { /* 0.0.0.0 stands for disable in SA-RG-MIB */
-            fprintf(nat_fp, "-A prerouting_fromwan_todmz --dst %s -p tcp -m multiport ! --dports %s,%s -j DNAT %s\n", natip4, Httpport, Httpsport, dst_str);
-            
-            fprintf(nat_fp, "-A prerouting_fromwan_todmz --dst %s -p udp -m multiport ! --dports %s,%s -j DNAT %s\n", natip4, Httpport, Httpsport, dst_str);
+            fprintf(nat_fp, "-A prerouting_fromwan_todmz --dst %s -p tcp -j DNAT %s\n", natip4, dst_str); /* Forward all incoming tcp traffic to the host */
+            fprintf(nat_fp, "-A prerouting_fromwan_todmz --dst %s -p udp -j DNAT %s\n", natip4, dst_str); /* Forward all incoming udp traffic to the host */
 #ifdef _ICMP_ON_DMZ_HOST_
             fprintf(nat_fp, "-A prerouting_fromwan_todmz --dst %s -p icmp  -j DNAT %s\n", natip4, dst_str);
 #endif
