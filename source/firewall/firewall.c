@@ -4117,11 +4117,11 @@ static int do_dmz(FILE *nat_fp, FILE *filter_fp)
          if (isNatReady &&
              strcmp(tohost, "0.0.0.0") != 0) { /* 0.0.0.0 stands for disable in SA-RG-MIB */
             snprintf(str, sizeof(str),
-               "-A prerouting_fromwan_todmz --dst %s -p tcp -m multiport ! --dports %s,%s -j DNAT %s", natip4, Httpport, Httpsport, dst_str);
+               "-A prerouting_fromwan_todmz --dst %s -p tcp -j DNAT %s", natip4, dst_str); /* Forward all incoming tcp traffic to the host */
             fprintf(nat_fp, "%s\n", str);
             
             snprintf(str, sizeof(str),
-               "-A prerouting_fromwan_todmz --dst %s -p udp -m multiport ! --dports %s,%s -j DNAT %s", natip4, Httpport, Httpsport, dst_str);
+               "-A prerouting_fromwan_todmz --dst %s -p udp -j DNAT %s", natip4, dst_str); /* Forward all incoming udp traffic to the host */
             fprintf(nat_fp, "%s\n", str);
          }
 
