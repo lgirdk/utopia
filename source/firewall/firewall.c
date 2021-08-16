@@ -5069,9 +5069,8 @@ if(status_http_ert == 0){
    else
    {
 #endif
-            fprintf(nat_fp, "-A prerouting_fromwan_todmz --dst %s -p tcp -m multiport ! --dports %s,%s -j DNAT %s\n", natip4, Httpport, Httpsport, dst_str);
-            
-            fprintf(nat_fp, "-A prerouting_fromwan_todmz --dst %s -p udp -m multiport ! --dports %s,%s -j DNAT %s\n", natip4, Httpport, Httpsport, dst_str);
+            fprintf(nat_fp, "-A prerouting_fromwan_todmz --dst %s -p tcp -j DNAT %s\n", natip4, dst_str); /* Forward all incoming tcp traffic to the host */
+            fprintf(nat_fp, "-A prerouting_fromwan_todmz --dst %s -p udp -j DNAT %s\n", natip4, dst_str); /* Forward all incoming udp traffic to the host */
 #if defined(SPEED_BOOST_SUPPORTED)
    }
 #endif
