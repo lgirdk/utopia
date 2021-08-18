@@ -43,9 +43,9 @@
 #define SERVICE_NAME "lan"
 #define SERVICE_DEFAULT_HANDLER "/etc/utopia/service.d/lan_handler.sh"
 
-#if defined(_COSA_INTEL_USG_ARM_) && !defined(INTEL_PUMA7) && !defined(_COSA_BCM_ARM_) && !defined(_PLATFORM_IPQ_)
-const char* SERVICE_CUSTOM_EVENTS[] = {
-    "pnm-status|/etc/utopia/service.d/lan_handler.sh",
+#if defined(_COSA_INTEL_USG_ARM_) && !defined(INTEL_PUMA7) && !defined(_PLATFORM_IPQ_)
+const char* SERVICE_CUSTOM_EVENTS[] = { 
+    "pnm-status|/usr/bin/service_dhcp",
     "bring-lan|/usr/bin/service_dhcp",
     "lan-start|/usr/bin/service_dhcp",
     "lan-restart|/usr/bin/service_dhcp",
