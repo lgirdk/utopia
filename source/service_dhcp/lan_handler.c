@@ -400,6 +400,16 @@ void ipv4_status(int l3_inst, char *status)
                 {
                         fprintf(stderr, "[%s] Restarting post.d from ipv4_status\n", __FUNCTION__);
                         system("touch " POSTD_START_FILE "; execute_dir /etc/utopia/post.d/");
+                }
+            }
+            else if (strncmp(l_cStart_Misc, "ready", 5)) //from lan_handler.sh script
+            {
+                sysevent_set(g_iSyseventfd, g_tSysevent_token, "lan-status", "started", 0);
+
+                if (access(POSTD_START_FILE, F_OK) != 0)
+                {
+                        fprintf(stderr, "[%s] Restarting post.d from ipv4_status\n", __FUNCTION__);
+                        system("touch " POSTD_START_FILE "; execute_dir /etc/utopia/post.d/");
                 }   
             }
         else
