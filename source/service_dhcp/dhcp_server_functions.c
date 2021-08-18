@@ -1772,7 +1772,35 @@ int prepare_dhcp_conf (char *input, void *bus_handle)
 	}
 
 	fprintf(stderr, "DHCP server configuring for Mesh network\n");
-#if defined (_COSA_INTEL_USG_ARM_)
+
+#if defined (_COSA_BCM_ARM_) //from dhcp_server_functions.sh script file for Broadcom SoC
+
+	char mesh_enable[8];
+
+	syscfg_get(NULL, "mesh_enable", mesh_enable, sizeof(mesh_enable));
+
+	if (strcmp(mesh_enable, "true") == 0)
+	{
+		fprintf(l_fLocal_Dhcp_ConfFile, "interface=wl0.1\n"
+						"dhcp-range=169.254.0.5,169.254.0.253,255.255.255.0,infinite\n");
+
+		if (l_bDhcpNs_Enabled && l_bIsValidWanDHCPNs)
+		{
+			fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-option=wl0.1,6,%s\n", l_cWan_Dhcp_Dns);
+			fprintf(stderr, "DHCP_SERVER : [wl0.1] dhcp-option=wl0.1,6,%s\n", l_cWan_Dhcp_Dns);
+		}
+
+		fprintf(l_fLocal_Dhcp_ConfFile, "interface=wl1.1\n"
+						"dhcp-range=169.254.1.5,169.254.1.253,255.255.255.0,infinite\n");
+
+		if (l_bDhcpNs_Enabled && l_bIsValidWanDHCPNs)
+		{
+			fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-option=wl1.1,6,%s\n", l_cWan_Dhcp_Dns);
+			fprintf(stderr, "DHCP_SERVER : [wl1.1] dhcp-option=wl1.1,6,%s\n", l_cWan_Dhcp_Dns);
+		}
+	}
+
+#elif defined (_COSA_INTEL_USG_ARM_)
 
 	fprintf(l_fLocal_Dhcp_ConfFile, "interface=l2sd0.112\n");
 	fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-range=169.254.0.3,169.254.0.254,255.255.255.0,infinite\n");
