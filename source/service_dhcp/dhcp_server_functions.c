@@ -1437,6 +1437,20 @@ int prepare_dhcp_conf (char *input, void *bus_handle)
 	fprintf(stderr, "DHCP server configuring for Mesh network\n");
 #if defined (_COSA_INTEL_USG_ARM_)
 
+#if defined (_COSA_BCM_ARM_) //from dhcp_server_functions.sh script file for Broadcom SoC
+	fprintf(l_fLocal_Dhcp_ConfFile, "interface=brebhaul\n");
+	fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-range=169.254.85.5,169.254.85.253,255.255.255.0,infinite\n");
+
+	fprintf(l_fLocal_Dhcp_ConfFile, "interface=br403\n");
+	fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-range=192.168.245.2,192.168.245.253,255.255.255.0,infinite\n");
+
+	// Add br403 custom dns server configuration
+	if( l_bDhcpNs_Enabled && l_bIsValidWanDHCPNs )
+	{
+		fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-option=br403,6,%s\n", l_cWan_Dhcp_Dns);
+		fprintf(stderr, "DHCP_SERVER : [br403] dhcp-option=br403,6,%s\n", l_cWan_Dhcp_Dns);
+	}
+#else
 	fprintf(l_fLocal_Dhcp_ConfFile, "interface=l2sd0.112\n");
 	fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-range=169.254.0.3,169.254.0.254,255.255.255.0,infinite\n");
 
@@ -1456,6 +1470,7 @@ int prepare_dhcp_conf (char *input, void *bus_handle)
 		fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-option=l2sd0.113,6,%s\n", l_cWan_Dhcp_Dns);
 		fprintf(stderr, "DHCP_SERVER : [l2sd0.113] dhcp-option=l2sd0.113,6,%s\n", l_cWan_Dhcp_Dns);
 	}
+#endif
 
 #elif defined (_COSA_INTEL_XB3_ARM_)
    	fprintf(l_fLocal_Dhcp_ConfFile, "interface=l2sd0.112\n");
