@@ -452,7 +452,7 @@ int main(int argc, char *argv[])
 			lan_status_change(NULL);
 		}
 	}
-	else if (!strncmp(argv[1], "bring-lan", 9))
+	else if (!strncmp(argv[1], "bring-lan", 9) || !strncmp(argv[1], "pnm-status", 10))
 	{
 		bring_lan_up();
 	}
