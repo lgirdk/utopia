@@ -647,10 +647,10 @@ static int dhcp_start(struct serv_wan *sw)
 	if (strcmp(cEthWanMode, "true") == 0 ) 
       	  err = vsystem("/sbin/udhcpc -b -i %s -p %s -V eRouter1.0 -O ntpsrv -O timezone -O 122 -O 125 -O 2 -x %s -x 125:0000118b0701027B7C7c0107 -s /etc/udhcpc.script", sw->ifname, DHCPC_PID_FILE, options);
 	else
-         err = vsystem("/sbin/udhcpc -b -i %s -p %s -V eRouter1.0 -O ntpsrv -O timezone -O 125 -O 2 -x %s -s /etc/udhcpc.script", sw->ifname, DHCPC_PID_FILE, options);
+         err = vsystem("/sbin/udhcpc -b -i %s -p %s -V eRouter1.0 -O ntpsrv -O timezone -O 122 -O 125 -O 2 -O 4 -O 7 -O 54 -O 100 -x %s -s /etc/udhcpc.script", sw->ifname, DHCPC_PID_FILE, options);
     #else
      {
-        err = vsystem("/sbin/udhcpc -b -i %s -p %s -V eRouter1.0 -O ntpsrv -O timezone -O 125 -O 2 -x %s -s /etc/udhcpc.script", sw->ifname, DHCPC_PID_FILE, options);
+        err = vsystem("/sbin/udhcpc -b -i %s -p %s -V eRouter1.0 -O ntpsrv -O timezone -O 122 -O 125 -O 2 -O 4 -O 7 -O 54 -O 100 -x %s -s /etc/udhcpc.script", sw->ifname, DHCPC_PID_FILE, options);
      }
     #endif
 #else
