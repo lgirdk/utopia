@@ -206,6 +206,11 @@ else
    echo 204 > /var/tmp/networkresponse.txt
 fi
 
+if [ -x /usr/bin/db_mig ]; then
+   DB_MIG_COMPLETE=$(syscfg get db_migration_completed)
+   echo_t "[utopia][init] db_mig = $DB_MIG_COMPLETE"
+fi
+
 SYSCFG_LAN_DOMAIN=`syscfg get lan_domain` 
 
 if [ "$SYSCFG_LAN_DOMAIN" == "utopia.net" ]; then
@@ -318,7 +323,13 @@ fi
    # This value again will be modified from network_response.sh 
    echo_t "[utopia][init] Echoing network response during Factory reset"
    echo 204 > /var/tmp/networkresponse.txt
-    
+
+   # If db_migration_completed was true before then make that persistent across factory resets.
+   if [ -x /usr/bin/db_mig ] && [ "$DB_MIG_COMPLETE" = "true" ]; then
+      echo_t "[utopia][init] dbmig during Factory reset = $DB_MIG_COMPLETE"
+      syscfg set db_migration_completed $DB_MIG_COMPLETE
+      syscfg commit
+   fi
 
 elif [ "$FACTORY_RESET_WIFI" = "$SYSCFG_FR_VAL" ]; then
     echo_t "[utopia][init] Performing wifi reset"
@@ -718,5 +729,12 @@ SYSCFG_CUST_CHANGED="$(syscfg get customer-index-changed)"
 if [ "${SYSCFG_CUST_CHANGED}" = "true" ]; then
     rm -f $PSM_CUR_XML_CONFIG_FILE_NAME $PSM_BAK_XML_CONFIG_FILE_NAME
     syscfg unset customer-index-changed
+    syscfg commit
+fi
+
+if [ -x /usr/bin/db_mig ] && [ "$DB_MIG_COMPLETE" != "true" ]; then
+    echo_t "[utopia][init] Running db_mig utility"
+    /usr/bin/db_mig
+    syscfg set db_migration_completed true
     syscfg commit
 fi
