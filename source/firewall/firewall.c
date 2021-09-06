@@ -16389,8 +16389,8 @@ static int do_blockfragippktsv4(FILE *fp)
     }
     if (enable)
     {
-	system("echo 0 > /proc/sys/net/ipv4/ipfrag_high_thresh");
 	system("echo 0 > /proc/sys/net/ipv4/ipfrag_low_thresh");
+	system("echo 0 > /proc/sys/net/ipv4/ipfrag_high_thresh");
     } else {
 	sprintf(cfgcmd,"echo %d > /proc/sys/net/ipv4/ipfrag_high_thresh", 
 			DEFAULT_FRAG_HIGH_THRESH_VALUE);
