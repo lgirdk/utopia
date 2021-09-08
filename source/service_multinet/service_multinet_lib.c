@@ -286,9 +286,6 @@ static int nethelper_bridgeCreateUniqueMac(char* brname, int id) {
     /* Bring bridge up */
     snprintf(cmdBuff, sizeof(cmdBuff), "echo 1 > /proc/sys/net/ipv6/conf/%s/autoconf", brname);
     system(cmdBuff);
-    snprintf(cmdBuff, sizeof(cmdBuff), "ifconfig %s up", brname);
-    MNET_DEBUG("SYSTEM CALL: \"%s\"\n" COMMA cmdBuff);
-    system(cmdBuff);
 
     if (got_base_mac)
     {
@@ -309,9 +306,8 @@ static void nethelper_bridgeCreate (char *brname)
               "brctl addbr %s; "
               // Link local is not available to blranX interfaces as autoconf is disabled
               // Enable autoconf, before making the bridge up
-              "echo 1 > /proc/sys/net/ipv6/conf/%s/autoconf; "
-              "ifconfig %s up",
-              brname, brname, brname);
+              "echo 1 > /proc/sys/net/ipv6/conf/%s/autoconf",
+              brname, brname);
 
     MNET_DEBUG("SYSTEM CALL: \"%s\"\n" COMMA cmdBuff)
     system(cmdBuff);
