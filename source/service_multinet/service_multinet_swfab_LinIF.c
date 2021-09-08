@@ -101,6 +101,14 @@ MNET_DEBUG("%s : %d Entry. \n" COMMA __FUNCTION__ COMMA __LINE__)
             
     }
 
+    /* Bring up the bridge interface after slave interfaces has been attached to it */
+    if (numArgs && up) {
+        offset += snprintf(cmdBuf+offset,
+                           sizeof(cmdBuf) - offset,
+                           " ; ifconfig %s up",
+                           args[0].hints.network->name);
+    }
+
 MNET_DEBUG("%s : %d offset is %d \n" COMMA __FUNCTION__ COMMA __LINE__ COMMA offset)
 
 MNET_DEBUG(" CMD : %s \n" COMMA cmdBuf)
