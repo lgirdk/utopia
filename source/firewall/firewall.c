@@ -14995,8 +14995,6 @@ int prepare_ipv6_firewall(const char *fw_file, char* strBlockTimeCmd)
 // LGI ADD START
       if(BTMASK_ALWAYS == v6_dayofweek_block_time_bit_mask_type) {
          do_ip_filter_IpV6_service(filter_fp);
-         /* IPv6 Macfilter */
-         do_mac_filter(filter_fp);
       }
       else if( (!strBlockTimeCmd) ||
                ((strcmp(strBlockTimeCmd, "v6cron_block_time_start")) &&
@@ -15028,7 +15026,6 @@ int prepare_ipv6_firewall(const char *fw_file, char* strBlockTimeCmd)
                   // See if we have passed the 0th minute already.  If yes, apply the filter here.
                   if(ptm->tm_min >= 0) {
                       do_ip_filter_IpV6_service(filter_fp);
-                      do_mac_filter(filter_fp);
                   }
               }
           }
@@ -15039,6 +15036,51 @@ int prepare_ipv6_firewall(const char *fw_file, char* strBlockTimeCmd)
               do_ip_filter_IpV6_service(filter_fp);
           }
       }
+
+      /* IPv6 Macfilter */
+      if(BTMASK_ALWAYS == mac_dayofweek_block_time_bit_mask_type) {
+          do_mac_filter(filter_fp);
+      }
+      else if( (!strBlockTimeCmd) ||
+               ((strcmp(strBlockTimeCmd, "mac_cron_block_time_start")) &&
+               (strcmp(strBlockTimeCmd, "mac_cron_block_time_stop")) )) {
+          time_t ttime = 0;
+          struct tm *ptm = NULL;
+          unsigned long ulMaskDayOfWeek[7];
+          unsigned long ulMaskToday = 0;
+
+          // We reached here fron a NON-CRON invocation (system reboot or normal firewall restart).
+          // Check the times and re-apply the filters as applicable.
+          GetTimeOfDayMasks(ulMaskDayOfWeek, macDayOfWeekBlockTimeBitMask);
+          time(&ttime);
+          ptm = localtime(&ttime);
+
+          if(BTMASK_BYHOUR == mac_dayofweek_block_time_bit_mask_type) {
+              ulMaskToday = ulMaskDayOfWeek[0]; // Use only SUNDAY bits.
+          }
+          else if (BTMASK_BYDAYHOUR == mac_dayofweek_block_time_bit_mask_type) {
+              ulMaskToday = ulMaskDayOfWeek[ptm->tm_wday];
+          }
+
+          // Check if any time is scheduled for today
+          if(ulMaskToday) {
+              // Find if the current hour has been scheduled
+              if(ulMaskToday & (1 << ptm->tm_hour)) {
+                  // The CRON will fire at 0th minute of the scheduled hour.
+                  // See if we have passed the 0th minute already.  If yes, apply the filter here.
+                  if(ptm->tm_min >= 0) {
+                      do_mac_filter(filter_fp);
+                  }
+              }
+          }
+      }
+      else {
+          // This is CRON Start - Apply the filters
+          if(!strcmp(strBlockTimeCmd, "mac_cron_block_time_start")) {
+              do_mac_filter(filter_fp);
+          }
+      }
+
 // LGI ADD END
 
       if (!isBridgeMode) {
