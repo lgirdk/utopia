@@ -15158,6 +15158,26 @@ static void do_ipv6_filter_table(FILE *fp){
    fprintf(fp, ":wan2lan - [0:0]\n");
    fprintf(fp, ":isolate_lans - [0:0]\n");
    fprintf(fp, ":http2self - [0:0]\n");
+#ifdef _PUMA6_ARM_
+   fprintf(fp, "%s\n", ":lan2self_dos - [0:0]");
+   fprintf(fp, "%s\n", ":lan2self_dos_tcp - [0:0]");
+   fprintf(fp, "%s\n", ":lan2self_dos_udp - [0:0]");
+   fprintf(fp, "%s\n", ":lan2self_dos_icmp - [0:0]");
+   fprintf(fp, "-A lan2self_dos -p tcp -j lan2self_dos_tcp\n");
+   fprintf(fp, "-A lan2self_dos -p udp -j lan2self_dos_udp\n");
+   fprintf(fp, "-A lan2self_dos -p icmpv6 -j lan2self_dos_icmp\n");
+#endif
+
+   fprintf(fp, "-A INPUT -p tcp -m tcp --dport 80 -j http2self\n");
+
+   fprintf(fp, "-A http2self -j DROP\n");
+   if (!isBridgeMode)
+   {
+      fprintf(fp, "-I http2self -i %s -j ACCEPT\n", lan_ifname);
+#ifdef _PUMA6_ARM_
+      fprintf(fp, "-I http2self -j lan2self_dos\n");
+#endif
+   }
 
 #ifdef _HUB4_PRODUCT_REQ_
 #ifdef HUB4_BFD_FEATURE_ENABLED
@@ -16730,9 +16750,22 @@ static int do_ipflooddetectv6(FILE *fp)
         fprintf(fp, "-A DOS_TCP ! -i erouter0 -p tcp --syn %s -j RETURN\n", LAN_DoS);
         fprintf(fp, "-A DOS_TCP -i erouter0 -p tcp --syn %s -j RETURN\n", WAN_DoS);
         fprintf(fp, "-A DOS_TCP -j DOS_DROP\n");
+
+#ifdef _PUMA6_ARM_
+        fprintf(fp, "-A lan2self_dos_tcp -p tcp ! --syn -m state --state NEW -j DROP\n");
+        fprintf(fp, "-A lan2self_dos_tcp -m state --state ESTABLISHED,RELATED -j RETURN\n");
+        fprintf(fp, "-A lan2self_dos_tcp -m recent --set --name lan2self_dos_tcp\n");
+        fprintf(fp, "-A lan2self_dos_tcp -m recent --update --seconds 1 --hitcount 15 --name lan2self_dos_tcp -j DROP\n");
+#endif
+
         fprintf(fp, "-A DOS_UDP ! -i erouter0 -p udp %s -j RETURN\n", LAN_DoS);
         fprintf(fp, "-A DOS_UDP -i erouter0 -p udp %s -j RETURN\n", WAN_DoS);
         fprintf(fp, "-A DOS_UDP -j DOS_DROP\n");
+
+#ifdef _PUMA6_ARM_
+        fprintf(fp, "-A lan2self_dos_udp -m recent --set --name lan2self_dos_udp\n");
+        fprintf(fp, "-A lan2self_dos_udp -m recent --update --seconds 1 --hitcount 15 --name lan2self_dos_udp -j DROP\n");
+#endif
 
         /* Note: DOS_ICMP rules have now been moved into do_icmpflooddetectv6() */
 
@@ -16778,6 +16811,10 @@ static void do_icmpflooddetectv6 (FILE *fp)
         fprintf(fp, "-A DOS_ICMP -i erouter0 -m limit --limit %u/second --limit-burst %u -j RETURN\n", icmpRate, icmpRate);
         fprintf(fp, "-A DOS_ICMP -i erouter0 -m limit --limit 5/min --limit-burst 5 -j LOG --log-prefix \"ICMP Flood: \" --log-level 5\n");
         fprintf(fp, "-A DOS_ICMP -i erouter0 -j DROP\n");
+#ifdef _PUMA6_ARM_
+        fprintf(fp, "-A lan2self_dos_icmp -m recent --set --name lan2self_dos_icmp\n");
+        fprintf(fp, "-A lan2self_dos_icmp -m recent --update --seconds 1 --hitcount %u --name lan2self_dos_icmp -j DROP\n", icmpRate);
+#endif
     }
     else
     {
