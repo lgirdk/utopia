@@ -17701,11 +17701,45 @@ static int do_ip_filter_IpV6_service(FILE *fp)
         {
             if (4 == proto || 3 == proto || 1 ==  proto)
             {
-                fprintf(fp, "-I FORWARD -p tcp %s %s --sport %s:%s --dport %s:%s -j %s\n", srcstartipaddress, dststartipaddress, srcstartport, srcendport, dststartport, dstendport, action);
+               if (((strcmp(srcstartport, "0") == 0) && (strcmp(srcendport, "0") == 0)) && 
+                                                   ((strcmp(dststartport, "0") != 0) && (strcmp(dstendport, "0") != 0))) 
+               {
+                  fprintf(fp, "-I FORWARD -p tcp %s %s --dport %s:%s -j %s\n", srcstartipaddress, dststartipaddress, dststartport, dstendport, action);
+               }
+               else if (((strcmp(srcstartport, "0") != 0) && (strcmp(srcendport, "0") != 0)) && 
+                                                         ((strcmp(dststartport, "0") == 0) && (strcmp(dstendport, "0") == 0))) 
+               {
+                  fprintf(fp, "-I FORWARD -p tcp %s %s --sport %s:%s -j %s\n", srcstartipaddress, dststartipaddress, srcstartport, srcendport, action);  
+               }
+               else if (((strcmp(srcstartport, "0") == 0) && (strcmp(srcendport, "0") == 0)) && 
+                                                         ((strcmp(dststartport, "0") == 0) && (strcmp(dstendport, "0") == 0))) 
+               {
+                  fprintf(fp, "-I FORWARD -p tcp %s %s -j %s\n", srcstartipaddress, dststartipaddress, action);  
+               }
+               else {
+                  fprintf(fp, "-I FORWARD -p tcp %s %s --sport %s:%s --dport %s:%s -j %s\n", srcstartipaddress, dststartipaddress, srcstartport, srcendport, dststartport, dstendport, action);    
+               }
             }
             if (4 == proto || 3 == proto || 2 ==  proto)
             {
-                fprintf(fp, "-I FORWARD -p udp %s %s --sport %s:%s --dport %s:%s -j %s\n", srcstartipaddress, dststartipaddress, srcstartport, srcendport, dststartport, dstendport, action);
+               if (((strcmp(srcstartport, "0") == 0) && (strcmp(srcendport, "0") == 0)) && 
+                                                   ((strcmp(dststartport, "0") != 0) && (strcmp(dstendport, "0") != 0))) 
+               {
+                  fprintf(fp, "-I FORWARD -p udp %s %s --dport %s:%s -j %s\n", srcstartipaddress, dststartipaddress, dststartport, dstendport, action);
+               }
+               else if (((strcmp(srcstartport, "0") != 0) && (strcmp(srcendport, "0") != 0)) && 
+                                                         ((strcmp(dststartport, "0") == 0) && (strcmp(dstendport, "0") == 0))) 
+               {
+                  fprintf(fp, "-I FORWARD -p udp %s %s --sport %s:%s -j %s\n", srcstartipaddress, dststartipaddress, srcstartport, srcendport, action);  
+               }
+               else if (((strcmp(srcstartport, "0") == 0) && (strcmp(srcendport, "0") == 0)) && 
+                                                         ((strcmp(dststartport, "0") == 0) && (strcmp(dstendport, "0") == 0))) 
+               {
+                  fprintf(fp, "-I FORWARD -p udp %s %s -j %s\n", srcstartipaddress, dststartipaddress, action);  
+               }
+               else {
+                  fprintf(fp, "-I FORWARD -p udp %s %s --sport %s:%s --dport %s:%s -j %s\n", srcstartipaddress, dststartipaddress, srcstartport, srcendport, dststartport, dstendport, action);    
+               }
             }
             if (4 == proto || 5 ==  proto)
             {
@@ -17729,11 +17763,45 @@ static int do_ip_filter_IpV6_service(FILE *fp)
         {
             if (4 == proto || 3 == proto || 1 ==  proto)
             {
-                fprintf(fp, "-I FORWARD -p tcp %s %s --sport %s:%s --dport %s:%s -j %s\n", srcstartipaddress, dststartipaddress, srcstartport, srcendport, dststartport, dstendport, action);
+               if (((strcmp(srcstartport, "0") == 0) && (strcmp(srcendport, "0") == 0)) && 
+                                                   ((strcmp(dststartport, "0") != 0) && (strcmp(dstendport, "0") != 0))) 
+               {
+                  fprintf(fp, "-I FORWARD -p tcp %s %s --dport %s:%s -j %s\n", srcstartipaddress, dststartipaddress, dststartport, dstendport, action);
+               }
+               else if (((strcmp(srcstartport, "0") != 0) && (strcmp(srcendport, "0") != 0)) && 
+                                                         ((strcmp(dststartport, "0") == 0) && (strcmp(dstendport, "0") == 0))) 
+               {
+                  fprintf(fp, "-I FORWARD -p tcp %s %s --sport %s:%s -j %s\n", srcstartipaddress, dststartipaddress, srcstartport, srcendport, action);  
+               }
+               else if (((strcmp(srcstartport, "0") == 0) && (strcmp(srcendport, "0") == 0)) && 
+                                                         ((strcmp(dststartport, "0") == 0) && (strcmp(dstendport, "0") == 0))) 
+               {
+                  fprintf(fp, "-I FORWARD -p tcp %s %s -j %s\n", srcstartipaddress, dststartipaddress, action);  
+               }
+               else {
+                  fprintf(fp, "-I FORWARD -p tcp %s %s --sport %s:%s --dport %s:%s -j %s\n", srcstartipaddress, dststartipaddress, srcstartport, srcendport, dststartport, dstendport, action);    
+               } 
             }
             if (4 == proto || 3 == proto || 2 ==  proto)
             {
-                fprintf(fp, "-I FORWARD -p udp %s %s --sport %s:%s --dport %s:%s -j %s\n", srcstartipaddress, dststartipaddress, srcstartport, srcendport, dststartport, dstendport, action);
+               if (((strcmp(srcstartport, "0") == 0) && (strcmp(srcendport, "0") == 0)) && 
+                                                   ((strcmp(dststartport, "0") != 0) && (strcmp(dstendport, "0") != 0))) 
+               {
+                  fprintf(fp, "-I FORWARD -p udp %s %s --dport %s:%s -j %s\n", srcstartipaddress, dststartipaddress, dststartport, dstendport, action);
+               }
+               else if (((strcmp(srcstartport, "0") != 0) && (strcmp(srcendport, "0") != 0)) && 
+                                                         ((strcmp(dststartport, "0") == 0) && (strcmp(dstendport, "0") == 0))) 
+               {
+                  fprintf(fp, "-I FORWARD -p udp %s %s --sport %s:%s -j %s\n", srcstartipaddress, dststartipaddress, srcstartport, srcendport, action);  
+               }
+               else if (((strcmp(srcstartport, "0") == 0) && (strcmp(srcendport, "0") == 0)) && 
+                                                         ((strcmp(dststartport, "0") == 0) && (strcmp(dstendport, "0") == 0))) 
+               {
+                  fprintf(fp, "-I FORWARD -p udp %s %s -j %s\n", srcstartipaddress, dststartipaddress, action);  
+               }
+               else {
+                  fprintf(fp, "-I FORWARD -p udp %s %s --sport %s:%s --dport %s:%s -j %s\n", srcstartipaddress, dststartipaddress, srcstartport, srcendport, dststartport, dstendport, action);    
+               } 
             }
             if (4 == proto || 5 ==  proto)
             {
