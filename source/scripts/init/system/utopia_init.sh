@@ -176,6 +176,15 @@ if [ -f $SYSCFG_BKUP_FILE ]; then
    if [ $? != 0 ]; then
 	   CheckAndReCreateDB
    fi
+
+   if [ -f $CUSTOMER_BOOT_CONFIG_FILE ]; then
+      # Ensure that syscfg has been written back to Flash before
+      # CUSTOMER_BOOT_CONFIG_FILE is removed (see below) to avoid race if
+      # power is lost after removing CUSTOMER_BOOT_CONFIG_FILE but before
+      # syscfg data containing the new customer ID has been saved to Flash.
+      syscfg commit
+   fi
+
 else
    echo -n > $SYSCFG_FILE
    echo -n > $SYSCFG_BKUP_FILE
