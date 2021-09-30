@@ -73,8 +73,8 @@ do_start_igmpproxy () {
    fi
 
 #HOME_LAN_ISOLATION=`psmcli get dmsb.l2net.HomeNetworkIsolation`
-if [ "$HOME_LAN_ISOLATION" == "1" ]; then
-if [ "$MOCA_LAN_UP" == "1" ]; then
+if [ "$HOME_LAN_ISOLATION" = "1" ]; then
+if [ "$MOCA_LAN_UP" = "1" ]; then
    echo "phyint $SYSCFG_lan_ifname enable ttl-threshold 1" >> $LOCAL_CONF_FILE
    echo "phyint $MOCA_INTERFACE enable ttl-threshold 1" >> $LOCAL_CONF_FILE
    if [ "$NEW_SMCROUTE" != "1" ]; then
@@ -86,7 +86,7 @@ if [ "$MOCA_LAN_UP" == "1" ]; then
 fi
    cat $LOCAL_CONF_FILE > $CONF_FILE_2
    rm -f $LOCAL_CONF_FILE
-   if [ "$NEW_SMCROUTE" == "1" ]; then
+   if [ "$NEW_SMCROUTE" = "1" ]; then
        $BIN2 -d 5 -f $CONF_FILE_2 -n -N -s &
    else
        $BIN2 -f $CONF_FILE_2 -d &
@@ -95,7 +95,7 @@ fi
 else
    cat $LOCAL_CONF_FILE > $CONF_FILE
    rm -f $LOCAL_CONF_FILE
-   if [ "$BOX_TYPE" == "HUB4" ] || [ "$BOX_TYPE" == "SR300" ]; then
+   if [ "$BOX_TYPE" = "HUB4" ] || [ "$BOX_TYPE" = "SR300" ]; then
        $BIN $CONF_FILE &
    else 
        $BIN -r -f $CONF_FILE &
@@ -123,7 +123,7 @@ service_start ()
 {
    ulog ${SERVICE_NAME} status "starting ${SERVICE_NAME} service" 
 
-   if [ "" != "$WAN_IFNAME" ] && [ "1" == "$SYSCFG_igmpproxy_enabled" ] ; then
+   if [ "" != "$WAN_IFNAME" ] && [ "1" = "$SYSCFG_igmpproxy_enabled" ] ; then
       do_start_igmpproxy
       sysevent set ${SERVICE_NAME}-errinfo
       sysevent set ${SERVICE_NAME}-status "started"
@@ -134,7 +134,7 @@ service_stop ()
 {
    ulog ${SERVICE_NAME} status "stopping ${SERVICE_NAME} service" 
 
-if [ "$HOME_LAN_ISOLATION" -eq "1" ]; then
+if [ "$HOME_LAN_ISOLATION" = "1" ]; then
    killall $BIN2
    rm -rf $CONF_FILE_2
 else
