@@ -140,8 +140,6 @@ service_start ()
         #zqiu: monitor lan client traffic
         echo "* * * * * /usr/ccsp/tad/rxtx_lan.sh" >> $CRONTAB_FILE
 
-        echo "1 */6 * * * /usr/ccsp/tad/log_sixhourly.sh" >> $CRONTAB_FILE
-
         #RDKB-9367, file handle monitor, needs to be run every 12 hours
         echo "1 */12 * * * /usr/ccsp/tad/FileHandle_Monitor.sh" >> $CRONTAB_FILE
 
@@ -305,6 +303,11 @@ service_start ()
 
         # hourly
         ########
+
+        # log zombie process once an hour
+        echo "#! /bin/sh" > /etc/cron/cron.hourly/log_status.sh
+        echo "nice -n 19 sh /usr/ccsp/tad/log_status.sh &" >> /etc/cron/cron.hourly/log_status.sh
+        chmod 700 /etc/cron/cron.hourly/log_status.sh
 
         # add starting the ntp client once an hour
         echo "#! /bin/sh" > /etc/cron/cron.hourly/ntp_hourly.sh
