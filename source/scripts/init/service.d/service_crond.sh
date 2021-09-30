@@ -134,7 +134,6 @@ service_start ()
       #zqiu: monitor lan client traffic
       echo "* * * * *   /usr/ccsp/tad/rxtx_lan.sh" >> $CRONTAB_FILE
 
-      echo "1 */6 * * *   /usr/ccsp/tad/log_sixhourly.sh" >> $CRONTAB_FILE
 #RDKB-9367, file handle monitor, needs to be run every 12 hours
       echo "1 */12 * * *   /usr/ccsp/tad/FileHandle_Monitor.sh" >> $CRONTAB_FILE
 
@@ -230,6 +229,8 @@ service_start ()
       addCron "* * * * *  /etc/utopia/service.d/misc_handler.sh"
 
       addCron "* * * * * /usr/ccsp/tad/selfheal_bootup.sh"
+
+      addCron "48 * * * * nice -n 19 /usr/ccsp/tad/log_status.sh &"
 
 	  #monitor cosa_start_rem triggered state in case its not triggered on 
 	  #bootup even after 10 minutes then we have to trigger this via cron
