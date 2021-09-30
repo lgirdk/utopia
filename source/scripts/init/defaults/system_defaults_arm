@@ -1617,3 +1617,6 @@ $troubleshoot_wizard_enable=0
 $router_mobile_app_enable=0
 $custom_lan_https_enabled=1
 $user_bridge_mode_allowed=true
+
+$skenable=0
+$skproperty=none
