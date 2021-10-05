@@ -19,13 +19,17 @@
 #/etc/dibbler/server.conf is soft link of /var/tmp/dhcp6s.conf
 #sed operation on soft link will delete the soft link.
 #Hence process on the actual configuration file.
+
+source /etc/utopia/service.d/utctx_helper.sh
+
 dibbler_conf=/var/tmp/dhcp6s.conf
 zebra_conf=/var/zebra.conf
 tool=$1
 ips=""
 STATIC_DNS_IPv6=""
 
-eval `utctx_cmd get dns_relay_enable dns_override dns_static_server_count dns_ipv6_preferred dns_ipv6_alternate`
+queries="dns_relay_enable dns_override dns_static_server_count dns_ipv6_preferred dns_ipv6_alternate"
+get_utctx_val "$queries"
 dns_proxy=$SYSCFG_dns_relay_enable
 dhcp_dns_ips=`sysevent get ipv6_nameserver`
 DNS_OVERRIDE=$SYSCFG_dns_override
