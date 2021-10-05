@@ -41,6 +41,7 @@ source /etc/utopia/service.d/ulog_functions.sh
 source /etc/utopia/service.d/log_capture_path.sh
 source /etc/log_timestamp.sh    # define 'echo_t' ASAP!
 source /etc/waninfo.sh
+source /etc/utopia/service.d/utctx_helper.sh
 
 if [ -f /etc/device.properties ]; then
 	. /etc/device.properties
@@ -512,8 +513,8 @@ service_stop ()
 
 service_init ()
 {
-    FOO=`utctx_cmd get ntp_server1 ntp_server2 ntp_server3 ntp_server4 ntp_server5 ntp_enabled new_ntp_enabled`
-    eval "$FOO"
+    queries="ntp_server1 ntp_server2 ntp_server3 ntp_server4 ntp_server5 ntp_enabled new_ntp_enabled"
+    get_utctx_val "$queries"
 }
 
 
