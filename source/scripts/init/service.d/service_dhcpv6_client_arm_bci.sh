@@ -38,6 +38,7 @@ source /etc/utopia/service.d/ulog_functions.sh
 source /etc/utopia/service.d/ipv6_functions.sh
 source /etc/utopia/service.d/event_handler_functions.sh
 source /etc/utopia/service.d/sysevent_functions.sh
+source /etc/utopia/service.d/utctx_helper.sh
 
 # This handler is called not only to start/stop/restart the service
 # but also when WAN or LAN status is updated as well as current_wan_ifname
@@ -60,7 +61,8 @@ DHCPV6_PID_FILE=/var/run/erouter_dhcp6c.pid
 service_init ()
 {
    # First some SYSCFG
-   eval `utctx_cmd get last_erouter_mode dhcpv6c_enable ipv6_static_enable lan_ipv6addr wan_ipv6addr dhcpv6c_duid lan_ifname`
+   queries="last_erouter_mode dhcpv6c_enable ipv6_static_enable lan_ipv6addr wan_ipv6addr dhcpv6c_duid lan_ifname"
+   get_utctx_val "$queries"
    LAN_INTERFACE_NAME=$SYSCFG_lan_ifname
 
    if [ -z "$SYSCFG_ipv6_static_enable" ]
