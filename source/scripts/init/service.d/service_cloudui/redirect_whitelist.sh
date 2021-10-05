@@ -1,5 +1,7 @@
 #!/bin/sh
 
+source /etc/utopia/service.d/utctx_helper.sh
+
 SERVER4_CONF="$1"
 SERVER6_CONF="/etc/dibbler/server.conf"
 SERVER6_CONF_BKUP="/etc/dibbler/server_bkp.conf"
@@ -11,7 +13,8 @@ RESOLV_CONF="/etc/resolv.conf"
 # cloud_enable_flag         : Device.X_LGI-COM_General.CloudUIEnable
 # redirection_url           : Device.X_LGI-COM_General.CloudUIUrl
 
-eval `utctx_cmd get FirstInstallWizard_Enable FirstInstall_State CaptivePortal_Enable cloud_enable_flag redirection_url HTTP_Server_I`
+queries="FirstInstallWizard_Enable FirstInstall_State CaptivePortal_Enable cloud_enable_flag redirection_url HTTP_Server_I"
+get_utctx_val "$queries"
 FirstInstall_Enable=${SYSCFG_FirstInstallWizard_Enable}
 FirstInstall_State=${SYSCFG_FirstInstall_State}
 Redirection_Enable=${SYSCFG_CaptivePortal_Enable}
