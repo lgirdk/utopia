@@ -61,13 +61,15 @@
 #              
 #------------------------------------------------------------------
 source /etc/utopia/service.d/ulog_functions.sh
+source /etc/utopia/service.d/utctx_helper.sh
 
 SERVICE_NAME="wds"
 SELF_NAME="`basename $0`"
 
 service_init ()
 {
-    eval `utctx_cmd get wifi_bridge_mode wifi_bridge_ssid wifi_bridge_bssid wifi_bridge_chan`
+    queries="wifi_bridge_mode wifi_bridge_ssid wifi_bridge_bssid wifi_bridge_chan"
+    get_utctx_val "$queries"
 }
 
 #
