@@ -45,6 +45,7 @@ CCSPPATH="/usr/ccsp"
 ls /tmp/pam_initialized* > /tmp/pam_init_status
 
 source $UTOPIA_PATH/log_capture_path.sh
+source /etc/utopia/service.d/utctx_helper.sh
 
 echo_t "*******************************************************************"
 echo_t "*                                                                  "
@@ -221,7 +222,8 @@ if [ -x /usr/bin/db_mig ]; then
    echo_t "[utopia][init] db_mig = $DB_MIG_COMPLETE"
 fi
 
-eval `utctx_cmd get lan_domain factory_reset PartnerID_FR UpdateNvram lan_ipaddr lan_netmask lost_and_found_enable iot_ifname iot_dhcp_start iot_dhcp_end iot_netmask ForwardSSH unit_activated lan_ifname cmdiag_ifname ecm_wan_ifname nat_udp_timeout nat_tcp_timeout nat_icmp_timeout lan_ethernet_physical_ifnames`
+queries="lan_domain factory_reset PartnerID_FR UpdateNvram lan_ipaddr lan_netmask lost_and_found_enable iot_ifname iot_dhcp_start iot_dhcp_end iot_netmask ForwardSSH unit_activated lan_ifname cmdiag_ifname ecm_wan_ifname nat_udp_timeout nat_tcp_timeout nat_icmp_timeout lan_ethernet_physical_ifnames"
+get_utctx_val "$queries"
 
 if [ "$SYSCFG_lan_domain" = "utopia.net" ]; then
    echo_t "[utopia][init] Setting lan domain to NULL"

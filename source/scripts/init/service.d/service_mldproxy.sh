@@ -38,6 +38,7 @@
 #------------------------------------------------------------------
 
 source /etc/utopia/service.d/ulog_functions.sh
+source /etc/utopia/service.d/utctx_helper.sh
 
 SERVICE_NAME="mldproxy"
 SELF_NAME="`basename "$0"`"
@@ -68,7 +69,8 @@ do_start_mldproxy () {
 
 service_init ()
 {
-   eval "`utctx_cmd get mldproxy_enabled lan_ifname`"
+   queries="mldproxy_enabled lan_ifname"
+   get_utctx_val "$queries"
    eval `sysevent batchget current_wan_ifname wan-status lan-status`
    WAN_IFNAME=$SYSEVENT_1
    CURRENT_WAN_STATUS=$SYSEVENT_2
