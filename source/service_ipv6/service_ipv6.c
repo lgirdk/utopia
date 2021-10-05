@@ -1299,10 +1299,10 @@ static int lan_addr6_set(struct serv_ipv6 *si6)
         /*enable ipv6 link local*/
         v_secure_system("ip -6 link set dev %s up", iface_name);
         sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/autoconf", iface_name, "1");
-#ifndef MULTILAN_FEATURE
+
         sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/disable_ipv6", iface_name, "1");
         sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/disable_ipv6", iface_name, "0");
-#endif
+
         sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/forwarding", iface_name, "1");
 
         sysevent_set(si6->sefd, si6->setok, "ipv6_linklocal", "up", 0);
