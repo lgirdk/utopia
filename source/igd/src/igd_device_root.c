@@ -157,8 +157,8 @@ struct upnp_device IGD_device =
 	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO, "<deviceType>urn:schemas-upnp-org:device:InternetGatewayDevice:1</deviceType>\n");
 	fprintf(fp, "<deviceType>urn:schemas-upnp-org:device:InternetGatewayDevice:1</deviceType>\n");
 
-	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO, "<friendlyName>%s</friendlyName>\n",ROOT_FRIENDLY_NAME);
-	fprintf(fp, "<friendlyName>%s</friendlyName>\n",ROOT_FRIENDLY_NAME);
+	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO, "<friendlyName>%s %s</friendlyName>\n", MANUFACTURER, MODULE_NAME);
+	fprintf(fp, "<friendlyName>%s %s</friendlyName>\n", MANUFACTURER, MODULE_NAME);
 
 	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO, "<manufacturer>%s</manufacturer>\n",MANUFACTURER);
 	fprintf(fp, "<manufacturer>%s</manufacturer>\n",MANUFACTURER);
