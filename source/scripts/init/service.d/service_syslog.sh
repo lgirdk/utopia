@@ -58,6 +58,7 @@
 #------------------------------------------------------------------
 
 source /etc/utopia/service.d/ulog_functions.sh
+source /etc/utopia/service.d/utctx_helper.sh
 
 SERVICE_NAME="syslog"
 SELF_NAME="`basename "$0"`"
@@ -134,8 +135,8 @@ fi
 
 service_init ()
 {
-    FOO=`utctx_cmd get log_level log_remote`
-    eval "$FOO"
+    queries="log_level log_remote"
+    get_utctx_val "$queries"
 }
 
 #--------------------------------------------------------------------------------
