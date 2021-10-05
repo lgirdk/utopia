@@ -36,6 +36,7 @@
 
 source /etc/utopia/service.d/ulog_functions.sh
 source /etc/utopia/service.d/event_handler_functions.sh
+source /etc/utopia/service.d/utctx_helper.sh
 
 SERVICE_NAME="sysevent_proxy"
 PMON=/etc/utopia/service.d/pmon.sh
@@ -52,8 +53,8 @@ BIN=syseventd_proxy
 
 service_init ()
 {
-   FOO=`utctx_cmd get local_syseventd bootstrap_syseventd secondary_syseventd`
-   eval "$FOO"
+   queries="local_syseventd bootstrap_syseventd secondary_syseventd"
+   get_utctx_val "$queries"
    SCRIPT_FILE="/etc/syseventp.conf"
 }
 

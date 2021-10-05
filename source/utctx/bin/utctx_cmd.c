@@ -73,15 +73,9 @@ static int s_UTCTX_BatchGet(UtopiaContext* pCtx, char** ppszArgs, int iArgCount)
         /* Attempt to get the value, ignoring failures */
         Utopia_RawGet(pCtx, pszNamespace, pszName, pszBuf, sizeof(pszBuf));
 
-        if (pszNamespace)
-        {
-            printf("SYSCFG_%s_%s='%s'\n", pszNamespace, pszName, pszBuf);
-        }
-        else
-        {
-            printf("SYSCFG_%s='%s'\n", pszName, pszBuf);
-        }
+        printf("%s\'", pszBuf);
     }
+    printf("\n");
 
     return 0;
 }

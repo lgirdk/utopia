@@ -42,6 +42,7 @@ source /etc/utopia/service.d/event_handler_functions.sh
 #source /etc/utopia/service.d/service_lan/lan_hooks.sh
 #source /etc/utopia/service.d/brcm_ethernet_helper.sh
 source /lib/rdk/t2Shared_api.sh
+source /etc/utopia/service.d/utctx_helper.sh
 
 SERVICE_NAME="lan"
 
@@ -611,8 +612,8 @@ service_init ()
    # SYSCFG_lan_wl_physical_ifnames is the names of each wireless interface as known
    # to the operating system
 
-   FOO=`utctx_cmd get lan_ifname lan_ethernet_virtual_ifnums lan_ethernet_physical_ifnames lan_wl_physical_ifnames lan_ipaddr lan_netmask lan_dhcp_client`
-   eval "$FOO"
+   queries="lan_ifname lan_ethernet_virtual_ifnums lan_ethernet_physical_ifnames lan_wl_physical_ifnames lan_ipaddr lan_netmask lan_dhcp_client"
+   get_utctx_val "$queries"
 
    #figure out the interfaces that are part of the lan
    # if we are not using virtual ethernet interfaces then
