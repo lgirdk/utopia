@@ -101,17 +101,6 @@
 #define WAN_CONNECTION_DEVICE_FRIENDLY_NAME 	"WANConnectionDevice:1"
 #define LANDEVICE_FRIENDLY_NAME 	        "LANDevice:1"
 
-#ifndef INTEL_PUMA7
-#define ROOT_FRIENDLY_NAME 			CONFIG_VENDOR_MODEL
-#undef MODULE_DESCRIPTION
-#define MODULE_DESCRIPTION 		        CONFIG_VENDOR_MODEL
-#undef MODULE_NAME
-#define MODULE_NAME 				CONFIG_VENDOR_MODEL
-#undef MODULE_NUMBER
-#define MODULE_NUMBER 				CONFIG_VENDOR_MODEL
-#undef UPC
-#define UPC 					CONFIG_VENDOR_MODEL
-#endif
 /***********************************************************************
 * (2) Product-related functions
 *     Notes: All the below functions should be implemented based on your   
