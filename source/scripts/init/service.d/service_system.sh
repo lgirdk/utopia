@@ -40,6 +40,7 @@
 
 source /etc/utopia/service.d/ulog_functions.sh
 source /etc/utopia/service.d/event_handler_functions.sh
+source /etc/utopia/service.d/utctx_helper.sh
 
 SERVICE_NAME="system"
 
@@ -52,8 +53,8 @@ service_init ()
 {
    # Get all provisioning data
 
-   FOO=`utctx_cmd get wan_physical_ifname wan_virtual_ifnum lan_ifname`
-   eval "$FOO"
+   queries="wan_physical_ifname wan_virtual_ifnum lan_ifname"
+   get_utctx_val "$queries"
 }
 
 #--------------------------------------------------------------
