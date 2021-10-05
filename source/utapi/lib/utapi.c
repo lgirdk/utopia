@@ -368,23 +368,6 @@ int Utopia_SetDeviceSettings (UtopiaContext *ctx, deviceSetting_t *device)
     return SUCCESS;
 }
 
-void get_dhcp_wan_domain(unsigned char *pDomain)
-{
-    FILE *f;
-    char *pos;
-    
-    pDomain[0] = 0;
-    f = popen("sysevent get dhcp_domain","r");
-    if(f==NULL){
-        return;
-    }
-    fgets(pDomain,IPHOSTNAME_SZ,f);
-    /* remove trailing newline */
-    if((pos = strrchr(pDomain, '\n')) != NULL)
-        *pos = '\0';
-    pclose(f);
-}
-
 #ifdef WAN_FAILOVER_SUPPORTED
 static BOOL isServiceNeeded()
 {
@@ -406,6 +389,9 @@ static BOOL isServiceNeeded()
  */
 int Utopia_GetLanSettings (UtopiaContext *ctx, lanSetting_t *lan)
 {
+    int se_fd;
+    token_t se_token;
+
     if (NULL == ctx || NULL == lan) {
         return ERR_INVALID_ARGS;
     }
@@ -415,7 +401,8 @@ int Utopia_GetLanSettings (UtopiaContext *ctx, lanSetting_t *lan)
     UTOPIA_GET(ctx, UtopiaValue_LAN_IPAddr, lan->ipaddr, IPADDR_SZ);
     UTOPIA_GET(ctx, UtopiaValue_LAN_Netmask, lan->netmask, IPADDR_SZ);
     /*just for USGv2*/
-    get_dhcp_wan_domain(lan->domain);
+    if ((se_fd = s_sysevent_connect (&se_token)) >= 0)
+        sysevent_get (se_fd, se_token, "dhcp_domain", lan->domain, IPHOSTNAME_SZ);
     if(lan->domain[0]==0)
         Utopia_Get(ctx, UtopiaValue_LAN_Domain, lan->domain, IPHOSTNAME_SZ);
     Utopia_Get(ctx, UtopiaValue_LAN_IfName, lan->ifname, IFNAME_SZ);
