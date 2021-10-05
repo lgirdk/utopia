@@ -50,6 +50,7 @@ source /etc/utopia/service.d/event_handler_functions.sh
 source /etc/utopia/service.d/log_capture_path.sh
 source /etc/device.properties
 #source /etc/utopia/service.d/sysevent_functions.sh
+source /etc/utopia/service.d/utctx_helper.sh
 UTOPIA_PATH="/etc/utopia/service.d"
 
 SERVICE_NAME="dhcp_server"
@@ -274,8 +275,8 @@ restart_request ()
 #-----------------------------------------------------------------
 service_init ()
 {
-    FOO=`utctx_cmd get lan_ipaddr lan_netmask dhcp_server_enabled`
-    eval $FOO
+    queries="lan_ipaddr lan_netmask dhcp_server_enabled"
+    get_utctx_val "$queries"
 }
 
 #-----------------------------------------------------------------
