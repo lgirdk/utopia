@@ -39,6 +39,7 @@
 
 source /etc/utopia/service.d/ulog_functions.sh
 source /etc/utopia/service.d/event_handler_functions.sh
+source /etc/utopia/service.d/utctx_helper.sh
 
 SERVICE_NAME="mcastsnooper"
 SELF_NAME="`basename "$0"`"
@@ -75,7 +76,8 @@ do_start_igmp_snooper () {
 
 service_init ()
 {
-   eval `utctx_cmd get mcastsnooper_enabled lan_sw_unit lan_ifname lan_sw_np_port`
+   queries="mcastsnooper_enabled lan_sw_unit lan_ifname lan_sw_np_port"
+   get_utctx_val "$queries"
 #   WAN_IFNAME=`sysevent get current_wan_ifname`
 }
 
