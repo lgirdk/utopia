@@ -163,8 +163,8 @@ LOCAL void _igd_root_device_desc_file(INOUT FILE *fp,IN const CHAR *uuid)
 	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD", "<deviceType>urn:schemas-upnp-org:device:InternetGatewayDevice:1</deviceType>\n");
 	fprintf(fp, "<deviceType>urn:schemas-upnp-org:device:InternetGatewayDevice:1</deviceType>\n");
 
-	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD", "<friendlyName>%s</friendlyName>\n",ROOT_FRIENDLY_NAME);
-	fprintf(fp, "<friendlyName>%s</friendlyName>\n",ROOT_FRIENDLY_NAME);
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD", "<friendlyName>%s %s</friendlyName>\n", MANUFACTURER, MODULE_NAME);
+	fprintf(fp, "<friendlyName>%s %s</friendlyName>\n", MANUFACTURER, MODULE_NAME);
 
 	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD", "<manufacturer>%s</manufacturer>\n",MANUFACTURER);
 	fprintf(fp, "<manufacturer>%s</manufacturer>\n",MANUFACTURER);
