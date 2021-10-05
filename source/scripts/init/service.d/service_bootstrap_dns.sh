@@ -36,6 +36,7 @@
 
 source /etc/utopia/service.d/ulog_functions.sh
 source /etc/utopia/service.d/event_handler_functions.sh
+source /etc/utopia/service.d/utctx_helper.sh
 
 SERVICE_NAME="bootstrap_dns"
 
@@ -114,8 +115,8 @@ remove_local_registrations ()
 #-----------------------------------------------------------------
 service_init ()
 {
-   FOO=`utctx_cmd get lan_ifname local_syseventd bootstrap_syseventd`
-   eval "$FOO"
+   queries="lan_ifname local_syseventd bootstrap_syseventd"
+   get_utctx_val "$queries"
    SCRIPT_FILE="/tmp/add_dns_entry.sh"
 }
 
