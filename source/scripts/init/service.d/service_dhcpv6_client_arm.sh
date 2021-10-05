@@ -39,6 +39,7 @@ source /etc/utopia/service.d/ipv6_functions.sh
 source /etc/utopia/service.d/event_handler_functions.sh
 source /etc/utopia/service.d/sysevent_functions.sh
 source /etc/utopia/service.d/log_capture_path.sh
+source /etc/utopia/service.d/utctx_helper.sh
 . /etc/device.properties
 # This handler is called not only to start/stop/restart the service
 # but also when WAN or LAN status is updated as well as current_wan_ifname
@@ -53,7 +54,9 @@ source /etc/utopia/service.d/log_capture_path.sh
 #------------------------------------------------------------------
 SERVICE_NAME="dhcpv6_client"
 
-eval "`utctx_cmd get last_erouter_mode dhcpv6c_enable ipv6_static_enable lan_ipv6addr wan_ipv6addr dhcpv6c_duid dibbler_client_enable`"
+queries="last_erouter_mode dhcpv6c_enable ipv6_static_enable lan_ipv6addr wan_ipv6addr dhcpv6c_duid dibbler_client_enable"
+get_utctx_val "$queries"
+
 DIBBLER_ENABLED=$SYSCFG_dibbler_client_enable
 
 if ([ "$BOX_TYPE" = "XB3" ] || [ "$BOX_TYPE" = "XB6" -a "$MANUFACTURE" = "Arris" ] || [ "$MODEL_NUM" = "INTEL_PUMA" ]) && [[ "$DIBBLER_ENABLED" != "true" ]] ;then
