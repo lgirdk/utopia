@@ -38,6 +38,7 @@
 source /etc/utopia/service.d/hostname_functions.sh
 source /etc/utopia/service.d/ulog_functions.sh
 source /etc/utopia/service.d/event_handler_functions.sh
+source /etc/utopia/service.d/utctx_helper.sh
 
 SERVICE_NAME="bridge"
 
@@ -389,8 +390,8 @@ service_init ()
    # SYSCFG_lan_wl_physical_ifnames is the names of each wireless interface as known
    # to the operating system
 
-   FOO=`utctx_cmd get bridge_mode lan_ifname lan_ethernet_physical_ifnames lan_wl_physical_ifnames wan_physical_ifname bridge_ipaddr bridge_netmask bridge_default_gateway bridge_nameserver1 bridge_nameserver2 bridge_nameserver3 bridge_domain hostname`
-   eval "$FOO"
+   queries="bridge_mode lan_ifname lan_ethernet_physical_ifnames lan_wl_physical_ifnames wan_physical_ifname bridge_ipaddr bridge_netmask bridge_default_gateway bridge_nameserver1 bridge_nameserver2 bridge_nameserver3 bridge_domain hostname"
+   get_utctx_val "$queries"
 
   if [ -z "$SYSCFG_hostname" ] ; then
      SYSCFG_hostname="Utopia"
