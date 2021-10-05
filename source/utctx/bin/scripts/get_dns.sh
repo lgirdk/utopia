@@ -18,7 +18,9 @@
 # limitations under the License.
 ##########################################################################
 
-eval "`./utctx_cmd get dhcp_nameserver_1 dhcp_nameserver_2 dhcp_nameserver_3`"
+source /etc/utopia/service.d/utctx_helper.sh
+queries="dhcp_nameserver_1 dhcp_nameserver_2 dhcp_nameserver_3"
+get_utctx_val "$queries"
 
 echo DNS1 = "$SYSCFG_dhcp_nameserver_1"
 echo DNS2 = "$SYSCFG_dhcp_nameserver_2"
