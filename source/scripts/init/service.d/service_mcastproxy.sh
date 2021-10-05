@@ -39,6 +39,7 @@
 
 source /etc/utopia/service.d/ulog_functions.sh
 source /etc/device.properties
+source /etc/utopia/service.d/utctx_helper.sh
 
 SERVICE_NAME="mcastproxy"
 SELF_NAME="`basename "$0"`"
@@ -131,7 +132,8 @@ fi
 
 service_init ()
 {
-   eval "`utctx_cmd get igmpproxy_enabled lan_ifname`"
+   queries="igmpproxy_enabled lan_ifname"
+   get_utctx_val "$queries"
    eval `sysevent batchget current_wan_ifname wan-status lan-status bridge-status`
    WAN_IFNAME=$SYSEVENT_1
    CURRENT_WAN_STATUS=$SYSEVENT_2
