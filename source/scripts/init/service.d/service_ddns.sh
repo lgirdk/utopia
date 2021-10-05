@@ -37,6 +37,8 @@
 source /etc/utopia/service.d/date_functions.sh
 source /etc/utopia/service.d/ulog_functions.sh
 source /etc/utopia/service.d/event_handler_functions.sh
+source /etc/utopia/service.d/utctx_helper.sh
+
 if [ -f /lib/rdk/utils.sh ];then
      . /lib/rdk/utils.sh
 fi
@@ -320,9 +322,8 @@ update_ddns_if_needed () {
 #----------------------------------------------------------------------
 service_init ()
 {
-    #FOO=`utctx_cmd get ddns_enable wan_last_ipaddr ddns_last_update ddns_update_days ddns_hostname ddns_username ddns_password ddns_service ddns_mx ddns_mx_backup ddns_wildcard ddns_server`
-    FOO=`utctx_cmd get ddns_enable wan_last_ipaddr ddns_last_update ddns_update_days ddns_mx ddns_mx_backup ddns_wildcard `
-    eval "$FOO"
+    queries="ddns_enable wan_last_ipaddr ddns_last_update ddns_update_days ddns_mx ddns_mx_backup ddns_wildcard"
+    get_utctx_val "$queries"
 }
 
 #----------------------------------------------------------------------
