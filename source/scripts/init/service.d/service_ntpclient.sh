@@ -40,11 +40,14 @@
 source /etc/utopia/service.d/ulog_functions.sh
 source /etc/utopia/service.d/log_capture_path.sh
 source /lib/rdk/t2Shared_api.sh
+source /etc/utopia/service.d/utctx_helper.sh
+
 if [ -f /lib/rdk/utils.sh ];then
      . /lib/rdk/utils.sh
 fi
 CRON_DIR="/var/spool/cron/crontabs/"
 CRONTAB_FILE=$CRON_DIR"root"
+
 SERVICE_NAME="ntpclient"
 SELF_NAME="`basename "$0"`"
 
@@ -209,8 +212,8 @@ service_stop ()
 
 service_init ()
 {
-    FOO=`utctx_cmd get ntp_server1 ntp_server2 ntp_server3 ntp_enabled TZ InternetAccessPolicyCount`
-    eval "$FOO"
+    queries="ntp_server1 ntp_server2 ntp_server3 ntp_enabled TZ InternetAccessPolicyCount"
+    get_utctx_val "$queries"
 }
 
 

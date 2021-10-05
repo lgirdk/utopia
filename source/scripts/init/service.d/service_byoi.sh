@@ -42,6 +42,7 @@ source /etc/utopia/service.d/ulog_functions.sh
 source /etc/utopia/service.d/event_handler_functions.sh
 source /etc/utopia/service.d/service_managed/hsd_mode_functions.sh
 source /etc/utopia/service.d/ip_functions.sh
+source /etc/utopia/service.d/utctx_helper.sh
 
 #------------------------------------------------------------------
 # name of this service
@@ -177,9 +178,8 @@ service_init ()
 {
     STATUS=`sysevent get ${SERVICE_NAME}-status`
     
-    FOO=`utctx_cmd get byoi_enabled bridge_mode primary_wan_proto last_configured_hsd_mode last_provisioned_hsd_mode autobridge_enabled wan_proto`
-
-    eval "$FOO"
+    queries="byoi_enabled bridge_mode primary_wan_proto last_configured_hsd_mode last_provisioned_hsd_mode autobridge_enabled wan_proto"
+    get_utctx_val "$queries"
 }
 
 #-------------------------------------------------------------------------------------------
