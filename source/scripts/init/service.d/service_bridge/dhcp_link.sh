@@ -35,6 +35,7 @@
 #######################################################################
 
 source /etc/utopia/service.d/ulog_functions.sh
+source /etc/utopia/service.d/utctx_helper.sh
 PID="($$)"
 
 UDHCPC_PID_FILE=/var/run/udhcpc.pid
@@ -48,8 +49,8 @@ LOG_FILE="/tmp/udhcp.log"
 #--------------------------------------------------------------
 service_init ()
 {
-   FOO=`utctx_cmd get lan_ifname hostname`
-   eval "$FOO"
+   queries="lan_ifname hostname"
+   get_utctx_val "$queries"
 
   if [ -z "$SYSCFG_hostname" ] ; then
      SYSCFG_hostname="Utopia"
