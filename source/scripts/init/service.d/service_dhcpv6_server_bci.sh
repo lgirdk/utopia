@@ -37,6 +37,7 @@ source /etc/device.properties
 
 source /etc/utopia/service.d/ulog_functions.sh
 source /etc/utopia/service.d/event_handler_functions.sh
+source /etc/utopia/service.d/utctx_helper.sh
 
 # This handler is called not only to start/stop/restart the service
 # but also when LAN status is updated
@@ -144,7 +145,8 @@ restore_dhcpv6s_duid() {
 service_init ()
 {
    # First some SYSCFG
-   eval `utctx_cmd get dhcpv6s_duid lan_ifname dhcpv6s_enable`
+   queries="dhcpv6s_duid lan_ifname dhcpv6s_enable"
+   get_utctx_val "$queries"
    LAN_INTERFACE_NAME=$SYSCFG_lan_ifname
 
    # The more information from SYSEVENT
