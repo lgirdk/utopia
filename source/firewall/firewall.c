@@ -7079,6 +7079,9 @@ static int do_wan2self_ports(FILE *mangle_fp, FILE *nat_fp, FILE *filter_fp)
  */
 static int do_wan2self_allow(FILE *filter_fp)
 {
+    char buf[8];
+    int rip_enable, rip_if_enable;
+
         // FIREWALL_DEBUG("Entering do_wan2self_allow\n");    
 #ifdef CISCO_CONFIG_TRUE_STATIC_IP
    int i;
@@ -7089,6 +7092,21 @@ static int do_wan2self_allow(FILE *filter_fp)
          fprintf(filter_fp, "-A wan2self_allow -d %s -p icmp --icmp-type 8 -m limit --limit 3/second -j %s\n",  StaticIPSubnet[i].ip,"xlog_accept_wan2self");
   }
 #endif
+
+    /* Allow ripv2 multicast if RIPv2 feature is enabled */
+
+    syscfg_get(NULL, "rip_enabled", buf, sizeof(buf));
+    rip_enable = atoi(buf);
+    if (rip_enable)
+    {
+        syscfg_get("cosa_usgv2_rip00", "If1Enable", buf, sizeof(buf));
+        rip_if_enable = atoi(buf);
+        if (rip_if_enable)
+        {
+            fprintf(filter_fp, "-A wan2self_allow -d 224.0.0.9/32 -p udp -j ACCEPT\n");
+        }
+    }
+
     return 0;
 }
 #if defined(CISCO_CONFIG_DHCPV6_PREFIX_DELEGATION) && ! defined(_CBR_PRODUCT_REQ_) 

@@ -749,6 +749,25 @@ $locale=en-us
 # $rip_interface_wan 0|1, 0 means disable rip on the wan interface
 # $rip_interface_lan 0|1, 0 means disable rip on the lan interface
 $rip_enabled=0
+$cosa_usgv2_rip00::Version=2
+$cosa_usgv2_rip00::UpdateTime=30
+$cosa_usgv2_rip00::TimoutTime=180
+$cosa_usgv2_rip00::CollectionTime=120
+$cosa_usgv2_rip00::ConnectedMetric=1
+$cosa_usgv2_rip00::DefaultMetric=1
+$cosa_usgv2_rip00::If1Enable=1
+$cosa_usgv2_rip00::If1Name=Device.IP.Interface.1.
+$cosa_usgv2_rip00::If1Alias=cpe-rip-interface
+$cosa_usgv2_rip00::If1Neighbor=0
+$cosa_usgv2_rip00::If1SendEnable=1
+$cosa_usgv2_rip00::If1ReceiveEnable=1
+$cosa_usgv2_rip00::If1SendVersion=2
+$cosa_usgv2_rip00::If1ReceiveVersion=2
+$cosa_usgv2_rip00::If1AuthenticateType=1
+$cosa_usgv2_rip00::If1KeyChainName=keychain1
+$cosa_usgv2_rip00::If1KeyID=1
+$cosa_usgv2_rip00::If1Md5KeyValue=
+$cosa_usgv2_rip00::If1SimplePassword=
 
 # RIPNG
 # $ripng_enabled=0
