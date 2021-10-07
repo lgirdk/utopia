@@ -36,3 +36,7 @@ endif
 #if FEATURE_RDKB_WANFAILOVER
 #SUBDIRS += NetworkMonitor
 #endif
+
+if DDNS_BINARY_CLIENT_SUPPORT
+SUBDIRS += service_ddns
+endif
