@@ -141,6 +141,7 @@ AC_CONFIG_FILES(
 	source/service_routed/Makefile
 	source/service_udhcpc/Makefile
 	source/service_wan/Makefile
+	source/service_ddns/Makefile
 	source/syscfg/Makefile
 	source/syscfg/cmd/Makefile
 	source/syscfg/lib/Makefile
