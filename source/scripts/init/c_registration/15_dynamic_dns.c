@@ -36,6 +36,15 @@
 #include <stdio.h>
 #include "srvmgr.h"
 
+#ifdef DDNS_SERVICE_BIN
+const char* SERVICE_NAME            = "service_ddns";
+const char* SERVICE_DEFAULT_HANDLER = "/usr/bin/service_ddns";
+const char* SERVICE_CUSTOM_EVENTS[] = {
+                                        "wan-status|/usr/bin/service_ddns",
+                                        "current_wan_ipaddr|/usr/bin/service_ddns",
+                                        NULL
+                                      };
+#else
 const char* SERVICE_NAME            = "dynamic_dns";
 const char* SERVICE_DEFAULT_HANDLER = "/etc/utopia/service.d/service_dynamic_dns.sh";
 const char* SERVICE_CUSTOM_EVENTS[] = { 
@@ -43,6 +52,7 @@ const char* SERVICE_CUSTOM_EVENTS[] = {
                                         "current_wan_ipaddr|/etc/utopia/service.d/service_dynamic_dns.sh",
                                         NULL
                                       };
+#endif
 
 void srv_register(void) {
    sm_register(SERVICE_NAME, SERVICE_DEFAULT_HANDLER, SERVICE_CUSTOM_EVENTS);
