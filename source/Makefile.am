@@ -23,3 +23,6 @@ endif
 if WITH_GTEST_SUPPORT
 SUBDIRS += test
 endif
+if DDNS_BINARY_CLIENT_SUPPORT
+SUBDIRS += service_ddns
+endif
