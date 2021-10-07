@@ -168,6 +168,21 @@ AC_CONFIG_FILES([
 #    source/NetworkMonitor/Makefile
 #])] )
 
+# Checks for DDNS Binary Client Support
+AC_ARG_ENABLE([ddns_binary_client_support],
+[  --enable-ddns_binary_client_support    Turn on DDNS Binary Client Support],
+[case "${enableval}" in
+  yes) ddns_binary_client_support=true ;;
+  no)  ddns_binary_client_support=false ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-ddns_binary_client_support]) ;;
+esac],[ddns_binary_client_support=false])
+AM_CONDITIONAL([DDNS_BINARY_CLIENT_SUPPORT], [test x$ddns_binary_client_support = xtrue])
+
+AM_COND_IF( [DDNS_BINARY_CLIENT_SUPPORT], [
+AC_CONFIG_FILES([
+   source/service_ddns/Makefile
+])] )
+
 AC_CONFIG_FILES(
 	Makefile
 	source/Makefile
