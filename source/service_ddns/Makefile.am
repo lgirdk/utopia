@@ -2,7 +2,7 @@
 # If not stated otherwise in this file or this component's Licenses.txt
 # file the following copyright and licenses apply:
 #
-# Copyright 2015 RDK Management
+# Copyright 2021 RDK Management
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,31 +16,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ##########################################################################
-SUBDIRS = ulog syscfg sysevent services utctx utapi firewall firewall_log newhost macclone util pal pmon services service_wan trigger igd service_routed service_ipv6 scripts service_multinet service_udhcpc
 
-#SUBDIRS += dhcpproxy
+bin_PROGRAMS = service_ddns
 
-if DSLITE_FEATURE_SUPPORT
-SUBDIRS += service_dslite
-endif
+service_ddns_SOURCES = service_ddns.c
+service_ddns_CFLAGS = -I$(top_srcdir)/source -I$(top_srcdir)/source/include -I$(top_srcdir)/source/util/utils
+service_ddns_LDFLAGS =
+service_ddns_LDADD = $(top_builddir)/source/util/utils/libutopiautil.la \
+                     $(top_builddir)/source/services/lib/libsrvmgr.la \
+                     $(top_builddir)/source/sysevent/lib/libsysevent.la \
+                     $(top_builddir)/source/syscfg/lib/libsyscfg.la \
+                     $(top_builddir)/source/ulog/libulog.la
 
-if WITH_GTEST_SUPPORT
-SUBDIRS += test
-endif
-
-if CORE_NET_LIB_FEATURE_SUPPORT
-SUBDIRS += service_dhcp
-SUBDIRS += service_dhcpv6_client
-endif
-
-if FEATURE_RDKB_EXTENDER
-SUBDIRS += service_deviceMode
-endif
-
-#if FEATURE_RDKB_WANFAILOVER
-#SUBDIRS += NetworkMonitor
-#endif
-
-if DDNS_BINARY_CLIENT_SUPPORT
-SUBDIRS += service_ddns
-endif
