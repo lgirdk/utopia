@@ -259,6 +259,8 @@ if test "$BUTTON_THRESHOLD" -le "$PUNIT_RESET_DURATION"; then
    syscfg commit
 fi
 
+SYSCFG_LastRebootReason="$(syscfg get X_RDKCENTRAL-COM_LastRebootReason)"
+
 SYSCFG_FR_VAL="`syscfg get $FACTORY_RESET_KEY`"
 
 if [ "$FACTORY_RESET_RGWIFI" = "$SYSCFG_FR_VAL" ]; then
@@ -585,10 +587,10 @@ if [ "$FACTORY_RESET_REASON" = "true" ]; then
    if [ -e "/usr/bin/onboarding_log" ]; then
        /usr/bin/onboarding_log "[utopia][init] Detected last reboot reason as factory-reset"
    fi
-   syscfg set X_RDKCENTRAL-COM_LastRebootReason "factory-reset"
+   syscfg set X_RDKCENTRAL-COM_LastRebootReason "$SYSCFG_LastRebootReason"
    syscfg set X_RDKCENTRAL-COM_LastRebootCounter "1"
 else
-   rebootReason=`syscfg get X_RDKCENTRAL-COM_LastRebootReason`
+   rebootReason="$SYSCFG_LastRebootReason"
    rebootCounter=`syscfg get X_RDKCENTRAL-COM_LastRebootCounter`
    echo_t "[utopia][init] X_RDKCENTRAL-COM_LastRebootReason ($rebootReason)"
    if [ "$rebootReason" = "factory-reset" ]; then
