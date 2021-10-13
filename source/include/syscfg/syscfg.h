@@ -214,7 +214,7 @@ int syscfg_unset(const char *ns, const char *name);
  */
 int syscfg_commit2 (void);
 
-static int syscfg_commit (void)
+static inline int syscfg_commit (void)
 {
     syscfg_commit2();
 
