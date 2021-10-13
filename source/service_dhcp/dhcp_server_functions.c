@@ -173,7 +173,7 @@ static int get_dmcli_value(char *param, char *out, size_t out_size, void* bus_ha
     paramNames[0] = param;
     if(CcspBaseIf_getParameterValues(bus_handle, pDestComponentName, pDestComponentPath, paramNames, 1, &valNum, &parameterVal) != CCSP_SUCCESS)
     {
-        fprintf("DHCP SERVER %d: failed get parameter value for %s\n", __LINE__, param);
+        fprintf(stderr, "DHCP SERVER %d: failed get parameter value for %s\n", __LINE__, param);
         return ERROR;
     }
 
@@ -181,7 +181,7 @@ static int get_dmcli_value(char *param, char *out, size_t out_size, void* bus_ha
         strncpy(out, parameterVal[0]->parameterValue, out_size);
         free_parameterValStruct_t(bus_handle, valNum, parameterVal);
     }
-//    fprintf("DHCP SERVER %d: out:%s\n",__LINE__,out);
+//    fprintf(stderr, "DHCP SERVER %d: out:%s\n",__LINE__,out);
 
     return SUCCESS;
 }
