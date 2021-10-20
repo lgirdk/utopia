@@ -964,6 +964,11 @@ static int IsValidIPv6Addr(char* ip_addr_string)
 static void add_dslite_mss_clamping(FILE *fp);
 #endif
 
+static char *get_current_wan_ifname (void)
+{
+    return current_wan_ifname;
+}
+
 #ifdef _HUB4_PRODUCT_REQ_
 static int IsValidIPv4Addr(char* ip_addr_string)
 {
