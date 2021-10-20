@@ -73,7 +73,6 @@ int do_hub4_bfd_rules_v4(FILE *nat_fp, FILE *filter_fp, FILE *mangle_fp);
 int do_hub4_voice_rules_v4(FILE *filter_fp);
 int isInSelfHealMode ();
 char *get_lan_ipaddr();
-char *get_current_wan_ifname();
 void ethwan_mso_gui_acess_rules(FILE *filter_fp,FILE *mangle_fp);
 void do_OpenVideoAnalyticsPort (FILE *filter_fp);
 void do_webui_rate_limit (FILE *filter_fp);
