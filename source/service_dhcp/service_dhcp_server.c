@@ -924,7 +924,7 @@ int dhcp_server_start (char *input)
             }
             print_uptime("boot_to_ETH_uptime",NULL, NULL);
             print_with_uptime("LAN initization is complete notify SSID broadcast");
-            #if (defined _COSA_INTEL_XB3_ARM_)
+            #if defined (_PUMA6_ARM_)
                 executeCmd("rpcclient2 '/bin/touch /tmp/.advertise_ssids'");
             #else
                 executeCmd("touch /tmp/.advertise_ssids");
