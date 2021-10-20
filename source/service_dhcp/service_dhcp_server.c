@@ -300,7 +300,7 @@ int dhcp_server_start (char *input)
 	char l_cDhcpServerEnable[16] = {0}, l_cLanStatusDhcp[16] = {0};
 	char l_cSystemCmd[255] = {0}, l_cPsm_Mode[8] = {0}, l_cStart_Misc[8] = {0};
 	char l_cPmonCmd[255] = {0}, l_cDhcp_Tmp_Conf[32] = {0};
-	char l_cCurrent_PID[8] = {0}, l_cRpc_Cmd[64] = {0};
+	char l_cCurrent_PID[8] = {0};
 	char l_cCommand[128] = {0}, l_cBuf[128] = {0};
     char l_cBridge_Mode[8] = {0};
     char l_cRefresh_Switch[8] = {0};
@@ -584,10 +584,12 @@ int dhcp_server_start (char *input)
 	    }
 	    print_uptime("boot_to_ETH_uptime",NULL, NULL);
        	
+#if defined (_PUMA6_ARM_)
 	    print_with_uptime("LAN initization is complete notify SSID broadcast");
-	    snprintf(l_cRpc_Cmd, sizeof(l_cRpc_Cmd), "rpcclient2 \"/bin/touch /tmp/.advertise_ssids\"");
-	    executeCmd(l_cRpc_Cmd);
+	    executeCmd("rpcclient2 '/bin/touch /tmp/.advertise_ssids'");
+#endif
         }
+   
     // This function is called for brlan0 and brlan1
     // If brlan1 is available then XHS service is available post all DHCP configuration   
     if (is_iface_present(XHS_IF_NAME))
