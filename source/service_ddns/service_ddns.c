@@ -23,7 +23,8 @@
 #include "sysevent/sysevent.h"
 
 #define TRACE_FILE "/tmp/ddns-general.trace"
-
+#define RETRY_SOON_FILENAME "/etc/cron/cron.everyminute/ddns_retry.sh"
+ 
 typedef enum {
     CLIENT_CONNECTING = 1,
     CLIENT_AUTHENTICATING = 2,
@@ -499,20 +500,17 @@ EXIT:
 
     if (ddns_return_status_success) {
         printf("%s: ddns_return_status_success, update status", __FUNCTION__);
-        //system("/etc/utopia/service.d/service_ddns/ddns_success.sh");
 
         sysevent_set(se_fd, se_token, "ddns_failure_time", "0", 0);
         sysevent_set(se_fd, se_token, "ddns_updated_time", buf, 0);
 
         syscfg_set(NULL, "ddns_host_lastupdate_1", buf);
-/*
-        //to do
-        //echo "   rm -f $CHECK_INTERVAL_FILENAME" >> $CHECK_INTERVAL_FILENAME;
-        //echo "#! /bin/sh" > $CHECK_INTERVAL_FILENAME;
-        //echo "   /etc/utopia/service.d/service_dynamic_dns.sh ${SERVICE_NAME}-check" >> $CHECK_INTERVAL_FILENAME;
-        //chmod 700 $CHECK_INTERVAL_FILENAME;
-        //break
-*/
+        
+        /* Remove retry file  if update success and file exist */
+        if (!access(RETRY_SOON_FILENAME, F_OK )) {
+            unlink(RETRY_SOON_FILENAME);
+        }
+
         printf("%s: return 0 because everything looks good\n", __FUNCTION__);
         ret = 0;
     }
@@ -521,34 +519,58 @@ EXIT:
         sysevent_set(se_fd, se_token, "ddns_updated_time", "0", 0);
 
         printf("%s: return -1 because curl command return !0 or found error message in output file\n", __FUNCTION__);
+
+        if (!strcmp(return_status,"error-connect")) {
+           /* Create retry file in cron.everyminute if file not exist.
+              else decrement the retry count till it reach maxretries.
+              Remove the file once it reach maxretries.
+           */
+           int max_retry_count = 0;
+           if (!access(RETRY_SOON_FILENAME, F_OK )) {
+              memset(buf, 0, sizeof(buf));
+              syscfg_get(NULL,"max_retry_count",buf,sizeof(buf));
+              max_retry_count = atol (buf);
+              if (max_retry_count > 0) {
+                  max_retry_count--;
+                  syscfg_set_u(NULL,"max_retry_count", max_retry_count);
+              } 
+              else {
+                  unlink(RETRY_SOON_FILENAME);
+              }
+           } 
+           else {
+             FILE *fp = NULL;
+             fp = fopen(RETRY_SOON_FILENAME,"w");
+             if (fp != NULL) {
+                fprintf(fp,"#! /bin/sh\n");
+                fprintf(fp,"/usr/bin/service_ddns restart &\n");
+                fclose(fp);
+             }
+             sprintf(command,"chmod 777 %s",RETRY_SOON_FILENAME);
+             system (command);
+             int max_retries = 0;
+             sprintf(command,"ddns_server_maxretries_%d",server_index);
+             syscfg_get( NULL, command, buf, sizeof(buf));
+             max_retries = atol(buf);
+             syscfg_set_u(NULL,"max_retry_count", max_retries);
+           }
+
+        }
+        else {
+          /* Remove retry file  if error is not error-connect and file exist */
+          if (!access(RETRY_SOON_FILENAME, F_OK )) {
+              unlink(RETRY_SOON_FILENAME);
+          }
+        }
         ret = -1;
     }
+    syscfg_commit();
 
     if (unlink("/var/tmp/updating_ddns_server.txt") != 0)
        ret = -1;
 
     return ret;
 
-#if 0
-/*
-   #If there is no error-connect for any provider, then delete the $RETRY_SOON_FILENAME.
-   RETRY_SOON_NEEDED=0
-   ddns_enable_x=`syscfg get ddns_server_enable_${DnsIdx}`
-   if [ "1" = "$ddns_enable_x" ]; then
-       tmp_status=`sysevent get ddns_return_status${DnsIdx}`
-       if [ "error-connect" = "$tmp_status" ] ; then
-           sysevent set ddns_return_status
-           sysevent set ddns_failure_time `date "+%s"`
-           sysevent set ddns_updated_time
-           RETRY_SOON_NEEDED=1
-           break
-       fi
-   fi
-   if [ "0" = "$RETRY_SONN_NEEDED" ]; then
-       rm -f $RETRY_SOON_FILENAME
-   fi
-*/
-#endif
 }
 
 int main (int argc, char *argv[])
