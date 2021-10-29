@@ -1510,6 +1510,15 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
 
     /*Begin write dibbler configurations*/
     fprintf(fp, "log-level 4\n");
+
+    /*
+       Enable inactive mode: When server begins operation and it detects that
+       required interfaces are not ready, error message is printed and server
+       exits. However, if inactive mode is enabled, server sleeps instead and
+       wait for required interfaces to become operational.
+    */
+    fprintf(fp, "inactive-mode\n");
+
    /*Run scipt to config route */
 #if defined (_CBR_PRODUCT_REQ_) || defined (_BWG_PRODUCT_REQ_)
     fprintf(fp, "script \"/lib/rdk/server-notify.sh\" \n");
