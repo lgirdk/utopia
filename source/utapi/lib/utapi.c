@@ -7434,6 +7434,8 @@ int Utopia_IPRule_ephemeral_port_forwarding( portMapDyn_t *pmap, boolean_t isCal
 			lan_netmask[ 32 ],
 			ciptableOprationCode = 'D';
 
+	char cmd[1024] = {0};
+
 	if ( 0 > se_fd ) 
 	{
 	   return ERR_SYSEVENT_CONN;
@@ -7556,33 +7558,38 @@ int Utopia_IPRule_ephemeral_port_forwarding( portMapDyn_t *pmap, boolean_t isCal
 	{
 		if ( isNatReady ) 
 		{
-			v_secure_system("iptables -t nat -%c prerouting_fromwan -p tcp -m tcp -d %s %s %s -j DNAT --to-destination %s%s",
+			snprintf(cmd,sizeof(cmd),"iptables -t nat -%c prerouting_fromwan -p tcp -m tcp -d %s %s %s -j DNAT --to-destination %s%s",
 				ciptableOprationCode,natip4, external_dest_port, external_ip, toip, port_modifier);
+			system(cmd);
 		}
 
 		if ( !isNatRedirectionBlocked ) 
 		{
 			if (0 == strcmp("none", fromip)) 
 			{
-				v_secure_system("iptables -t nat -%c prerouting_fromlan -p tcp -m tcp -d %s %s %s -j DNAT --to-destination %s%s",
+				snprintf(cmd,sizeof(cmd),"iptables -t nat -%c prerouting_fromlan -p tcp -m tcp -d %s %s %s -j DNAT --to-destination %s%s",
 					ciptableOprationCode,lan_ipaddr, external_dest_port, external_ip, toip, port_modifier);
+				system(cmd);
 
 				if ( isNatReady )
 				{
-					v_secure_system("iptables -t nat -%c prerouting_fromlan -p tcp -m tcp -d %s %s %s -j DNAT --to-destination %s%s",
+					snprintf(cmd,sizeof(cmd),"iptables -t nat -%c prerouting_fromlan -p tcp -m tcp -d %s %s %s -j DNAT --to-destination %s%s",
 						ciptableOprationCode,natip4, external_dest_port, external_ip, toip, port_modifier);
+					system(cmd);
 				}
 
-				v_secure_system("iptables -t nat -%c postrouting_tolan -s %s.0/%s -p tcp -m tcp -d %s --dport %s -j SNAT --to-source %s", 
+				snprintf(cmd,sizeof(cmd),"iptables -t nat -%c postrouting_tolan -s %s.0/%s -p tcp -m tcp -d %s --dport %s -j SNAT --to-source %s", 
 					ciptableOprationCode,lan_3_octets, lan_netmask, toip, dport, lan_ipaddr);
+				system(cmd);
 			}
 		}
 
 		/*  it will applicable during router mode */
 		if( 0 == isBridgeMode )
 		{
-			v_secure_system("iptables -t filter -%c wan2lan_forwarding_accept -p tcp -m tcp %s -d %s --dport %s -j xlog_accept_wan2lan", 
+			snprintf(cmd,sizeof(cmd),"iptables -t filter -%c wan2lan_forwarding_accept -p tcp -m tcp %s -d %s --dport %s -j xlog_accept_wan2lan", 
 				ciptableOprationCode,external_ip, toip, dport);
+			system(cmd);
 		}
 	}
 
@@ -7592,33 +7599,38 @@ int Utopia_IPRule_ephemeral_port_forwarding( portMapDyn_t *pmap, boolean_t isCal
 	 {
 		if (isNatReady) 
 		{
-           v_secure_system("iptables -t nat -%c prerouting_fromwan -p udp -m udp -d %s %s %s -j DNAT --to-destination %s%s",
+           snprintf(cmd,sizeof(cmd),"iptables -t nat -%c prerouting_fromwan -p udp -m udp -d %s %s %s -j DNAT --to-destination %s%s",
                    ciptableOprationCode,natip4, external_dest_port, external_ip, toip, port_modifier);
+			system(cmd);
         }
 
         if ( !isNatRedirectionBlocked ) 
 		{
            if (0 == strcmp("none", fromip)) 
 		   {
-              v_secure_system("iptables -t nat -%c prerouting_fromlan -p udp -m udp -d %s %s %s -j DNAT --to-destination %s%s",
+              snprintf(cmd,sizeof(cmd),"iptables -t nat -%c prerouting_fromlan -p udp -m udp -d %s %s %s -j DNAT --to-destination %s%s",
                 ciptableOprationCode,lan_ipaddr, external_dest_port, external_ip, toip, port_modifier);
+			  system(cmd);
 
               if ( isNatReady ) 
 			  {
-                 v_secure_system("iptables -t nat -%c prerouting_fromlan -p udp -m udp -d %s %s %s -j DNAT --to-destination %s%s",
+                 snprintf(cmd,sizeof(cmd),"iptables -t nat -%c prerouting_fromlan -p udp -m udp -d %s %s %s -j DNAT --to-destination %s%s",
                    ciptableOprationCode,natip4, external_dest_port, external_ip, toip, port_modifier);
+				 system(cmd);
               }
 
-              v_secure_system("iptables -t nat -%c postrouting_tolan -s %s.0/%s -p udp -m udp -d %s --dport %s -j SNAT --to-source %s", 
+              snprintf(cmd,sizeof(cmd),"iptables -t nat -%c postrouting_tolan -s %s.0/%s -p udp -m udp -d %s --dport %s -j SNAT --to-source %s", 
                       ciptableOprationCode,lan_3_octets, lan_netmask, toip, dport, lan_ipaddr);
+			  system(cmd);
            }
         }
 
 		/*  it will applicable during router mode */
 		if( 0 == isBridgeMode )
 		{
-		v_secure_system("iptables -t filter -%c wan2lan_forwarding_accept -p udp -m udp %s -d %s --dport %s -j xlog_accept_wan2lan", 
+		snprintf(cmd,sizeof(cmd),"iptables -t filter -%c wan2lan_forwarding_accept -p udp -m udp %s -d %s --dport %s -j xlog_accept_wan2lan", 
 						ciptableOprationCode,external_ip, toip, dport);
+		system(cmd);
 		}
      }
  
