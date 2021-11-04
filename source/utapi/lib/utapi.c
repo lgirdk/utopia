@@ -7503,12 +7503,16 @@ int Utopia_IPRule_ephemeral_port_forwarding( portMapDyn_t *pmap, boolean_t isCal
 
 	if ( 0 != strcmp( "none", fromip ) ) 
 	{
-		snprintf( external_ip, sizeof( external_ip ), "-s %s", fromip ); 
+		snprintf( external_ip, sizeof( external_ip ), "%s", fromip );
 	} 
+	else
+	{
+		snprintf( external_ip, sizeof( external_ip ), "%s", "0.0.0.0/0" );
+	}
 
 	if ( 0 != strcmp( "none", fromport ) ) 
 	{
-		snprintf( external_dest_port, sizeof( external_dest_port ), "--dport %s", fromport );
+		snprintf( external_dest_port, sizeof( external_dest_port ), "%s", fromport );
 	} 
 
 	if ( ('\0' == dport[ 0 ] ) || ( 0 == strcmp( fromport, dport ) ) ) 
@@ -7527,7 +7531,7 @@ int Utopia_IPRule_ephemeral_port_forwarding( portMapDyn_t *pmap, boolean_t isCal
 	{
 		if ( isNatReady ) 
 		{
-			v_secure_system("iptables -t nat -%c prerouting_fromwan -p tcp -m tcp -d %s %s %s -j DNAT --to-destination %s%s",
+			v_secure_system("iptables -t nat -%c prerouting_fromwan -p tcp -m tcp -d %s --dport %s -s %s -j DNAT --to-destination %s%s",
 				ciptableOprationCode,natip4, external_dest_port, external_ip, toip, port_modifier);
 		}
 
@@ -7535,12 +7539,12 @@ int Utopia_IPRule_ephemeral_port_forwarding( portMapDyn_t *pmap, boolean_t isCal
 		{
 			if (0 == strcmp("none", fromip)) 
 			{
-				v_secure_system("iptables -t nat -%c prerouting_fromlan -p tcp -m tcp -d %s %s %s -j DNAT --to-destination %s%s",
+				v_secure_system("iptables -t nat -%c prerouting_fromlan -p tcp -m tcp -d %s --dport %s -s %s -j DNAT --to-destination %s%s",
 					ciptableOprationCode,lan_ipaddr, external_dest_port, external_ip, toip, port_modifier);
 
 				if ( isNatReady )
 				{
-					v_secure_system("iptables -t nat -%c prerouting_fromlan -p tcp -m tcp -d %s %s %s -j DNAT --to-destination %s%s",
+					v_secure_system("iptables -t nat -%c prerouting_fromlan -p tcp -m tcp -d %s --dport %s -s %s -j DNAT --to-destination %s%s",
 						ciptableOprationCode,natip4, external_dest_port, external_ip, toip, port_modifier);
 				}
 
@@ -7552,7 +7556,7 @@ int Utopia_IPRule_ephemeral_port_forwarding( portMapDyn_t *pmap, boolean_t isCal
 		/*  it will applicable during router mode */
 		if( 0 == isBridgeMode )
 		{
-			v_secure_system("iptables -t filter -%c wan2lan_forwarding_accept -p tcp -m tcp %s -d %s --dport %s -j xlog_accept_wan2lan", 
+			v_secure_system("iptables -t filter -%c wan2lan_forwarding_accept -p tcp -m tcp -s %s -d %s --dport %s -j xlog_accept_wan2lan",
 				ciptableOprationCode,external_ip, toip, dport);
 		}
 	}
@@ -7563,7 +7567,7 @@ int Utopia_IPRule_ephemeral_port_forwarding( portMapDyn_t *pmap, boolean_t isCal
 	 {
 		if (isNatReady) 
 		{
-           v_secure_system("iptables -t nat -%c prerouting_fromwan -p udp -m udp -d %s %s %s -j DNAT --to-destination %s%s",
+           v_secure_system("iptables -t nat -%c prerouting_fromwan -p udp -m udp -d %s --dport %s -s %s -j DNAT --to-destination %s%s",
                    ciptableOprationCode,natip4, external_dest_port, external_ip, toip, port_modifier);
         }
 
@@ -7571,12 +7575,12 @@ int Utopia_IPRule_ephemeral_port_forwarding( portMapDyn_t *pmap, boolean_t isCal
 		{
            if (0 == strcmp("none", fromip)) 
 		   {
-              v_secure_system("iptables -t nat -%c prerouting_fromlan -p udp -m udp -d %s %s %s -j DNAT --to-destination %s%s",
+              v_secure_system("iptables -t nat -%c prerouting_fromlan -p udp -m udp -d %s --dport %s -s %s -j DNAT --to-destination %s%s",
                 ciptableOprationCode,lan_ipaddr, external_dest_port, external_ip, toip, port_modifier);
 
               if ( isNatReady ) 
 			  {
-                 v_secure_system("iptables -t nat -%c prerouting_fromlan -p udp -m udp -d %s %s %s -j DNAT --to-destination %s%s",
+                 v_secure_system("iptables -t nat -%c prerouting_fromlan -p udp -m udp -d %s --dport %s -s %s -j DNAT --to-destination %s%s",
                    ciptableOprationCode,natip4, external_dest_port, external_ip, toip, port_modifier);
               }
 
@@ -7588,7 +7592,7 @@ int Utopia_IPRule_ephemeral_port_forwarding( portMapDyn_t *pmap, boolean_t isCal
 		/*  it will applicable during router mode */
 		if( 0 == isBridgeMode )
 		{
-		v_secure_system("iptables -t filter -%c wan2lan_forwarding_accept -p udp -m udp %s -d %s --dport %s -j xlog_accept_wan2lan", 
+		v_secure_system("iptables -t filter -%c wan2lan_forwarding_accept -p udp -m udp -s %s -d %s --dport %s -j xlog_accept_wan2lan",
 						ciptableOprationCode,external_ip, toip, dport);
 		}
      }
