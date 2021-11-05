@@ -161,24 +161,19 @@ static char *trim(char *in)
  * Return Value  : 0 if ok -1 if not
  * Note          : This function will change the contents of in
  */
-static int parse_line(char *in, char **name, char **value)
+static int parse_line (char *in, char **name, char **value)
 {
-   // look for the separator token
-   if (NULL == in) {
-      return(-1);
-   } else {
-      *name = *value = NULL;
-   }
+   char *tok;
 
-   char *tok = strchr(in, '=');
-   if (NULL == tok) {
-      return(-1);
-   } else {
-      *name=(in + 1);
-      *value=(tok + 1); 
-      *tok='\0';
-   } 
-   return(0);
+   tok = strchr(in, '=');
+   if (tok == NULL)
+      return -1;
+
+   *tok = '\0';
+   *name = in;
+   *value = tok + 1;
+
+   return 0;
 }
 
 /*
@@ -347,7 +342,7 @@ static int check_version (void)
       }
       else if (line[0] == '$')
       {
-         if (parse_line (line, &name, &value) != 0)
+         if (parse_line (line + 1, &name, &value) != 0)
 	 {
             printf("[utopia] [error] set_defaults failed to set syscfg (%s)\n", line);
          }
@@ -421,7 +416,7 @@ static int set_syscfg_defaults (void)
       }
       else if (line[0] == '$')
       {
-         if (parse_line (line, &name, &value) != 0)
+         if (parse_line (line + 1, &name, &value) != 0)
 	 {
             printf("[utopia] [error] set_syscfg_defaults failed to set syscfg (%s)\n", line);
          }
@@ -495,7 +490,7 @@ static int set_sysevent_defaults (void)
       }
       else if (line[0] == '@')
       {
-         if (parse_line (line, &name, &value) != 0)
+         if (parse_line (line + 1, &name, &value) != 0)
 	 {
             printf("[utopia] set_sysevent_defaults failed to set sysevent (%s)\n", line);
          }
