@@ -352,6 +352,70 @@ static int check_version (void)
 }
 #endif
 
+
+/* TODO: Currently only one parameter (i.e. default_LanAllowedSubnet) is needed to reset (without factory-reset).
+ * Later if multiple pararameters require force update, will create a separate file or separator.
+ */
+static int set_customer_defaults (void)
+{
+    char customer_index[12];
+    char buf[256];
+    char *value = NULL;
+    unsigned int temp[4];
+    FILE *fp;
+
+    if ((syscfg_get (NULL, "Customer_Index", customer_index, sizeof(customer_index)) == 0) && (customer_index[0] != '0'))
+    {
+        snprintf(buf, sizeof(buf), "/etc/utopia/defaults/lg_syscfg_cust_%s.db", customer_index);
+
+        if ((fp = fopen(buf, "r")))
+        {
+            while (fgets (buf, sizeof(buf), fp) != NULL)
+            {
+                if (strncmp(buf, "default_LanAllowedSubnet=", 25) == 0)
+                {
+                    value = buf + 25;
+                    break;
+                }
+            }
+
+            fclose(fp);
+        }
+    }
+
+    /*
+       If no customer specific value was found (e.g. if Customer ID is 0) then for now
+       we still want to over-ride the default arLanAllowedSubnet_1::SubnetIP with an
+       appropriate value rather than leaving the default. Fixme: Why?
+    */
+    if (value == NULL)
+    {
+        value = "192.168.0.0";
+    }
+
+    /*
+       Transfer default_LanAllowedSubnet to arLanAllowedSubnet_1::SubnetIP
+       The last byte of arLanAllowedSubnet_1 is forced to 1 for
+       non legacy (see MVXREQ-675) platforms, but for legacy platforms,
+       the last two bytes are forced to 0 (see MVXREQ-1360)
+    */
+    if ((sscanf(value, "%u.%u.%u.%u", &temp[0], &temp[1], &temp[2], &temp[3]) == 4) &&
+        (temp[0] < 256) && (temp[1] < 256) && (temp[2] < 256) && (temp[3] < 256))
+    {
+        char SubnetIp[32];
+
+#ifdef _PUMA6_ARM_
+        sprintf(SubnetIp, "%u.%u.%u.%u", temp[0], temp[1], 0, 0);
+#else
+        sprintf(SubnetIp, "%u.%u.%u.%u", temp[0], temp[1], temp[2], 1);
+#endif
+        syscfg_set ("arLanAllowedSubnet_1", "SubnetIP", SubnetIp);
+        syscfg_dirty++;
+    }
+
+    return 0;
+}
+
 /*
  * Procedure     : set_syscfg_defaults
  * Purpose       : Go through a file, parse it into <name, value> tuples,
@@ -418,6 +482,8 @@ static int set_syscfg_defaults (void)
    }
 
    fclose (fp);
+
+   set_customer_defaults();
 
    return 0;
 }
