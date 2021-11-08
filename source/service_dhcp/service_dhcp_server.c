@@ -124,6 +124,18 @@ static void refresh_wifi (void* bus_handle)
 
     ret = CcspBaseIf_setParameterValues(bus_handle, component, bus_path, 0, 0x0, param_val, sizeof(param_val)/sizeof(*param_val), TRUE, &faultParam);
 
+#if defined (_PUMA6_ARM_)
+    char refresh_plume[8];
+
+    refresh_plume[0] = 0;
+    sysevent_get(g_iSyseventfd, g_tSysevent_token, "refresh-plume", refresh_plume, sizeof(refresh_plume));
+    if (strcmp(refresh_plume, "true") == 0)
+    {
+        system("rpcclient2 '(flock 200; (exec 200>&-; /etc/plume_init.sh restart;) ) 200> /var/run/lock/resetlock-wlan'");
+        sysevent_set(g_iSyseventfd, g_tSysevent_token, "refresh-plume", "false", 0);
+    }
+#endif
+
     //fprintf (stderr, "%s: Kick assoc device, return status - %d\n", __FUNCTION__, ret);
 }
 
