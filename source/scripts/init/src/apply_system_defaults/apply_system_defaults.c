@@ -49,6 +49,7 @@
 #include <arpa/inet.h>
 #include <syscfg/syscfg.h>
 #include "sysevent/sysevent.h"
+#include <time.h>
 #if defined (_XB6_PRODUCT_REQ_) || defined(_HUB4_PRODUCT_REQ_) || defined(_SR300_PRODUCT_REQ_)
 #include "platform_hal.h"
 #endif
