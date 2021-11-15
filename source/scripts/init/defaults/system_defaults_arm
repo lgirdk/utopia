@@ -1001,7 +1001,7 @@ $hostname=Docsis-Gateway
 $redirection_flag=true
 $redirection_url=http://XfinityHomeNetworking.com
 $cloud_capable_flag=1
-$cloud_enable_flag=1
+$cloud_enable_flag=0
 
 # RDK log level
 $X_RDKCENTRAL-COM_LogLevel=4
@@ -1142,7 +1142,7 @@ $Speedtest_SubUnPauseTimeOut=45
 #WiFi password Get/Set disabled by default
 $SNMPPSWDCTRLFLAG=false
 $TR069PSWDCTRLFLAG=false
-$X_RDKCENTRAL-COM_AkerEnable=true
+$X_RDKCENTRAL-COM_AkerEnable=false
 #codebig
 $codebigsupport=0
 $CodeBigFirstEnabled=false
