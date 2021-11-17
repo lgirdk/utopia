@@ -53,7 +53,8 @@ source /etc/utopia/service.d/log_capture_path.sh
 #------------------------------------------------------------------
 SERVICE_NAME="dhcpv6_client"
 
-DIBBLER_ENABLED=`syscfg get dibbler_client_enable`
+eval "`utctx_cmd get last_erouter_mode dhcpv6c_enable ipv6_static_enable lan_ipv6addr wan_ipv6addr dhcpv6c_duid dibbler_client_enable`"
+DIBBLER_ENABLED=$SYSCFG_dibbler_client_enable
 
 if ([ "$BOX_TYPE" = "XB3" ] || [ "$BOX_TYPE" = "XB6" -a "$MANUFACTURE" = "Arris" ] || [ "$MODEL_NUM" = "INTEL_PUMA" ]) && [[ "$DIBBLER_ENABLED" != "true" ]] ;then
 	DHCPV6_BINARY=/sbin/ti_dhcp6c
@@ -69,10 +70,6 @@ DHCP6C_PROGRESS_FILE=/tmp/dhcpv6c_inprogress
 
 service_init ()
 {
-   # First some SYSCFG
-   eval "`utctx_cmd get last_erouter_mode dhcpv6c_enable ipv6_static_enable lan_ipv6addr wan_ipv6addr dhcpv6c_duid lan_ifname`"
-   LAN_INTERFACE_NAME=$SYSCFG_lan_ifname
-
    if [ -z "$SYSCFG_ipv6_static_enable" ]
    then
         SYSCFG_ipv6_static_enable=0
