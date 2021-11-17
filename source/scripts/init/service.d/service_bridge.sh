@@ -366,14 +366,8 @@ service_init ()
    # SYSCFG_lan_wl_physical_ifnames is the names of each wireless interface as known
    # to the operating system
 
-   SYSCFG_FAILED='false'
    FOO=`utctx_cmd get bridge_mode lan_ifname lan_ethernet_physical_ifnames lan_wl_physical_ifnames wan_physical_ifname bridge_ipaddr bridge_netmask bridge_default_gateway bridge_nameserver1 bridge_nameserver2 bridge_nameserver3 bridge_domain hostname`
    eval $FOO
-  if [ $SYSCFG_FAILED = 'true' ] ; then
-     ulog bridge status "$PID utctx failed to get some configuration data"
-     ulog bridge status "$PID BRIDGE CANNOT BE CONTROLLED"
-     exit
-  fi
 
   if [ -z "$SYSCFG_hostname" ] ; then
      SYSCFG_hostname="Utopia"
