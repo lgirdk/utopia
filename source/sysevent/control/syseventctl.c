@@ -123,6 +123,29 @@ static int handle_get(char *target)
    return(rc);
 }
 
+static int handle_batchget (int argc, char **argv, int next_arg)
+{
+    int fd;
+    int idx;
+    token_t token;
+    se_buffer return_buffer;
+
+    if ((fd = server_connect(server_host, server_port, &token)) < 0)
+        return -1;
+
+    idx = 1;
+    while (++next_arg < argc)
+    {
+        if (sysevent_get(fd, token, argv[next_arg], return_buffer, sizeof(return_buffer)) != 0)
+            return_buffer[0] = 0;
+        printf("SYSEVENT_%d='%s'\n", idx++, return_buffer);
+    }
+
+    server_disconnect(fd, token);
+
+    return 0;
+}
+
 static int handle_unset(char *target)
 {
    int fd;
@@ -195,6 +218,36 @@ static int handle_set(char *target, char *value)
 
    server_disconnect(fd, token);
    return(rc);
+}
+
+static int handle_batchset (int argc, char **argv, int next_arg)
+{
+    int fd;
+    int retval = 0;
+    token_t token;
+
+    if ((fd = server_connect(server_host, server_port, &token)) < 0)
+        return -1;
+
+    while (++next_arg < argc)
+    {
+        char *pszName = argv[next_arg];
+        char *pszValue = strchr(argv[next_arg], '=');
+
+        if (pszValue == NULL)
+        {
+            puts("invalid format!!!\n");
+            retval = -1;
+            break;
+        }
+
+        *pszValue++ = 0;
+        sysevent_set(fd, token, pszName, pszValue, 0);
+    }
+
+    server_disconnect(fd, token);
+
+    return retval;
 }
 
 static int handle_set_data(char *target, char *value)
@@ -652,7 +705,9 @@ static void printhelp(char *name) {
       printf ("    a daemon can also be reach by specifying an ip address/port\n");
       printf (" commands:\n");
       printf ("    get name\n");
+      printf ("    batchget name1 name2 name3 ...\n");
       printf ("    set name value\n");
+      printf ("    batchset name1=value1 name2=value2 name3=value3 ...\n");
       printf ("    setdata name binary_file_path\n");
       printf ("         successful output stores --> /tmp/setdata.bin\n");
       printf ("    getdata name\n");
@@ -790,6 +845,24 @@ int main(int argc, char **argv)
          printhelp(argv[0]);
       } else {
          retval = handle_get(argv[next_arg+1]);
+      }
+      return(retval);
+   }
+
+   if (!strcmp(argv[next_arg], "batchget")) {
+      if ((argc-1) < next_arg+1) {
+         printhelp(argv[0]);
+      } else {
+         retval = handle_batchget(argc, argv, next_arg);
+      }
+      return(retval);
+   }
+
+   if (!strcmp(argv[next_arg], "batchset")) {
+      if ((argc-1) < next_arg+1) {
+         printhelp(argv[0]);
+      } else {
+         retval = handle_batchset(argc, argv, next_arg);
       }
       return(retval);
    }
