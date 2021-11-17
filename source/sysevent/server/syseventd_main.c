@@ -1144,9 +1144,6 @@ static void *sanity_thread_main(void *arg)
 		if (l_FsyseventFp != NULL) { /*RDKB-12965 & CID:-34067*/
                fprintf(l_FsyseventFp, "Process (%d) (%s) runs for more than %d secs sending SIGKILL !!!", waiting_pid[i].pid, 
                                       waiting_pid[i].name, MAX_ACTIVATION_BLOCKING_SECS);
-	       fprintf(stderr, "\n Process (%d) (%s) runs for more than %d secs sending SIGKILL !!!\n ", waiting_pid[i].pid, 
-                                      waiting_pid[i].name, MAX_ACTIVATION_BLOCKING_SECS);
-               
                fclose(l_FsyseventFp);
 		}
                kill(waiting_pid[i].pid, 9);
