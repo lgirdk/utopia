@@ -28,14 +28,7 @@ SPF="SinglePortForward_$1"
 
 do_utctx_get() # Accepts 1 parameter - the utctx_cmd argument list
 {
-    SYSCFG_FAILED='false'
-
     eval "`./utctx_cmd get "$1"`"
-
-    if [ $SYSCFG_FAILED = 'true' ] ; then
-        echo "Call failed"
-        exit
-    fi
 }
 
 # Get the namespace value for the SinglePortForward
