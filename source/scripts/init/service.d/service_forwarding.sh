@@ -68,15 +68,6 @@ router_mode ()
 } 
 
 #--------------------------------------------------------------
-# service_init
-#--------------------------------------------------------------
-service_init ()
-{
-   FOO=`utctx_cmd get bridge_mode`
-   eval $FOO
-}
-
-#--------------------------------------------------------------
 # service_start
 #--------------------------------------------------------------
 service_start ()
@@ -92,7 +83,6 @@ service_start ()
       sysevent set ${SERVICE_NAME}-errinfo 
 	  LANRESTART_STATUS=`sysevent get lan_restarted`
 	  echo "service_start : Check Lan Restart Status"
-      service_init
 
       # if we are in bridge mode then make sure that the wan, lan are down
       if [ "1" = "$bridge_mode" ] || [ "2" = "$bridge_mode" ] || [ "3" = "$bridge_mode" ]; then
