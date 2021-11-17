@@ -14735,6 +14735,9 @@ static void do_ipv6_nat_table(FILE* fp)
        if (!syscfg_get(NULL, "dmz_dst_ip_addrv6", ipv6host, sizeof(ipv6host))) {
 			rc = IsValidIPv6Addr(ipv6host);
 			  if(rc != 0 && strlen(current_wan_ipv6[0]) > 0) {
+				  char cwmpPort[6];
+				  getCwmpPort(cwmpPort, sizeof(cwmpPort));
+				  fprintf(fp,"-I PREROUTING -i erouter0 -p tcp --dport %s -j RETURN\n", cwmpPort);
 				  fprintf(fp, "-A PREROUTING -i %s -d %s -j DNAT --to-destination %s \n", wan6_ifname, (char *)current_wan_ipv6, ipv6host);
 			}
 		}
