@@ -63,8 +63,7 @@ DHCP6C_PROGRESS_FILE=/tmp/dhcpv6c_inprogress
 service_init ()
 {
    # First some SYSCFG
-   eval "`utctx_cmd get last_erouter_mode dhcpv6c_enable ipv6_static_enable lan_ipv6addr wan_ipv6addr dhcpv6c_duid lan_ifname`"
-   LAN_INTERFACE_NAME=$SYSCFG_lan_ifname
+   eval "`utctx_cmd get last_erouter_mode ipv6_static_enable`"
 
    if [ -z "$SYSCFG_ipv6_static_enable" ]
    then
