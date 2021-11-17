@@ -83,7 +83,6 @@ static void gw_lan_refresh_switch (void)
     CCSP_HAL_ETHSW_PORT port;
     CCSP_HAL_ETHSW_ADMIN_STATUS  adminStatus = CCSP_HAL_ETHSW_AdminDown;
 
-    fprintf(stderr," %s %d Disable the ports \n ",__FUNCTION__,__LINE__);
     for (port = CCSP_HAL_ETHSW_EthPort1; port <= CCSP_HAL_ETHSW_EthPort4; port++)
     {
         // Check to see if the port is enabled
@@ -97,16 +96,13 @@ static void gw_lan_refresh_switch (void)
         }
     }
 
-    fprintf(stderr," %s %d after disabling the ports\n",__FUNCTION__,__LINE__);
     sleep(SLEEP_TIME);
-    fprintf(stderr," %s %d Enable the ports (after sleep)\n",__FUNCTION__,__LINE__);
 
     for (port = CCSP_HAL_ETHSW_EthPort1; port <= CCSP_HAL_ETHSW_EthPort4; port++)
     {
             // Enable the ports
             CcspHalEthSwSetPortAdminStatus(port, CCSP_HAL_ETHSW_AdminUp);
     }
-    fprintf(stderr," %s %d  \n",__FUNCTION__,__LINE__);
 }
 
 static void refresh_wifi (void* bus_handle)
@@ -199,7 +195,7 @@ int dnsmasq_server_start()
            ERR_CHK(safec_rc);
         }
     }
-    fprintf(stderr," %s %d l_cSystemCmd:%s \n",__FUNCTION__,__LINE__,l_cSystemCmd);
+
 	return system(l_cSystemCmd);
 }
 
@@ -433,7 +429,6 @@ int dhcp_server_start (char *input)
         sysevent_set(g_iSyseventfd, g_tSysevent_token, "dhcp_server-progress", "completed", 0);
 		remove_file("/var/tmp/lan_not_restart");
 		message_bus_close(bus_handle);
-		fprintf(stderr, " %s:%d l_bRestart is false return..\n ",__FUNCTION__,__LINE__);
 		return 0;
 	}
 
@@ -525,7 +520,6 @@ int dhcp_server_start (char *input)
 
 	sysevent_get(g_iSyseventfd, g_tSysevent_token, "system_psm_mode", l_cPsm_Mode, sizeof(l_cPsm_Mode));
 	sysevent_get(g_iSyseventfd, g_tSysevent_token, "start-misc", l_cStart_Misc, sizeof(l_cStart_Misc));
-	fprintf(stderr, " %s:%d  _cPsm_Mode:%s l_cStart_Misc:%s\n",__FUNCTION__,__LINE__, l_cPsm_Mode,l_cStart_Misc);
 	if (strcmp(l_cPsm_Mode, "1")) //PSM Mode is Not 1
 	{
 		if ((access("/var/tmp/lan_not_restart", F_OK) == -1 && errno == ENOENT) && 
@@ -543,7 +537,6 @@ int dhcp_server_start (char *input)
                        More details: OFW-969-WiFi client ip is not getting updated after Changing Subnet using TR069
                     */
                     refresh_wifi(bus_handle);
-                    fprintf(stderr, "%s:%d After refresh_wifi() \n",__FUNCTION__,__LINE__);
                     sysevent_set(g_iSyseventfd, g_tSysevent_token, "refresh-switch", "false", 0);
                 }
         	}
@@ -571,7 +564,7 @@ int dhcp_server_start (char *input)
 		executeCmd("rpcclient2 '/bin/touch /tmp/.advertise_ssids'");
 #endif
 	}
-   fprintf(stderr, "%s:%d  \n",__FUNCTION__,__LINE__);
+   
     // This function is called for brlan0 and brlan1
     // If brlan1 is available then XHS service is available post all DHCP configuration   
     if (is_iface_present(XHS_IF_NAME))
@@ -595,7 +588,6 @@ int dhcp_server_start (char *input)
         fprintf(stderr, "Xfinityhome service is not UP yet\n");
     }
 
-	fprintf(stderr, "%s:%d  \n",__FUNCTION__,__LINE__);
 	safec_rc = sprintf_s(l_cPmonCmd, sizeof(l_cPmonCmd),"%s setproc dhcp_server %s %s \"%s dhcp_server-restart\"", 
 			PMON, BIN, PID_FILE, THIS);
     if(safec_rc < EOK){
@@ -612,7 +604,6 @@ int dhcp_server_start (char *input)
 	print_file(RESOLV_CONF);
 	
 	message_bus_close(bus_handle);
-	fprintf(stderr, "%s:%d  \n",__FUNCTION__,__LINE__);
 	return 0;
 }
 
