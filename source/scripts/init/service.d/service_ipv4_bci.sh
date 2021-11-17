@@ -147,14 +147,8 @@ service_stop () {
 }
 
 service_init() {
-   SYSCFG_FAILED='false'
    FOO=`utctx_cmd get last_erouter_mode`
    eval "$FOO"
-   if [ $SYSCFG_FAILED = 'true' ] ; then
-      ulog wan status "$PID utctx failed to get some configuration data"
-      ulog wan status "$PID WAN CANNOT BE CONTROLLED"
-      exit
-   fi
 }
 
 #args: l3 instance, l2 instance, l2 status, [flag:bringup lower?]

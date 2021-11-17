@@ -611,14 +611,8 @@ service_init ()
    # SYSCFG_lan_wl_physical_ifnames is the names of each wireless interface as known
    # to the operating system
 
-   SYSCFG_FAILED='false'
    FOO=`utctx_cmd get lan_ifname lan_ethernet_virtual_ifnums lan_ethernet_physical_ifnames lan_wl_physical_ifnames lan_ipaddr lan_netmask lan_dhcp_client`
    eval "$FOO"
-  if [ $SYSCFG_FAILED = 'true' ] ; then
-     ulog lan status "$PID utctx failed to get some configuration data"
-     ulog lan status "$PID LAN CANNOT BE CONTROLLED"
-     exit
-  fi
 
    #figure out the interfaces that are part of the lan
    # if we are not using virtual ethernet interfaces then
