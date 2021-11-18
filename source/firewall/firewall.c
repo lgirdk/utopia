@@ -5584,6 +5584,20 @@ static int do_wan_nat_lan_clients(FILE *fp)
   }
   else
   {
+      char erouter_static_enable[8];
+      char erouter_static_ip[20];
+      if(isRipEnabled)
+      {
+         syscfg_get(NULL, "erouter_static_ip_enable", erouter_static_enable, sizeof(erouter_static_enable));
+         if(strcmp(erouter_static_enable, "true") == 0)
+         {
+            if(syscfg_get(NULL, "erouter_static_ip_address", erouter_static_ip, sizeof(erouter_static_ip)) ==0)
+            {
+               fprintf(fp, "-A postrouting_towan -s %s/%s -j SNAT --to-source %s\n", lan_ipaddr,lan_netmask,erouter_static_ip);
+            }
+         }
+      }
+
 #if defined (FEATURE_MAPT) || defined (FEATURE_SUPPORT_MAPT_NAT46)
      if (!isMAPTReady)
      {
@@ -7092,7 +7106,7 @@ static int do_wan2self_ports(FILE *mangle_fp, FILE *nat_fp, FILE *filter_fp)
 static int do_wan2self_allow(FILE *filter_fp)
 {
     char buf[8];
-    int rip_enable, rip_if_enable;
+    int rip_if_enable;
 
         // FIREWALL_DEBUG("Entering do_wan2self_allow\n");    
 #ifdef CISCO_CONFIG_TRUE_STATIC_IP
@@ -7107,9 +7121,7 @@ static int do_wan2self_allow(FILE *filter_fp)
 
     /* Allow ripv2 multicast if RIPv2 feature is enabled */
 
-    syscfg_get(NULL, "rip_enabled", buf, sizeof(buf));
-    rip_enable = atoi(buf);
-    if (rip_enable)
+    if (isRipEnabled)
     {
         syscfg_get("cosa_usgv2_rip00", "If1Enable", buf, sizeof(buf));
         rip_if_enable = atoi(buf);
