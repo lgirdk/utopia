@@ -601,6 +601,8 @@ static void set_wifi_flood_protect(void);
 static int iseRouter0IPv6AddrReady;
 static int isFirewallEnabledV6;
 
+static int get_erouter_secondary_ip(char *ip, int size);
+
 FILE *firewallfp = NULL;
 
 #define CONFIG_BUILD_TRIGGER 1
@@ -3396,6 +3398,7 @@ static int do_single_port_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, 
    char query[MAX_QUERY];
    int  rc;
    int  count;
+   int nat_swapped = 0;
 #ifndef INTEL_PUMA7
    char *tmp = NULL;
 #endif
@@ -3423,6 +3426,11 @@ static int do_single_port_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, 
        isFeatureDisabled = FALSE;
    }
 #endif
+
+   /* If rip is enabled and erouter has static IP then swap the NAT IP. */
+   char temp_natip4[20];
+   memcpy(temp_natip4, natip4, sizeof(temp_natip4));
+   nat_swapped = get_erouter_secondary_ip(natip4, sizeof(natip4));
 
    syscfg_get("CosaNAT", "port_forward_enabled", query, sizeof(query));
    if ((query[0] != '\0') && (atoi(query) != 0))
@@ -3780,6 +3788,13 @@ SinglePortForwardNext:
          FIREWALL_DEBUG("PortMapping:Feature Enable %d\n" COMMA FALSE);
      }
 #endif
+
+   if (nat_swapped)
+   {
+      /* swap the NAT address back to DHCP IP */
+      memcpy(natip4, temp_natip4, sizeof(natip4));
+   }
+
            FIREWALL_DEBUG("Exiting do_single_port_forwarding\n");       
    return(0);
 }
@@ -3806,6 +3821,7 @@ static int do_port_range_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, F
    BOOL isFeatureDisabled = TRUE;
 #endif
    BOOL varyingPortRange = TRUE; // LGI ADD
+   int nat_swapped = 0;
 
 #ifdef CISCO_CONFIG_TRUE_STATIC_IP 
 
@@ -3829,6 +3845,11 @@ static int do_port_range_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, F
    FIREWALL_DEBUG("PortMapping:Feature Enable %d\n" COMMA TRUE);
    isFeatureDisabled = FALSE;
 #endif
+
+   /* If rip is enabled and erouter has static IP then swap the NAT IP. */
+   char temp_natip4[20];
+   memcpy(temp_natip4, natip4, sizeof(temp_natip4));
+   nat_swapped = get_erouter_secondary_ip(natip4, sizeof(natip4));
 
    syscfg_get("CosaNAT", "port_forward_enabled", query, sizeof(query));
    if ((query[0] != '\0') && (atoi(query) != 0))
@@ -4349,6 +4370,12 @@ PortRangeForwardNext:
           FIREWALL_DEBUG("PortMapping:Feature Enable %d\n" COMMA FALSE);
       }
 #endif
+
+   if (nat_swapped)
+   {
+      /* swap the NAT address back to DHCP IP */
+      memcpy(natip4, temp_natip4, sizeof(natip4));
+   }
 
          FIREWALL_DEBUG("Exiting do_port_range_forwarding\n");
 
@@ -4871,6 +4898,7 @@ static int do_dmz(FILE *nat_fp, FILE *filter_fp)
 
    int rc;
    int  src_type = 0; // 0 is all networks, 1 is an ip[/netmask], 2 is ip range
+   int nat_swapped = 0;
            FIREWALL_DEBUG("Entering do_dmz\n");       
    if (!isDmzEnabled) {
       return(0);
@@ -4995,6 +5023,11 @@ if(status_http_ert == 0){
    /* tohost is now a full ip address */
    snprintf(dst_str, sizeof(dst_str), "--to-destination %s ", tohost);
 
+   /* If rip is enabled and erouter has static IP then swap the NAT IP. */
+   char temp_natip4[20];
+   memcpy(temp_natip4, natip4, sizeof(temp_natip4));
+   nat_swapped = get_erouter_secondary_ip(natip4, sizeof(natip4));
+
    switch (src_type) {
       case(0):
          if (isNatReady &&
@@ -5089,6 +5122,13 @@ if(status_http_ert == 0){
       default:
          break;
    }
+
+   if (nat_swapped)
+   {
+      /* swap the NAT address back to DHCP IP */
+      memcpy(natip4, temp_natip4, sizeof(natip4));
+   }
+
            FIREWALL_DEBUG("Exiting do_dmz\n");       
    return(0);
 }
@@ -18802,3 +18842,26 @@ static int do_mac_filter(FILE *fp)
     }
 }
 
+/*
+   API to retrieve erouter0's static ip
+   reutrn : 1 if erouter0 has static ip else 0
+*/
+static int get_erouter_secondary_ip(char *ip, int size)
+{
+   char erouter_static_enable[8];
+   char erouter_static_ip[20];
+
+   if (isRipEnabled)
+   {
+      syscfg_get(NULL, "erouter_static_ip_enable", erouter_static_enable, sizeof(erouter_static_enable));
+      if (strcmp(erouter_static_enable, "true") == 0)
+      {
+         if (syscfg_get(NULL, "erouter_static_ip_address", erouter_static_ip, sizeof(erouter_static_ip)) == 0)
+         {
+            memcpy(ip,erouter_static_ip,size);
+            return 1;
+         }
+      }
+   }
+   return 0;
+}
