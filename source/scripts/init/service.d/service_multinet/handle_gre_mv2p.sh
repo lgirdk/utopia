@@ -51,7 +51,7 @@ source /etc/utopia/service.d/log_capture_path.sh
 THIS=/etc/utopia/service.d/service_multinet/handle_gre.sh
 
 MTU_VAL=1400
-MSS_VAL=1360
+MSS_VAL=1378
 
 GRE_PSM_BASE=dmsb.cisco.gre
 #HS_PSM_BASE=dmsb.hotspot.gre
@@ -89,6 +89,7 @@ GRE_PSM_SNOOP_OPTION60=EnableVendorClassID
 GRE_PSM_ENABLE=enable
 HS_PSM_ENABLE=Enable
 GRE_PSM_LOCALIFS=LocalInterfaces   
+GRE_PSM_TCPMSS=GreTcpMss
 WIFI_PSM_PREFIX=eRT.com.cisco.spvtg.ccsp.Device.WiFi.Radio.SSID
 WIFI_RADIO_INDEX=RadioIndex
 
@@ -311,6 +312,7 @@ read_init_params () {
 
     eval `psmcli get -e PRIMARY $HS_PSM_BASE.${inst}.$GRE_PSM_PRIENDPOINTS SECONDARY $HS_PSM_BASE.${inst}.$GRE_PSM_SECENDPOINTS NUMBER_OF_EP $HS_PSM_BASE.${inst}.$GRE_PSM_NUMBER_OF_EP BRIDGE_INST_1 $HS_PSM_BASE.${inst}.interface.1.$GRE_PSM_BRIDGES BRIDGE_INST_2 $HS_PSM_BASE.${inst}.interface.2.$GRE_PSM_BRIDGES KA_INTERVAL $GRE_OBJ_GRE.$GRE_PSM_KAINT KA_FAIL_INTERVAL $GRE_OBJ_GRE.$GRE_PSM_KAFINT KA_POLICY $HS_PSM_BASE.${inst}.$GRE_PSM_KAPOLICY KA_THRESH $HS_PSM_BASE.${inst}.$GRE_PSM_KATHRESH KA_COUNT $HS_PSM_BASE.${inst}.$GRE_PSM_KACOUNT KA_RECON_PRIM $HS_PSM_BASE.${inst}.$GRE_PSM_KARECON SNOOP_CIRCUIT $HS_PSM_BASE.${inst}.$GRE_PSM_SNOOPCIRC SNOOP_REMOTE $HS_PSM_BASE.${inst}.$GRE_PSM_SNOOPREM`
 
+    eval `psmcli get -e MSS_VAL $HS_PSM_BASE.${inst}.$GRE_PSM_TCPMSS`
     eval `psmcli get -e SNOOP_OPTION60 $HS_PSM_BASE.${inst}.$GRE_PSM_SNOOP_OPTION60`
 
     status=$?
@@ -538,7 +540,7 @@ initialize_hotpsot()
             sysevent set ${inst}_keepalive_pid $! > /dev/null
             sysevent set hotspot_${inst}-status started
 
-            update_bridge_config $2 > /dev/null
+            update_bridge_config $GRE_IFNAME > /dev/null
             arpFWrule=`sysevent setunique GeneralPurposeFirewallRule " -I OUTPUT -o $WAN_IF -p icmp --icmp-type 3 -j NFQUEUE --queue-bypass --queue-num $ARP_NFQUEUE"`
             sysevent set ${inst}_arp_queue_rule "$arpFWrule" > /dev/null
             $GRE_ARP_PROC -q $ARP_NFQUEUE  > /dev/null &
@@ -729,6 +731,29 @@ case "$1" in
         fi
     ;;
     
+    #args: hotspot gre instance
+    hotspot-update_tcpmss)
+       allGreInst="`psmcli getallinst $HS_PSM_BASE.`"
+       inst=`echo $allGreInst | cut -f 1`
+       eval `psmcli get -e MSS_VAL $HS_PSM_BASE.${inst}.$GRE_PSM_TCPMSS`
+       BRIDGE=`sysevent get gre_${inst}_current_bridges | cut -d ':' -f1 | cut -d ' ' -f1`
+       if [ "x" == "x$BRIDGE" ]
+       then
+               echo "handle_gre : Bridge instance not found. Exiting.."
+               exit 0;
+       fi
+
+       sysevent set `sysevent get gre_${inst}_${BRIDGE}_mss_rule`
+
+       if [ $MSS_VAL -ne 0 ]
+       then
+               br_mss_rule=`sysevent setunique GeneralPurposeMangleRule " -A POSTROUTING -o $BRIDGE -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss $MSS_VAL"`
+               sysevent set gre_${inst}_${BRIDGE}_mss_rule "$br_mss_rule"
+       fi
+
+       echo "handle_gre : Triggering RDKB_FIREWALL_RESTART"
+       sysevent set firewall-restart
+    ;;
     *)
         exit 3
         ;;
