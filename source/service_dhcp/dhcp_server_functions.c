@@ -154,12 +154,21 @@ static int isValidLANIP(const char* ipStr)
 {
         int octet1,octet2,octet3,octet4;
         struct sockaddr_in l_sSocAddr;
+        char rip_status[8];
+
         if(!inet_pton(AF_INET, ipStr, &(l_sSocAddr.sin_addr)))
         {
                 return 0;
         }
 
         sscanf(ipStr, "%d.%d.%d.%d", &octet1, &octet2, &octet3, &octet4);
+
+        syscfg_get(NULL, "rip_enabled", rip_status, sizeof(rip_status));
+        // TODO : IP Range for RIPv2 might need to handle. Range is specific to CMTS
+        if(atoi(rip_status) == 1)
+        {
+                return 1;
+        }
 
         if( ((octet1 != 10) && (octet1 != 172) && (octet1 != 192)) ||
                 ((octet1 == 172) && ((octet2<16) || (octet2>31)))  ||
