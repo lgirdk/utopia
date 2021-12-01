@@ -167,6 +167,11 @@ echo_t "[utopia][init] Starting syscfg using file store ($SYSCFG_BKUP_FILE)"
 if [ -f $SYSCFG_BKUP_FILE ]; then
 
    if [ -f $CUSTOMER_BOOT_CONFIG_FILE ]; then
+
+      if [ -x /usr/bin/db_mig ]; then
+         # preserving value of db_migration_complete before removing /nvram/sycfg.db file
+         DB_MIG_COMPLETE=$(grep "db_migration_complete" /nvram/syscfg.db | cut -d "=" -f2)
+      fi
       # If Customer index is set via boot config then remove /nvram/sycfg.db file
       echo -n > $SYSCFG_BKUP_FILE
    fi
@@ -178,6 +183,11 @@ if [ -f $SYSCFG_BKUP_FILE ]; then
    fi
 
    if [ -f $CUSTOMER_BOOT_CONFIG_FILE ]; then
+      # Setting preserved value of db_migration_completed
+      if [ -x /usr/bin/db_mig ] && [ "$DB_MIG_COMPLETE" = "true" ]; then
+         echo_t "[utopia][init] dbmig = $DB_MIG_COMPLETE"
+         syscfg set db_migration_completed $DB_MIG_COMPLETE
+      fi
       # Ensure that syscfg has been written back to Flash before
       # CUSTOMER_BOOT_CONFIG_FILE is removed (see below) to avoid race if
       # power is lost after removing CUSTOMER_BOOT_CONFIG_FILE but before
