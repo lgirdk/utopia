@@ -3491,7 +3491,7 @@ static int do_single_port_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, 
 #endif //FEATURE_MAPT
       
       
-    if ( (0 == strcmp("both", prot) || 0 == strcmp("tcp", prot)) && (privateIpCheck(toip)) )
+    if ( (0 == strcmp("both", prot) || 0 == strcmp("tcp", prot)))
 	  {
 	     if (isNatReady) {
             fprintf(nat_fp, "-A prerouting_fromwan -p tcp -m tcp -d %s --dport %s -j DNAT --to-destination %s%s\n", natip4, external_port, toip, port_modifier);
@@ -3584,7 +3584,7 @@ static int do_single_port_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, 
 
         }
       }
-      if ((0 == strcmp("both", prot) || 0 == strcmp("udp", prot)) &&  (privateIpCheck(toip)) )	
+      if ((0 == strcmp("both", prot) || 0 == strcmp("udp", prot)))	
 	  {
 		 if (isNatReady) {
             fprintf(nat_fp, "-A prerouting_fromwan -p udp -m udp -d %s --dport %s -j DNAT --to-destination %s%s\n", natip4, external_port, toip, port_modifier);
@@ -3814,7 +3814,7 @@ static int do_port_range_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, F
            * so if it get failed, keep doing the next step */ 
           if(0 == rc && '\0' != public_ip[0] ){
               // do one-2-one nat 
-              if ((0 != strcmp("0.0.0.0", public_ip)) &&  ( privateIpCheck(toip) ))
+              if ((0 != strcmp("0.0.0.0", public_ip)))
 			  {
 /* if TRUE static IP not be configed , skip one 2 one nat */
 #ifdef CISCO_CONFIG_TRUE_STATIC_IP
@@ -4017,7 +4017,7 @@ static int do_port_range_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, F
       int num = 0;                         // LGI ADD
       int internalPortCnt = internal_port; // LGI ADD
       
-      if ((0 == strcmp("both", prot) || 0 == strcmp("tcp", prot)) && (privateIpCheck(toip)))
+      if ((0 == strcmp("both", prot) || 0 == strcmp("tcp", prot)))
 	  {
 		 if (isNatReady) {
             // LGI ADD - START
@@ -4139,7 +4139,7 @@ static int do_port_range_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, F
 #endif
          }
       }
-      if ((0 == strcmp("both", prot) || 0 == strcmp("udp", prot)) &&  (privateIpCheck(toip)) )
+      if ((0 == strcmp("both", prot) || 0 == strcmp("udp", prot)))
 	  {
 		 if (isNatReady) {
             // LGI ADD - START
@@ -4397,8 +4397,6 @@ static int do_wellknown_ports_forwarding(FILE *nat_fp, FILE *filter_fp)
            snprintf(port_modifier, sizeof(port_modifier), ":%s", toport);
          }
 
-		 if  (privateIpCheck(toip))
-		 {
 		 	if (isWanReady) {
 	            fprintf(nat_fp, "-A prerouting_fromwan -p %s -m %s -d %s --dport %s -j DNAT --to-destination %s.%s%s\n", port_prot, port_prot, current_wan_ipaddr, port_val, lan_3_octets, toip, port_modifier);
     	     }
@@ -4416,7 +4414,6 @@ static int do_wellknown_ports_forwarding(FILE *nat_fp, FILE *filter_fp)
 		    if(filter_fp) {
             	fprintf(filter_fp, "-A wan2lan_forwarding_accept -p %s -m %s -d %s.%s --dport %s -j xlog_accept_wan2lan\n", port_prot, port_prot, lan_3_octets, toip, '\0' == toport[0] ? port_val : toport);
          	}
-		 }
       }
    }
 WellKnownPortForwardNext:
@@ -4535,7 +4532,7 @@ static int do_ephemeral_port_forwarding(FILE *nat_fp, FILE *filter_fp)
          }
 
          
-         if ((0 == strcmp("both", prot) || 0 == strcmp("tcp", prot)) &&  (privateIpCheck(toip)) )
+         if ((0 == strcmp("both", prot) || 0 == strcmp("tcp", prot)))
 		 {
 			if (isNatReady) {
                fprintf(nat_fp, "-A prerouting_fromwan -p tcp -m tcp -d %s %s %s -j DNAT --to-destination %s%s\n", natip4, external_dest_port, external_ip, toip, port_modifier);
@@ -4566,7 +4563,7 @@ static int do_ephemeral_port_forwarding(FILE *nat_fp, FILE *filter_fp)
                 fprintf(filter_fp, "-A wan2lan_forwarding_accept -p tcp -m tcp %s -d %s --dport %s -j xlog_accept_wan2lan\n", external_ip, toip, dport);
             }
          }
-         if ((0 == strcmp("both", prot) || 0 == strcmp("udp", prot)) &&  (privateIpCheck(toip)) )
+         if ((0 == strcmp("both", prot) || 0 == strcmp("udp", prot)))
 		 {
 			if (isNatReady) {
                fprintf(nat_fp, "-A prerouting_fromwan -p udp -m udp -d %s %s %s -j DNAT --to-destination %s%s\n", natip4, external_dest_port, external_ip, toip, port_modifier);
