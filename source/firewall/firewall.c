@@ -5603,9 +5603,11 @@ static int do_wan_nat_lan_clients(FILE *fp)
   {
       char erouter_static_enable[8];
       char erouter_static_ip[20];
+      char brlan_static_enable[8];
       if(isRipEnabled)
       {
          syscfg_get(NULL, "erouter_static_ip_enable", erouter_static_enable, sizeof(erouter_static_enable));
+         syscfg_get(NULL, "brlan_static_ip_enable", brlan_static_enable, sizeof(brlan_static_enable));
          if(strcmp(erouter_static_enable, "true") == 0)
          {
             if(syscfg_get(NULL, "erouter_static_ip_address", erouter_static_ip, sizeof(erouter_static_ip)) ==0)
@@ -5613,6 +5615,11 @@ static int do_wan_nat_lan_clients(FILE *fp)
                fprintf(fp, "-A postrouting_towan -s %s/%s -j SNAT --to-source %s\n", lan_ipaddr,lan_netmask,erouter_static_ip);
             }
          }
+         else if (strcmp(brlan_static_enable, "true") == 0)
+        {
+            //In the /30 static IP or more, the gateway MUST have NAT disabled on the eRouter WAN interface
+            fprintf(fp, "-A postrouting_towan -s %s/%s -j ACCEPT\n", lan_ipaddr,lan_netmask);
+        }
       }
 
 #if defined (FEATURE_MAPT) || defined (FEATURE_SUPPORT_MAPT_NAT46)
