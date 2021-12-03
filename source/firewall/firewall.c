@@ -911,6 +911,8 @@ static inline int SET_IPT_PRI_MODULD(char *s){
 #define PSM_NAME_TRUE_STATIC_ASN_ENABLE "Enable"
 #endif
 
+#define PSM_NAME_HOTSPOT_ENABLED "dmsb.hotspot.enable"
+
 #define PSM_VALUE_GET_STRING(name, str) PSM_Get_Record_Value2(bus_handle, CCSP_SUBSYS, name, NULL, &(str)) 
 #define PSM_VALUE_GET_INS(name, pIns, ppInsArry) PsmGetNextLevelInstances(bus_handle, CCSP_SUBSYS, name, pIns, ppInsArry)
 
@@ -16205,6 +16207,20 @@ static int service_start (char* strBlockTimeCmd)
    //if (!isFirewallEnabled) {
    //   unlink(filename1);
    //}
+
+#if defined (_LG_MV2_PLUS_)
+    {
+        int rc;
+        char *pStr = NULL;
+        rc = PSM_VALUE_GET_STRING(PSM_NAME_HOTSPOT_ENABLED, pStr);
+        if ((rc == CCSP_SUCCESS) && (pStr != NULL)) {
+           if (strcmp(pStr, "1") == 0) {
+               system("ebtables -t nat -I PREROUTING --logical-in brlan2 -p IPv4 --ip-proto udp --ip-destination-port 67:68 -j mark --mark-or 0x100");
+           }
+           Ansc_FreeMemory_Callback(pStr);
+       }
+    }
+#endif
 
    /* ipv6 */
    prepare_ipv6_firewall(filename2, strBlockTimeCmd);
