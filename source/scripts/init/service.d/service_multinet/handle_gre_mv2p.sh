@@ -347,6 +347,7 @@ update_bridge_config () {
     if [ x != x"$curBridges" ]; then
         remove_bridge_config ${inst} "$curBridges"
     fi
+    echo 0x100 > /proc/sys/net/bridge/bridge-nf-call-iptables-mark
 
     queue=$BASEQUEUE
     for br in $BRIDGES; do
