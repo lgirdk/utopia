@@ -1319,7 +1319,7 @@ $T2Version=2.0.1
 $T2ConfigURL=""
 
 #Defaults for mTLS in T2
-$T2mTLSEnable=true
+$$T2mTLSEnable=false
 
 #Device.X_LGI-COM_Telemetry DcmRetryConfig parameters
 $dcm_retry_attemptInterval=60
