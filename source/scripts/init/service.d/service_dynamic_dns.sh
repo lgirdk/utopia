@@ -514,8 +514,7 @@ do_start() {
       WAN_LAST_IPADDR=$SYSCFG_wan_last_ipaddr
    fi
    CURRENT_WAN_IPADDR=`sysevent get current_wan_ipaddr`
-   DnsIdx=`echo ${DDNS_CLIENT_SET_SERVER} | cut -d"." -f4`
-   CURRENT_RETURN_STATUS=`sysevent get ddns_return_status${DnsIdx}`
+   CURRENT_RETURN_STATUS=`sysevent get ddns_return_status`
 
    if [ -z $SYSCFG_wan_last_ipaddr ] ; then
       WAN_LAST_IPADDR=0.0.0.0
@@ -531,7 +530,7 @@ do_start() {
         UPDATE_NEEDED=1
         ulog ddns status "$PID ddns update required due change in wan ip address from $WAN_LAST_IPADDR to $CURRENT_WAN_IPADDR"
 
-   elif [ "$WAN_LAST_IPADDR" =  "$CURRENT_WAN_IPADDR" ] && [ "$CURRENT_RETURN_STATUS" != "success" ] ; then
+   elif [ "$WAN_LAST_IPADDR" =  "$CURRENT_WAN_IPADDR" ] && [ "$CURRENT_RETURN_STATUS" = "" ] ; then
         UPDATE_NEEDED=1
         ulog ddns status "$PID ddns update required due to the startup of the router even if no change in wan ip address from $WAN_LAST_IPADDR to $CURRENT_WAN_IPADDR"
    fi
