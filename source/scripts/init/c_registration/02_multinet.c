@@ -115,6 +115,7 @@ const char* SERVICE_CUSTOM_EVENTS[] = {
     "multinet-up|/etc/utopia/service.d/vlan_util_tchxb6.sh|NULL|"TUPLE_FLAG_EVENT,
     "lnf-setup|/etc/utopia/service.d/vlan_util_tchxb6.sh|NULL|"TUPLE_FLAG_EVENT,
     "meshbhaul-setup|/etc/utopia/service.d/vlan_util_tchxb6.sh|NULL|"TUPLE_FLAG_EVENT,
+    "meshethbhaul-bridge-setup|/etc/utopia/service.d/vlan_util_tchxb6.sh|NULL|"TUPLE_FLAG_EVENT,
     "meshethbhaul-up|/etc/utopia/service.d/vlan_util_tchxb6.sh|NULL|"TUPLE_FLAG_EVENT,
     "meshethbhaul-down|/etc/utopia/service.d/vlan_util_tchxb6.sh|NULL|"TUPLE_FLAG_EVENT,
     NULL };
@@ -128,6 +129,7 @@ const char* SERVICE_CUSTOM_EVENTS[] = {
     "multinet-up|/etc/utopia/service.d/vlan_util_xb7.sh|"ACTION_FLAG_NOT_THREADSAFE"|"TUPLE_FLAG_EVENT,
     "lnf-setup|/etc/utopia/service.d/vlan_util_xb7.sh|"ACTION_FLAG_NOT_THREADSAFE"|"TUPLE_FLAG_EVENT,
     "meshbhaul-setup|/etc/utopia/service.d/vlan_util_xb7.sh|"ACTION_FLAG_NOT_THREADSAFE"|"TUPLE_FLAG_EVENT,
+    "meshethbhaul-bridge-setup|/etc/utopia/service.d/vlan_util_xb7.sh|"ACTION_FLAG_NOT_THREADSAFE"|"TUPLE_FLAG_EVENT,
     "meshethbhaul-up|/etc/utopia/service.d/vlan_util_xb7.sh|"ACTION_FLAG_NOT_THREADSAFE"|"TUPLE_FLAG_EVENT,
     "meshethbhaul-down|/etc/utopia/service.d/vlan_util_xb7.sh|"ACTION_FLAG_NOT_THREADSAFE"|"TUPLE_FLAG_EVENT,
 #else
