@@ -2059,6 +2059,7 @@ int Utopia_GetFirewallSettings (UtopiaContext *ctx, firewall_t *fw)
     char tokenbuf[256];
     int rule_count;
     int i;
+    char buf[8];
     
     bzero(fw, sizeof(firewall_t));
 
@@ -2101,7 +2102,10 @@ int Utopia_GetFirewallSettings (UtopiaContext *ctx, firewall_t *fw)
     }
 
     fw->allow_ipsec_passthru = TRUE;
-    fw->allow_pptp_passthru = TRUE;
+
+    syscfg_get(NULL, "PPTPPassthrough", buf, sizeof(buf));
+    fw->allow_pptp_passthru = (strcmp(buf, "0") == 0) ? FALSE : TRUE;
+
     fw->allow_l2tp_passthru = TRUE;
 
     for (i = 0; i < rule_count; i++) {
