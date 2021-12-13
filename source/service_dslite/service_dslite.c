@@ -237,7 +237,7 @@ static struct in6_addr *dslite_resolve_fqdn_to_ipv6addr (const char *name, unsig
     return in6_addrs;
 }
 
-static int get_aftr (char *DSLITE_AFTR, char *dslite_mode, char *dslite_addr_type, int size_aftr)
+static int get_aftr (struct serv_dslite *sd, char *DSLITE_AFTR, char *dslite_mode, char *dslite_addr_type, int size_aftr)
 {
     int retvalue = -1;
 
@@ -245,13 +245,13 @@ static int get_aftr (char *DSLITE_AFTR, char *dslite_mode, char *dslite_addr_typ
 
     if (strcmp (dslite_mode, "1") == 0)//AFTR got from DCHP mode
     {
-        syscfg_get (NULL, "dslite_addr_fqdn_1", DSLITE_AFTR, size_aftr);
+        sysevent_get(sd->sefd, sd->setok, "dslite_dhcpv6_endpointname", DSLITE_AFTR, size_aftr);
         retvalue = 1;
     }
     else if (strcmp (dslite_mode, "2") == 0) //AFTR got from static mode
     {
         if (strcmp (dslite_addr_type, "1") == 0)
-            syscfg_get (NULL, "dslite_addr_fqdn_1", DSLITE_AFTR, size_aftr);
+            sysevent_get(sd->sefd, sd->setok, "dslite_dhcpv6_endpointname", DSLITE_AFTR, size_aftr);
         else if (strcmp (dslite_addr_type, "2") == 0)
             syscfg_get (NULL, "dslite_addr_ipv6_1", DSLITE_AFTR, size_aftr);
         else
@@ -265,6 +265,71 @@ static int get_aftr (char *DSLITE_AFTR, char *dslite_mode, char *dslite_addr_typ
     }
 
     return retvalue;
+}
+
+static void wan_dhcp_stop(void)
+{
+    FILE *fp;
+    char pid_str[10];
+    int pid = -1;
+
+    if ((fp = fopen("/tmp/udhcpc.erouter0.pid", "rb")) != NULL)
+    {
+        if (fgets(pid_str, sizeof(pid_str), fp) != NULL && atoi(pid_str) > 0)
+        {
+            pid = atoi(pid_str);
+        }
+        fclose(fp);
+    }
+
+    if (pid > 0)
+    {
+        kill(pid, SIGUSR2); // triger DHCP release
+        sleep(1);
+        kill(pid, SIGTERM); // terminate DHCP client
+    }
+    unlink("/tmp/udhcpc.erouter0.pid");
+    unlink("/tmp/udhcp.log");
+}
+
+static void restart_zebra(struct serv_dslite *sd)
+{
+    FILE *zebra_pid_fd;
+    FILE *zebra_cmdline_fd;
+    char pid_str[10];
+    char cmdline_buf[255];
+    int pid = -1;
+    int restart_needed = 1;
+
+    if ((zebra_pid_fd = fopen("/var/zebra.pid", "rb")) != NULL)
+    {
+        if (fgets(pid_str, sizeof(pid_str), zebra_pid_fd) != NULL && atoi(pid_str) > 0)
+        {
+            pid = atoi(pid_str);
+        }
+        fclose(zebra_pid_fd);
+    }
+
+    if (pid > 0)
+    {
+        sprintf(cmdline_buf, "/proc/%d/cmdline", pid);
+        if ((zebra_cmdline_fd = fopen(cmdline_buf, "rb")) != NULL)
+        {
+            if (fgets(cmdline_buf, sizeof(cmdline_buf), zebra_cmdline_fd) != NULL)
+            {
+                if(strstr(cmdline_buf, "zebra"))
+                {
+                    restart_needed = 0;
+                }
+            }
+            fclose(zebra_cmdline_fd);
+        }
+    }
+
+    if(restart_needed)
+    {
+        sysevent_set (sd->sefd, sd->setok, "zebra-restart", "", 0);
+    }
 }
 
 static int dslite_start (struct serv_dslite *sd)
@@ -282,7 +347,7 @@ static int dslite_start (struct serv_dslite *sd)
     char rule[256];
     char rule2[256];
     char return_buffer[256];
-    FILE *fptmp = NULL;
+    FILE *fpresolv = NULL;
     int Cnt;
     char dslite_mode[16], dslite_addr_type[16];
     size_t len;
@@ -298,36 +363,18 @@ static int dslite_start (struct serv_dslite *sd)
     val[0] = 0;
     buf[0] = 0;
 
-    /*
-       Wait for both "dslite_enable" and "dslite_active_1" to be set to 1
-    */
-    for (Cnt = 0; Cnt < 48; Cnt++)
-    {
-        if (strcmp (val, "1") != 0)
-            syscfg_get (NULL, "dslite_enable", val, sizeof(val));
-
-        if (strcmp (val, "1") != 0) {
-            sleep (10);
-            continue;
-        }
-
-        if (strcmp (buf, "1") != 0)
-            syscfg_get (NULL, "dslite_active_1", buf, sizeof(buf));
-
-        if (strcmp (buf, "1") != 0) {
-            sleep (10);
-            continue;
-        }
-
-        fprintf(fp_dslt_dbg, "%s: DSLite is enabled %d *********\n", __FUNCTION__, Cnt);
-        break;
-    }
+    syscfg_get (NULL, "dslite_enable", val, sizeof(val));
+    syscfg_get (NULL, "dslite_active_1", buf, sizeof(buf));
 
     if ((strcmp (val, "1") != 0) || (strcmp (buf, "1") != 0)) // Either DSLite not enabled or tunnel not enabled
     {
         fprintf(fp_dslt_dbg, "%s: DSLite not enabled, can't be started\n", __FUNCTION__);
         SEM_POST;
         return 1;
+    }
+    else
+    {
+        fprintf(fp_dslt_dbg, "%s: DSLite is enabled *********\n", __FUNCTION__);
     }
 
     val[0] = 0;
@@ -341,7 +388,7 @@ static int dslite_start (struct serv_dslite *sd)
 
     /* get the WAN side IPv6 global address */
     gw_ipv6[0] = 0;
-    sysevent_get (sd->sefd, sd->setok, "tr_" ER_NETDEVNAME "_dhcpv6_client_v6addr", gw_ipv6, sizeof(gw_ipv6));
+    sysevent_get (sd->sefd, sd->setok, "wan6_ipaddr", gw_ipv6, sizeof(gw_ipv6));
     fprintf (fp_dslt_dbg, "%s: The GW IPv6 address is %s\n", __FUNCTION__, gw_ipv6);
 
     /*
@@ -369,7 +416,7 @@ static int dslite_start (struct serv_dslite *sd)
     syscfg_get (NULL, "dslite_mode_1", dslite_mode, sizeof(dslite_mode));
     syscfg_get (NULL, "dslite_addr_type_1", dslite_addr_type, sizeof(dslite_addr_type));
 
-    dhcp_mode = get_aftr (DSLITE_AFTR, dslite_mode, dslite_addr_type, sizeof(DSLITE_AFTR));
+    dhcp_mode = get_aftr (sd, DSLITE_AFTR, dslite_mode, dslite_addr_type, sizeof(DSLITE_AFTR));
 
     if ((strlen (DSLITE_AFTR) == 0) || (strcmp (DSLITE_AFTR, "none") == 0))
     {
@@ -380,25 +427,16 @@ static int dslite_start (struct serv_dslite *sd)
     }
     fprintf (fp_dslt_dbg, "%s: AFTR address is %s\n", __FUNCTION__, DSLITE_AFTR);
 
-    /* Filter and store the WAN public IPv6 DNS server to a separate file */
-    vsystem ("cat /etc/resolv.conf | grep nameserver | grep : | grep -v \"nameserver ::1\" | awk '/nameserver/{print $2}' > /tmp/ipv6_dns_server.conf");
-    fptmp = fopen ("/tmp/ipv6_dns_server.conf", "r");
-    if (fptmp == NULL)
+    buf[0] = 'x';
+    sysevent_get (sd->sefd, sd->setok, "ipv6_nameserver", buf, sizeof(buf));
+    // fpresolv = fopen ("/etc/resolv.conf", "r");
+    if (buf[0] == 'x')
     {
         sysevent_set (sd->sefd, sd->setok, "dslite_service-status", "error", 0);
-        fprintf (fp_dslt_dbg, "%s: IPv6 DNS server isn't present !\n", __FUNCTION__);
+        fprintf (fp_dslt_dbg, "%s: ipv6_nameserver is empty !\n", __FUNCTION__);
         SEM_POST;
         return 1;
     }
-
-    if (fgets (buf, sizeof(buf), fptmp) != NULL)
-    {
-        len = strlen (buf);
-        if ((len > 0) && (buf[len - 1] == '\n'))
-            buf[len - 1] = 0;
-    }
-
-    fclose (fptmp);
 
     resolved_ipv6[0] = 0;
 
@@ -456,9 +494,7 @@ static int dslite_start (struct serv_dslite *sd)
 
     //Stop WAN IPv4 service
     route_deconfig (sd);
-
-    vsystem ("service_wan dhcp-release" "; "
-             "service_wan dhcp-stop");
+    wan_dhcp_stop();
 
     sysevent_set (sd->sefd, sd->setok, "current_wan_ipaddr", "0.0.0.0", 0);
 
@@ -498,9 +534,7 @@ static int dslite_start (struct serv_dslite *sd)
     // If GW is the IPv6 only mode, we need to start the LAN to WAN IPv4 function
     if (sd->rtmod == WAN_RTMOD_IPV6)
     {
-        vsystem ("echo 1 > /proc/sys/net/ipv4/ip_forward" "; "                  // Enable the IPv4 forwarding
-                 "/etc/utopia/service.d/service_igd.sh lan-status" "; "         // Start Upnp & IGMP proxy
-                 "/etc/utopia/service.d/service_mcastproxy.sh lan-status");
+        sysctl_iface_set ("/proc/sys/net/ipv4/ip_forward", NULL, "1");
     }
     else
     {
@@ -557,8 +591,7 @@ static int dslite_start (struct serv_dslite *sd)
     syscfg_get (NULL, "dslite_ipv6_frag_enable_1", val, sizeof(val));
 
     vsystem ("sysevent set firewall-restart" "; "       //restart firewall to install the rules
-             "conntrack_flush" "; "
-             "echo %u >/proc/dslite/dslite_ipv6_frag", (strcmp (val, "1") == 0) ? 1 : 0);
+             "conntrack_flush");
 
     sysevent_set (sd->sefd, sd->setok, "dslite_service-status", "started", 0);
 
@@ -614,26 +647,22 @@ static int dslite_stop (struct serv_dslite *sd)
 
     if ((strlen (remote_addr) != 0) && (strlen (local_addr) != 0))
     {
-        char buf[64];
+        // char buf[64];
 
         /* Change for CLM-51561. The ip -6 tunnel del command cause that zebra exit abnormally and generate coredump file.
            So stop the zebra before it. */
-        _get_shell_output ("ps > /var/tmp/process; cat /var/tmp/process | grep zebra", buf, sizeof(buf));
-        if (strlen (buf) > 0)
-            vsystem ("killall zebra &");
+        // _get_shell_output ("ps > /var/tmp/process; cat /var/tmp/process | grep zebra", buf, sizeof(buf));
+        // if (strlen (buf) > 0)
+        //     vsystem ("killall zebra &");
 
-        vsystem ("rm -rf /var/tmp/process");
+        // vsystem ("rm -rf /var/tmp/process");
 
         vsystem ("ip -6 tunnel del " TNL_NETDEVNAME " mode ip4ip6 remote %s local %s dev " ER_NETDEVNAME " encaplimit none", remote_addr, local_addr);
 
         /*The Zebra process will exit for unknown reason when execute the above tunnel delete operation.
         This may be a bug of Zebra SW package. But here we make a workaround to restart the zebra process if it's exited
         */
-        _get_shell_output ("ps > /var/tmp/process; cat /var/tmp/process | grep zebra", buf, sizeof(buf));
-        if (strlen (buf) == 0)
-            sysevent_set (sd->sefd, sd->setok, "zebra-restart", "", 0);
-
-        vsystem ("rm -rf /var/tmp/process");
+        restart_zebra(sd);
     }
     else
     {
@@ -658,9 +687,7 @@ static int dslite_stop (struct serv_dslite *sd)
     //if GW is the IPv6 only mode, we need to shutdown the LAN to WAN IPv4 function
     if (sd->rtmod == WAN_RTMOD_IPV6)
     {
-        vsystem ("echo 0 > /proc/sys/net/ipv4/ip_forward" "; "                  //Disable the IPv4 forwarding
-                 "/etc/utopia/service.d/service_igd.sh igd-stop" "; "           //Stop Upnp & IGMP proxy
-                 "/etc/utopia/service.d/service_mcastproxy.sh mcastproxy-stop");
+        sysctl_iface_set ("/proc/sys/net/ipv4/ip_forward", NULL, "0");
     }
     else
     {
@@ -695,8 +722,7 @@ static int dslite_stop (struct serv_dslite *sd)
     sysevent_set (sd->sefd, sd->setok, return_buffer, "", 0);
 
     vsystem ("sysevent set firewall-restart" "; "        //restart firewall to install the rules
-             "conntrack_flush" "; "
-             "echo 0 >/proc/dslite/dslite_ipv6_frag");
+             "conntrack_flush");
 
     sysevent_set (sd->sefd, sd->setok, "dslite_service-status", "stopped", 0);
 
