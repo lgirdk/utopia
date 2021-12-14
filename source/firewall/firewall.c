@@ -741,6 +741,7 @@ static char lan0_ipaddr[20];       // ipv4 address of the lan0 interface used to
 #endif
 static char rip_enabled[20];      // is rip enabled
 static char rip_interface_wan[20];  // if rip is enabled, then is it enabled on the wan interface
+static char brlan_static_enable[20];  // is static ip enabled for /30 and more subnets for rip.
 static char nat_enabled[20];      // is nat enabled
 static char dmz_enabled[20];      // is dmz enabled
 static char firewall_enabled[20]; // is the firewall enabled
@@ -784,6 +785,7 @@ static int isRFC1918Blocked;
 static int allowOpenPorts;
 static int isRipEnabled;
 static int isRipWanEnabled;
+static int isBrlanStaticEnabled;
 static int isNatEnabled;
 
 static int isDmzEnabled;
@@ -2539,6 +2541,7 @@ static int prepare_globals_from_configuration(void)
    memset(lan_3_octets, 0, sizeof(lan_3_octets));
    memset(rip_enabled, 0, sizeof(rip_enabled));
    memset(rip_interface_wan, 0, sizeof(rip_interface_wan));
+   memset(brlan_static_enable, 0, sizeof(brlan_static_enable));
    memset(nat_enabled, 0, sizeof(nat_enabled));
    memset(dmz_enabled, 0, sizeof(dmz_enabled));
    memset(firewall_enabled, 0, sizeof(firewall_enabled));
@@ -2556,7 +2559,8 @@ static int prepare_globals_from_configuration(void)
    //syscfg_get(NULL, "lan_ipaddr", lan_ipaddr, sizeof(lan_ipaddr));
    syscfg_get(NULL, "lan_netmask", lan_netmask, sizeof(lan_netmask)); 
    syscfg_get(NULL, "rip_enabled", rip_enabled, sizeof(rip_enabled)); 
-   syscfg_get(NULL, "rip_interface_wan", rip_interface_wan, sizeof(rip_interface_wan)); 
+   syscfg_get(NULL, "rip_interface_wan", rip_interface_wan, sizeof(rip_interface_wan));
+   syscfg_get(NULL, "brlan_static_ip_enable", brlan_static_enable, sizeof(brlan_static_enable));
    syscfg_get(NULL, "nat_enabled", nat_enabled, sizeof(nat_enabled)); 
    syscfg_get(NULL, "dmz_enabled", dmz_enabled, sizeof(dmz_enabled)); 
    syscfg_get(NULL, "firewall_enabled", firewall_enabled, sizeof(firewall_enabled)); 
@@ -2635,7 +2639,17 @@ static int prepare_globals_from_configuration(void)
    }
    rfstatus =  isInRFCaptivePortal();
    isCacheActive     = (0 == strcmp("started", transparent_cache_state)) ? 1 : 0;
-   isFirewallEnabled = (0 == strcmp("0", firewall_enabled)) ? 0 : 1; 
+   isRipEnabled      = (0 == (strcmp("1", rip_enabled))) ? 1 : 0;
+   isBrlanStaticEnabled   = ((isRipEnabled) && (0 == (strcmp("true", brlan_static_enable)))) ? 1 : 0;
+   if (isBrlanStaticEnabled)
+   {
+       isFirewallEnabled = 0;
+   }
+   else
+   {
+       isFirewallEnabled = (0 == strcmp("0", firewall_enabled)) ? 0 : 1;
+   }
+
    isFirewallEnabledV6 = (0 == strcmp("0", firewall_enabledv6)) ? 0 : 1;
 
 #if defined (FEATURE_MAPT) || defined (FEATURE_SUPPORT_MAPT_NAT46)
@@ -3247,7 +3261,10 @@ static int do_single_port_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, 
     * keeps track of the syscfg namespace of a defined port forwarding rule.
     * We iterate through these tuples until we dont find another instance in syscfg.
     */ 
-
+    if (isBrlanStaticEnabled)
+    {
+        return(0);
+    }
    int idx;
    char namespace[MAX_NAMESPACE];
    char query[MAX_QUERY];
@@ -3659,6 +3676,10 @@ SinglePortForwardNext:
  */
 static int do_port_range_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, FILE *filter_fp_v6)
 {
+    if (isBrlanStaticEnabled)
+    {
+        return(0);
+    }
    int idx;
    char namespace[MAX_NAMESPACE];
    char query[MAX_QUERY];
@@ -4246,6 +4267,10 @@ PortRangeForwardNext:
  */
 static int do_wellknown_ports_forwarding(FILE *nat_fp, FILE *filter_fp)
 {
+    if (isBrlanStaticEnabled)
+    {
+        return(0);
+    }
    int idx;
    char *filename = wellknown_ports_file_dir"/"wellknown_ports_file;
    FILE *wkp_fp = NULL;
@@ -4379,6 +4404,11 @@ WellKnownPortForwardNext:
 
 static int do_ephemeral_port_forwarding(FILE *nat_fp, FILE *filter_fp)
 {
+    if (isBrlanStaticEnabled)
+    {
+        return(0);
+    }
+
    /*unsigned int iterator;*/
    char          name[MAX_QUERY];
    char          rule[MAX_QUERY];
@@ -4550,6 +4580,11 @@ static int do_ephemeral_port_forwarding(FILE *nat_fp, FILE *filter_fp)
  */
 static int do_static_route_forwarding(FILE *filter_fp)
 {
+    if (isBrlanStaticEnabled)
+    {
+        return(0);
+    }
+
    char namespace[MAX_NAMESPACE];
    char query[MAX_QUERY];
    int  rc;
@@ -4626,7 +4661,11 @@ static int do_port_forwarding(FILE *nat_fp, FILE *filter_fp)
     *   a PREROUTING DNAT rule
     *   an ACCEPT rule
     */
-      //     FIREWALL_DEBUG("Entering do_port_forwarding\n"); 
+      //     FIREWALL_DEBUG("Entering do_port_forwarding\n");
+   if (isBrlanStaticEnabled)
+   {
+        return(0);
+   }
    if(isBridgeMode)
    {
         FIREWALL_DEBUG("do_port_forwarding : Device is in bridge mode returning\n");  
@@ -4735,7 +4774,10 @@ static int do_nonat(FILE *filter_fp)
 static int do_dmz(FILE *nat_fp, FILE *filter_fp)
 {
 
-
+   if (isBrlanStaticEnabled)
+   {
+        return(0);
+   }
    int rc;
    int  src_type = 0; // 0 is all networks, 1 is an ip[/netmask], 2 is ip range
    int nat_swapped = 0;
@@ -9597,7 +9639,12 @@ static int do_prepare_port_range_triggers(FILE *nat_fp, FILE *filter_fp)
 static int do_prepare_port_range_triggers(FILE *mangle_fp, FILE *filter_fp)
 #endif
 {
-   FIREWALL_DEBUG("Entering do_prepare_port_range_triggers\n"); 
+   FIREWALL_DEBUG("Entering do_prepare_port_range_triggers\n");
+   if (isBrlanStaticEnabled)
+   {
+       FIREWALL_DEBUG("Exiting do_prepare_port_range_triggers\n");
+       return(0);
+   }
    int idx;
    int  rc;
    char namespace[MAX_NAMESPACE];
@@ -17305,6 +17352,10 @@ static int do_ip_filter_IpV6_service(FILE *fp)
 
 static int do_ip_filter_IpV4_service(FILE *fp)
 {
+   if (isBrlanStaticEnabled)
+   {
+       return(0);
+   }
     int rc;
     char query[MAX_QUERY];
     int count=0, idx;
@@ -17555,6 +17606,10 @@ static int do_ip_filter_IpV4_service(FILE *fp)
 
 static int do_mac_filter(FILE *fp)
 {
+    if (isBrlanStaticEnabled)
+    {
+        return(0);
+    }
     int rc;
     char query[MAX_QUERY];
     int count=0, idx;
