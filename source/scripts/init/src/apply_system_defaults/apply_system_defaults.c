@@ -96,7 +96,7 @@ static int global_fd = 0;
    always over-ride any setting which may have already been configured.
 */
 
-//#define ALWAYS_CONVERT
+#define ALWAYS_CONVERT
 
 #if ! defined (ALWAYS_CONVERT)
 //Flag to indicate a db conversion is necessary
