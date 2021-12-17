@@ -741,7 +741,7 @@ static int gen_zebra_conf(int sefd, token_t setok)
     }
     FILE *fp = NULL;
     char rtmod[16], ra_en[16], dh6s_en[16];
-    int ra_interval;
+    int ra_interval, ra_lifetime;
     char name_servs[1024] = {0};
     char dnssl[2560] = {0};
     char dnssl_lft[16];
@@ -1144,6 +1144,17 @@ static int gen_zebra_conf(int sefd, token_t setok)
 #endif
 
 #endif//_HUB4_PRODUCT_REQ_
+            if (i == 0) {
+               syscfg_get(NULL, "ra_lifetime", buf, sizeof(buf));
+            }
+            else {
+               sprintf(syscfgName, "ra_lifetime_%d", i+1);
+               syscfg_get(NULL, syscfgName, buf, sizeof(buf));
+            }
+            ra_lifetime = atoi(buf);
+            if (ra_lifetime <= 0)
+                ra_lifetime = 180;
+
             if(i == 0)
                strcpy(syscfgName, "ra_interval");
             else
@@ -1161,7 +1172,8 @@ static int gen_zebra_conf(int sefd, token_t setok)
             syscfg_get(NULL, syscfgName, buf, sizeof(buf));
             ra_interval = atoi(buf);
             if (ra_interval <= 0)
-                ra_interval = 3;
+                ra_interval = 180;
+            ra_interval = (ra_interval > ra_lifetime) ? ra_lifetime : ra_interval;
             fprintf(fp, "   ipv6 nd ra-interval %d\n", ra_interval);
 #else
             ra_interval = 180;
@@ -1177,15 +1189,6 @@ static int gen_zebra_conf(int sefd, token_t setok)
             if (strcmp(default_wan_interface, wan_interface) != 0)
 #endif
             {
-                int ra_lifetime;
-                if(i == 0)
-                   strcpy(syscfgName, "ra_lifetime");
-                else
-                   sprintf(syscfgName, "ra_lifetime_%d", i+1);
-                syscfg_get(NULL, syscfgName, buf, sizeof(buf));
-                ra_lifetime = atoi(buf);
-                if (ra_lifetime <= 0)
-                    ra_lifetime = 180;
                 fprintf(fp, "   ipv6 nd ra-lifetime %d\n", ra_lifetime);
             }
             else
@@ -1199,15 +1202,6 @@ static int gen_zebra_conf(int sefd, token_t setok)
                 }
                 else
                 {
-                    int ra_lifetime;
-                    if(i == 0)
-                       strcpy(syscfgName, "ra_lifetime");
-                    else
-                       sprintf(syscfgName, "ra_lifetime_%d", i+1);
-                    syscfg_get(NULL, syscfgName, buf, sizeof(buf));
-                    ra_lifetime = atoi(buf);
-                    if (ra_lifetime <= 0)
-                        ra_lifetime = 180;
                     fprintf(fp, "   ipv6 nd ra-lifetime %d\n", ra_lifetime);
                 }
             }
