@@ -742,10 +742,10 @@ $router_autonomous_flag=1
 $router_adv_provisioning_enable=1
 
 # Router Advertisement Transmission Interval
-$ra_interval=3
+$ra_interval=180
 
 # Router Advertisement Lifetime
-$ra_lifetime=180
+$ra_lifetime=1800
 
 $last_router_reboot_time=0
 $router_reboot_Interval=28800
