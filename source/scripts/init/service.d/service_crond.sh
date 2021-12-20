@@ -220,6 +220,8 @@ service_start ()
 
       addCron "* * * * * /usr/ccsp/tad/selfheal_bootup.sh"
 
+      addCron "48 * * * * nice -n 19 /usr/ccsp/tad/log_status.sh &"
+
 	  #monitor cosa_start_rem triggered state in case its not triggered on 
 	  #bootup even after 10 minutes then we have to trigger this via cron
       addCron "2,12,22,32,42,52 * * * * /usr/ccsp/tad/selfheal_cosa_start_rem.sh"
