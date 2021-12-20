@@ -91,10 +91,6 @@ fi
 echo_t "Starting log module.."
 /usr/sbin/log_start.sh
 
-mkdir -p /tmp/cron
-
-mount --bind /tmp/cron/ /etc/cron
-
 cat /etc/dhcp_static_hosts > /var/tmp/dhcp_static_hosts
 cat /etc/hosts > /var/tmp/hosts
 cat /etc/hostname > /var/tmp/hostname
