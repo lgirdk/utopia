@@ -67,7 +67,6 @@ then
 	fi
 
 	sysevent set firewall-restart
-	/bin/sh /etc/start_lighttpd.sh restart
 
 else
 	echo 'FirstInstall: Revert Redirection'
@@ -79,6 +78,5 @@ else
 		sleep 2
 		dibbler-server start
 		sysevent set firewall-restart
-		/bin/sh /etc/start_lighttpd.sh restart
 	fi
 fi
