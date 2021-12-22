@@ -1245,8 +1245,8 @@ $WebUIEnable=1
 
 #SyndicationFlowControl Defaults
 $SyndicationFlowControlEnable=false
-$DSCP_InitialForwardedMark=
-$DSCP_InitialOutputMark=
+$DSCP_InitialForwardedMark=cs0
+$DSCP_InitialOutputMark=af22
 $dmesglogsync_interval=900
 
 #Enable log and core file encryption at S3 Amazon
@@ -1417,6 +1417,14 @@ $DLCaStoreEnabled=false
 #Wake-On-Lan defaults
 $wol_interval=500
 $wol_retries=3
+
+# The following are typically taken from the Partner ID specific json config file.
+# Add them to system_defaults so that the dependency on the Comcast Partner ID infrastructure can be dropped.
+$StartupIPMode=0
+$IPv4PrimaryDhcpServerOptions=FFFFFFFF
+$IPv4SecondaryDhcpServerOptions=FFFFFFFF
+$WANsideSSH_Enable=false
+$TR104Enable=false
 
 #mta rf-loss detection enable/disable
 $mta_rf_loss_detection=0
