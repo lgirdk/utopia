@@ -1413,6 +1413,8 @@ $IPv4PrimaryDhcpServerOptions=FFFFFFFF
 $IPv4SecondaryDhcpServerOptions=FFFFFFFF
 $WANsideSSH_Enable=false
 $TR104Enable=false
+$WiFiRegionCode=USI
+$XHS_SSIDprefix=XHS
 
 #mta rf-loss detection enable/disable
 $mta_rf_loss_detection=0
