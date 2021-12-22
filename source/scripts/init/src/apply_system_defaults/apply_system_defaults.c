@@ -2236,6 +2236,10 @@ int main( int argc, char **argv )
    system( "sh /lib/rdk/apply_partner_customization.sh" );
 #endif
 
+// Disable applying Partner specific paramters. Required parameters already part of syscfg file
+
+#if 0
+
   if ( access( PARTNER_DEFAULT_APPLY_FILE , F_OK ) != 0 )  
   {
 	  isNeedToApplyPartnersDefault = 0;
@@ -2336,6 +2340,8 @@ int main( int argc, char **argv )
 		if( NULL != db_val )
 		free( db_val );
    }
+
+#endif
 
    return(0);
 }
