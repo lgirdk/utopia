@@ -1242,7 +1242,6 @@ $dmesglogsync_interval=900
 #Enable log and core file encryption at S3 Amazon
 $encryptcloudupload=0
 #EthWAN Defaults
-$AllowEthernetWAN=
 $eth_wan_enabled=false
 #SNMPv2 control default values
 $$V2Support=true
