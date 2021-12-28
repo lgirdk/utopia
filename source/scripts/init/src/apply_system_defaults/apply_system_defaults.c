@@ -1365,10 +1365,6 @@ void updateSysCfgdDB(char * key, char * value)
       set_syscfg_partner_values( value,"TR69CertLocation" );
       IsPSMMigrationNeeded = 1;
    }
-   if ( 0 == strcmp ( key, "Device.DeviceInfo.X_RDKCENTRAL-COM_Syndication.RDKB_UIBranding.AllowEthernetWAN") )
-   {
-         set_syscfg_partner_values( value,"AllowEthernetWAN" );
-   }
 #ifdef MTA_TR104SUPPORT
       if ( 0 == strcmp ( key, "Device.DeviceInfo.X_RDKCENTRAL-COM_RFC.Feature.TR104.Enable" ) )
       {
