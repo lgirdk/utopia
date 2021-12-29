@@ -1266,9 +1266,6 @@ $gw_health=0
 #Wan_LinkHeal_Enable default Value
 $wanlinkheal=true
 
-#UPnP Refactor default Value
-$Refactor=false
-
 #Cpu Mem Frag Interval
 $CpuMemFrag_Interval=4
 
