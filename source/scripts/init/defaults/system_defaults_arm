@@ -778,8 +778,8 @@ $cosa_usgv2_rip00::If1ReceiveVersion=2
 $cosa_usgv2_rip00::If1AuthenticateType=1
 $cosa_usgv2_rip00::If1KeyChainName=keychain1
 $cosa_usgv2_rip00::If1KeyID=1
-$cosa_usgv2_rip00::If1Md5KeyValue=
-$cosa_usgv2_rip00::If1SimplePassword=
+$cosa_usgv2_rip00::If1Md5KeyValue=rdkb
+$cosa_usgv2_rip00::If1SimplePassword=rdkb
 
 # RIPNG
 # $ripng_enabled=0
