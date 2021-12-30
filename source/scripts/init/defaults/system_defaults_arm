@@ -1218,7 +1218,6 @@ $TR069PSWDCTRLFLAG=false
 $X_RDKCENTRAL-COM_AkerEnable=false
 #codebig
 $codebigsupport=0
-$CodeBigFirstEnabled=false
 
 #ManageNotifications
 $ManageableNotificationEnabled=true
