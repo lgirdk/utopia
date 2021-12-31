@@ -53,8 +53,6 @@ AC_PROG_INSTALL
 AM_PROG_CC_C_O
 AM_PROG_LIBTOOL(libtool)
 
-AM_CONDITIONAL([PLATFORM_HAL_SYNDICATION], [test "$PLATFORM_HAL_SYNDICATION" = "yes"])
-
 # Specify ccsp platform (device)
 AC_ARG_WITH([ccsp-platform],
 [AC_HELP_STRING([--with-ccsp-platform={intel_usg,pc,bcm,intel_puma7}],
