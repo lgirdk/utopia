@@ -1766,14 +1766,7 @@ static int apply_partnerId_default_values (char *data, char *PartnerID)
 	cJSON 	*partnerObj 	= NULL;
 	cJSON 	*json 			= NULL;
 	cJSON	*paramObjVal	= NULL;
-	char 	*userName 		= NULL, 
-		    *defaultAdminIP = NULL,	 
-		    *passWord 		= NULL,	 
-		    *subnetRange 	= NULL,
-	*minAddress = NULL,
-	*maxAddress = NULL,
-        *allow_ethernet_wan = NULL,
-        *initialForwardedMark = NULL,
+	char 	*initialForwardedMark = NULL,
         *initialOutputMark = NULL,
         *startupipmode = NULL,
         *pridhcpoption = NULL,
@@ -1790,12 +1783,11 @@ static int apply_partnerId_default_values (char *data, char *PartnerID)
 
 	/*
 	  * Case 1:
-	  * Check whether PartnerID is comcast of not. 
+	  * Check whether PartnerID is comcast of not - always true.
 	  * if "comcast" then we don't want to apply any defaults 
 	  * if not "comcast" then we should apply partners defaults
 	  *
 	  * Case 2:
-	  * Check whether PartnerID is comcast of not. 
 	  * if "/nvram/.apply_partner_defaults" file available or not
 	  * if available then go ahead and apply default values corresponding partners
 	  * if not available then it would have applied before boot-up
@@ -1837,163 +1829,9 @@ static int apply_partnerId_default_values (char *data, char *PartnerID)
 		} 
 		else
 		{
-			int isThisComcastPartner = 0;
-			//Check whether this is comcast partner or not
-			// Note that in this context, RDKM is counted as Comcast since we want
-			// generic builds (which default to Comcast) and Mv2+ builds (which set
-			// Partner ID to RDKM) to have the same behaviour. Fixme: To be
-			// reviewed... the solution is probably that generic builds should default
-			// to Partner ID RDKM rather than Comcast ?
-			if ((strcmp( "RDKM", PartnerID) == 0) || (strcmp( "comcast", PartnerID) == 0))
-			{
-				isThisComcastPartner = 1;
-			}
-				
 			partnerObj = cJSON_GetObjectItem( json, PartnerID );
 			if( partnerObj != NULL) 
 			{
-				// Don't overwrite this value into syscfg.db for comcast partner
-				if( ( 0 == isThisComcastPartner ) && \
-					( 1 == isNeedToApplyPartnersDefault )
-				  )
-				{
-					paramObjVal = cJSON_GetObjectItem(cJSON_GetObjectItem( partnerObj, "Device.DeviceInfo.X_RDKCENTRAL-COM_Syndication.RDKB_UIBranding.LocalUI.DefaultLoginUsername"), "ActiveValue");
-					if ( paramObjVal != NULL )
-					{
-						userName = paramObjVal->valuestring; 
-					
-						if (userName != NULL) 
-						{
-							set_syscfg_partner_values(userName,"user_name_3");
-							userName = NULL;
-						}	
-						else
-						{
-							APPLY_PRINT("%s - DefaultLoginUsername Value is NULL\n", __FUNCTION__ );
-						}	
-					}
-
-					paramObjVal = cJSON_GetObjectItem(cJSON_GetObjectItem( partnerObj, "Device.DeviceInfo.X_RDKCENTRAL-COM_Syndication.RDKB_UIBranding.LocalUI.DefaultLoginPassword"), "ActiveValue");
-                                        if ( paramObjVal != NULL )
-					{
-						passWord = paramObjVal->valuestring;
-
-                                                if (strstr( PartnerID, "sky-" ) != NULL)
-                                                {
-                                                    APPLY_PRINT("%s - Fetching %s password from serial data \n",__FUNCTION__, PartnerID);
-                                                    // For Sky, we need to pull the default login from the /tmp/serial.txt file.
-                                                    FILE *fp = NULL;
-                                                    char DefaultPassword[25] = {0};
-
-                                                    fp = popen("grep 'WIFIPASSWORD' /tmp/serial.txt | cut -d '=' -f 2 | tr -d [:space:]", "r");
-                                                    if (fp == NULL)
-                                                    {
-                                                        APPLY_PRINT("%s - ERROR Grabbing the default password\n",__FUNCTION__);
-                                                    } else {
-                                                                fgets(DefaultPassword, sizeof(DefaultPassword), fp);
-                                                                pclose(fp);
-                                                    }
- 
-                                                    if (DefaultPassword[0] != '\0')
-                                                        {
-                                                                set_syscfg_partner_values(DefaultPassword,"user_password_3");
-                                                        }
-                                                        else
-                                                        {
-                                                                APPLY_PRINT("%s - DefaultLoginPassword Value is NULL\n", __FUNCTION__ );
-                                                        }
-                                                }
-					
-						else if (passWord != NULL) 
-						{
-							set_syscfg_partner_values(passWord,"user_password_3");
-							passWord = NULL;
-						}	
-						else
-						{
-							APPLY_PRINT("%s - DefaultLoginUsername Value is NULL\n", __FUNCTION__ );
-						}	
-					}
-
-					paramObjVal = cJSON_GetObjectItem(cJSON_GetObjectItem( partnerObj, "Device.DeviceInfo.X_RDKCENTRAL-COM_Syndication.RDKB_UIBranding.DefaultAdminIP"), "ActiveValue");
-                                        if ( paramObjVal != NULL )
-                                        {
-						defaultAdminIP = paramObjVal->valuestring; 
-					
-						if (defaultAdminIP != NULL) 
-						{
-							set_syscfg_partner_values(defaultAdminIP,"lan_ipaddr");
-							defaultAdminIP = NULL;
-						}	
-						else
-						{
-							APPLY_PRINT("%s - DefaultAdminIP Value is NULL\n", __FUNCTION__ );
-						}	
-					}
-
-					paramObjVal = cJSON_GetObjectItem(cJSON_GetObjectItem( partnerObj, "Device.DeviceInfo.X_RDKCENTRAL-COM_Syndication.RDKB_UIBranding.DefaultLocalIPv4SubnetRange"), "ActiveValue");
-                                        if ( paramObjVal != NULL )
-                                        {
-						subnetRange = paramObjVal->valuestring; 
-					
-						if (subnetRange != NULL) 
-						{
-							set_syscfg_partner_values(subnetRange,"lan_netmask");
-							subnetRange = NULL;
-						}	
-						else
-						{
-							APPLY_PRINT("%s - DefaultLocalIPv4SubnetRange Value is NULL\n", __FUNCTION__ );
-						}	
-					}
-                                        paramObjVal = cJSON_GetObjectItem(cJSON_GetObjectItem( partnerObj, "Device.DHCPv4.Server.Pool.1.MinAddress"), "ActiveValue");
-                                        if ( paramObjVal != NULL )
-                                        {
-						minAddress = paramObjVal->valuestring;
-
-						if (minAddress != NULL)
-						{
-							set_syscfg_partner_values(minAddress,"dhcp_start");
-							minAddress = NULL;
-						}
-						else
-						{
-							APPLY_PRINT("%s - Default DHCP minAddress Value is NULL\n", __FUNCTION__ );
-						}
-					}
-                                        paramObjVal = cJSON_GetObjectItem(cJSON_GetObjectItem( partnerObj, "Device.DHCPv4.Server.Pool.1.MaxAddress"), "ActiveValue");
-                                        if ( paramObjVal != NULL )
-                                        {
-                                                maxAddress = paramObjVal->valuestring;
-
-                                                if (maxAddress != NULL)
-                                                {
-                                                        set_syscfg_partner_values(maxAddress,"dhcp_end");
-                                                        maxAddress = NULL;
-                                                }
-                                                else
-                                                {
-                                                        APPLY_PRINT("%s - Default DHCP maxAddress Value is NULL\n", __FUNCTION__ );
-                                                }
-                                        }
-					paramObjVal = cJSON_GetObjectItem(cJSON_GetObjectItem( partnerObj, "Device.DeviceInfo.X_RDKCENTRAL-COM_Syndication.RDKB_UIBranding.AllowEthernetWAN"), "ActiveValue");
-					if ( paramObjVal != NULL )
-                    {
-                        allow_ethernet_wan = paramObjVal->valuestring;
-
-                        if (allow_ethernet_wan != NULL)
-                        {
-                            set_syscfg_partner_values(allow_ethernet_wan,"AllowEthernetWAN");
-                            allow_ethernet_wan = NULL;
-                        }
-                        else
-                        {
-                            APPLY_PRINT("%s - AllowEthernetWAN Value is NULL\n", __FUNCTION__ );
-                        }
-                    }
- 
-				}
-
 				if( ( 1 == isNeedToApplyPartnersDefault ) || \
 						( 1 == isNeedToApplyPartnersPSMDefault ) 
 					  )
