@@ -29,12 +29,7 @@ AM_LDFLAGS = $(top_builddir)/source/services/lib/libsrvmgr.la \
              $(top_builddir)/source/utapi/lib/libutapi.la \
              $(top_builddir)/source/utctx/lib/libutctx.la \
              -ltelemetry_msgsender \
-             -lcjson \
 	     -lccsp_common $(DBUS_LIBS)
-
-if PLATFORM_HAL_SYNDICATION
-AM_LDFLAGS += "-lhal_platform -lsysevent -lutctx -lutapi -lhal_wifi"
-endif
 
 AM_CPPFLAGS = -I$(top_srcdir)/source/scripts/init/src
 
