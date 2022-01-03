@@ -1245,8 +1245,6 @@ $DSCP_InitialForwardedMark=cs0
 $DSCP_InitialOutputMark=af22
 $dmesglogsync_interval=900
 
-#Enable log and core file encryption at S3 Amazon
-$encryptcloudupload=0
 #EthWAN Defaults
 $eth_wan_enabled=false
 
