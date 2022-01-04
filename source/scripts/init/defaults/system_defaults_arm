@@ -1487,9 +1487,6 @@ $hwHealthTest=false
 #BridgeUtilEnableParam
 $bridge_util_enable=false
 
-#TDK Enable default value
-$TDKEnable=false
-
 #CMRouteIsolation is enabled by default
 $CMRouteIsolation_Enable=true
 
