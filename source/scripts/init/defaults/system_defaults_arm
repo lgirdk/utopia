@@ -1489,9 +1489,6 @@ $hwHealthTest=false
 #BridgeUtilEnableParam
 $bridge_util_enable=false
 
-#TDK Enable default value
-$TDKEnable=false
-
 #Alias Manager
 $custom_data_model_enabled=1
 
