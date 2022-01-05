@@ -120,7 +120,7 @@ service_start ()
       echo "10 */6 * * *  /usr/ccsp/tad/getSsidNames.sh" >> $CRONTAB_FILE
 
 #rdkb-4297 Runs on the 1st minute of every 12th hour
-      echo "1 */12 * * *  /usr/ccsp/pam/moca_status.sh" >> $CRONTAB_FILE
+      #echo "1 */12 * * *  /usr/ccsp/pam/moca_status.sh" >> $CRONTAB_FILE                       //script not used for MV1/MV2PLUS
 
 #RDKB-17984: Runs every 12 hours and prints mesh status
       if [ "$BOX_TYPE" != "XB3" ] && [ "$BOX_TYPE" != "MV1" ]; then
