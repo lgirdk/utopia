@@ -760,7 +760,6 @@ static char nat_enabled[20];      // is nat enabled
 static char dmz_enabled[20];      // is dmz enabled
 static char firewall_enabled[20]; // is the firewall enabled
 static char firewall_enabledv6[20]; // is the IPv6 firewall enabled
-static char container_enabled[20]; // is the container enabled
 static char bridge_mode[20];      // is system in bridging mode
 static char log_level[5];         // if logging is enabled then this is the log level
 static int  log_leveli;           // an integer version of the above
@@ -2395,41 +2394,6 @@ int get_ip6address (char * ifname, char ipArry[][40], int * p_num, unsigned int 
 
 #endif
 
-static int bIsContainerEnabled( void)
- {
-    char *pContainerSupport = NULL, *pLxcBridge = NULL;
-    int isContainerEnabled = 0, offsetValue = 0;
-    char fileContent[255] = {'\0'};
-    FILE *deviceFilePtr;
-    errno_t   safec_rc     = -1;
-
-    FIREWALL_DEBUG("Entering bIsContainerEnabled\n");
-    deviceFilePtr = fopen( DEVICE_PROPERTIES, "r" );
-
-    if (deviceFilePtr) {
-        while (fscanf(deviceFilePtr , "%s", fileContent) != EOF ) {
-            if ((pContainerSupport = strstr(fileContent, "CONTAINER_SUPPORT")) != NULL) {
-                offsetValue = strlen("CONTAINER_SUPPORT=");
-                pContainerSupport = pContainerSupport + offsetValue;
-                if (0 == strncmp(pContainerSupport, "1", 1)) {
-                   isContainerEnabled = 1;
-                }
-            } else if ((pLxcBridge = strstr(fileContent, "LXC_BRIDGE_NAME")) != NULL) {
-                offsetValue = strlen("LXC_BRIDGE_NAME=");
-                pLxcBridge = pLxcBridge + offsetValue ;
-                safec_rc = strcpy_s(lxcBridgeName, sizeof(lxcBridgeName),pLxcBridge);
-                ERR_CHK(safec_rc);
-            } else {
-                continue;
-            }
-        }
-        fclose(deviceFilePtr);
-    }
- 
-    FIREWALL_DEBUG("Exiting bIsContainerEnabled\n");
-    return isContainerEnabled;
- }
-
 #if defined(CONFIG_KERNEL_NETFILTER_XT_TARGET_CT)
 /*
  *  Procedure     : prepare_multinet_prerouting_raw
@@ -2602,7 +2566,6 @@ static int prepare_globals_from_configuration(void)
    memset(dmz_enabled, 0, sizeof(dmz_enabled));
    memset(firewall_enabled, 0, sizeof(firewall_enabled));
    memset(firewall_enabledv6, 0, sizeof(firewall_enabledv6));
-   memset(container_enabled, 0, sizeof(container_enabled));
    memset(bridge_mode, 0, sizeof(bridge_mode));
    memset(log_level, 0, sizeof(log_level));
    memset(lan_local_ipv6,0,sizeof(lan_local_ipv6));
@@ -2621,7 +2584,6 @@ static int prepare_globals_from_configuration(void)
    syscfg_get(NULL, "dmz_enabled", dmz_enabled, sizeof(dmz_enabled)); 
    syscfg_get(NULL, "firewall_enabled", firewall_enabled, sizeof(firewall_enabled)); 
    syscfg_get(NULL, "firewall_enabledv6", firewall_enabledv6, sizeof(firewall_enabledv6));
-   syscfg_get(NULL, "containersupport", container_enabled, sizeof(container_enabled)); 
    //mipieper - change for pseudo bridge
    //syscfg_get(NULL, "bridge_mode", bridge_mode, sizeof(bridge_mode)); 
    sysevent_get(sysevent_fd, sysevent_token, "bridge_mode", bridge_mode, sizeof(bridge_mode));
@@ -2708,9 +2670,6 @@ static int prepare_globals_from_configuration(void)
 
    iseRouter0IPv6AddrReady = (current_wan_ipv6_num > 0) ? 1 : 0;
 
-   if (0 == strcmp("true", container_enabled)) {
-      isContainerEnabled = bIsContainerEnabled();
-   }
    rfstatus =  isInRFCaptivePortal();
    isCacheActive     = (0 == strcmp("started", transparent_cache_state)) ? 1 : 0;
    isRipEnabled      = (0 == (strcmp("1", rip_enabled))) ? 1 : 0;
@@ -13583,7 +13542,6 @@ static int prepare_MoCA_bridge_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *nat
    const char *HomeNetIsolation = "dmsb.l2net.HomeNetworkIsolation";
    const char *HomePrivateLan = "dmsb.l2net.1.Name";
    const char *HomeMoCALan = "dmsb.l2net.9.Name";
-   char MoCA_AccountIsolation[8] = {0};
    int rc = 0;
    errno_t safec_rc = -1;
    if(bus_handle != NULL)
@@ -13623,51 +13581,6 @@ static int prepare_MoCA_bridge_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *nat
           fprintf(filter_fp, "-A FORWARD -i %s -o %s -j ACCEPT\n", mLan,current_wan_ifname);
           fprintf(filter_fp, "-A FORWARD -i %s -o %s -j ACCEPT\n", mLan,mLan);
           fprintf(filter_fp, "-A OUTPUT -o %s -j ACCEPT\n",mLan);
-          MoCA_AccountIsolation[0] = '\0';
-          rc = syscfg_get(NULL, "enableMocaAccountIsolation", MoCA_AccountIsolation, sizeof(MoCA_AccountIsolation));
-          if (0 != rc || '\0' == MoCA_AccountIsolation[0]) {
-	  }
-          else if (0 == strcmp("true", MoCA_AccountIsolation)) {
-          // increment ttl if upnp discovery from brlan0
-          fprintf(mangle_fp, "-A PREROUTING -i %s -d 239.255.255.250 -j TTL --ttl-inc 1\n", pLan);
-
-          // traffic between brlan0 and brlan10, subject to moca_isolation
-          fprintf(filter_fp, "-I FORWARD -i %s -o %s -j moca_isolation\n", pLan, mLan);
-          fprintf(filter_fp, "-I FORWARD -i %s -o %s -j moca_isolation\n", mLan, pLan);
-          fprintf(filter_fp, "-A moca_isolation -o %s -s %s/24 -d 239.255.255.250/32 -j ACCEPT\n", mLan, lan_ipaddr);
-          // moca traffic, default to drop all
-          fprintf(filter_fp, "-A moca_isolation -i %s -d %s/24 -j DROP\n", mLan, lan_ipaddr);
-          fprintf(filter_fp, "-A moca_isolation -o %s -s %s/24 -j DROP\n", mLan, lan_ipaddr);
-          // if the packet does not match the above, do we DROP it ? ACCEPT it ? or
-          // send it back to the FORWARD chain ? currently send it back to FORWARD,
-
-          // moca whitelist, allow them
-          FILE *whitelist_fp;
-          char line[256];
-          int len;
-
-          whitelist_fp = fopen("/tmp/moca_whitelist.txt", "r");
-          if (whitelist_fp != NULL)
-          {
-              memset(line, 0, sizeof(line));
-              while (fgets(line, sizeof(line)-1, whitelist_fp) != 0)
-              {
-                  if (strstr(line, "169.254."))
-                  {
-                      len = strlen(line);
-                      line[len-2] = '\0';
-                      fprintf(filter_fp, "-I moca_isolation -i %s -s %s/32 -j ACCEPT\n", mLan, line);
-                      fprintf(filter_fp, "-I moca_isolation -o %s -d %s/32 -j ACCEPT\n", mLan, line);
-			/* Establish point to point traffic- whitelisting */
-                      fprintf(filter_fp, "-I moca_isolation -i %s -d %s/24 -s %s/32 -j ACCEPT\n", mLan, lan_ipaddr,line);
-                      fprintf(filter_fp, "-I moca_isolation -o %s -s %s/24 -d %s/32 -j ACCEPT\n", mLan, lan_ipaddr,line);
-                      memset(line, 0, sizeof(line));
-		  }
-	      }
-
-              fclose(whitelist_fp);
-	  }
-	}
        }
 
    }
