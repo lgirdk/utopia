@@ -1210,9 +1210,6 @@ $unique_telemetry_enable=false
 $unique_telemetry_tag=
 $unique_telemetry_interval=0
 
-#ForwardSSH is enabled by default
-$ForwardSSH=true
-
 #mTlsLogUpload is disabled by default.
 $mTlsLogUpload_Enable=false
 
@@ -1372,10 +1369,6 @@ $dslite_tcpmss_1=1420
 
 #dslite_ipv6_frag_enable - Enable/disable dslite IPv6 frag
 $dslite_ipv6_frag_enable_1=0
-
-#Credential Download and usage is diasbled by default
-$CredDwnld_Enable=false
-$CredDwnld_Use=false
 
 #CA store download is disabled by default
 $DLCaStoreEnabled=false
