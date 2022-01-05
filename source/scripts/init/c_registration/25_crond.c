@@ -62,7 +62,7 @@ void srv_register(void) {
 
    // we want cron_every_minute to be an event
    // this will generate a sysevent event every minute
-   system("sysevent setoptions cron_every_minute " TUPLE_FLAG_EVENT);
+   //system("sysevent setoptions cron_every_minute " TUPLE_FLAG_EVENT);                       /* event in service_wan_ipv6.sh and this script is not used  */
 }
 
 #ifdef RDKB_EXTENDER_ENABLED
