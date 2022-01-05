@@ -1199,8 +1199,6 @@ $local_ui_enable=true
 $SNMPPSWDCTRLFLAG=false
 $TR069PSWDCTRLFLAG=false
 $X_RDKCENTRAL-COM_AkerEnable=false
-#codebig
-$codebigsupport=0
 
 #ManageNotifications
 $ManageableNotificationEnabled=true
@@ -1370,9 +1368,6 @@ $dslite_tcpmss_1=1420
 #dslite_ipv6_frag_enable - Enable/disable dslite IPv6 frag
 $dslite_ipv6_frag_enable_1=0
 
-#CA store download is disabled by default
-$DLCaStoreEnabled=false
-
 #Wake-On-Lan defaults
 $wol_interval=500
 $wol_retries=3
@@ -1469,9 +1464,6 @@ $custom_data_model_enabled=1
 
 #CMRouteIsolation is enabled by default
 $CMRouteIsolation_Enable=true
-
-#SHORTS is disabled by default
-$ShortsEnabled=false
 
 #Allowed Subnet Table
 $lglanAllowedSubnetCount=1
