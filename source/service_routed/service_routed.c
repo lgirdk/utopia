@@ -1524,11 +1524,6 @@ static int serv_routed_init(struct serv_routed *sr)
         return -1;
     }
 
-    if (syscfg_init() != 0) {
-        fprintf(fp_routd_dbg, "%s: fail to init syscfg\n", __FUNCTION__);
-        return -1;
-    }
-
     /*
         LGI ADD
         Restore the Router Forwarding value from syscfg

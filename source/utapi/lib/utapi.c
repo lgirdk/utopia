@@ -8127,10 +8127,7 @@ int Utopia_GetV4DayOfWeekByIndex(UtopiaContext *ctx, unsigned long ulIndex, fwv4
     Utopia_GetIndexed(ctx, UtopiaValue_LGFW_V4DayOfWeek_Alias, index, V4DayOfWeek->Alias, sizeof(V4DayOfWeek->Alias));
     Utopia_GetIndexed(ctx, UtopiaValue_LGFW_V4DayOfWeek_BlockTimeBitMask, index, V4DayOfWeek->V4DayOfWeek_BlockTimeBitMask, sizeof(V4DayOfWeek->V4DayOfWeek_BlockTimeBitMask));
 
-    if (syscfg_init() == 0)
-    {
-        syscfg_get(NULL, "v4_dayofweek_block_time_bitmask_type", buf, sizeof(buf));
-    }
+    syscfg_get(NULL, "v4_dayofweek_block_time_bitmask_type", buf, sizeof(buf));
 
     if (atoi(buf) == 0)
     {
@@ -8187,10 +8184,7 @@ int Utopia_GetV6DayOfWeekByIndex(UtopiaContext *ctx, unsigned long ulIndex, fwv6
 
     Utopia_GetIndexed(ctx, UtopiaValue_LGFW_V6DayOfWeek_BlockTimeBitMask, index, V6DayOfWeek->V6DayOfWeek_BlockTimeBitMask, sizeof(V6DayOfWeek->V6DayOfWeek_BlockTimeBitMask));
 
-    if (syscfg_init() == 0)
-    {
-        syscfg_get(NULL, "v6_dayofweek_block_time_bitmask_type", buf, sizeof(buf));
-    }
+    syscfg_get(NULL, "v6_dayofweek_block_time_bitmask_type", buf, sizeof(buf));
 
     if (atoi(buf) == 0)
     {
@@ -8248,10 +8242,7 @@ int Utopia_GetMacDayOfWeekByIndex(UtopiaContext *ctx, unsigned long ulIndex, fwm
     Utopia_GetIndexed(ctx, UtopiaValue_LGFW_MacDayOfWeek_Alias, index, MacDayOfWeek->Alias, sizeof(MacDayOfWeek->Alias));
     Utopia_GetIndexed(ctx, UtopiaValue_LGFW_MacDayOfWeek_BlockTimeBitMask, index, MacDayOfWeek->MacDayOfWeek_BlockTimeBitMask, sizeof(MacDayOfWeek->MacDayOfWeek_BlockTimeBitMask));
 
-    if (syscfg_init() == 0)
-    {
-        syscfg_get(NULL, "mac_dayofweek_block_time_bitmask_type", buf, sizeof(buf));
-    }
+    syscfg_get(NULL, "mac_dayofweek_block_time_bitmask_type", buf, sizeof(buf));
 
     if (atoi(buf) == 0)
     {

@@ -124,11 +124,6 @@ int main(int argc, char **argv)
             printf("WARNING!!! Are your sure you want to destroy system configuration?\n This will cause the system to be unstable. Press CTRL-C to abort or ENTER to proceed.\n");
             getchar();
         }
-        rc = syscfg_init();
-        if (rc != 0) {
-            printf("ERROR: syscfg initialization failure (%d)\n", rc);
-            return 1;
-        }
         syscfg_destroy();
         return rc;
     }
@@ -137,12 +132,6 @@ int main(int argc, char **argv)
         syscfg_usage();
         return 1;
     } 
-    rc = syscfg_init();
-    if (rc != 0) {
-        printf("ERROR: syscfg init (%d)", rc);
-        return 1;
-    }
-
    argc -= 1;
    char **cmd = argv+1;
    char *name = NULL, *value = NULL, *ns = NULL;
