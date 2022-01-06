@@ -2298,14 +2298,6 @@ int main( int argc, char **argv )
       retryCount--;
    }
 
-   rc = syscfg_init();
-   if ( rc ) 
-   {
-      APPLY_PRINT("[Utopia] %s unable to initialize with syscfg context. Reason (%d)\n", argv[0], rc);
-      sysevent_close(global_fd, global_id);
-      return(-1);
-   }
-
    if ( global_fd <= 0 )
    {		
 		APPLY_PRINT("[Utopia] Retrying sysevent open\n");

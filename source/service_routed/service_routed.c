@@ -1456,11 +1456,6 @@ static int serv_routed_init(struct serv_routed *sr)
         return -1;
     }
 
-    if (syscfg_init() != 0) {
-        fprintf(stderr, "%s: fail to init syscfg\n", __FUNCTION__);
-        return -1;
-    }
-
     sysevent_get(sr->sefd, sr->setok, "wan-status", wan_st, sizeof(wan_st));
     if (strcmp(wan_st, "started") == 0)
         sr->wan_ready = true;
