@@ -38,9 +38,8 @@
 #include "syscfg/syscfg.h"
 
 
-void do_start(void) {
-   syscfg_init();
-
+void do_start(void)
+{
    FILE *fp = fopen("/etc/shadow", "w"); 
    if (NULL != fp) {
       char passwd[256];
