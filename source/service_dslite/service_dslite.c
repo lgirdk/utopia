@@ -781,16 +781,6 @@ int main (int argc, char *argv[])
         exit (1);
     }
 
-    /*
-       syscfg_init() is now a no-op, but keep the function call incase
-       this code somehow gets used with an older version of RDKB where
-       syscfg_int() is still required...
-    */
-    if (syscfg_init() != 0) {
-        fprintf (stderr, "%s: fail to init syscfg\n", __FUNCTION__);
-        return -1;
-    }
-
     if ((fp_dslt_dbg=fopen(SVC_DSLITE_LOG,"a+"))==NULL) {
        fprintf(stderr,"service_dslite, File(%s) Open Error\n", SVC_DSLITE_LOG);
        exit(1);
