@@ -2885,6 +2885,7 @@ int Utopia_DeleteDynPortMappingIndex (int index)
 		if( UT_SUCCESS == rc_del ) 
 		{
 			Utopia_IPRule_ephemeral_port_forwarding( &pmap, FALSE );
+			v_secure_system("conntrack_flush &");
 		}
 #endif /* 0 */
     }
