@@ -1223,9 +1223,6 @@ $ForwardSSH=true
 #mTlsLogUpload is disabled by default.
 $mTlsLogUpload_Enable=false
 
-#UploadLogsOnUnscheduledRebootDisable is disabled by default.
-$UploadLogsOnUnscheduledRebootDisable=false
-
 #WebUIEnable is Enable by default.
 $WebUIEnable=1
 
