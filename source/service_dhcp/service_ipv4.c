@@ -729,10 +729,12 @@ void load_static_l3 (int l3_inst)
 		{
 			snprintf(l_cSysevent_Cmd, sizeof(l_cSysevent_Cmd), "ipv4_%d-status", l3_inst);
 	     		sysevent_set(g_iSyseventfd, g_tSysevent_token, l_cSysevent_Cmd, "up", 0);
-		
-		       fprintf(stderr, "service_ipv4 : Triggering RDKB_FIREWALL_RESTART\n");
-                       t2_event_d("SYS_SH_RDKB_FIREWALL_RESTART", 1);
-		       sysevent_set(g_iSyseventfd, g_tSysevent_token, "firewall-restart", "", 0);
+		       if (access("/tmp/dhcp_server_start", F_OK) == 0)
+		       {
+				fprintf(stderr, "service_ipv4 : Triggering RDKB_FIREWALL_RESTART\n");
+				t2_event_d("SYS_SH_RDKB_FIREWALL_RESTART", 1);
+				sysevent_set(g_iSyseventfd, g_tSysevent_token, "firewall-restart", "", 0);
+		       }
 #if (defined _COSA_INTEL_XB3_ARM_)
 		       if(XHS_INST == l3_inst)
 		       {
