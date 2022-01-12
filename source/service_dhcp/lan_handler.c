@@ -395,6 +395,8 @@ void bring_lan_up()
 			sysevent_set(g_iSyseventfd, g_tSysevent_token, "primary_lan_l2net", l_cL2Inst, 0);
 			sysevent_set(g_iSyseventfd, g_tSysevent_token, "primary_lan_brport", l_cLan_Brport, 0);
 
+			ipv4_up(l_cPrimaryLan_L3Net);
+
             #if defined (FEATURE_RDKB_DHCP_MANAGER)
                 #if 1
                 snprintf(l_cSysevent_Cmd, sizeof(l_cSysevent_Cmd),"dmcli eRT setv Device.DHCPv4.Server.Enable bool true");
