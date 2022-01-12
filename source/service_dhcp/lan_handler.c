@@ -630,13 +630,16 @@ void ipv4_status(int l3_inst, char *status)
                 		fprintf(stderr, "LAN HANDLER : Triggering DHCP server using LAN status based on RG_MODE:2");
                 		sysevent_set(g_iSyseventfd, g_tSysevent_token, "lan-status", "started", 0);
             		}
-            		system("firewall");
 
-            		if ((access("/tmp/dhcp_server_start", F_OK) == 0) && (access(POSTD_START_FILE, F_OK) != 0))
+            		if (access("/tmp/dhcp_server_start", F_OK) == 0)
             		{
-                    		fprintf(stderr, "[%s] Restarting post.d from ipv4_status\n", __FUNCTION__);
-                    		system("touch " POSTD_START_FILE "; execute_dir /etc/utopia/post.d/");
-            		}		
+            			system("firewall");
+            			if (access(POSTD_START_FILE, F_OK) != 0)
+            			{
+                    			fprintf(stderr, "[%s] Restarting post.d from ipv4_status\n", __FUNCTION__);
+                    			system("touch " POSTD_START_FILE "; execute_dir /etc/utopia/post.d/");
+            			}
+            		}
         	}
 		else if ((strncmp(l_cStart_Misc, "ready", 5)) && 
 				 (0 != l_cCurrentWan_IpAddr[0]) &&
@@ -680,6 +683,8 @@ void ipv4_status(int l3_inst, char *status)
 				}
             		}
 
+                if (access("/tmp/dhcp_server_start", F_OK) == 0)
+                {
 			if (is_iface_present(XHS_IF_NAME))
 			{
 				fprintf(stderr, "%s interface is present call gw_lan_refresh\n", XHS_IF_NAME);
@@ -688,10 +693,11 @@ void ipv4_status(int l3_inst, char *status)
 			}
                 system("firewall");
 
-                if ((access("/tmp/dhcp_server_start", F_OK) == 0) && (access(POSTD_START_FILE, F_OK) != 0))
+                if (access(POSTD_START_FILE, F_OK) != 0)
                 {
                         fprintf(stderr, "[%s] Restarting post.d from ipv4_status\n", __FUNCTION__);
                         system("touch " POSTD_START_FILE "; execute_dir /etc/utopia/post.d/");
+                }
                 }
             }
             else if (strncmp(l_cStart_Misc, "ready", 5)) //from lan_handler.sh script
@@ -711,11 +717,14 @@ void ipv4_status(int l3_inst, char *status)
                 fprintf(stderr, "LAN HANDLER : Triggering DHCP server using LAN status\n");
                 sysevent_set(g_iSyseventfd, g_tSysevent_token, "lan-status", "started", 0);
             }
+            if ( access("/tmp/dhcp_server_start", F_OK) == 0 )
+            {
 			fprintf(stderr, "LAN HANDLER : Triggering RDKB_FIREWALL_RESTART\n");
                         t2_event_d("SYS_SH_RDKB_FIREWALL_RESTART", 1);
 			sysevent_set(g_iSyseventfd, g_tSysevent_token, "firewall-restart", "", 0);
 			get_dateanduptime(buffer,&uptime);
 			OnboardLog("RDKB_FIREWALL_RESTART:%d\n",uptime);
+            }
         }
 //        system("firewall_nfq_handler.sh &");
     	sysinfo(&l_sSysInfo);
@@ -807,15 +816,6 @@ void ipv4_status(int l3_inst, char *status)
         fprintf(stderr, "Setting up brlan10 for HOME_LAN_ISOLATION\n");
         sysevent_set(g_iSyseventfd, g_tSysevent_token, "multinet-up", "9", 0);
     }
-
-    fprintf(stderr, "LAN HANDLER : Triggering RDKB_FIREWALL_RESTART after nfqhandler\n");
-    t2_event_d("SYS_SH_RDKB_FIREWALL_RESTART", 1);
-	sysevent_set(g_iSyseventfd, g_tSysevent_token, "firewall-restart", "", 0);
-    get_dateanduptime(buffer,&uptime);
-    OnboardLog("RDKB_FIREWALL_RESTART:%d\n",uptime);
-    print_uptime("Laninit_complete", NULL, NULL);
-    OnboardLog("Lan_init_complete:%d\n", uptime);
-    t2_event_d("btime_laninit_split", uptime);
 }
 
 void lan_restart()
