@@ -1711,13 +1711,6 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
             /*lease time*/
             {
                 unsigned long t1, t2, pref_time, valid_time;
-                if ( ret < 0){
-                    sysevent_get(si6->sefd, si6->setok, COSA_DML_DHCPV6C_PREF_VLDTM_SYSEVENT_NAME, s_ia_pd_pretm, sizeof(s_ia_pd_pretm));
-                    dhcpv6s_pool_cfg.lease_time = atol(s_ia_pd_pretm);
-                }
-                else {
-                    dhcpv6s_pool_cfg.lease_time = atol(ia_pd.pretm);
-                }
 
                 if (dhcpv6s_pool_cfg.lease_time <= -1) {
                     t1 = t2 = pref_time = valid_time = 0xFFFFFFFF;
