@@ -78,6 +78,8 @@ extern char g_cBox_Type[8];
 extern char g_cXdns_Enabled[8];
 #endif
 
+#define POSTD_START_FILE "/tmp/.postd_started"
+
 static void gw_lan_refresh_switch (void)
 {
     CCSP_HAL_ETHSW_PORT port;
@@ -823,4 +825,13 @@ void lan_status_change(char *input)
 	}
 
 	message_bus_close(bus_handle);
+
+	if (strcmp(l_cLan_Status, "started") == 0)
+	{
+		if (access(POSTD_START_FILE, F_OK) != 0)
+		{
+			fprintf(stderr, "[%s] Restarting post.d from lan_status_change to %s\n", __FUNCTION__, l_cLan_Status);
+			system("touch " POSTD_START_FILE "; execute_dir /etc/utopia/post.d/");
+		}
+	}
 }
