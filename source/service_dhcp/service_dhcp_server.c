@@ -58,6 +58,14 @@
 
 #define SLEEP_TIME 4
 
+#ifdef FEATURE_SUPPORT_ONBOARD_LOGGING
+#include <rdk_debug.h>
+#define LOGGING_MODULE "Utopia"
+#define OnboardLog(...)     rdk_log_onboard(LOGGING_MODULE, __VA_ARGS__)
+#else
+#define OnboardLog(...)
+#endif
+
 static char dnsOption[8] = "";
 
 extern void copy_command_output(char *, char *, int);
@@ -782,6 +790,8 @@ void lan_status_change(char *input)
 	char l_cLan_Status[16] = {0}, l_cDhcp_Server_Enabled[8] = {0};
 	int l_iSystem_Res;
 	void *bus_handle = message_bus_init();
+	int uptime=0;
+	char buffer[64];
 
 	sysevent_get(g_iSyseventfd, g_tSysevent_token, "lan-status", l_cLan_Status, sizeof(l_cLan_Status));
 	fprintf(stderr, "SERVICE DHCP : Inside lan status change with lan-status:%s\n", l_cLan_Status);
@@ -832,6 +842,18 @@ void lan_status_change(char *input)
 		{
 			fprintf(stderr, "[%s] Restarting post.d from lan_status_change to %s\n", __FUNCTION__, l_cLan_Status);
 			system("touch " POSTD_START_FILE "; execute_dir /etc/utopia/post.d/");
+		}
+		if (access("/tmp/dhcp_bootup", F_OK) != 0)
+		{
+			system("touch /tmp/dhcp_bootup"); 
+			fprintf(stderr, "LAN HANDLER : Triggering RDKB_FIREWALL_RESTART after once dhcp server is up\n");
+			t2_event_d("SYS_SH_RDKB_FIREWALL_RESTART", 1);
+			sysevent_set(g_iSyseventfd, g_tSysevent_token, "firewall-restart", "", 0);
+			get_dateanduptime(buffer,&uptime);
+			OnboardLog("RDKB_FIREWALL_RESTART:%d\n",uptime);
+			print_uptime("Laninit_complete", NULL , NULL);
+			OnboardLog("Lan_init_complete:%d\n", uptime);
+			t2_event_d("btime_laninit_split", uptime);
 		}
 	}
 }
