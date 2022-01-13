@@ -432,6 +432,8 @@ static int dslite_start (struct serv_dslite *sd)
         SEM_POST;
         return 1;
     }
+    // ipv6_nameserver sysevent can have multiple namesevers. use the first one.
+    strtok(buf, " ");
 
     resolved_ipv6[0] = 0;
 
