@@ -1099,7 +1099,7 @@ static int wan_start(struct serv_wan *sw)
     if (access(POSTD_START_FILE, F_OK) != 0)
     {
             fprintf(fp_wan_dbg, "[%s] Restarting post.d from service_wan\n", __FUNCTION__);
-            v_secure_system("touch " POSTD_START_FILE " ; execute_dir /etc/utopia/post.d/");
+            v_secure_system("touch " POSTD_START_FILE "; execute_dir /etc/utopia/post.d/");
     }
 
     sysevent_set(sw->sefd, sw->setok, "wan_service-status", "started", 0);
