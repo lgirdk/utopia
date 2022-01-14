@@ -251,7 +251,7 @@ static int get_aftr (struct serv_dslite *sd, char *DSLITE_AFTR, char *dslite_mod
     else if (strcmp (dslite_mode, "2") == 0) //AFTR got from static mode
     {
         if (strcmp (dslite_addr_type, "1") == 0)
-            sysevent_get(sd->sefd, sd->setok, "dslite_dhcpv6_endpointname", DSLITE_AFTR, size_aftr);
+            syscfg_get (NULL, "dslite_addr_fqdn_1", DSLITE_AFTR, size_aftr);
         else if (strcmp (dslite_addr_type, "2") == 0)
             syscfg_get (NULL, "dslite_addr_ipv6_1", DSLITE_AFTR, size_aftr);
         else
