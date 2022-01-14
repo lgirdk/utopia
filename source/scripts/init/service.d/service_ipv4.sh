@@ -75,8 +75,7 @@ service_stop () {
 }
 
 service_init() {
-   FOO=`utctx_cmd get last_erouter_mode`
-   eval $FOO
+   SYSCFG_last_erouter_mode=`syscfg get last_erouter_mode`
 }
 
 #args: l3 instance, l2 instance, l2 status, [flag:bringup lower?]
