@@ -751,7 +751,6 @@ static int Is_Dslite_Dhcpv6option64_received(struct serv_wan *sw)
             {
                 memset(endpointname,0,sizeof(endpointname));
                 sysevent_get(sw->sefd, sw->setok, "dslite_dhcpv6_endpointname", endpointname, sizeof(endpointname));
-                syscfg_set(NULL, "dslite_addr_fqdn_1", endpointname);
                 fprintf(fp_wan_dbg, "DHCP DS-Lite Option 64 received ok value: %s\n",endpointname);
                 //If dslite_addr_fqdn_1 is not set, dslite would have failed to start, adding a restart to create a tunnel
                 vsystem("service_dslite restart &");
