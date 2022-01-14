@@ -686,8 +686,7 @@ service_retry ()
 #----------------------------------------------------------------------
 service_init ()
 {
-    FOO=`utctx_cmd get wan_last_ipaddr`
-    eval "$FOO"
+    SYSCFG_wan_last_ipaddr=`syscfg get wan_last_ipaddr`
 }
 
 
