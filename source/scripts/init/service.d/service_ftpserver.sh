@@ -45,8 +45,7 @@ SELF_NAME="`basename "$0"`"
 
 service_init ()
 {
-    eval "`utctx_cmd get current_lan_ipaddr`"
-    LAN_IPADDR=$SYSCFG_current_lan_ipaddr
+    LAN_IPADDR=`syscfg get current_lan_ipaddr`
 }
 
 service_start()
