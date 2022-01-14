@@ -94,8 +94,7 @@ LAN_IFNAME=`syscfg get lan_ifname`
 #--------------------------------------------------------------
 service_init ()
 {
-   FOO=`utctx_cmd get hostname`
-   eval "$FOO"
+   SYSCFG_hostname=`syscfg get hostname`
 
   if [ -z "$SYSCFG_hostname" ] ; then
      SYSCFG_hostname="Utopia"
