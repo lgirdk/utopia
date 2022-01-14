@@ -697,8 +697,7 @@ service_init ()
 {
     asyncid=`sysevent async current_wan_ipaddr /etc/utopia/service.d/service_dynamic_dns.sh`
     sysevent set dynamicdns_ip_changed_asyncid "$asyncid"
-    FOO=`utctx_cmd get wan_last_ipaddr`
-    eval $FOO
+    SYSCFG_wan_last_ipaddr=`syscfg get wan_last_ipaddr`
 }
 
 
