@@ -203,8 +203,7 @@ init_once () {
 }
 
 service_init() {
-    FOO=`utctx_cmd get upnp_igd_enabled`
-    eval $FOO
+    SYSCFG_upnp_igd_enabled=`syscfg get upnp_igd_enabled`
 
     eval `sysevent batchget ${SERVICE_NAME}_current_nets ${SERVICE_NAME}-status lan-status resync_upnp_process ipv4_status_process`
     CURRENT_NETS=$SYSEVENT_1
