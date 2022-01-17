@@ -23,8 +23,7 @@
 #include "sysevent/sysevent.h"
 
 #define TRACE_FILE "/tmp/ddns-general.trace"
-#define RETRY_SOON_FILENAME "/etc/cron/cron.everyminute/ddns_retry.sh"
- 
+
 typedef enum {
     CLIENT_CONNECTING = 1,
     CLIENT_AUTHENTICATING = 2,
@@ -42,6 +41,7 @@ typedef enum {
     AUTHENTICATION_ERROR = 5,
     TIMEOUT_ERROR = 6,
     PROTOCOL_ERROR = 7,
+    UNKNOWN_ERROR = 8,
 } client_lasterror_t;
 
 typedef enum {
@@ -69,6 +69,51 @@ static char *markers[][8] = {
     { "duckdns", "OK", "", "", "", "", "KO", "" },
     { "afraid", "Updated", "has not changed", "", "", "", "Unable to locate this record", "" },
 };
+
+static int se_fd = -1;
+static token_t se_token;
+
+static void add_ddns_retryinterval_to_cron (int retryinterval)
+{
+    FILE *cron_fp;
+    int quotient, modulus;
+
+    if (retryinterval <= 60)
+        quotient = 1;
+    else if (retryinterval >= 3600)
+        quotient = 59;
+    else {
+        modulus = retryinterval % 60;
+        quotient = retryinterval / 60;
+        if (modulus >= 30)
+           quotient += 1;
+    }
+
+    /* Fixme: should update /var/spool/cron/crontabs/root in one step (ie don't use sed to remove a line and C code to add one */
+
+    system("sed -i '/#DDNS_RETRY_INTERVAL/d' /var/spool/cron/crontabs/root");
+    cron_fp = fopen("/var/spool/cron/crontabs/root", "a+");
+    if (cron_fp != NULL) {
+        fprintf(cron_fp, "*/%d * * * * /usr/bin/service_ddns ddns-retry & #DDNS_RETRY_INTERVAL\n", quotient);
+        fclose(cron_fp);
+        sysevent_set(se_fd, se_token, "crond-restart", "1", 0);
+    }
+}
+
+static void add_ddns_checkinterval_to_cron (void)
+{
+    FILE *cron_fp;
+
+    /* Fixme: should update /var/spool/cron/crontabs/root in one step (ie don't use sed to remove a line and C code to add one */
+
+    system("sed -i '/#DDNS_CHECK_INTERVAL/d' /var/spool/cron/crontabs/root");
+    cron_fp = fopen("/var/spool/cron/crontabs/root", "a+");
+    if (cron_fp != NULL) {
+        fprintf(cron_fp, "* * * * * /usr/bin/service_ddns ddns-check & #DDNS_CHECK_INTERVAL\n");
+        fclose(cron_fp);
+        sysevent_set(se_fd, se_token, "crond-restart", "1", 0);
+    }
+}
 
 static char bin2hex (unsigned int a)
 {
@@ -104,9 +149,6 @@ static int update_ddnsserver (void)
     int server_service;
     char server_servicename[16];
 
-    token_t se_token;
-    int se_fd = -1;
-
     struct timeval tv;
     time_t t;
     struct tm *info;
@@ -119,25 +161,13 @@ static int update_ddnsserver (void)
 
     system ("touch /var/tmp/updating_ddns_server.txt");
 
-    se_fd = sysevent_open("127.0.0.1", SE_SERVER_WELL_KNOWN_PORT, SE_VERSION, "service_ddns", &se_token);
-    if (se_fd < 0) {
-        printf("%s: FAILED to connect sysevent\n", __FUNCTION__);
-        goto EXIT;
-    }
-
-    //set initializing status?
-    //system("sysevent set ddns_return_status");
-    //vsystem("sysevent set ddns_check_maxretries 0"); //TO DO
-    //vsystem("sysevent set ddns_updated_time 0");
-    //vsystem("sysevent set ddns_failure_time 0");
-
     /************************************************************************/
 
     strcpy (wan_ipaddr, "0.0.0.0");
 
     sysevent_get(se_fd, se_token, "current_wan_ipaddr", wan_ipaddr, sizeof(wan_ipaddr));
 
-    syscfg_set(NULL, "wan_last_ipaddr", wan_ipaddr); //avoid service_check_interval from script ???
+    syscfg_set(NULL, "wan_last_ipaddr", wan_ipaddr);
 
     if (strcmp(wan_ipaddr, "0.0.0.0") == 0) {
         printf("%s: FAILED because wan_ipaddr is %s\n", __FUNCTION__, wan_ipaddr);
@@ -350,7 +380,10 @@ static int update_ddnsserver (void)
     // create the command line
 
     cmd = command;
-    cmd += sprintf(cmd, "rm -f /var/tmp/ipupdate.%s ; /usr/bin/curl --interface erouter0 -o /var/tmp/ipupdate.%s ", server_servicename, server_servicename);
+
+    sprintf(buf, "/var/tmp/ipupdate.%s", server_servicename);
+
+    cmd += sprintf(cmd, "/usr/bin/curl --interface erouter0 -o %s ", buf);
 
     if (server_service == CHANGEIP)
         cmd += sprintf(cmd, "--url 'http://nic.changeip.com/nic/update?u=%s&p=%s&hostname=%s&ip=%s'", client_username, client_password, host_name, wan_ipaddr);
@@ -369,16 +402,17 @@ static int update_ddnsserver (void)
 
     printf("%s: command %s\n", __FUNCTION__, command);
 
-    // Execute command + analyze result and set syscfg ddns_client_Lasterror / sysevent ddns_return_status here based on the error etc
+    // Remove output file, execute command + analyze result and set syscfg ddns_client_Lasterror / sysevent ddns_return_status here based on the error etc
 
+    unlink (buf);
     ret = system(command);
 
-    if (ret == 0) {
+    if (ret == 0)
+    {
         FILE *output_file;
 
-        printf("%s: servicename %s command %s\n", __FUNCTION__, server_servicename, "succeeded");
+        printf("%s: servicename %s command %s\n", __FUNCTION__, server_servicename, (ret == 0) ? "succeeded" : "failed");
 
-        sprintf(buf, "/var/tmp/ipupdate.%s", server_servicename);
         output_file = fopen(buf, "r");
         if (output_file == NULL) {
             printf("%s: failed to open %s\n", __FUNCTION__, buf);
@@ -431,14 +465,16 @@ static int update_ddnsserver (void)
             }
             else {
                   printf("%s: didn't find expected result in %s\n", __FUNCTION__, buf);
-                  client_Lasterror = AUTHENTICATION_ERROR;
+                  client_Lasterror = UNKNOWN_ERROR;
                   return_status = "error-auth";
             }
         }
 
         fclose(output_file);
     }
-    else {
+
+    if ((ret != 0) || (client_Lasterror == UNKNOWN_ERROR))
+    {
         FILE *output_file;
 
         printf("%s: servicename %s command %s\n", __FUNCTION__, server_servicename, "failed");
@@ -477,10 +513,18 @@ static int update_ddnsserver (void)
 EXIT:
 
     if (ddns_return_status_success) {
+        int checkinterval;
+
         client_status = CLIENT_UPDATED;
         client_Lasterror = NO_ERROR;
         host_status_1 = HOST_REGISTERED;
         return_status = "success";
+
+        snprintf (buf, sizeof(buf), "ddns_server_checkinterval_%d", server_index);
+        syscfg_get (NULL, buf, command, sizeof(command));
+        checkinterval = atol(command);
+        if (checkinterval != 0)
+            add_ddns_checkinterval_to_cron();	
     }
 
     printf("%s: ddns_return_status_success %d return_status %s, client_status %d, host_status_1 %d, client_Lasterror %d\n", __FUNCTION__, ddns_return_status_success, return_status, client_status, host_status_1, client_Lasterror);
@@ -502,16 +546,17 @@ EXIT:
         printf("%s: ddns_return_status_success, update status", __FUNCTION__);
 
         sysevent_set(se_fd, se_token, "ddns_failure_time", "0", 0);
-        sysevent_set(se_fd, se_token, "ddns_updated_time", buf, 0);
-
         syscfg_set(NULL, "ddns_host_lastupdate_1", buf);
-        
-        /* Remove retry file  if update success and file exist */
-        if (!access(RETRY_SOON_FILENAME, F_OK )) {
-            unlink(RETRY_SOON_FILENAME);
-        }
+
+        snprintf(buf, sizeof(buf), "%d", tv.tv_sec);
+        sysevent_set(se_fd, se_token, "ddns_updated_time", buf , 0);
+
+        /* Remove retry check if update success */
+        syscfg_set(NULL, "ddns_retry_enable", "0");
+        system("sed -i '/#DDNS_RETRY_INTERVAL/d' /var/spool/cron/crontabs/root");
 
         printf("%s: return 0 because everything looks good\n", __FUNCTION__);
+
         ret = 0;
     }
     else {
@@ -521,47 +566,33 @@ EXIT:
         printf("%s: return -1 because curl command return !0 or found error message in output file\n", __FUNCTION__);
 
         if (!strcmp(return_status,"error-connect")) {
-           /* Create retry file in cron.everyminute if file not exist.
-              else decrement the retry count till it reach maxretries.
-              Remove the file once it reach maxretries.
-           */
-           int max_retry_count = 0;
-           if (!access(RETRY_SOON_FILENAME, F_OK )) {
-              memset(buf, 0, sizeof(buf));
-              syscfg_get(NULL,"max_retry_count",buf,sizeof(buf));
-              max_retry_count = atol (buf);
-              if (max_retry_count > 0) {
-                  max_retry_count--;
-                  syscfg_set_u(NULL,"max_retry_count", max_retry_count);
-              } 
-              else {
-                  unlink(RETRY_SOON_FILENAME);
-              }
-           } 
-           else {
-             FILE *fp = NULL;
-             fp = fopen(RETRY_SOON_FILENAME,"w");
-             if (fp != NULL) {
-                fprintf(fp,"#! /bin/sh\n");
-                fprintf(fp,"/usr/bin/service_ddns restart &\n");
-                fclose(fp);
-             }
-             sprintf(command,"chmod 777 %s",RETRY_SOON_FILENAME);
-             system (command);
-             int max_retries = 0;
-             sprintf(command,"ddns_server_maxretries_%d",server_index);
-             syscfg_get( NULL, command, buf, sizeof(buf));
-             max_retries = atol(buf);
-             syscfg_set_u(NULL,"max_retry_count", max_retries);
-           }
+            int max_retries = 0, retry_interval = 0, ddns_retry_enable = 0;
 
+            syscfg_get( NULL, "ddns_retry_enable", buf, sizeof(buf));
+            ddns_retry_enable = atol(buf);
+
+            if (ddns_retry_enable != 1) {
+                sprintf(command,"ddns_server_retryinterval_%d",server_index);
+                syscfg_get( NULL, command, buf, sizeof(buf));
+                retry_interval = atol(buf);
+
+                sprintf(command,"ddns_server_maxretries_%d",server_index);
+                syscfg_get( NULL, command, buf, sizeof(buf));
+                max_retries = atol(buf);
+
+                if ((retry_interval != 0) && (max_retries != 0)) {
+                    syscfg_set_u(NULL,"max_retry_count", max_retries);
+                    syscfg_set(NULL,"ddns_retry_enable","1" );
+                    add_ddns_retryinterval_to_cron(retry_interval);
+                }
+            }
         }
         else {
-          /* Remove retry file  if error is not error-connect and file exist */
-          if (!access(RETRY_SOON_FILENAME, F_OK )) {
-              unlink(RETRY_SOON_FILENAME);
-          }
+            /* Remove retry entry if error is not error-connect */
+            syscfg_set(NULL, "ddns_retry_enable", "0");
+            system("sed -i '/#DDNS_RETRY_INTERVAL/d' /var/spool/cron/crontabs/root");
         }
+
         ret = -1;
     }
     syscfg_commit();
@@ -571,6 +602,109 @@ EXIT:
 
     return ret;
 
+}
+
+static void check_and_update_ddns_service (void)
+{
+    int count = 5;
+
+    while (count > 0) {
+        if (!access("/var/tmp/updating_ddns_server.txt", F_OK )) {
+            printf("Already ddnsupdate is in progress.\n");
+            sleep(2);
+            count--;
+        }
+        else {
+            printf("Restart DDNS service\n");
+            update_ddnsserver();
+            break;
+        }
+    }
+}
+
+static void update_ddns_if_needed (int enable_checked)
+{
+    char client_enable[5];
+    char current_status[8];
+    char curr_wan_ipaddr[64];
+    char prev_wan_ipaddr[64];
+
+    if (!enable_checked) {
+        syscfg_get("arddnsclient_1", "enable", client_enable, sizeof(client_enable));
+        if (strcmp(client_enable, "1") != 0)
+            return;
+    }
+
+    current_status[0] = 0;
+    sysevent_get(se_fd, se_token, "wan-status", current_status, sizeof(current_status));
+    if (strcmp(current_status, "started") != 0)
+        return;
+
+    curr_wan_ipaddr[0] = 0;
+    sysevent_get(se_fd, se_token, "current_wan_ipaddr", curr_wan_ipaddr, sizeof(curr_wan_ipaddr));
+    syscfg_get(NULL, "wan_last_ipaddr", prev_wan_ipaddr, sizeof(prev_wan_ipaddr));
+
+    if (strcmp(curr_wan_ipaddr, prev_wan_ipaddr) != 0) {
+        printf("Erouter IP changed\n");
+        check_and_update_ddns_service();
+     }
+}
+
+static void service_retry_interval (void)
+{
+    char buf[20];
+    int max_retry_count = 0;
+
+    syscfg_get(NULL, "max_retry_count", buf, sizeof(buf));
+    max_retry_count = atol (buf);
+
+    if (max_retry_count > 0) {
+        max_retry_count--;
+        syscfg_set_u(NULL, "max_retry_count", max_retry_count);
+        check_and_update_ddns_service();
+    }
+    else {
+        syscfg_set(NULL, "ddns_retry_enable", "0");
+        system("sed -i '/#DDNS_RETRY_INTERVAL/d' /var/spool/cron/crontabs/root");
+    }
+
+    syscfg_commit();
+}
+
+static void service_check_interval (void)
+{
+    char client_enable[5];
+
+    syscfg_get("arddnsclient_1", "enable", client_enable, sizeof(client_enable));
+
+    if (strcmp(client_enable, "1") == 0) {
+
+        char buf[50];
+        char check_interval_time[50];
+        struct timeval current_time;
+        int last_updated_time;
+        int server_index;
+        int check_interval;
+        int time_diff;
+
+        gettimeofday(&current_time, NULL);
+
+        buf[0] = 0;
+        sysevent_get(se_fd, se_token, "ddns_updated_time", buf, sizeof(buf));
+        last_updated_time = atol(buf);
+        time_diff = current_time.tv_sec - last_updated_time;
+
+        syscfg_get("arddnsclient_1", "Server", buf, sizeof(buf));
+        if (sscanf(buf, "Device.DynamicDNS.Server.%d", &server_index) == 1) {
+            snprintf(buf, sizeof(buf),"ddns_server_checkinterval_%d", server_index);
+            syscfg_get(NULL, buf, check_interval_time, sizeof(check_interval_time));
+            check_interval = atol(check_interval_time);
+
+            if ((check_interval != 0) && (time_diff > check_interval)) {
+                update_ddns_if_needed(1);
+            }
+        }
+    }
 }
 
 int main (int argc, char *argv[])
@@ -583,10 +717,31 @@ int main (int argc, char *argv[])
         exit (1);
     }
 
+    se_fd = sysevent_open("127.0.0.1", SE_SERVER_WELL_KNOWN_PORT, SE_VERSION, "service_ddns", &se_token);
+    if (se_fd < 0)
+    {
+        printf("%s: FAILED to connect sysevent\n", __FUNCTION__);
+        exit (1);
+    }
+
     if (strcmp(argv[1], "restart") == 0)
     {
         retval = update_ddnsserver();
     }
+    if (strcmp(argv[1], "wan-status") == 0)
+    {
+        update_ddns_if_needed(0);
+    }
+    if (strcmp(argv[1], "ddns-check") == 0)
+    {
+        service_check_interval();
+    }
+    if (strcmp(argv[1], "ddns-retry") == 0)
+    {
+        service_retry_interval();
+    }
+
+    sysevent_close(se_fd, se_token);
 
     return retval;
 }
