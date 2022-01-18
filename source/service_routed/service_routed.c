@@ -608,7 +608,7 @@ static int gen_zebra_conf(int sefd, token_t setok)
     char dnssl[2560] = {0};
     char dnssl_lft[16];
     unsigned int dnssllft = 0;
-    char prefix[64], orig_prefix[64], lan_addr[64];
+    char prefix[64], orig_prefix[64], lan_addr[64], router_prefix[64];
     char preferred_lft[16], valid_lft[16];
 #if defined(MULTILAN_FEATURE)
     char orig_lan_prefix[64];
@@ -728,6 +728,9 @@ static int gen_zebra_conf(int sefd, token_t setok)
     	sysevent_get(sefd, setok, "ipv6_prefix_ula", last_broadcasted_prefix, sizeof(last_broadcasted_prefix));
     }
     #endif
+
+    memcpy(router_prefix, prefix, sizeof(prefix));
+
     sysevent_get(sefd, setok, "previous_ipv6_prefix", orig_prefix, sizeof(orig_prefix));
 #ifndef _HUB4_PRODUCT_REQ_
     sysevent_get(sefd, setok, "current_lan_ipv6address", lan_addr, sizeof(lan_addr));
@@ -904,6 +907,8 @@ static int gen_zebra_conf(int sefd, token_t setok)
                             fprintf(fp, "   ipv6 nd prefix %s %s %s\n", prefix, valid_lft, preferred_lft);
                         else
                             fprintf(fp, "   ipv6 nd prefix %s %s %s no-autoconfig\n", prefix, valid_lft, preferred_lft);
+
+                        fprintf(fp, "   ipv6 nd router-information %s\n", router_prefix);
                     }
                 }
             }
