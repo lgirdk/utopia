@@ -960,13 +960,6 @@ $CosaNAT::port_trigger_enabled=1
 $CosaNAT::port_forward_enabled=1
 $CosaNAT::port_hs_forward_enabled=1
 
-#Email Notification Defaults
-$email_notification_sendlogs=0
-$email_notification_firewallbreach=0
-$email_notification_parentalcontrolbreach=0
-$email_notification_alertswarning=0
-$email_notification_enabled=0
-
 # remote logging
 $rlog_enable=0
 $rlog_host=10.0.0.120
