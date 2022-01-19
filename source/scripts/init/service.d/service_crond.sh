@@ -54,6 +54,15 @@ source /etc/device.properties
 SERVICE_NAME="crond"
 SELF_NAME="`basename "$0"`"
 
+
+set_tz() {
+    timezone=$(grep "TZ=" /nvram/syscfg.db)
+    if [ $timezone ]
+    then
+        export $timezone
+    fi
+}
+
 service_start () 
 {
    echo_t "SERVICE_CROND : starting ${SERVICE_NAME} service"
@@ -61,6 +70,7 @@ service_start ()
 
    killall crond
    
+   set_tz
    CRONTAB_DIR="/var/spool/cron/crontabs/"
    CRONTAB_FILE=$CRONTAB_DIR"root"
    if [ ! -e $CRONTAB_FILE ] || [ ! -e "/etc/cron/cron.monthly" ]  ; then
