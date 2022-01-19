@@ -16474,6 +16474,8 @@ int main(int argc, char **argv)
 {
    int rc = 0;
    char syslog_status[32];
+   char value[256];
+   char str[256];
    pid_t process_id;
    
    process_id = getpid();
@@ -16507,6 +16509,12 @@ int main(int argc, char **argv)
       }
    }
 //	pthread_mutex_init(&firewall_check, NULL);
+
+  syscfg_get(NULL, "TZ", value, sizeof(value));
+  if (value[0] != '\0'){
+    sprintf(str, "TZ=%s", value);
+    putenv(str);
+  }
 
 
   fw_shm_mutex fwmutex = fw_shm_mutex_init(SHM_MUTEX);
