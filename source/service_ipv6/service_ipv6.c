@@ -53,6 +53,7 @@
 #include <ccsp_base_api.h>
 #include "ccsp_memory.h"
 #endif
+#include <platform_hal.h>
 
 #define PROG_NAME       "SERVICE-IPV6"
 
