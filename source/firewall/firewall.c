@@ -17536,6 +17536,13 @@ int main(int argc, char **argv)
    }
 //	pthread_mutex_init(&firewall_check, NULL);
 
+   char str[3+256+1];
+
+   strcpy(str, "TZ=");
+   syscfg_get(NULL, "TZ", str + 3, sizeof(str) - 3);
+   if (str[3] != '\0') {
+      putenv(str);
+   }
 
   fw_shm_mutex fwmutex = fw_shm_mutex_init(SHM_MUTEX);
   if (fwmutex.ptr == NULL) {
