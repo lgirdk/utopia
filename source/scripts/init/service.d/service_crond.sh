@@ -58,13 +58,23 @@ SERVICE_NAME="crond"
 SELF_NAME="`basename "$0"`"
 #BOX_TYPE=`cat /etc/device.properties | grep BOX_TYPE  | cut -f2 -d=`
 
+
+set_tz() {
+    timezone=$(grep "TZ=" /nvram/syscfg.db)
+    if [ $timezone ]
+    then
+        export $timezone
+    fi
+}
+
 service_start () 
 {
    echo_t "SERVICE_CROND : starting ${SERVICE_NAME} service"
    ulog ${SERVICE_NAME} status "starting ${SERVICE_NAME} service" 
 
    killall crond
-   
+
+   set_tz
    CRONTAB_DIR="/var/spool/cron/crontabs/"
    CRONTAB_FILE=$CRONTAB_DIR"root"
    if [ ! -e $CRONTAB_FILE ] || [ ! -e "/etc/cron/cron.monthly" ]  ; then
