@@ -2018,10 +2018,6 @@ int Utopia_SetFirewallSettings (UtopiaContext *ctx, firewall_t fw)
      UTOPIA_SETBOOL(ctx, UtopiaValue_Firewall_BlockMulticast, fw.filter_multicast);
      UTOPIA_SETBOOL(ctx, UtopiaValue_Firewall_BlockNatRedir, fw.filter_nat_redirect);
      UTOPIA_SETBOOL(ctx, UtopiaValue_Firewall_BlockIdent, fw.filter_ident);
-     UTOPIA_SETBOOL(ctx, UtopiaValue_Firewall_BlockWebProxy, fw.filter_web_proxy);
-     UTOPIA_SETBOOL(ctx, UtopiaValue_Firewall_BlockJava, fw.filter_web_java);
-     UTOPIA_SETBOOL(ctx, UtopiaValue_Firewall_BlockActiveX, fw.filter_web_activex);
-     UTOPIA_SETBOOL(ctx, UtopiaValue_Firewall_BlockCookies, fw.filter_web_cookies);
      UTOPIA_SETBOOL(ctx, UtopiaValue_Firewall_BlockHttp, fw.filter_http_from_wan);
      UTOPIA_SETBOOL(ctx, UtopiaValue_Firewall_BlockP2p, fw.filter_p2p_from_wan);
 
@@ -2085,18 +2081,6 @@ int Utopia_GetFirewallSettings (UtopiaContext *ctx, firewall_t *fw)
     Utopia_GetBool(ctx, UtopiaValue_Firewall_WanPingEnable, &fw->wan_ping_enable);
     Utopia_GetBool(ctx, UtopiaValue_Firewall_WanPingEnableV6, &fw->wan_ping_enable_v6);
 
-    if (SUCCESS != Utopia_GetBool(ctx, UtopiaValue_Firewall_BlockWebProxy, &fw->filter_web_proxy)) {
-        fw->filter_web_proxy = FALSE;
-    }
-    if (SUCCESS != Utopia_GetBool(ctx, UtopiaValue_Firewall_BlockJava, &fw->filter_web_java)) {
-        fw->filter_web_java = FALSE;
-    }
-    if (SUCCESS != Utopia_GetBool(ctx, UtopiaValue_Firewall_BlockActiveX, &fw->filter_web_activex)) {
-        fw->filter_web_activex = FALSE;
-    }
-    if (SUCCESS != Utopia_GetBool(ctx, UtopiaValue_Firewall_BlockCookies, &fw->filter_web_cookies)) {
-        fw->filter_web_cookies = FALSE;
-    }
 
     if (SUCCESS != Utopia_GetInt(ctx, UtopiaValue_Firewall_W2LWKRuleCount, &rule_count)) {
         rule_count = 0;
