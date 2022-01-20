@@ -377,12 +377,13 @@ static int update_ddnsserver (void)
 
     /************************************************************************/
 
-    sprintf(buf, "/var/tmp/ipupdate.%s", server_servicename);
-
     // create the command line
 
     cmd = command;
-    cmd += sprintf(cmd, "rm -f %s ; /usr/bin/curl --interface erouter0 -o %s ", buf, buf);
+
+    sprintf(buf, "/var/tmp/ipupdate.%s", server_servicename);
+
+    cmd += sprintf(cmd, "/usr/bin/curl --interface erouter0 -o %s ", buf);
 
     if (server_service == CHANGEIP)
         cmd += sprintf(cmd, "--url 'http://nic.changeip.com/nic/update?u=%s&p=%s&hostname=%s&ip=%s'", client_username, client_password, host_name, wan_ipaddr);
@@ -401,13 +402,12 @@ static int update_ddnsserver (void)
 
     printf("%s: command %s\n", __FUNCTION__, command);
 
-    // Execute command + analyze result and set syscfg ddns_client_Lasterror / sysevent ddns_return_status here based on the error etc
+    // Remove output file, execute command + analyze result and set syscfg ddns_client_Lasterror / sysevent ddns_return_status here based on the error etc
 
+    unlink (buf);
     ret = system(command);
 
-    /* Fixme: drop error check to avoid checking result from "rm -f" rather than curl. ipupdate file should be removed from C code (not from the shell command) so that problem goes away */
-
-//  if (ret == 0)
+    if (ret == 0)
     {
         FILE *output_file;
 
@@ -473,7 +473,7 @@ static int update_ddnsserver (void)
         fclose(output_file);
     }
 
-    if (client_Lasterror == UNKNOWN_ERROR)
+    if ((ret != 0) || (client_Lasterror == UNKNOWN_ERROR))
     {
         FILE *output_file;
 
