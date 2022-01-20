@@ -247,6 +247,46 @@ dslite_resolve_fqdn_to_ipv6addr(const char *name, unsigned int *dnsttl, const ch
     return in6_addrs;
 }
 
+static void restart_zebra (struct serv_dslite *sd)
+{
+    FILE *zebra_pid_fd;
+    FILE *zebra_cmdline_fd;
+    char pid_str[10];
+    char cmdline_buf[255];
+    int pid = -1;
+    int restart_needed = 1;
+
+    if ((zebra_pid_fd = fopen("/var/zebra.pid", "rb")) != NULL)
+    {
+        if (fgets(pid_str, sizeof(pid_str), zebra_pid_fd) != NULL && atoi(pid_str) > 0)
+        {
+            pid = atoi(pid_str);
+        }
+        fclose(zebra_pid_fd);
+    }
+
+    if (pid > 0)
+    {
+        sprintf(cmdline_buf, "/proc/%d/cmdline", pid);
+        if ((zebra_cmdline_fd = fopen(cmdline_buf, "rb")) != NULL)
+        {
+            if (fgets(cmdline_buf, sizeof(cmdline_buf), zebra_cmdline_fd) != NULL)
+            {
+                if(strstr(cmdline_buf, "zebra"))
+                {
+                    restart_needed = 0;
+                }
+            }
+            fclose(zebra_cmdline_fd);
+        }
+    }
+
+    if(restart_needed)
+    {
+        sysevent_set (sd->sefd, sd->setok, "zebra-restart", "", 0);
+    }
+}
+
 static int dslite_start(struct serv_dslite *sd)
 {
     char val[64];
@@ -584,31 +624,13 @@ static int dslite_stop(struct serv_dslite *sd)
 
     if(strlen(remote_addr) != 0 && strlen(local_addr) != 0)
     {
-        /* Change for CLM-51561. The ip -6 tunnel del cmd cause that zebra exit abnormally and generate coredump file.
-           So stop the zebra before it. */
-        memset(buf, 0, sizeof(buf));
-        snprintf(cmd, sizeof(cmd), "ps > /var/tmp/process; cat /var/tmp/process | grep zebra");
-        _get_shell_output(cmd, buf, sizeof(buf));
-        if(strlen(buf) > 0)
-        {
-            vsystem("systemctl stop arris-zebra.service");
-            vsystem("rm -rf /var/tmp/process");
-        }
-
         snprintf(cmd, sizeof(cmd), "ip -6 tunnel del %s mode ip4ip6 remote %s local %s dev %s encaplimit none", TNL_NETDEVNAME, remote_addr, local_addr, ER_NETDEVNAME);
         vsystem(cmd);
 
         /*The Zebra process will exit for unknown reason when execute the above tunnel delete operation.
         This may be a bug of Zebra SW package. But here we make a workaround to restart the zebra process if it's exited
         */
-        memset(buf, 0, sizeof(buf));
-        snprintf(cmd, sizeof(cmd), "ps > /var/tmp/process; cat /var/tmp/process | grep zebra");
-        _get_shell_output(cmd, buf, sizeof(buf));
-        if(strlen(buf) == 0)
-        {
-            vsystem("systemctl start arris-zebra.service");
-            vsystem("rm -rf /var/tmp/process");
-        }
+        restart_zebra(sd);
     }
     else
     {
