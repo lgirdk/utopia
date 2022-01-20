@@ -907,10 +907,6 @@ typedef struct firewall {
     boolean_t filter_nat_redirect;
     boolean_t filter_ident;
     boolean_t filter_ident_v6;
-    boolean_t filter_web_proxy;
-    boolean_t filter_web_java;
-    boolean_t filter_web_activex;
-    boolean_t filter_web_cookies;
     boolean_t allow_ipsec_passthru;
     boolean_t allow_pptp_passthru;
     boolean_t allow_l2tp_passthru;
