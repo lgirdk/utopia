@@ -739,7 +739,7 @@ fi
 # starting the rpcserver
 echo_t "[utopia][init] Starting rpcserver in arm" 
 if [ -f /usr/bin/rpcserver ];then
-    /usr/bin/rpcserver &
+    nice -n -10 /usr/bin/rpcserver &
 fi
 
 # Remove webconfig_db.bin on factory reset on XB3 platforms,CISCOXB3-6731
