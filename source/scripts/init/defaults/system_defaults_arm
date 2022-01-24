@@ -1208,8 +1208,6 @@ $mTlsLogUpload_Enable=false
 #WebUIEnable is Enable by default.
 $WebUIEnable=1
 
-#SyndicationFlowControl Defaults
-$SyndicationFlowControlEnable=false
 $DSCP_InitialForwardedMark=cs0
 $DSCP_InitialOutputMark=af22
 $dmesglogsync_interval=900
