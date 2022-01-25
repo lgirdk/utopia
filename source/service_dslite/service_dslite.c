@@ -430,18 +430,48 @@ static int dslite_start (struct serv_dslite *sd)
     }
     else /* domain format, need to do DNS resolution */
     {
-        struct in6_addr *addrp = dslite_resolve_fqdn_to_ipv6addr (DSLITE_AFTR, &dnsttl, buf);
-
-        if (addrp)
+        int dns_retry_count = 1;
+        struct in6_addr *addrp = NULL;
+        while(1)
         {
-            char ipv6_str[INET6_ADDRSTRLEN];
-
-            if (inet_ntop (AF_INET6, addrp, ipv6_str, sizeof(ipv6_str)) != NULL)
+            addrp = dslite_resolve_fqdn_to_ipv6addr (DSLITE_AFTR, &dnsttl, buf);
+            if (addrp)
             {
-                strcpy (resolved_ipv6, ipv6_str);
+                char ipv6_str[INET6_ADDRSTRLEN];
+                if (inet_ntop (AF_INET6, addrp, ipv6_str, sizeof(ipv6_str)) != NULL)
+                {
+                    strcpy (resolved_ipv6, ipv6_str);
+                }
+                free (addrp); /* free the memory that dslite_resolve_fqdn_to_ipv6addr had allocated */
+                break;
             }
+            else
+            {
+                /* AFTR FQDN Retry mechanism */    
+                if(dns_retry_count <= 5)   
+                {
+                    sleep(30);           /* First 5 retries at interval of 30 s */          
+                }
+                else if(dns_retry_count <= 15)
+                {
+                    sleep(60);           /* Next 10 retries at interval of 2*30 s */
+                }
+                else
+                {
+                    sleep(120);          /* Following retries at interval of 4*30 s */
+                }
+            }
+            dns_retry_count++;
 
-            free (addrp); /* free the memory that dslite_resolve_fqdn_to_ipv6addr had allocated */
+            /* Stop the dslite service if dslite is disabled at time of AFTR FQDN retry. */
+            syscfg_get (NULL, "dslite_enable", val, sizeof(val));
+            if (strcmp (val, "0") == 0)
+            {
+                sysevent_set (sd->sefd, sd->setok, "dslite_service-status", "stopped", 0);
+                fprintf (fp_dslt_dbg, "%s: Dslite is disabled ...stop dslite service\n", __FUNCTION__);
+                SEM_POST;
+                return 0;
+            }
         }
     }
 
