@@ -228,6 +228,12 @@ void ipv4_status(int l3_inst, char *status)
 	{	
     	syscfg_get(NULL, "last_erouter_mode", l_cLast_Erouter_Mode, sizeof(l_cLast_Erouter_Mode));
 
+		if (!strncmp(l_cLast_Erouter_Mode, "0", 1))
+		{
+			snprintf(l_cSysevent_Cmd, sizeof(l_cSysevent_Cmd), "ipv4_%d-status", l3_inst);
+			sysevent_set(g_iSyseventfd, g_tSysevent_token, l_cSysevent_Cmd, "stopped", 0);
+			return;
+		}
 		safec_rc = sprintf_s(l_cSysevent_Cmd, sizeof(l_cSysevent_Cmd),"ipv4_%d-ifname", l3_inst);
 		if(safec_rc < EOK){
 			ERR_CHK(safec_rc);
