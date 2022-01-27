@@ -1143,8 +1143,6 @@ $iot_netmask=255.255.255.0
 $iot_dhcp_start=192.168.106.100
 $iot_dhcp_end=192.168.106.150
 
-# XSMART or IOT Enable
-$X_RDKCENTRAL-COM_ENABLEIOT=false
 $lost_and_found_enable=false
 
 # Webpa Parameters
@@ -1227,9 +1225,6 @@ $eth_log_period=3600
 
 #TR181 Telemetry Support via MessageBusSource
 $MessageBusSource=true
-
-#Account ID default Value
-$AccountID=Unknown
 
 #Secured syscfg
 $UpdateNvram=true
