@@ -468,8 +468,6 @@ case "$1" in
         dibbler-server stop
         #bridge mode enabled then remove all ethbackhaul interfaces
         sysevent set meshethbhaul-bridge-setup 0
-        sysevent set bring-lan down
-        sysevent unset lan_handler_async
    ;;
    
    lan-start)

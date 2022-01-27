@@ -180,7 +180,7 @@ service_start ()
          STATUS=`sysevent get lan-status`
          if [ "started" != "$STATUS" ] || [ "true" = "$LANRESTART_STATUS" ] ; then
             ulog forwarding status "starting lan"
-            sysevent set bring-lan up
+            sysevent set lan-start
          fi
          STATUS=`sysevent get firewall-status`
          if [ "stopped" = "$STATUS" ] ; then
