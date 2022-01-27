@@ -574,25 +574,7 @@ fi
 #--------MV1 Mesh Bhaul ----------------------------------------------
 
 if [ "$BOX_TYPE" = "MV1" ];then
-
-    vconfig add l2sd0 112
-    vconfig add l2sd0 113
-
-    ifconfig l2sd0.112 169.254.0.2 netmask 255.255.255.0 up
-    ifconfig l2sd0.113 169.254.1.2 netmask 255.255.255.0 up
-
-    #atom port
-    swctl -c 16 -p 0 -v 112 -m 2 -q 1
-    swctl -c 16 -p 0 -v 113 -m 2 -q 1
-
-    #arm port
-    swctl -c 16 -p 7 -v 112 -m 2 -q 1
-    swctl -c 16 -p 7 -v 113 -m 2 -q 1
-
-    #udma0,1 ports
-    swctl -c 16 -p 5 -v 112 -m 2 -q 1
-    swctl -c 16 -p 6 -v 113 -m 2 -q 1
-
+    $UTOPIA_PATH/service_multinet_exec create_mesh_vlan &
 fi
 
 # ------ Creating trunk port for ext switch ports of primary LAN --------------------
