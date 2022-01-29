@@ -14,6 +14,7 @@ pthread_t tid[2];
 bool isStarted = false;
 bool isConnected = false;
 static char rpcServerIp[16]={0} ;
+static CLIENT *clnt;
 
 bool getIsconnectedStatus()
 {
@@ -55,7 +56,9 @@ int initRPC(char* mainArgv)
 	}
 
 	/* We have IP being given to us */
-	strcpy(rpcServerIp,mainArgv);
+	/*CID 135428: Unbounded source buffer*/
+	strncpy(rpcServerIp,mainArgv,sizeof(rpcServerIp)-1);
+	rpcServerIp[sizeof(rpcServerIp)-1] = '\0';
 	ret = connectRPC();
 	return ret;
 }
@@ -69,7 +72,7 @@ void startRPCThread()
 		clnt_destroy(clnt);
 		isConnected  = false;
 		clnt = NULL;
-		err = pthread_create(&tid, NULL, &connectRPC, NULL);
+		err = pthread_create(&tid, NULL, (void *)&connectRPC, NULL);
 
 		if (err != 0)
 		    printf("\nstartRPCThread:can't create thread :[%s]", strerror(err));
