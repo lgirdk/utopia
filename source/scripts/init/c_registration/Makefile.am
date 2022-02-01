@@ -32,56 +32,30 @@ AM_LDFLAGS = $(top_builddir)/source/util/utils/libutopiautil.la \
              $(top_builddir)/source/syscfg/lib/libsyscfg.la \
              $(top_builddir)/source/ulog/libulog.la
 
-# Warning: Upstream utopia has disabled many of these binaries. For now keep
-# building the original set (since some of the ones disabled were being used)
-# but this needs review.
-
 bin_PROGRAMS = \
-    01_system \
     02_bridge \
     02_forwarding \
     02_ipv4 \
     02_ipv6 \
-    02_lan \
     02_lanHandler \
-    02_managed \
     02_multinet \
     02_parodus \
     02_wan \
-    02_wlan \
-    03_wan_ipv6 \
-    04_byoi \
-    04_byoi_gap \
     09_xdns \
-    10_bootstrap_dns \
     10_firewall \
-    10_fpm \
     10_mcastproxy \
-    10_mcastsnooper \
     10_mldproxy \
-    10_ntpclient \
     10_ntpd \
-    10_sysevent_proxy \
-    10_time_sync_peer \
     15_ccsphs \
     15_ddnsclient \
     15_dhcp_server \
     15_dhcpv6_client \
     15_dhcpv6_server \
-    15_dnsforwarder \
     15_dynamic_dns \
-    15_ftp_server \
     15_hotspot \
-    15_http_server \
     15_igd \
     15_misc \
-    15_qos \
     15_ssh_server \
-    15_switchpmon \
-    15_xhs \
-    20_ciscoconnect \
-    20_factorydefault \
-    20_gwreset \
     20_routing \
     25_crond \
     26_potd \
