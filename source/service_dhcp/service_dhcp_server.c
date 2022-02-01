@@ -131,7 +131,7 @@ static void refresh_wifi (void* bus_handle)
     sysevent_get(g_iSyseventfd, g_tSysevent_token, "refresh-plume", refresh_plume, sizeof(refresh_plume));
     if (strcmp(refresh_plume, "true") == 0)
     {
-        system("rpcclient2 '(flock 200; (exec 200>&-; /etc/plume_init.sh restart;) ) 200> /var/run/lock/resetlock-wlan'");
+        system("rpcclient2 '/etc/plume_init.sh restart'");
         sysevent_set(g_iSyseventfd, g_tSysevent_token, "refresh-plume", "false", 0);
     }
 #endif
