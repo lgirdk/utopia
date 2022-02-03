@@ -16,15 +16,12 @@
 
 bin_PROGRAMS = service_ddns
 
-AM_CFLAGS = -I$(top_srcdir)/source -I$(top_srcdir)/source/include -I$(top_srcdir)/source/util/utils
-
-AM_LDFLAGS =  -lpthread -lz
-
 service_ddns_SOURCES = service_ddns.c
-
+service_ddns_CFLAGS = -I$(top_srcdir)/source -I$(top_srcdir)/source/include -I$(top_srcdir)/source/util/utils
+service_ddns_LDFLAGS =
 service_ddns_LDADD = $(top_builddir)/source/util/utils/libutopiautil.la \
-                    $(top_builddir)/source/services/lib/libsrvmgr.la \
-                    $(top_builddir)/source/sysevent/lib/libsysevent.la \
-                    $(top_builddir)/source/syscfg/lib/libsyscfg.la \
-                    $(top_builddir)/source/ulog/libulog.la
+                     $(top_builddir)/source/services/lib/libsrvmgr.la \
+                     $(top_builddir)/source/sysevent/lib/libsysevent.la \
+                     $(top_builddir)/source/syscfg/lib/libsyscfg.la \
+                     $(top_builddir)/source/ulog/libulog.la
 
