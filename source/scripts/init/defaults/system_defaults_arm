@@ -1505,6 +1505,13 @@ $son_dfs_enable=1
 $son_native_atm_bs_disable=0
 $smart_wifi_hide=0
 
+$ssam_enable=0
+$ssam_maxstartdelay=30
+$$ssam_provisionedenv=
+$ssam_provisioningmodel=1
+$ssam_signingkeyid=0
+$ssam_updaterenable=0
+
 $Available_Languages=en,tr,fr,de,nl,ro,it,pl,cz,hu,es,sk
 $Current_Language=en
 $default_erouter_mode=3
