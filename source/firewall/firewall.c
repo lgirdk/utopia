@@ -12365,6 +12365,9 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(mangle_fp, "-A PREROUTING -i %s -p udp -m conntrack --ctstate NEW -m limit --limit 200/sec --limit-burst 100 -j ACCEPT\n",ecm_wan_ifname);
    fprintf(mangle_fp, "-A PREROUTING -i %s -p udp -m conntrack --ctstate NEW -m limit --limit 200/sec --limit-burst 100 -j ACCEPT\n",emta_wan_ifname);
 #endif
+#ifdef _PUMA6_ARM_
+   fprintf(mangle_fp, "-A OUTPUT -p udp --dport 69  -m conntrack --ctstate NEW -j CONNMARK --set-mark 0x1000/0x1000\n");
+#endif
    /*
     * nat
     */
@@ -14074,6 +14077,9 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    fprintf(mangle_fp, "-A PREROUTING -i %s -p udp -m conntrack --ctstate NEW -m limit --limit 200/sec --limit-burst 100 -j ACCEPT\n",ecm_wan_ifname);
    fprintf(mangle_fp, "-A PREROUTING -i %s -p udp -m conntrack --ctstate NEW -m limit --limit 200/sec --limit-burst 100 -j ACCEPT\n",emta_wan_ifname);
 #endif
+#ifdef _PUMA6_ARM_
+   fprintf(mangle_fp, "-A OUTPUT -p udp --dport 69  -m conntrack --ctstate NEW -j CONNMARK --set-mark 0x1000/0x1000\n");
+#endif
 
    /*
     * nat
@@ -14187,6 +14193,7 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
       fprintf(filter_fp, "-A lan2self_dos_tcp -m recent --set --name lan2self_dos_tcp\n");
       fprintf(filter_fp, "-A lan2self_dos_tcp -m recent --update --seconds 1 --hitcount 15 --name lan2self_dos_tcp -j DROP\n");
 
+      fprintf(filter_fp, "-A lan2self_dos_udp -m conntrack --ctstate RELATED,ESTABLISHED -m connmark --mark 0x1000/0x1000 -j RETURN\n");
       fprintf(filter_fp, "-A lan2self_dos_udp -m recent --set --name lan2self_dos_udp\n");
       fprintf(filter_fp, "-A lan2self_dos_udp -m recent --update --seconds 1 --hitcount 15 --name lan2self_dos_udp -j DROP\n");
 
@@ -16757,6 +16764,7 @@ static int do_ipflooddetectv4(FILE *fp)
         fprintf(fp, "-A DOS_UDP -j DOS_DROP\n");
 
 #ifdef _PUMA6_ARM_
+        fprintf(fp, "-A lan2self_dos_udp -m conntrack --ctstate RELATED,ESTABLISHED -m connmark --mark 0x1000/0x1000 -j RETURN\n");
         fprintf(fp, "-A lan2self_dos_udp -m recent --set --name lan2self_dos_udp\n");
         fprintf(fp, "-A lan2self_dos_udp -m recent --update --seconds 1 --hitcount 15 --name lan2self_dos_udp -j DROP\n");
 #endif
@@ -16962,6 +16970,7 @@ static int do_ipflooddetectv6(FILE *fp)
         fprintf(fp, "-A DOS_UDP -j DOS_DROP\n");
 
 #ifdef _PUMA6_ARM_
+        fprintf(fp, "-A lan2self_dos_udp -m conntrack --ctstate RELATED,ESTABLISHED -m connmark --mark 0x1000/0x1000 -j RETURN\n");
         fprintf(fp, "-A lan2self_dos_udp -m recent --set --name lan2self_dos_udp\n");
         fprintf(fp, "-A lan2self_dos_udp -m recent --update --seconds 1 --hitcount 15 --name lan2self_dos_udp -j DROP\n");
 #endif
