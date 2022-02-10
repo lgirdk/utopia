@@ -496,6 +496,11 @@ service_stop ()
    else
    	systemctl stop $BIN
    fi
+
+   # Temp workaround to try to always kill ntpd even if BOX_TYPE is wrong.
+   # Fixme: this whole script needs to be updated, but for now just fix service_stop
+   killall $BIN
+
    sysevent set ${SERVICE_NAME}-status "stopped"
 }
 
