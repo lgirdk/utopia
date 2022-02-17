@@ -546,6 +546,21 @@ void prepare_dhcp_options_wan_dns()
         if ((strcmp(g_rl_cWanStatus, "stopped") != 0) && (strcmp(relay_enable, "1") != 0))
         {
             char l_cDnsOverride[8];
+            sysevent_get(g_iSyseventfd, g_tSysevent_token, "wan_dhcp_dns", l_cWan_Dhcp_Dns, sizeof(l_cWan_Dhcp_Dns));
+            if (0 != l_cWan_Dhcp_Dns[0])
+            {
+                l_cToken = strtok(l_cWan_Dhcp_Dns, " ");
+                while (l_cToken != NULL)
+                {
+                    if (0 != l_cNs[0])
+                    {
+                        strcat(l_cNs, ",");
+                    }
+                    strcat(l_cNs, l_cToken);
+                    l_cToken = strtok(NULL, " ");
+                }
+                fprintf(stderr, "l_cNs is:%s\n", l_cNs);
+            }
 
             syscfg_get(NULL, "dns_override", l_cDnsOverride, sizeof(l_cDnsOverride));
             if (strcmp(l_cDnsOverride, "true") == 0)
@@ -554,42 +569,34 @@ void prepare_dhcp_options_wan_dns()
                 char l_cDhcpOptionString[128];
 
                 syscfg_get(NULL, "dns_ipv4_preferred", l_cDnsIpv4Preferred, sizeof(l_cDnsIpv4Preferred));
-                if (l_cDnsIpv4Preferred[0] != 0)
+                if (l_cDnsIpv4Preferred[0] != 0 && (strcmp(l_cDnsIpv4Preferred, "0.0.0.0") != 0))
                 {
                     strcpy(l_cDhcpOptionString, l_cDnsIpv4Preferred);
 
                     syscfg_get(NULL, "dns_ipv4_alternate", l_cDnsIpv4Alternate, sizeof(l_cDnsIpv4Alternate));
-                    if (l_cDnsIpv4Alternate[0] != 0)
+                    if (l_cDnsIpv4Alternate[0] != 0 && (strcmp(l_cDnsIpv4Alternate, "0.0.0.0") != 0))
                     {
                         strcat(l_cDhcpOptionString, ",");
                         strcat(l_cDhcpOptionString, l_cDnsIpv4Alternate);
                     }
-
+                    if (0 != l_cNs[0])
+                    {
+                        strcat(l_cDhcpOptionString, ",");
+                        strcat(l_cDhcpOptionString, l_cNs);
+                    }
                     fprintf(l_fLocalDhcpOpt, "option:dns-server, %s\n",l_cDhcpOptionString);
                 }
             }
             else if (!strncmp(l_cPropagate_Ns, "1", 1))
             {
-		    sysevent_get(g_iSyseventfd, g_tSysevent_token, "wan_dhcp_dns", l_cWan_Dhcp_Dns, sizeof(l_cWan_Dhcp_Dns));
-		    if (0 != l_cWan_Dhcp_Dns[0])
-		    {
-			    l_cToken = strtok(l_cWan_Dhcp_Dns, " ");
-			    while (l_cToken != NULL)
-			    {
-					if (0 != l_cNs[0])
-					{
-						strcat(l_cNs, ",");
-					}
-					strcat(l_cNs, l_cToken);
-					l_cToken = strtok(NULL, " ");
-				}
-				fprintf(stderr, "l_cNs is:%s\n", l_cNs);
-				fprintf(l_fLocalDhcpOpt, "option:dns-server, %s\n", l_cNs);
-			}
-			else
-			{
-				fprintf(stderr, "wan_dhcp_dns is empty, so file:%s will be empty \n", DHCP_OPTIONS_FILE);
-			}
+                if (0 != l_cNs[0])
+                {
+                    fprintf(l_fLocalDhcpOpt, "option:dns-server, %s\n", l_cNs);
+                }
+                else
+                {
+                    fprintf(stderr, "wan_dhcp_dns is empty, so file:%s will be empty \n", DHCP_OPTIONS_FILE);
+                }
             }
 
         }
