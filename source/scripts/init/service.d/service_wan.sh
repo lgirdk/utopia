@@ -86,6 +86,12 @@ case "$1" in
         service_wan stop
         ;;
     "${SERVICE_NAME}-restart")
+        if [ "$2" != "NULL" ]; then
+           wan6_ipaddr=`sysevent get wan6_ipaddr`
+           if [ -n "$wan6_ipaddr" ]; then
+              exit 0
+           fi
+        fi
         service_wan restart
         ;;
     phylink_wan_state)
