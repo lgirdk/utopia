@@ -120,6 +120,7 @@ fi
    fi
 
 else
+   if [ "$SYSCFG_last_erouter_mode" = "1" ] || [ "$SYSCFG_last_erouter_mode" = "3" ]; then
    cat $LOCAL_CONF_FILE > $CONF_FILE
    rm -f $LOCAL_CONF_FILE
    if [ "$BOX_TYPE" = "HUB4" ] || [ "$BOX_TYPE" = "SR300" ] || [ "$BOX_TYPE" = "SE501" ] || [ "$BOX_TYPE" = "SR213" ] || [ "$BOX_TYPE" == "WNXL11BWL" ] || [ "$BOX_TYPE" == "rpi" ]; then
@@ -127,12 +128,13 @@ else
    else 
        $BIN -r -f $CONF_FILE &
    fi
+   fi
 fi
 }
 
 service_init ()
 {
-   queries="igmpproxy_enabled lan_ifname dslite_enable dslite_tunnel_interface_1"
+   queries="igmpproxy_enabled lan_ifname dslite_enable dslite_tunnel_interface_1 last_erouter_mode"
    get_utctx_val "$queries"
    eval `sysevent batchget current_wan_ifname wan-status lan-status bridge-status`
    WAN_IFNAME=$SYSEVENT_1
