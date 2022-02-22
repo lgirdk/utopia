@@ -135,6 +135,10 @@ lgi_prepare_resolv_conf () {
 
     # Write DHCP configuration.
     if [ -z "$STATIC_DNS_IPv6" ] ; then
+        if [ -z "$WAN_DNS_IPv6" ] && [ -f /tmp/.ipv6dnsserver ]; then
+            WAN_DNS_IPv6=`head -n 1 /tmp/.ipv6dnsserver`
+        fi
+
         for ip in $WAN_DNS_IPv6;
         do
             echo "nameserver $ip" >> $RESOLV_CONF
