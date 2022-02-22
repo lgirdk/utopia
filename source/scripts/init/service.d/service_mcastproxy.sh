@@ -132,7 +132,7 @@ fi
 
 service_init ()
 {
-   queries="igmpproxy_enabled lan_ifname"
+   queries="igmpproxy_enabled lan_ifname dslite_enable dslite_tunnel_interface_1"
    get_utctx_val "$queries"
    eval `sysevent batchget current_wan_ifname wan-status lan-status bridge-status`
    WAN_IFNAME=$SYSEVENT_1
@@ -140,11 +140,9 @@ service_init ()
    CURRENT_LAN_STATUS=$SYSEVENT_3
    CURRENT_BRIDGE_STATUS=$SYSEVENT_4
    HOME_LAN_ISOLATION=`psmcli get dmsb.l2net.HomeNetworkIsolation`
-   DSLite_Enabled=`syscfg get dslite_enable`
-   if [ "$DSLITE_DHCP_OPTION_ENABLED" = "true" ] && [ "$DSLite_Enabled" = "1" ] ; then
-       WAN_TUNNEL_IFNAME=`syscfg get dslite_tunnel_interface_1`
-       if [ -n "$WAN_TUNNEL_IFNAME" ] ; then
-            WAN_IFNAME=$WAN_TUNNEL_IFNAME
+   if [ "$DSLITE_DHCP_OPTION_ENABLED" = "true" ] && [ "$SYSCFG_dslite_enable" = "1" ] ; then
+       if [ -n "$SYSCFG_dslite_tunnel_interface_1" ] ; then
+            WAN_IFNAME="$SYSCFG_dslite_tunnel_interface_1"
        fi
    fi
    MOCA_INTERFACE=`psmcli get dmsb.l2net.9.Name`
