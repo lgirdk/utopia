@@ -260,9 +260,11 @@ service_start ()
    echo "interface listen 127.0.0.1" >> $NTP_CONF_TMP
    echo "interface listen ::1" >> $NTP_CONF_TMP
 
-   if [ "$WAN_IP" != "" ]; then
-       echo "interface listen $WAN_IP" >> $NTP_CONF_TMP
-   fi  
+   if [ "$BOX_TYPE" != "MV2PLUS" ] && [ "$BOX_TYPE" != "MV1" ]; then
+       if [ "$WAN_IP" != "" ]; then
+           echo "interface listen $WAN_IP" >> $NTP_CONF_TMP
+       fi
+   fi
 
    if [ "x$BOX_TYPE" = "xHUB4" ] || [ "x$BOX_TYPE" = "xSR300" ]; then
        # SKYH4-2006: To listen v6 server, update the conf file after getting valid v6 IP(CURRENT_WAN_V6_PREFIX)
