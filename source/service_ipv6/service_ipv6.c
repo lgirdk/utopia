@@ -534,7 +534,14 @@ static int get_ia_info(struct serv_ipv6 *si6, char *config_file, ia_na_t *iana, 
             fprintf(fp_v6_dbg, "IA_NA:%s %s %s %s %s %s, IA_PD:%s %d %s %s %s %s\n",
                     iana->value.v6addr, iana->iaid, iana->t1, iana->t2, iana->pretm, iana->vldtm,
                     iapd->value.v6pref, iapd->len, iapd->t1, iapd->t2, iapd->pretm, iapd->vldtm);
-					
+
+            /* Recombine prefix and prefix length. Fixme: Is this the right place to do that? */
+            if (strcmp(iapd->value.v6pref, "::") != 0) {
+                size_t len = strlen(iapd->value.v6pref);
+                snprintf(iapd->value.v6pref + len, sizeof(iapd->value.v6pref) - len, "/%d", iapd->len);
+                fprintf(fp_v6_dbg, "erouter0 ipv6 prefix: %s\n", iapd->value.v6pref);
+            }
+
         } else {
             fprintf(fp_v6_dbg, "Get the IA_NA and IA_PD failed.\n");
 	    close(fd); /*RDKB-12965 & CID:-34141*/
