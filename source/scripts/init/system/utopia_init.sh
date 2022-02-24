@@ -761,3 +761,11 @@ if [ -x /usr/bin/db_mig ] && [ "$DB_MIG_COMPLETE" != "true" ]; then
     syscfg set db_migration_completed true
     syscfg commit
 fi
+
+if [ "$BOX_TYPE" = "MV1" ]; then
+    if [ -f /nvram/O/eventcode.dat ] && grep -qF "0 BOOTSTRAP" /nvram/O/eventcode.dat; then
+        echo_t "[utopia][init] 0 BOOTSTRAP is already set"
+    else
+        echo "0 BOOTSTRAP||" >> /nvram/O/eventcode.dat
+    fi
+fi
