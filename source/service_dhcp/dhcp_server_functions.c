@@ -172,23 +172,29 @@ static int isValidLANIP(const char* ipStr)
 }
 
 #if !defined (_PUMA6_ARM_)
-static void getErotuerMacAddress (char* mac)
+static void getErotuerMacAddress (char *mac)
 {
-    char buff[20];
-    FILE *fp = fopen("/sys/class/net/erouter0/address", "r");
+    char buf[18];
+    FILE *fp;
+    int i;
 
-    if(fp)
+    if (((fp = fopen("/sys/class/net/erouter0/address", "r")) != NULL) &&
+        (fgets(buf, sizeof(buf), fp) != NULL) &&
+        (strlen(buf) == 17))
     {
-        int i = 0;
-        fgets(buff, sizeof(buff), fp);
-        while (buff[i])
-        {
-            buff[i] = toupper(buff[i]);
-            i++;
+        /* Drop ':' chars and convert to upper case */
+        for (i = 0; i < 6; i++) {
+            mac[(i * 2) + 0] = toupper(buf[(i * 3) + 0]);
+            mac[(i * 2) + 1] = toupper(buf[(i * 3) + 1]);
         }
-        sscanf(buff, "%c%c:%c%c:%c%c:%c%c:%c%c:%c%c", &(mac[0]), &(mac[1]), &(mac[2]), &(mac[3]), &(mac[4]), &(mac[5]),
-			&(mac[6]), &(mac[7]), &(mac[8]), &(mac[9]), &(mac[10]), &(mac[11]));
-        mac[12] = '\0';
+        mac[12] = 0;
+    }
+    else {
+        mac[0] = 0;
+    }
+
+    if (fp) {
+        fclose(fp);
     }
 }
 #endif
