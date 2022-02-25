@@ -69,7 +69,7 @@ do_start_mldproxy () {
 
 service_init ()
 {
-   queries="mldproxy_enabled lan_ifname"
+   queries="mldproxy_enabled lan_ifname last_erouter_mode dslite_enable"
    get_utctx_val "$queries"
    eval `sysevent batchget current_wan_ifname wan-status lan-status`
    WAN_IFNAME=$SYSEVENT_1
@@ -81,7 +81,7 @@ service_start ()
 {
    ulog ${SERVICE_NAME} status "starting ${SERVICE_NAME} service" 
 
-   if [ -n "$WAN_IFNAME" ] && [ "1" == "$SYSCFG_mldproxy_enabled" ] ; then
+   if [ -n "$WAN_IFNAME" ] && [ "$SYSCFG_mldproxy_enabled" = "1" ] && [ "$SYSCFG_dslite_enable" = "1" -o "$SYSCFG_last_erouter_mode" = "3" ] ; then
       do_start_mldproxy
       sysevent set ${SERVICE_NAME}-errinfo
       sysevent set ${SERVICE_NAME}-status "started"
