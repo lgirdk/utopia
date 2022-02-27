@@ -95,22 +95,6 @@ int s_StrToEnum (EnumString_Map* pMap, const char *iStr)
 }
 
 /*
- * find delim, replace with '\0' and return ptr after delim char
- * returns null if no delim found
- */
-char *chop_str (char *str, char delim)
-{
-    char *p;
-
-    if (str && (p = strchr(str, delim))) {
-        *p = '\0';
-        return p+1;
-    }
-    return NULL;
-}
-
-
-/*
  * Utility routines
  */
 int IsValid_IPAddr (const char *ip)

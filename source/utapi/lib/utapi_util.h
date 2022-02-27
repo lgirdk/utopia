@@ -210,7 +210,6 @@ typedef struct _EnumString_Map
  */
 char* s_EnumToStr (EnumString_Map* pMap, int iEnum);
 int s_StrToEnum (EnumString_Map* pMap, const char *iStr);
-char *chop_str (char *str, char delim);
 
 int IsValid_IPAddr (const char *ip);
 int IsValid_IPAddrLastOctet (int ipoctet);
