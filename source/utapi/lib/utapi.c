@@ -252,6 +252,22 @@ static EnumString_Map g_byoi_WanTypeMap[] =
 };
 
 */
+
+/*
+ * find delim, replace with '\0' and return ptr after delim char
+ * returns null if no delim found
+ */
+static char *chop_str (char *str, char delim)
+{
+    char *p;
+
+    if (str && (p = strchr(str, delim))) {
+        *p = '\0';
+        return p+1;
+    }
+    return NULL;
+}
+
 /*
  * ------------------------------------------------------------------------------ 
  */

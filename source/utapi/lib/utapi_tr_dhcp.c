@@ -55,6 +55,21 @@
 static int g_IndexMapServerPool[MAX_NUM_INSTANCES+1] = {-1};
 static int g_IndexMapStaticAddr[MAX_NUM_INSTANCES+1] = {-1};
 
+/*
+ * find delim, replace with '\0' and return ptr after delim char
+ * returns null if no delim found
+ */
+static char *chop_str (char *str, char delim)
+{
+    char *p;
+
+    if (str && (p = strchr(str, delim))) {
+        *p = '\0';
+        return p+1;
+    }
+    return NULL;
+}
+
 int Utopia_GetDhcpServerEnable(UtopiaContext *ctx, unsigned char *bEnabled)
 {
     int iVal = -1;
