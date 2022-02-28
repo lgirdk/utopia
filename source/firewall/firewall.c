@@ -17770,7 +17770,14 @@ static int do_ip_filter_IpV6_service(FILE *fp)
         }
         else
         {
-           snprintf(srcstartipaddress, sizeof(srcstartipaddress), "-s %s/%s",srcstartip ,IPv6SrcPrefixLen);
+            if (strcmp(srcstartip, "::") == 0)  //source IP is All
+            {
+                snprintf(srcstartipaddress, sizeof(srcstartipaddress), "-s %s/%s", srcstartip, "0");
+            }
+            else
+            {
+                snprintf(srcstartipaddress, sizeof(srcstartipaddress), "-s %s/%s", srcstartip, IPv6SrcPrefixLen);
+            }
         }
 
         if (strcmp(IPv6DstPrefixLen, "0") == 0)
@@ -17789,7 +17796,14 @@ static int do_ip_filter_IpV6_service(FILE *fp)
         }
         else
         {
-           snprintf(dststartipaddress, sizeof(dststartipaddress), "-d %s/%s",dststartip ,IPv6DstPrefixLen);
+            if (strcmp(dststartip, "::") == 0)  //dst IP is All
+            {
+                snprintf(dststartipaddress, sizeof(dststartipaddress), "-d %s/%s", dststartip, "0");
+            }
+            else
+            {
+                snprintf(dststartipaddress, sizeof(dststartipaddress), "-d %s/%s", dststartip, IPv6DstPrefixLen);
+            }
         }
         if(0 == strcasecmp("OUTGOING", direction))
         {
