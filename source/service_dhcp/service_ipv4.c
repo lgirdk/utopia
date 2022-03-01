@@ -727,6 +727,7 @@ void load_static_l3 (int l3_inst)
 			   sysevent_set(g_iSyseventfd, g_tSysevent_token, "dhcp_server-restart", "lan_not_restart", 0);
 		       }	
 #endif
+#ifdef CONFIG_SYSTEM_MOCA
 			if (4 == l3_inst)
 			{
             	            fprintf(stderr, "IPv4 address is set for %s interface MOCA interface is UP\n",
@@ -745,6 +746,7 @@ void load_static_l3 (int l3_inst)
                               print_uptime("boot_to_MOCA_uptime",NULL, NULL);
                           }
                         }
+#endif
         }   
 	}	
     else
