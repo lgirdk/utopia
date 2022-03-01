@@ -1438,6 +1438,8 @@ void load_static_l3 (int l3_inst)
 			   sysevent_set(g_iSyseventfd, g_tSysevent_token, "dhcp_server-restart", "lan_not_restart", 0);
 		       }	
 #endif
+
+#if defined CONFIG_SYSTEM_MOCA
 #if !defined (_HUB4_PRODUCT_REQ_) && !defined(_SR300_PRODUCT_REQ_)
                         get_dateanduptime(buffer,&uptime);
 			OnboardLog("RDKB_FIREWALL_RESTART:%d\n",uptime);
@@ -1467,6 +1469,7 @@ void load_static_l3 (int l3_inst)
 				
 	
 			}
+#endif
 #endif
         }   
 	}	
