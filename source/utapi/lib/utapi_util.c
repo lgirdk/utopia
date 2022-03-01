@@ -54,8 +54,6 @@ int  err_rc;
 char s_intbuf[16];
 char s_tokenbuf[256];
 
-static int parsePrefixAddress(const char *prefixAddr, char *address, int *plen);
-
 
 /* Helper function to map from HDK_Enum to string */
 char* s_EnumToStr (EnumString_Map* pMap, int iEnum)
