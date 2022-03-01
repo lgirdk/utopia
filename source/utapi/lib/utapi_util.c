@@ -50,7 +50,6 @@
 
 // Global
 char ulog_msg[1024];
-char s_tokenbuf[256];
 
 
 /* Helper function to map from HDK_Enum to string */
