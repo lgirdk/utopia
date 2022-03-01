@@ -37,7 +37,6 @@
 #define __UTAPI_UTIL_H__
 
 extern char ulog_msg[1024];
-extern char s_tokenbuf[256];
 
 /* 
  * Generic struct used to map between the various Enums and 
