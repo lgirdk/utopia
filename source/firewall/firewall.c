@@ -14267,6 +14267,12 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
 #ifdef _PUMA6_ARM_
    fprintf(filter_fp, "-A http2self -j lan2self_dos\n");
 #endif
+   if(isRipEnabled && isBrlanStaticEnabled)
+   {
+       FIREWALL_DEBUG("Adding rule for GUI access via lan inetrface \n");
+       fprintf(filter_fp, "-I http2self -i %s -d %s -j ACCEPT\n", lan_ifname, lan_ipaddr);
+   }
+
    fprintf(filter_fp, "-A http2self -j DROP\n");
 #ifdef _PUMA6_ARM_
    fprintf(filter_fp, "-I http2self 2 -m physdev --physdev-in l2sd0.100 -d 192.168.100.1 -j ACCEPT\n");
