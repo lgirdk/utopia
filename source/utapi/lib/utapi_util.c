@@ -50,8 +50,6 @@
 
 // Global
 char ulog_msg[1024];
-int  err_rc;
-char s_intbuf[16];
 char s_tokenbuf[256];
 
 

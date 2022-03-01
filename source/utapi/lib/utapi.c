@@ -402,6 +402,8 @@ int Utopia_SetLanSettings (UtopiaContext *ctx, lanSetting_t *lan)
 
 int Utopia_SetDHCPServerSettings (UtopiaContext *ctx, dhcpServerInfo_t *dhcps)
 {
+    char s_intbuf[16];
+
     if (NULL == ctx || NULL == dhcps) {
         return ERR_INVALID_ARGS;
     }

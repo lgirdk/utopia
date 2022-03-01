@@ -37,8 +37,6 @@
 #define __UTAPI_UTIL_H__
 
 extern char ulog_msg[1024];
-extern int  err_rc;
-extern char s_intbuf[16];
 extern char s_tokenbuf[256];
 
 /* 
@@ -103,38 +101,49 @@ typedef struct _EnumString_Map
  * Integer sets
  */
 #define UTOPIA_SETINT(ctx,name,intvalue) \
-                    if (SUCCESS != (err_rc = Utopia_SetInt((ctx),(name),(intvalue)))) { \
-                        return (err_rc); \
-                    } \
+                    { \
+                        int err_rc = Utopia_SetInt((ctx),(name),(intvalue)); \
+                        if (err_rc != SUCCESS) \
+                            return err_rc; \
+                    }
 
 #define UTOPIA_SETINDEXEDINT(ctx,name,index,intvalue) \
-                    if (SUCCESS != (err_rc = Utopia_SetIndexedInt((ctx),(name),(index),(intvalue)))) { \
-                        return (err_rc); \
-                    } \
+                    { \
+                        int err_rc = Utopia_SetIndexedInt((ctx),(name),(index),(intvalue)); \
+                        if (err_rc != SUCCESS) \
+                            return err_rc; \
+                    }
 
 #define UTOPIA_SETNAMEDINT(ctx,name,prefix,intvalue) \
-                    if (SUCCESS != (err_rc = Utopia_SetNamedInt((ctx),(name),(prefix),(intvalue)))) { \
-                        return (err_rc); \
-                    } \
+                    { \
+                        int err_rc = Utopia_SetNamedInt((ctx),(name),(prefix),(intvalue)); \
+                        if (err_rc != SUCCESS) \
+                            return err_rc; \
+                    }
 
 /*
  * Boolean sets
  */
 #define UTOPIA_SETBOOL(ctx,name,boolvalue) \
-                    if (SUCCESS != (err_rc = Utopia_SetBool((ctx),(name),(boolvalue)))) { \
-                        return (err_rc); \
-                    } \
+                    { \
+                        int err_rc = Utopia_SetBool((ctx),(name),(boolvalue)); \
+                        if (err_rc != SUCCESS) \
+                            return err_rc; \
+                    }
 
 #define UTOPIA_SETINDEXEDBOOL(ctx,name,index,boolvalue) \
-                    if (SUCCESS != (err_rc = Utopia_SetIndexedBool((ctx),(name),(index),(boolvalue)))) { \
-                        return (err_rc); \
-                    } \
+                    { \
+                        int err_rc = Utopia_SetIndexedBool((ctx),(name),(index),(boolvalue)); \
+                        if (err_rc != SUCCESS) \
+                            return err_rc; \
+                    }
 
 #define UTOPIA_SETNAMEDBOOL(ctx,name,prefix,boolvalue) \
-                    if (SUCCESS != (err_rc = Utopia_SetNamedBool((ctx),(name),(prefix),(boolvalue)))) { \
-                        return (err_rc); \
-                    } \
-
+                    { \
+                        int err_rc = Utopia_SetNamedBool((ctx),(name),(prefix),(boolvalue)); \
+                        if (err_rc != SUCCESS) \
+                            return err_rc; \
+                    }
 
 /*
  * GET macros are used ONLY on values that are always expected to be set
@@ -174,36 +183,43 @@ typedef struct _EnumString_Map
  */
 
 #define UTOPIA_GETINT(ctx,name,out_intvalue) \
-                    if (SUCCESS != (err_rc = Utopia_GetInt((ctx),(name),(out_intvalue)))) { \
-                        return (err_rc); \
-                    } \
+                    { \
+                        int err_rc = Utopia_GetInt((ctx),(name),(out_intvalue)); \
+                        if (err_rc != SUCCESS) \
+                            return err_rc; \
+                    }
 
 #define UTOPIA_GETINDEXEDINT(ctx,name,index,out_intvalue) \
-                    if (SUCCESS != (err_rc = Utopia_GetIndexedInt((ctx),(name),(index),(out_intvalue)))) { \
-                        return (err_rc); \
-                    } \
+                    { \
+                        int err_rc = Utopia_GetIndexedInt((ctx),(name),(index),(out_intvalue)); \
+                        if (err_rc != SUCCESS) \
+                            return err_rc; \
+                    }
 
 #define UTOPIA_GETINDEXED2INT(ctx,name,index1,index2,out_value,size) \
-                    if (SUCCESS != (err_rc = Utopia_GetIndexed2Int((ctx),(name),(index1),(index2),(out_intvalue)))) { \
-                        return (err_rc); \
-                    } \
-
+                    { \
+                        int err_rc = Utopia_GetIndexed2Int((ctx),(name),(index1),(index2),(out_intvalue)); \
+                        if (err_rc != SUCCESS) \
+                            return err_rc; \
+                    }
 
 /*
  * Integer sets
  */
 
 #define UTOPIA_GETBOOL(ctx,name,out_boolvalue) \
-                    if (SUCCESS != (err_rc = Utopia_GetBool((ctx),(name),(out_boolvalue)))) { \
-                        return (err_rc); \
-                    } \
-
+                    { \
+                        int err_rc = Utopia_GetBool((ctx),(name),(out_boolvalue)); \
+                        if (err_rc != SUCCESS) \
+                            return err_rc; \
+                    }
 
 #define UTOPIA_GETINDEXEDBOOL(ctx,name,index,out_boolvalue) \
-                    if (SUCCESS != (err_rc = Utopia_GetIndexedBool((ctx),(name),(index),(out_boolvalue)))) { \
-                        return (err_rc); \
-                    } \
-
+                    { \
+                        int err_rc = Utopia_GetIndexedBool((ctx),(name),(index),(out_boolvalue)); \
+                        if (err_rc != SUCCESS) \
+                            return err_rc; \
+                    }
 
 /*
  * Utility APIs
