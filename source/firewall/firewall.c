@@ -771,8 +771,11 @@ static int isPingBlocked;
 static int isPingBlockedV6;
 static int isIdentBlocked;
 static int isIdentBlockedV6;
+#if 0 /* LGI: multicast is handled by 'isMulticastSsmEnabled' parameter */
 static int isMulticastBlocked;
 static int isMulticastBlockedV6;
+#endif
+static int isMulticastSsmEnabled;
 static int isNatRedirectionBlocked;
 static int isPortscanDetectionEnabled;
 static int isDevelopmentOverride;
@@ -2702,6 +2705,7 @@ static int prepare_globals_from_configuration(void)
      isPingBlockedV6 = 1;
    }
 
+#if 0 /* LGI: multicast is handled by 'isMulticastSsmEnabled' parameter */
    temp[0] = '\0';
    rc = syscfg_get(NULL, "block_multicast", temp, sizeof(temp));
    if (0 != rc || '\0' == temp[0]) {
@@ -2720,6 +2724,14 @@ static int prepare_globals_from_configuration(void)
       isMulticastBlockedV6 = 0;
    } else {
      isMulticastBlockedV6 = 1;
+   }
+#endif
+
+   syscfg_get(NULL, "multicast_ssm_fwd_enable", temp, sizeof(temp));
+   if (strcmp(temp, "0") == 0) {
+      isMulticastSsmEnabled = 0;
+   } else {
+      isMulticastSsmEnabled = 1;
    }
 
    temp[0] = '\0';
@@ -10118,6 +10130,13 @@ static void add_usgv2_wan2lan_general_rules(FILE *fp)
    FIREWALL_DEBUG("Entering add_usgv2_wan2lan_general_rules\n"); 
     fprintf(fp, "-A wan2lan_misc -m state --state RELATED,ESTABLISHED -j ACCEPT\n");
 
+    if (isMulticastSsmEnabled) {
+       /* accept ssm multicast from our wan */
+       fprintf(fp, "-A wan2lan_misc -p udp -m iprange --dst-range 232.0.1.0-232.255.255.255 -j ACCEPT\n");
+    }
+    /* drop all non-ssm multicast range */
+    fprintf(fp, "-A wan2lan_misc --destination 224.0.0.0/4 -j xlog_drop_wan2lan\n");
+
     if (strncasecmp(firewall_level, "High", strlen("High")) == 0) {
         if (isDmzEnabled) {
             fprintf(fp, "-A wan2lan_misc -j wan2lan_dmz\n");
@@ -10164,9 +10183,11 @@ static void add_usgv2_wan2lan_general_rules(FILE *fp)
             fprintf(fp, "-A wan2lan_misc -p tcp --dport 49152:65534 -j xlog_drop_wan2lan\n"); // Vuze
         }
 
+#if 0 /* LGI: multicast is handled by 'isMulticastSsmEnabled' parameter */
         if(isMulticastBlocked) {
             fprintf(fp, "-A wan2lan_misc -p 2 -j xlog_drop_wan2lan\n"); // IGMP
         }
+#endif
     }
    FIREWALL_DEBUG("Exiting add_usgv2_wan2lan_general_rules\n"); 
 }
@@ -10477,10 +10498,13 @@ static int do_wan2lan_accept(FILE *fp)
 
    FIREWALL_DEBUG("Entering do_wan2lan_accept\n"); 
 
+#if 0 /* LGI: multicast is handled by 'isMulticastSsmEnabled' parameter */
    if (!isMulticastBlocked) {
       // accept multicast from our wan
       fprintf(fp, "-A wan2lan_accept -p udp -m udp --destination 224.0.0.0/4 -j ACCEPT\n");
    }
+#endif
+
    FIREWALL_DEBUG("Exiting do_wan2lan_accept\n"); 
    return(0);
 }
@@ -15320,6 +15344,13 @@ v6GPFirewallRuleNext:
       do_single_port_forwarding(NULL, NULL, AF_INET6, fp);
       do_port_range_forwarding(NULL, NULL, AF_INET6, fp);
 
+      if (isMulticastSsmEnabled) {
+         /* accept ssm multicast from our wan */
+         fprintf(fp, "-A wan2lan -p udp -m udp --destination ff38::8000:0000/97 -j ACCEPT\n");
+      }
+      /* drop all non-ssm multicast range */
+      fprintf(fp, "-A wan2lan --destination ff00::/8 -j DROP\n");
+
       if (strncasecmp(firewall_levelv6, "High", strlen("High")) == 0)
       {
          fprintf(fp, "-A wan2lan -j RETURN\n");
@@ -15367,9 +15398,11 @@ v6GPFirewallRuleNext:
             fprintf(fp, "-A wan2lan -p tcp --dport 49152:65534 -j RETURN\n"); // Vuze
          }
 
+#if 0 /* LGI: multicast is handled by 'isMulticastSsmEnabled' parameter */
          if(isMulticastBlockedV6) {
             fprintf(fp, "-A wan2lan -p 2 -j RETURN\n"); // IGMP
          }
+#endif
 
          fprintf(fp, "-A wan2lan -j ACCEPT\n");
       }
