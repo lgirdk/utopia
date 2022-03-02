@@ -1582,6 +1582,8 @@ $FirstInstall_State=true
 
 $multicast_enable=1
 $multicast_snooping_enable=1
+$multicast_ssm_fwd_enable=1
+$multicast_max_ssm_sessions=8
 
 $dslite_dhcpv6_opt64_enable_dslite=0
 $troubleshoot_wizard_enable=0
