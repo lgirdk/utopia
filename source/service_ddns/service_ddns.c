@@ -21,6 +21,7 @@
 #include <time.h>
 #include "syscfg/syscfg.h"
 #include "sysevent/sysevent.h"
+#include <signal.h>
 
 #define TRACE_FILE "/tmp/ddns-general.trace"
 
@@ -41,7 +42,6 @@ typedef enum {
     AUTHENTICATION_ERROR = 5,
     TIMEOUT_ERROR = 6,
     PROTOCOL_ERROR = 7,
-    UNKNOWN_ERROR = 8,
 } client_lasterror_t;
 
 typedef enum {
@@ -125,6 +125,39 @@ static char bin2hex (unsigned int a)
         return 'a' + (a - 10);
 }
 
+/* system_function() call, setting the default SIGCHLD handler before calling system()
+ * and restoring the old handler after the call.  Needed so that system_function() will
+ * return success or failure.
+*/
+ 
+int system_function(const char * cmd)
+{
+    int ret = 0;
+#ifdef _GNU_SOURCE
+    sighandler_t old_signal;
+#else
+    sig_t old_signal;
+#endif
+
+    /* Set the default SIGCHLD handler */
+    if ((old_signal = signal(SIGCHLD, SIG_DFL)) == SIG_ERR)
+    {
+        printf("update_ddnsserver: ERROR: Couldn't set default SIGCHLD handler!\n");
+        return -1;
+    }
+
+    ret = system(cmd);
+
+    /* Restore previous SIGCHLD handler */
+    if (signal(SIGCHLD, old_signal) == SIG_ERR)
+    {
+        printf("update_ddnsserver: ERROR: Couldn't restore previous SIGCHLD handler!\n");
+        return -1;
+    }
+
+    return ret;
+}
+
 static int update_ddnsserver (void)
 {
     char buf[64];
@@ -158,6 +191,7 @@ static int update_ddnsserver (void)
     client_status_t client_status = CLIENT_ERROR;
     client_lasterror_t client_Lasterror = DNS_ERROR;
     host_status_t host_status_1 = HOST_ERROR;
+    struct sigaction sa;
 
     system ("touch /var/tmp/updating_ddns_server.txt");
 
@@ -405,7 +439,21 @@ static int update_ddnsserver (void)
     // Remove output file, execute command + analyze result and set syscfg ddns_client_Lasterror / sysevent ddns_return_status here based on the error etc
 
     unlink (buf);
-    ret = system(command);
+
+/* When wan status changed, ddns trying to update the details but the system() always returns -1.
+ * Reason: system() expects to get the SIGCHLD event when the forked process finishes,
+ * but syseventd disables the SIGCHLD process. This setting propagates to the event handlers,
+ * because they are child processes of syseventd or syseventd_fork_helper.
+ * Workaround: When SIGCHLD is blocked, replace the system() with system_function() to handle 
+ * the SIGCHLD and execute the command.
+*/
+    if (sigaction(SIGCHLD, NULL, &sa) != -1)
+    {
+        if(sa.sa_handler == SIG_DFL)
+            ret = system(command);
+        else
+            ret = system_function(command);
+    }
 
     if (ret == 0)
     {
@@ -465,15 +513,14 @@ static int update_ddnsserver (void)
             }
             else {
                   printf("%s: didn't find expected result in %s\n", __FUNCTION__, buf);
-                  client_Lasterror = UNKNOWN_ERROR;
+                  client_Lasterror = AUTHENTICATION_ERROR;
                   return_status = "error-auth";
             }
         }
 
         fclose(output_file);
     }
-
-    if ((ret != 0) || (client_Lasterror == UNKNOWN_ERROR))
+    else
     {
         FILE *output_file;
 
