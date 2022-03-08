@@ -46,17 +46,10 @@
 
 int Utopia_GetMocaIntf_Static(void *str_handle)
 {
-    char ulog_msg[256];
     Obj_Device_MoCA_Interface_i_static *deviceMocaIntfStatic = NULL;
-    errno_t  rc = -1;
 
     if (str_handle == NULL) {
-	rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: Invalid Input Parameter", __FUNCTION__);
-	if(rc < EOK)
-	{
-	    ERR_CHK(rc);
-	}
-	ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Invalid Input Parameter", __FUNCTION__);
         return ERR_INVALID_ARGS;
     }
     deviceMocaIntfStatic = (Obj_Device_MoCA_Interface_i_static *)str_handle;
@@ -65,32 +58,21 @@ int Utopia_GetMocaIntf_Static(void *str_handle)
     system("mocacfg -g moca0 moca >> " MOCACFG_FILE_NAME);
     system("mocacfg -g moca0 mac >> " MOCACFG_FILE_NAME);
     system("mocacfg -g moca0 phy >> " MOCACFG_FILE_NAME);
-    if(Utopia_Get_TR181_Device_MoCA_Interface_i_Static(deviceMocaIntfStatic) != SUCCESS){
-	rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: Error in MoCA_Intf_GET !!!", __FUNCTION__);
-	if(rc < EOK)
-	{
-	    ERR_CHK(rc);
-	}
-	ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+
+    if (Utopia_Get_TR181_Device_MoCA_Interface_i_Static(deviceMocaIntfStatic) != SUCCESS) {
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Error in MoCA_Intf_GET !!!", __FUNCTION__);
         return ERR_ITEM_NOT_FOUND;
     }
-        
+
     return UT_SUCCESS;
 }
 
 int Utopia_GetMocaIntf_Dyn(void *str_handle)
 {
-    char ulog_msg[256];
     Obj_Device_MoCA_Interface_i_dyn *deviceMocaIntfDyn = NULL;
-    errno_t  rc = -1;
-    
+
     if (str_handle == NULL) {
-	rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: Invalid Input Parameter", __FUNCTION__);
-	if(rc < EOK)
-	{
-	    ERR_CHK(rc);
-	}
-	ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Invalid Input Parameter", __FUNCTION__);
         return ERR_INVALID_ARGS;
     }
     deviceMocaIntfDyn = (Obj_Device_MoCA_Interface_i_dyn*)str_handle;
@@ -100,34 +82,22 @@ int Utopia_GetMocaIntf_Dyn(void *str_handle)
     system("mocacfg -g moca0 mac >> " MOCACFG_FILE_NAME);
     system("mocacfg -g moca0 phy >> " MOCACFG_FILE_NAME);
 
-    if(Utopia_Get_TR181_Device_MoCA_Interface_i_Dyn(deviceMocaIntfDyn) != SUCCESS){
-	rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: Error in MoCA_Intf_GET !!!", __FUNCTION__);
-	if(rc < EOK)
-	{
-	    ERR_CHK(rc);
-	}
-	ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    if (Utopia_Get_TR181_Device_MoCA_Interface_i_Dyn(deviceMocaIntfDyn) != SUCCESS) {
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Error in MoCA_Intf_GET !!!", __FUNCTION__);
         return ERR_ITEM_NOT_FOUND;
     }
-        
+
     return UT_SUCCESS;
 }
 
 int Utopia_GetMocaIntf_Cfg(UtopiaContext *pCtx, void *str_handle)
 {
-    char ulog_msg[256];
     Obj_Device_MoCA_Interface_i_cfg *deviceMocaIntfCfg = NULL;
     int iVal = -1;
     char buf[64] = {'\0'};
-    errno_t  rc = -1;
     
     if (!pCtx || !str_handle) {
-	rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: Invalid Input Parameter", __FUNCTION__);
-	if(rc < EOK)
-	{
-	    ERR_CHK(rc);
-	}
-	ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Invalid Input Parameter", __FUNCTION__);
         return ERR_INVALID_ARGS;
     }
     deviceMocaIntfCfg = (Obj_Device_MoCA_Interface_i_cfg*)str_handle;
@@ -149,8 +119,7 @@ int Utopia_GetMocaIntf_Cfg(UtopiaContext *pCtx, void *str_handle)
     buf[strlen(buf)] = '\0';
     /*CID 62105: Unchecked return value */
     if(getHex(buf, deviceMocaIntfCfg->FreqCurrentMaskSetting, HEX_SZ) != SUCCESS){
-       sprintf(ulog_msg, "%s: FreqCurrentMaskSetting read error !!!\n", __FUNCTION__);
-       ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+       ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: FreqCurrentMaskSetting read error !!!\n", __FUNCTION__);
     }
 
     if(Utopia_Get(pCtx, UtopiaValue_Moca_KeyPassPhrase, (char *)&deviceMocaIntfCfg->KeyPassphrase, KEYPASS_SZ) == 0)
@@ -167,21 +136,15 @@ int Utopia_GetMocaIntf_Cfg(UtopiaContext *pCtx, void *str_handle)
 
 int Utopia_SetMocaIntf_Cfg(UtopiaContext *pCtx, void *str_handle)
 {
-    char ulog_msg[256];
     Obj_Device_MoCA_Interface_i_cfg *deviceMocaIntfCfg = NULL;
     int iVal = -1;
     char buf[64] = {'\0'};
     char cmd[128] = {'\0'};
     char key_val[64] = {'\0'};
-    errno_t  rc = -1;
+    errno_t rc = -1;
     
     if (!pCtx || !str_handle) {
-	rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: Invalid Input Parameter", __FUNCTION__);
-	if(rc < EOK)
-	{
-	   ERR_CHK(rc);
-	}
-	ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Invalid Input Parameter", __FUNCTION__);
         return ERR_INVALID_ARGS;
     }
     deviceMocaIntfCfg = (Obj_Device_MoCA_Interface_i_cfg*)str_handle;
@@ -314,17 +277,10 @@ int Utopia_SetMocaIntf_Cfg(UtopiaContext *pCtx, void *str_handle)
 
 int Utopia_GetMocaIntf_AssociateDevice(void *str_handle, int count)
 {
-    char ulog_msg[256];
     Obj_Device_MoCA_Interface_i_AssociatedDevice_i *mocaIntfAssociatedevice = NULL;
-    errno_t  rc = -1;
 
     if (str_handle == NULL) {
-        rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: Invalid Input Parameter", __FUNCTION__);
-        if(rc < EOK)
-        {
-           ERR_CHK(rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Invalid Input Parameter", __FUNCTION__);
         return ERR_INVALID_ARGS;
     }
     mocaIntfAssociatedevice = (Obj_Device_MoCA_Interface_i_AssociatedDevice_i *)str_handle;
@@ -335,17 +291,9 @@ int Utopia_GetMocaIntf_AssociateDevice(void *str_handle, int count)
     system("mocacfg -g moca0 phy >> " MOCACFG_FILE_NAME);
 
     if(Utopia_Get_TR181_Device_MoCA_Interface_i_AssociateDevice(mocaIntfAssociatedevice, count) != SUCCESS){
-        rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: Error in MoCA_Intf_AssociateDevice_GET !!!", __FUNCTION__);
-        if(rc < EOK)
-        {
-           ERR_CHK(rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Error in MoCA_Intf_AssociateDevice_GET !!!", __FUNCTION__);
         return ERR_ITEM_NOT_FOUND;
     }
 
     return UT_SUCCESS;
 }
-
-
-

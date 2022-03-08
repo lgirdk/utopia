@@ -96,15 +96,8 @@ const int FREQ_5_GHZ_CHANNELS[] = {0, 36, 40, 44, 48, 52, 56, 60, 64, 149, 153, 
 
 int Utopia_GetWifiRadioInstances()
 {
-
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    errno_t safec_rc = -1;
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-        ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
     return WIFI_RADIO_NUM_INSTANCES;
 }
@@ -116,13 +109,7 @@ int Utopia_GetWifiRadioEntry(UtopiaContext *ctx, unsigned long ulIndex, void *pE
     }
 
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    errno_t safec_rc = -1;
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-        ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
    wifiRadioEntry_t *pEntry_t = ( wifiRadioEntry_t *)pEntry;
@@ -146,13 +133,7 @@ int Utopia_GetIndexedWifiRadioCfg(UtopiaContext *ctx, unsigned long ulIndex, voi
     }
 
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    errno_t safec_rc = -1;
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-        ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     wifiRadioCfg_t *cfg_t = (wifiRadioCfg_t *)cfg;
@@ -185,7 +166,6 @@ int Utopia_GetWifiRadioCfg(UtopiaContext *ctx, int dummyInstanceNum, void *cfg)
     if (NULL == ctx || NULL == cfg) {
         return ERR_INVALID_ARGS;
     }
-    char ulog_msg[256];
     wifiRadioCfg_t *cfg_t = (wifiRadioCfg_t *)cfg;
     char buf[BUF_SZ] = {'\0'};
     char strbuf[STR_SZ] = {'\0'};
@@ -198,11 +178,7 @@ int Utopia_GetWifiRadioCfg(UtopiaContext *ctx, int dummyInstanceNum, void *cfg)
     errno_t safec_rc = -1;
 
 #ifdef _DEBUG_
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-        ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     if(cfg_t->InstanceNumber > MAX_NUM_INSTANCES)
@@ -230,22 +206,14 @@ int Utopia_GetWifiRadioCfg(UtopiaContext *ctx, int dummyInstanceNum, void *cfg)
     retVal = file_parse(WLANCFG_RADIO_FILE, &head);
 
     if(retVal != SUCCESS){
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: Error in file read !!!", __FUNCTION__);
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Error in file read !!!", __FUNCTION__);
         free_paramList(head); /*RDKB-7127,CID-32897, free unused resources before exit */
         return retVal;
     }
     ptr = head;
 
     if(!ptr){
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: No nodes found!!!", __FUNCTION__);
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: No nodes found!!!", __FUNCTION__);
         return ERR_NO_NODES;
     }
     for(; ptr; ptr=ptr->next){
@@ -312,22 +280,14 @@ int Utopia_GetWifiRadioCfg(UtopiaContext *ctx, int dummyInstanceNum, void *cfg)
     retVal = file_parse(WLANCFG_RADIO_EXTN_FILE, &head);
 
     if(retVal != SUCCESS){
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: Error in file read !!!", __FUNCTION__);
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Error in file read !!!", __FUNCTION__);
         free_paramList(head); /*RDKB-7127,CID-32897, free unused resources before exit */
         return retVal;
     }
     ptr = head;
 
     if(!ptr){
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: No nodes found!!!", __FUNCTION__);
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: No nodes found!!!", __FUNCTION__);
         return ERR_NO_NODES;
     }
     for(; ptr; ptr=ptr->next){
@@ -427,12 +387,7 @@ int Utopia_SetWifiRadioCfg(UtopiaContext *ctx, void *cfg)
     }
 
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-       ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     wifiRadioCfg_t *cfg_t = (wifiRadioCfg_t *)cfg;
@@ -710,12 +665,7 @@ int Utopia_GetWifiRadioSinfo(unsigned long ulIndex, void *sInfo)
     errno_t safec_rc = -1;
 
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-       ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     wifiRadioSinfo_t *sInfo_t = (wifiRadioSinfo_t *)sInfo;
@@ -757,13 +707,7 @@ int Utopia_GetIndexedWifiRadioDinfo(UtopiaContext *ctx, unsigned long ulIndex, v
     }
 
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    errno_t safec_rc = -1;
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-        ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
     if(ulIndex >= WIFI_RADIO_NUM_INSTANCES){
         return ERR_INVALID_ARGS;
@@ -794,15 +738,10 @@ int Utopia_GetWifiRadioDinfo(unsigned long ulInstanceNum, void *dInfo)
     if (NULL == dInfo) {
         return ERR_INVALID_ARGS;
     }
-    char ulog_msg[256];
     errno_t safec_rc = -1;
-#ifdef _DEBUG_
 
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-        ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+#ifdef _DEBUG_
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     wifiRadioDinfo_t *dInfo_t = (wifiRadioDinfo_t *)dInfo;
@@ -835,22 +774,14 @@ int Utopia_GetWifiRadioDinfo(unsigned long ulInstanceNum, void *dInfo)
     retVal = file_parse(WLANCFG_RADIO_FILE, &head);
 
     if(retVal != SUCCESS){
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: Error in file read !!!", __FUNCTION__);
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Error in file read !!!", __FUNCTION__);
         free_paramList(head); /*RDKB-7127,CID-33277, free unused resource before exit*/
         return retVal;
     }
     ptr = head;
 
     if(!ptr){
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: No nodes found!!!", __FUNCTION__);
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: No nodes found!!!", __FUNCTION__);
         return ERR_NO_NODES;
     }
     for(; ptr; ptr=ptr->next){
@@ -874,16 +805,10 @@ int Utopia_GetWifiRadioStats(unsigned long instanceNum, void *stats)
     if (NULL == stats) {
         return ERR_INVALID_ARGS;
     }
-
-    char ulog_msg[256];
     errno_t safec_rc = -1;
 
 #ifdef _DEBUG_
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-       ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     wifiRadioStats_t *stats_t = (wifiRadioStats_t *)stats;
@@ -916,22 +841,14 @@ int Utopia_GetWifiRadioStats(unsigned long instanceNum, void *stats)
     retVal = file_parse(WLANCFG_RADIO_STATS_FILE, &head);
 
     if(retVal != SUCCESS){
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: Error in file read !!!", __FUNCTION__);
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Error in file read !!!", __FUNCTION__);
         free_paramList(head); /*RDKB-7127, CID-33224, Free unused resource before exit*/
         return retVal;
     }
     ptr = head;
 
     if(!ptr){
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: No nodes found!!!", __FUNCTION__);
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: No nodes found!!!", __FUNCTION__);
         return ERR_NO_NODES;
     }
     for(; ptr; ptr=ptr->next){
@@ -968,13 +885,7 @@ int Utopia_WifiRadioSetValues(UtopiaContext *ctx, unsigned long ulIndex, unsigne
     }
 
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    errno_t safec_rc = -1;
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-       ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     /* First set the ulIndex in the global Index Map */
@@ -1009,12 +920,7 @@ int Utopia_GetWifiSSIDInstances(UtopiaContext *ctx)
     errno_t safec_rc = -1;
 
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-       ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     Utopia_GetInt(ctx,UtopiaValue_WLAN_SSID_Num,&count);  
@@ -1052,7 +958,6 @@ int Utopia_GetWifiSSIDInstances(UtopiaContext *ctx)
 
 int Utopia_GetWifiSSIDEntry(UtopiaContext *ctx, unsigned long ulIndex, void *pEntry)
 {
-
     if((NULL == ctx) || (NULL == pEntry)){
         return ERR_INVALID_ARGS;
     }
@@ -1062,13 +967,7 @@ int Utopia_GetWifiSSIDEntry(UtopiaContext *ctx, unsigned long ulIndex, void *pEn
     }
 
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    errno_t safec_rc = -1;
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-       ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     wifiSSIDEntry_t *pEntry_t = ( wifiSSIDEntry_t *)pEntry;
@@ -1088,12 +987,7 @@ int Utopia_GetIndexedWifiSSIDCfg(UtopiaContext *ctx, unsigned long ulIndex, void
     }
 
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-       ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     wifiSSIDCfg_t *cfg_t = (wifiSSIDCfg_t *)cfg;
@@ -1130,16 +1024,10 @@ int Utopia_GetWifiSSIDCfg(UtopiaContext *ctx, int dummyInstanceNum, void *cfg)
     if (NULL == ctx || NULL == cfg) {
         return ERR_INVALID_ARGS;
     }
-
-    char ulog_msg[256];
     errno_t safec_rc = -1;
 
 #ifdef _DEBUG_
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-       ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     wifiSSIDCfg_t *cfg_t = (wifiSSIDCfg_t *)cfg;
@@ -1184,22 +1072,14 @@ int Utopia_GetWifiSSIDCfg(UtopiaContext *ctx, int dummyInstanceNum, void *cfg)
     retVal = file_parse(WLANCFG_SSID_FILE, &head);
 
     if(retVal != SUCCESS){
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: Error in file read !!!", __FUNCTION__);
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Error in file read !!!", __FUNCTION__);
         free_paramList(head); /*RDKB-7127,CID-33259, free unused resource before exit*/
         return retVal;
     }
     ptr = head;
 
     if(!ptr){
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: No nodes found!!!", __FUNCTION__);
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: No nodes found!!!", __FUNCTION__);
         return ERR_NO_NODES;
     }
     for(; ptr; ptr=ptr->next){
@@ -1253,16 +1133,10 @@ int Utopia_GetWifiSSIDSInfo(unsigned long ulIndex, void *sInfo)
     if (NULL == sInfo) {
         return ERR_INVALID_ARGS;
     }
-
-    char ulog_msg[256];
     errno_t safec_rc = -1;
 
 #ifdef _DEBUG_
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-       ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     wifiSSIDSInfo_t *sInfo_t = (wifiSSIDSInfo_t *)sInfo;
@@ -1294,41 +1168,25 @@ int Utopia_GetWifiSSIDSInfo(unsigned long ulIndex, void *sInfo)
     retVal = file_parse(WLANCFG_SSID_FILE, &head);
 
     if(retVal != SUCCESS){
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: Error in file read !!!", __FUNCTION__);
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Error in file read !!!", __FUNCTION__);
         free_paramList(head); /*RDKB-7127, CID-33247, free unused resources before exit*/
         return retVal;
     }
     ptr = head;
 
     if(!ptr){
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: No nodes found!!!", __FUNCTION__);
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: No nodes found!!!", __FUNCTION__);
         return ERR_NO_NODES;
     }
     for(; ptr; ptr=ptr->next){
         if(!strcasecmp(ptr->param_name, "BSSID")){
 	   if(getHex(ptr->param_val, sInfo_t->BSSID, MAC_SZ) != SUCCESS){
-                safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: BSSID read error !!!\n", __FUNCTION__);
-                if(safec_rc < EOK){
-                   ERR_CHK(safec_rc);
-                }
-                ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+                ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: BSSID read error !!!\n", __FUNCTION__);
             }
 
         }else if(!strcasecmp(ptr->param_name,"MACAddress")){
 	    if(getHex(ptr->param_val , sInfo_t->MacAddress, MAC_SZ) != SUCCESS){
-                safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: Macaddress read error !!!\n", __FUNCTION__);
-                if(safec_rc < EOK){
-                   ERR_CHK(safec_rc);
-                }
-                ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+                ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Macaddress read error !!!\n", __FUNCTION__);
             }
 
         }
@@ -1351,13 +1209,7 @@ int Utopia_GetIndexedWifiSSIDDInfo(UtopiaContext *ctx, unsigned long ulIndex, vo
     }
 
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    errno_t safec_rc = -1;
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-       ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     if(ulIndex >= WIFI_SSID_NUM_INSTANCES){
@@ -1390,15 +1242,10 @@ int Utopia_GetWifiSSIDDInfo(unsigned long ulInstanceNum, void *dInfo)
     if (NULL == dInfo) {
         return ERR_INVALID_ARGS;
     }
-
-    char ulog_msg[256];
     errno_t safec_rc = -1;
+
 #ifdef _DEBUG_
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-       ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     wifiSSIDDInfo_t *dInfo_t = (wifiSSIDDInfo_t *)dInfo;
@@ -1437,22 +1284,14 @@ int Utopia_GetWifiSSIDDInfo(unsigned long ulInstanceNum, void *dInfo)
     retVal = file_parse(WLANCFG_SSID_FILE, &head);
 
     if(retVal != SUCCESS){
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: Error in file read !!!", __FUNCTION__);
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Error in file read !!!", __FUNCTION__);
         free_paramList(head); /*RDKB-7127, CID-33106, free unused resources before exit*/
         return retVal;
     }
     ptr = head;
 
     if(!ptr){
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: No nodes found!!!", __FUNCTION__);
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: No nodes found!!!", __FUNCTION__);
         return ERR_NO_NODES;
     }
     for(; ptr; ptr=ptr->next){
@@ -1474,13 +1313,7 @@ int Utopia_SetWifiSSIDCfg(UtopiaContext *ctx, void *cfg)
     }
 
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    errno_t safec_rc = -1;
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-       ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     wifiSSIDCfg_t *cfg_t = (wifiSSIDCfg_t *)cfg;
@@ -1524,13 +1357,9 @@ int Utopia_AddWifiSSID(UtopiaContext *ctx, void *entry)
         return ERR_INVALID_ARGS;
     }
     errno_t safec_rc = -1;
+
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-       ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     wifiSSIDEntry_t *entry_t = (wifiSSIDEntry_t *)entry;
@@ -1615,16 +1444,11 @@ int Utopia_DelWifiSSID(UtopiaContext *ctx, unsigned long ulInstanceNumber)
     if(NULL == ctx){
         return ERR_INVALID_ARGS;
     }
+
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-       ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
                                                                                              
-
     if(0 == ulInstanceNumber)
         return ERR_INVALID_ARGS;
 
@@ -1670,13 +1494,7 @@ int Utopia_WifiSSIDSetValues(UtopiaContext *ctx, unsigned long ulIndex, unsigned
     }
 
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    errno_t safec_rc = -1;
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-       ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     /* First set the ulIndex in the global Index Map */
@@ -1705,13 +1523,9 @@ int Utopia_GetWifiSSIDStats(unsigned long ulInstanceNum, void *stats)
         return ERR_INVALID_ARGS;
     }
     errno_t safec_rc = -1;
+
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-       ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     wifiSSIDStats_t *stats_t = (wifiSSIDStats_t *)stats;
@@ -1743,14 +1557,9 @@ int Utopia_GetWifiSSIDStats(unsigned long ulInstanceNum, void *stats)
 int Utopia_GetWifiAPInstances(UtopiaContext *ctx)
 {
     int count = 0;
+
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    errno_t safec_rc = -1;
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-       ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
     Utopia_GetInt(ctx,UtopiaValue_WLAN_SSID_Num,&count);
     if(count < STATIC_SSID_COUNT)
@@ -1765,13 +1574,7 @@ int Utopia_GetWifiAPEntry(UtopiaContext *ctx, char *pSSID, void *pEntry)
     }
 
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    errno_t safec_rc = -1;
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-       ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     wifiAPEntry_t *pEntry_t = ( wifiAPEntry_t *)pEntry;
@@ -1800,13 +1603,7 @@ int Utopia_GetIndexedWifiAPCfg(UtopiaContext *ctx, unsigned long ulIndex, void *
     }
 
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    errno_t safec_rc = -1;
-    safec_rc = sprintf_s(ulog_msg,  sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-       ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     wifiAPCfg_t *cfg_t = (wifiAPCfg_t *)pCfg;
@@ -1844,14 +1641,10 @@ int Utopia_GetWifiAPCfg(UtopiaContext *ctx,int dummyInstanceNum, void *cfg)
     if (NULL == ctx || NULL == cfg) {
         return ERR_INVALID_ARGS;
     }
-    char ulog_msg[256];
     errno_t safec_rc = -1;
+
 #ifdef _DEBUG_
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-       ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     wifiAPCfg_t *cfg_t = (wifiAPCfg_t *)cfg;
@@ -1895,22 +1688,14 @@ int Utopia_GetWifiAPCfg(UtopiaContext *ctx,int dummyInstanceNum, void *cfg)
     retVal = file_parse(WLANCFG_AP_FILE, &head);
 
     if(retVal != SUCCESS){
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: Error in file read !!!", __FUNCTION__);
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Error in file read !!!", __FUNCTION__);
         free_paramList(head); /*RDKB-7127,CID-32951, free unused resources before exit */
         return retVal;
     }
     ptr = head;
 
     if(!ptr){
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: No nodes found!!!", __FUNCTION__);
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: No nodes found!!!", __FUNCTION__);
         return ERR_NO_NODES;
     }
     for(; ptr; ptr=ptr->next){
@@ -1973,14 +1758,10 @@ int Utopia_GetWifiAPInfo(UtopiaContext *ctx, char *pSSID, void *info)
     if ((NULL == ctx) || (NULL == info) || (NULL == pSSID)) {
         return ERR_INVALID_ARGS;
     }
-    char ulog_msg[256];
     errno_t safec_rc = -1;
+
 #ifdef _DEBUG_
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-      ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     wifiAPInfo_t *info_t = (wifiAPInfo_t *)info;
@@ -2019,22 +1800,14 @@ int Utopia_GetWifiAPInfo(UtopiaContext *ctx, char *pSSID, void *info)
     retVal = file_parse(WLANCFG_AP_FILE, &head);
 
     if(retVal != SUCCESS){
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: Error in file read !!!", __FUNCTION__);
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Error in file read !!!", __FUNCTION__);
         free_paramList(head); /*RDKB-7127,CID-33342, free unused resources before exit */
         return retVal;
     }
     ptr = head;
 
     if(!ptr){
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: No nodes found!!!", __FUNCTION__);
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: No nodes found!!!", __FUNCTION__);
         return ERR_NO_NODES;
     }
     for(; ptr; ptr=ptr->next){
@@ -2067,13 +1840,9 @@ int Utopia_SetWifiAPCfg(UtopiaContext *ctx, void *cfg)
         return ERR_INVALID_ARGS;
     }
     errno_t safec_rc = -1;
+
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-       ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     wifiAPCfg_t *cfg_t = (wifiAPCfg_t *)cfg;
@@ -2131,13 +1900,7 @@ int Utopia_WifiAPSetValues(UtopiaContext *ctx, unsigned long ulIndex, unsigned l
     }
 
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    errno_t safec_rc = -1;
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-       ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
     
     /* First set the ulIndex in the global Index Map */
@@ -2166,13 +1929,7 @@ int Utopia_GetWifiAPSecEntry(UtopiaContext *ctx,char *pSSID, void *pEntry)
     }
 
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    errno_t safec_rc = -1;
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-        ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     wifiAPSecEntry_t *pEntry_t = (wifiAPSecEntry_t *)pEntry;
@@ -2187,14 +1944,10 @@ int Utopia_GetWifiAPSecCfg(UtopiaContext *ctx,char *pSSID, void *cfg)
     if (NULL == ctx || NULL == cfg || NULL == pSSID) {
         return ERR_INVALID_ARGS;
     }
-    char ulog_msg[256];
     errno_t safec_rc = -1;
+
 #ifdef _DEBUG_
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-      ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     wifiAPSecCfg_t *cfg_t = (wifiAPSecCfg_t *)cfg;
@@ -2233,22 +1986,14 @@ int Utopia_GetWifiAPSecCfg(UtopiaContext *ctx,char *pSSID, void *cfg)
     retVal = file_parse(WLANCFG_AP_SEC_FILE, &head);
 
     if(retVal != SUCCESS){
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: Error in file read !!!", __FUNCTION__);
-        if(safec_rc < EOK){
-          ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Error in file read !!!", __FUNCTION__);
         free_paramList(head); /*RDKB-7127,CID-32998, free unused resources before exit */
         return retVal;
     }
     ptr = head;
 
     if(!ptr){
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: No nodes found!!!", __FUNCTION__);
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: No nodes found!!!", __FUNCTION__);
         return ERR_NO_NODES;
     }
     for(; ptr; ptr=ptr->next){
@@ -2339,13 +2084,7 @@ int Utopia_GetWifiAPSecInfo(UtopiaContext *ctx,char *pSSID, void *info)
     }
 
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    errno_t safec_rc = -1;
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-      ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     wifiAPSecInfo_t *info_t = (wifiAPSecInfo_t *)info;
@@ -2362,13 +2101,9 @@ int Utopia_SetWifiAPSecCfg(UtopiaContext *ctx, char *pSSID, void *cfg)
         return ERR_INVALID_ARGS;
     }
     errno_t safec_rc = -1;
+
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-       ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     wifiAPSecCfg_t *cfg_t = (wifiAPSecCfg_t *)cfg;
@@ -2506,13 +2241,7 @@ int Utopia_GetWifiAPWPSEntry(UtopiaContext *ctx, char*pSSID, void *pEntry)
     }
 
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    errno_t safec_rc = -1;
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-        ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     wifiAPWPSEntry_t *pEntry_t = (wifiAPWPSEntry_t *)pEntry;
@@ -2531,13 +2260,7 @@ int Utopia_GetWifiAPWPSCfg(UtopiaContext *ctx, char*pSSID, void *cfg)
     }
 
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    errno_t safec_rc = -1;
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-      ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     wifiAPWPSCfg_t *cfg_t = (wifiAPWPSCfg_t *)cfg;
@@ -2588,13 +2311,9 @@ int Utopia_SetWifiAPWPSCfg(UtopiaContext *ctx,char *pSSID, void *cfg)
         return ERR_INVALID_ARGS;
     }
     errno_t safec_rc = -1;
+
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-      ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
    wifiAPWPSCfg_t *cfg_t = (wifiAPWPSCfg_t *)cfg;
@@ -2637,14 +2356,10 @@ unsigned long Utopia_GetAssociatedDevicesCount(UtopiaContext *ctx, char *pSSID)
     if (NULL == ctx || NULL == pSSID) {
         return ERR_INVALID_ARGS;
     }
-    char ulog_msg[256];
     errno_t safec_rc = -1;
+
 #ifdef _DEBUG_
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-      ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     char buf[BUF_SZ] = {'\0'};
@@ -2682,22 +2397,14 @@ unsigned long Utopia_GetAssociatedDevicesCount(UtopiaContext *ctx, char *pSSID)
     retVal = file_parse(WLANCFG_AP_ASSOC_DEV_FILE, &head);
 
     if(retVal != SUCCESS){
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: Error in file read !!!", __FUNCTION__);
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Error in file read !!!", __FUNCTION__);
         free_paramList(head);/*RDKB-7127, CID-33021, free unused resource before exit*/
         return retVal;
     }
     ptr = head;
 
     if(!ptr){
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: No nodes found!!!", __FUNCTION__);
-        if(safec_rc < EOK){
-          ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: No nodes found!!!", __FUNCTION__);
         return ERR_NO_NODES;
     }
     for(; ptr; ptr=ptr->next){
@@ -2716,14 +2423,10 @@ int Utopia_GetAssocDevice(UtopiaContext *ctx, char *pSSID, unsigned long ulIndex
     if (NULL == ctx || NULL == assocDev || NULL == pSSID) {
         return ERR_INVALID_ARGS;
     }
-    char ulog_msg[256];
     errno_t safec_rc = -1;
+
 #ifdef _DEBUG_
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** !!!", __FUNCTION__);
-    if(safec_rc < EOK){
-      ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
     wifiAPAssocDevice_t *assocDev_t = (wifiAPAssocDevice_t *)assocDev;
     char buf[BUF_SZ] = {'\0'};
@@ -2760,32 +2463,20 @@ int Utopia_GetAssocDevice(UtopiaContext *ctx, char *pSSID, unsigned long ulIndex
     retVal = file_parse(WLANCFG_AP_ASSOC_DEV_FILE, &head);
 
     if(retVal != SUCCESS){
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: Error in file read !!!", __FUNCTION__);
-        if(safec_rc < EOK){
-          ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Error in file read !!!", __FUNCTION__);
         free_paramList(head);/*RDKB-7127, CID-33011, free unused resource before exit*/
         return retVal;
     }
     ptr = head;
 
     if(!ptr){
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: No nodes found!!!", __FUNCTION__);
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: No nodes found!!!", __FUNCTION__);
         return ERR_NO_NODES;
     }
     for(; ptr; ptr=ptr->next){
         if(!strcasecmp(ptr->param_name, "MACAddress")){
             if(getHex(ptr->param_val , assocDev_t->MacAddress, MAC_SZ) != SUCCESS){
-                safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: Macaddress read error !!!\n", __FUNCTION__);
-                if(safec_rc < EOK){
-                  ERR_CHK(safec_rc);
-                }
-                ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+                ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Macaddress read error !!!\n", __FUNCTION__);
             }
         } else if(!strcasecmp(ptr->param_name,"AuthenticationState")) {
             assocDev_t->AuthenticationState = (0 == atoi(ptr->param_val)) ? FALSE : TRUE;
@@ -2821,13 +2512,7 @@ unsigned long Utopia_GetWifiAPIndex(UtopiaContext *ctx, char *pSSID)
     }
 
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    errno_t safec_rc = -1;
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** with SSID %s!!!", __FUNCTION__,pSSID);
-    if(safec_rc < EOK){
-      ERR_CHK(safec_rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** with SSID %s!!!", __FUNCTION__,pSSID);
 #endif
 
     for(i=0;i<WIFI_SSID_NUM_INSTANCES;i++)
@@ -2899,7 +2584,6 @@ int Utopia_GetWifiAPMFCfg(UtopiaContext *ctx, char *pSSID, void *cfg)
         return ERR_INVALID_ARGS;
     }
 
-    char ulog_msg[256];
     wifiMacFilterCfg_t *cfg_t = (wifiMacFilterCfg_t *)cfg;
     char buf[1024] = {'\0'};
     char maclist[1024] = {'\0'};
@@ -2911,11 +2595,7 @@ int Utopia_GetWifiAPMFCfg(UtopiaContext *ctx, char *pSSID, void *cfg)
     int vif_num = 0;
     errno_t safec_rc = -1;
 
-    safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: ********Entered ****** with SSID %s!!!", __FUNCTION__,pSSID);
-    if(safec_rc < EOK){
-       ERR_CHK(safec_rc);
-    }
-    ulogf(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulogf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** with SSID %s!!!", __FUNCTION__,pSSID);
 
     int index = Utopia_GetWifiAPIndex(ctx, pSSID);
 
@@ -2947,21 +2627,13 @@ int Utopia_GetWifiAPMFCfg(UtopiaContext *ctx, char *pSSID, void *cfg)
     retVal = file_parse(WIFI_MACFILTER_FILE, &head);
 
     if(retVal != SUCCESS){
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: Error in file read !!!", __FUNCTION__);
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Error in file read !!!", __FUNCTION__);
         free_paramList(head);/*RDKB-7127, CID-33359, free unused resource before exit*/
         return retVal;
     }
     ptr = head;
     if(!ptr){
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"%s: No nodes found!!!", __FUNCTION__);
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: No nodes found!!!", __FUNCTION__);
         return ERR_NO_NODES;
     }
     cfg_t->macFilterEnabled = FALSE;
