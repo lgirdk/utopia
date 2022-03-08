@@ -47,20 +47,15 @@
 
 int Utopia_Get_DeviceDnsRelayForwarding(UtopiaContext *pCtx, int index, void *str_handle)
 {
-    char ulog_msg[256];
     char tokenBuf[64] = {'\0'};
     char tokenVal[64] = {'\0'};
     errno_t  rc = -1;
 
     if(!str_handle){
-	rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: Invalid Input Parameter", __FUNCTION__);
-	if(rc < EOK)
-	{
-	    ERR_CHK(rc);
-	}
-	ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Invalid Input Parameter", __FUNCTION__);
         return ERR_INVALID_ARGS;
     }
+
     Obj_Device_DNS_Relay *deviceDnsRelay = (Obj_Device_DNS_Relay*)str_handle;
 
     rc = sprintf_s(tokenBuf, sizeof(tokenBuf), "tr_dns_relay_forwarding_enable_%d", index);
@@ -71,13 +66,8 @@ int Utopia_Get_DeviceDnsRelayForwarding(UtopiaContext *pCtx, int index, void *st
     tokenBuf[strlen(tokenBuf)] = '\0';
     Utopia_RawGet(pCtx, NULL, tokenBuf, tokenVal, sizeof(tokenVal));
     deviceDnsRelay->Enable = (!strncasecmp(tokenVal, "false", 5))? FALSE : TRUE ;  
-    rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: Get Enable key & val = %s, %u", __FUNCTION__, tokenBuf, deviceDnsRelay->Enable);
-    if(rc < EOK)
-    {
-        ERR_CHK(rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
-    
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Get Enable key & val = %s, %u", __FUNCTION__, tokenBuf, deviceDnsRelay->Enable);
+
     memset(tokenVal, 0, sizeof(tokenVal));
     rc = sprintf_s(tokenBuf, sizeof(tokenBuf), "tr_dns_relay_forwarding_server_%d", index);
     if(rc < EOK)
@@ -105,20 +95,15 @@ int Utopia_Get_DeviceDnsRelayForwarding(UtopiaContext *pCtx, int index, void *st
 
 int Utopia_Set_DeviceDnsRelayForwarding(UtopiaContext *pCtx, int index, void *str_handle)
 {
-    char ulog_msg[256];
     char tokenBuf[64] = {'\0'};
     char tokenVal[64] = {'\0'};
     errno_t  rc = -1;
 
     if (!pCtx || !str_handle) {
-	rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: Invalid Input Parameter", __FUNCTION__);
-	if(rc < EOK)
-	{
-	    ERR_CHK(rc);
-	}
-	ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Invalid Input Parameter", __FUNCTION__);
         return ERR_INVALID_ARGS;
     }
+
     Obj_Device_DNS_Relay *deviceDnsRelay = (Obj_Device_DNS_Relay*)str_handle;
 
     rc = sprintf_s(tokenBuf, sizeof(tokenBuf), "tr_dns_relay_forwarding_enable_%d", index);
@@ -127,27 +112,10 @@ int Utopia_Set_DeviceDnsRelayForwarding(UtopiaContext *pCtx, int index, void *st
         ERR_CHK(rc);
     }
     tokenBuf[strlen(tokenBuf)] = '\0';
-    rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: Set Enable key & val = %s, %u", __FUNCTION__, tokenBuf, deviceDnsRelay->Enable);
-    if(rc < EOK)
-    {
-        ERR_CHK(rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Set Enable key & val = %s, %u", __FUNCTION__, tokenBuf, deviceDnsRelay->Enable);
     if(deviceDnsRelay->Enable == FALSE){
-        rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: Enable is FALSE \n", __FUNCTION__);
-        if(rc < EOK)
-        {
-            ERR_CHK(rc);
-        }
-	ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
         Utopia_RawSet(pCtx, NULL, tokenBuf, "false");
     }else{
-        rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: Enable is TRUE \n", __FUNCTION__);
-        if(rc < EOK)
-        {
-            ERR_CHK(rc);
-        }
-	ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
         Utopia_RawSet(pCtx, NULL, tokenBuf, "true");
     }
     rc = sprintf_s(tokenBuf, sizeof(tokenBuf), "tr_dns_relay_forwarding_server_%d", index);
