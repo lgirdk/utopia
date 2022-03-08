@@ -2555,10 +2555,8 @@ static int s_get_portmapdyn_count ()
 
 static int s_set_portmapdyn_count (int count)
 {
-    char ulog_msg[256];
     token_t  se_token;
     int      se_fd = s_sysevent_connect(&se_token);
-    errno_t   rc = -1;
     if (0 > se_fd) {
         return ERR_SYSEVENT_CONN;
     }
@@ -2567,12 +2565,7 @@ static int s_set_portmapdyn_count (int count)
     snprintf(val, sizeof(val), "%d", count);
     sysevent_set(se_fd, se_token, "portmap_dyn_count", val, 0);
 
-    rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: set count %d", __FUNCTION__, count);
-    if(rc < EOK)
-    {
-        ERR_CHK(rc);
-    }
-    ulog(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulogf(ULOG_CONFIG, UL_UTAPI, "%s: set count %d", __FUNCTION__, count);
 
     return UT_SUCCESS;
 }
@@ -2772,9 +2765,7 @@ static int s_get_portmapdyn (int index, portMapDyn_t *portmap)
  */
 static int s_find_portmapdyn (const char *external_host, int external_port, protocol_t proto)
 {
-    char ulog_msg[256];
     int i, count = s_get_portmapdyn_count();
-    errno_t  rc = -1;
 
     ulog_debugf(ULOG_CONFIG, UL_UTAPI, "%s: count %d", __FUNCTION__, count);
 
@@ -2787,13 +2778,8 @@ static int s_find_portmapdyn (const char *external_host, int external_port, prot
             if (external_port == pmap.external_port &&
                 proto == pmap.protocol &&
                 (0 == strcasecmp(external_host, pmap.external_host))) {
-                rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: found dynamic port map: entry %d (%s:%d<->%s:%d)",
+                ulogf(ULOG_CONFIG, UL_UTAPI, "%s: found dynamic port map: entry %d (%s:%d<->%s:%d)",
                         __FUNCTION__, i, pmap.external_host, pmap.external_port, pmap.internal_host, pmap.internal_port);
-                if(rc < EOK)
-                {
-                    ERR_CHK(rc);
-                }
-                ulog(ULOG_CONFIG, UL_UTAPI, ulog_msg);
                 return i;
             }
         }
@@ -4379,8 +4365,7 @@ static int s_setiap (UtopiaContext *ctx, int index, iap_entry_t *iap)
     strncpy(buf, (iap->allow_access) ? "allow" : "deny", sizeof(buf));
     UTOPIA_SETINDEXED(ctx, UtopiaValue_IAP_Access, index, buf);
     
-    memset(buf, 0, sizeof(buf));
-    snprintf(buf, sizeof(buf)-1, "%d", iap->tr_inst_num );
+    snprintf(buf, sizeof(buf), "%d", iap->tr_inst_num );
     UTOPIA_SETINDEXED(ctx, UtopiaValue_IAP_TR_INST_NUM, index, buf);
 
     if (iap->tod.all_day) {
@@ -4402,13 +4387,11 @@ static int s_setiap (UtopiaContext *ctx, int index, iap_entry_t *iap)
             for (i = 1; i <= iap->block.url_count; i++) {
                 Utopia_SetIndexed2(ctx, UtopiaValue_IAP_BlockURL, index, i, url);
                 
-                memset(buf, 0, sizeof(buf));
-                snprintf(buf, sizeof(buf)-1, "%d",  iap->block.url_tr_inst_num[i-1]);
+                snprintf(buf, sizeof(buf), "%d",  iap->block.url_tr_inst_num[i-1]);
                 Utopia_SetIndexed2(ctx, UtopiaValue_IAP_BlockURL_TR_INST_NUM, index, i, buf);
 
                 char * alias = iap->block.url_tr_alias + (i-1)*TR_ALIAS_SZ;
-                memset(buf, 0, sizeof(buf));
-                snprintf(buf, sizeof(buf)-1, "%s", alias);
+                snprintf(buf, sizeof(buf), "%s", alias);
                 Utopia_SetIndexed2(ctx, UtopiaValue_IAP_BlockURL_TR_ALIAS, index, i, buf);
                 
                 url += URL_SZ;
@@ -4423,13 +4406,11 @@ static int s_setiap (UtopiaContext *ctx, int index, iap_entry_t *iap)
             for (i = 1; i <= iap->block.keyword_count; i++) {
                 Utopia_SetIndexed2(ctx, UtopiaValue_IAP_BlockKeyword, index, i, keyword);
                 
-                memset(buf, 0, sizeof(buf));
-                snprintf(buf, sizeof(buf)-1, "%d", iap->block.keyword_tr_inst_num[i-1]);
+                snprintf(buf, sizeof(buf), "%d", iap->block.keyword_tr_inst_num[i-1]);
                 Utopia_SetIndexed2(ctx, UtopiaValue_IAP_BlockKeyword_TR_INST_NUM, index, i, buf);
 
                 char * alias = iap->block.keyword_tr_alias + (i-1)*TR_ALIAS_SZ;
-                memset(buf, 0, sizeof(buf));
-                snprintf(buf, sizeof(buf)-1, "%s", alias);
+                snprintf(buf, sizeof(buf), "%s", alias);
                 Utopia_SetIndexed2(ctx, UtopiaValue_IAP_BlockKeyword_TR_ALIAS, index, i, buf);
 
                 keyword += IAP_KEYWORD_SZ;
@@ -4450,8 +4431,7 @@ static int s_setiap (UtopiaContext *ctx, int index, iap_entry_t *iap)
                 if (isWellKnownService(app[i].name)) {
                     Utopia_SetIndexed2(ctx, UtopiaValue_IAP_BlockWKApplication, index, wkappcount+1, app[i].name);
 
-                    memset(buf, 0, sizeof(buf));
-                    snprintf(buf, sizeof(buf)-1, "%d", iap->block.app_tr_inst_num[i]);
+                    snprintf(buf, sizeof(buf), "%d", iap->block.app_tr_inst_num[i]);
                     Utopia_SetIndexed2(ctx, UtopiaValue_IAP_BlockWKApplication_TR_INST_NUM, index, index_wk_app+1, buf);
 
                     index_wk_app++;
@@ -4463,8 +4443,7 @@ static int s_setiap (UtopiaContext *ctx, int index, iap_entry_t *iap)
                     snprintf(buf, sizeof(buf), "iap_blockapp_%d_%d", index, appcount+1);
                     Utopia_SetIndexed2(ctx, UtopiaValue_IAP_BlockApplication, index, appcount+1, buf);
 
-                    memset(buf, 0, sizeof(buf));
-                    snprintf(buf, sizeof(buf)-1, "%d", iap->block.app_tr_inst_num[i]);
+                    snprintf(buf, sizeof(buf), "%d", iap->block.app_tr_inst_num[i]);
                     Utopia_SetIndexed2(ctx, UtopiaValue_IAP_BlockApplication_TR_INST_NUM, index, index_app+1, buf);
 
                     Utopia_SetIndexed2(ctx, UtopiaValue_IAP_BlockName, index, appcount+1, app[i].name);
@@ -6721,9 +6700,7 @@ int Utopia_Get_Http_User(UtopiaContext *ctx,  http_user_t *httpuser)
     if the status is user - UI page with Cable(primary provider), WAN(byoi) and None(no internet) will be provided*/
 int Utopia_Get_BYOI_allowed(UtopiaContext *ctx,  int *byoi_state)
 {  
-    char ulog_msg[256];
     char buf[TOKEN_SZ];
-    errno_t  rc = -1;
 
     if (NULL == ctx) {
         return ERR_UTCTX_INIT;
@@ -6745,12 +6722,7 @@ int Utopia_Get_BYOI_allowed(UtopiaContext *ctx,  int *byoi_state)
 
      *byoi_state = status;
 
-    rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: hsd_allowed %d", __FUNCTION__, *byoi_state);
-    if(rc < EOK)
-    {
-        ERR_CHK(rc);
-    }
-    ulog(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulogf(ULOG_CONFIG, UL_UTAPI, "%s: hsd_allowed %d", __FUNCTION__, *byoi_state);
 
     return UT_SUCCESS;
 
@@ -6918,20 +6890,13 @@ int Utopia_Get_DeviceTime_NTPServer(UtopiaContext *ctx, char *server,int index)
 
 int Utopia_Set_DeviceTime_LocalTZ(UtopiaContext *ctx, char *tz)
 {
-    char ulog_msg[256];
-    errno_t  rc = -1;
     if (NULL == ctx || NULL == tz)
     {
         return ERR_UTCTX_INIT;
     }
 
     UTOPIA_SET(ctx, UtopiaValue_TZ, tz);
-    rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: entered ", __FUNCTION__);
-    if(rc < EOK)
-    {
-        ERR_CHK(rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: entered ", __FUNCTION__);
     return SUCCESS;
 }
 
@@ -7036,7 +7001,6 @@ int Utopia_Get_Mac_MgWan(UtopiaContext *ctx,  char *val)
 
 int Utopia_GetEthAssocDevices(int unitId, int portId ,unsigned char *macAddrList,int *numMacAddr)
 {
-    char ulog_msg[256];
     char line[LINE_SZ];
     char tok[] = "=";
     char *mac = NULL;
@@ -7044,16 +7008,10 @@ int Utopia_GetEthAssocDevices(int unitId, int portId ,unsigned char *macAddrList
     int index = 0;
     FILE *fp = NULL;
     int numAssocDev = 0;
-    errno_t  rc = -1;
 
     v_secure_system("switchcfg -a %d 'l2 show' | grep Learned | grep 'DestPort(s): %d' | cut -d'|' -f3 | awk '{print $1$2}' > " ETHERNET_ASSOC_DEVICE_FILE , unitId, portId);
     if((fp = fopen(ETHERNET_ASSOC_DEVICE_FILE, "r"))== NULL ) {
-        rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: Error in File Open !!!", __FUNCTION__);
-        if(rc < EOK)
-        {
-            ERR_CHK(rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Error in File Open !!!", __FUNCTION__);
         return ERR_FILE_OPEN_FAIL;
     }
     while((fgets(line, sizeof(line), fp)) != NULL)
@@ -7085,12 +7043,7 @@ int Utopia_GetEthAssocDevices(int unitId, int portId ,unsigned char *macAddrList
     *numMacAddr = numAssocDev;
 
     if(fclose(fp) != SUCCESS){
-        rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: File Close Error !!!", __FUNCTION__);
-        if(rc < EOK)
-        {
-            ERR_CHK(rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: File Close Error !!!", __FUNCTION__);
         return ERR_FILE_CLOSE_FAIL;
     }
 
@@ -7533,24 +7486,21 @@ int Utopia_IPRule_ephemeral_port_forwarding( portMapDyn_t *pmap, boolean_t isCal
 	}
 
 	/* Get Bridge-Mode value */
-	memset( event_string, 0, sizeof( event_string ) );
-    sysevent_get(se_fd, se_token, "bridge_mode", event_string, sizeof( event_string ) - 1 );
+	sysevent_get(se_fd, se_token, "bridge_mode", event_string, sizeof( event_string ) - 1 );
 	isBridgeMode		= ( 0 == strcmp( "0", event_string ) ) ? 0 : 1;
 
 	/* NAT Ip4  & NAT, WAN Ready */
-	memset( natip4, 0, sizeof( natip4 ) );
-    sysevent_get(se_fd, se_token, "current_wan_ipaddr", natip4, sizeof( natip4 ) - 1 );
+	sysevent_get(se_fd, se_token, "current_wan_ipaddr", natip4, sizeof( natip4 ) - 1 );
 	isWanReady		  	= ( 0 == strcmp( "0.0.0.0", natip4 ) ) ? 0 : 1;
 	isNatReady		  	= isWanReady;
 
 	/* Lan IP Address, Octets and LAN Net mask */
-	memset( lan_ipaddr, 0, sizeof( lan_ipaddr ) );
-    sysevent_get(se_fd, se_token, "current_lan_ipaddr", lan_ipaddr, sizeof( lan_ipaddr ) - 1 );
+	sysevent_get(se_fd, se_token, "current_lan_ipaddr", lan_ipaddr, sizeof( lan_ipaddr ) - 1 );
 
 	// the first 3 octets of the lan ip address
-	memset( lan_3_octets, 0, sizeof( lan_3_octets ) );
-	snprintf( lan_3_octets, sizeof( lan_3_octets ), "%s", lan_ipaddr );
-	for ( p = lan_3_octets + strlen( lan_3_octets ); p >= lan_3_octets; p-- ) 
+	p = lan_3_octets;
+	p += snprintf(lan_3_octets, sizeof(lan_3_octets), "%s", lan_ipaddr);
+	for ( ; p >= lan_3_octets; p--)
 	{
 	   if ( *p == '.' ) 
 	   {
@@ -7563,18 +7513,13 @@ int Utopia_IPRule_ephemeral_port_forwarding( portMapDyn_t *pmap, boolean_t isCal
 	   }
 	}
 
-	memset( lan_netmask, 0, sizeof( lan_netmask ) );
 	syscfg_get( NULL, "lan_netmask", lan_netmask, sizeof( lan_netmask ) ); 
 
 	/* NatRedirectionBlocked status */
-	memset( event_string, 0, sizeof( event_string ) );
 	rc = syscfg_get( NULL, "block_nat_redirection", event_string, sizeof( event_string ));
-	if ( ( 0 == rc ) && ('\0' != event_string[ 0 ] ) ) 
+	if ((rc == 0) && (strcmp(event_string, "1") == 0))
 	{
-	   if ( 0 == strcmp( "1", event_string))
-	   {
-		  isNatRedirectionBlocked = 1;
-	   }
+		isNatRedirectionBlocked = 1;
 	}
 
 	/* 
@@ -7589,12 +7534,6 @@ int Utopia_IPRule_ephemeral_port_forwarding( portMapDyn_t *pmap, boolean_t isCal
 	{
 		ciptableOprationCode = 'D';
 	}
-		
-
-	/* external & destination IP-Host */
-	memset( external_ip, 0, sizeof( external_ip ) );
-	memset( external_dest_port, 0, sizeof( external_dest_port ) );	
-	
 
 	safec_rc = sprintf_s( fromip, sizeof(fromip), "%s", (strlen(pmap->external_host) == 0) ? "none" : pmap->external_host );
 	if(safec_rc < EOK)
@@ -7630,6 +7569,10 @@ int Utopia_IPRule_ephemeral_port_forwarding( portMapDyn_t *pmap, boolean_t isCal
 	{
 		snprintf( external_dest_port, sizeof( external_dest_port ), "%s", fromport );
 	} 
+	else
+	{
+		external_dest_port[0] = '\0';
+	}
 
 	if ( ('\0' == dport[ 0 ] ) || ( 0 == strcmp( fromport, dport ) ) ) 
 	{

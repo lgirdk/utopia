@@ -59,14 +59,7 @@ int Utopia_GetNumOfUsers(UtopiaContext *ctx)
     }
 
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    errno_t  rc = -1;
-    rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: ********Entered ****** !!!", __FUNCTION__);
-    if(rc < EOK)
-    {
-        ERR_CHK(rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     if( 0 != Utopia_GetInt(ctx,UtopiaValue_User_Count,&cnt))
@@ -82,14 +75,7 @@ int Utopia_SetNumOfUsers(UtopiaContext *ctx, int count)
     }
 
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    errno_t  rc = -1;
-    rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: ********Entered ****** !!!", __FUNCTION__);
-    if(rc < EOK)
-    {
-        ERR_CHK(rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     Utopia_SetInt(ctx,UtopiaValue_User_Count,count); 
@@ -103,14 +89,7 @@ int Utopia_GetUserEntry(UtopiaContext *ctx, unsigned long ulIndex, void *pUserEn
     }
 
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    errno_t  rc = -1;
-    rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: ********Entered ****** !!!", __FUNCTION__);
-    if(rc < EOK)
-    {
-        ERR_CHK(rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
    userCfg_t *pUserEntry_t = (userCfg_t *)pUserEntry;
@@ -135,14 +114,7 @@ int Utopia_GetUserCfg(UtopiaContext *ctx, void *pUserCfg)
     }
 
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    errno_t  rc = -1;
-    rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: ********Entered ****** !!!", __FUNCTION__);
-    if(rc < EOK)
-    {
-        ERR_CHK(rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
     
     userCfg_t *pUserCfg_t = (userCfg_t *)pUserCfg;
@@ -164,14 +136,7 @@ int Utopia_AddUser(UtopiaContext *ctx, void *pUserCfg)
     }
 
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    errno_t  rc = -1;
-    rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: ********Entered ****** !!!", __FUNCTION__);
-    if(rc < EOK)
-    {
-        ERR_CHK(rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     userCfg_t *pUserCfg_t = (userCfg_t *)pUserCfg;
@@ -200,13 +165,7 @@ int Utopia_DelUser(UtopiaContext *ctx, unsigned long ulInstanceNumber)
     }
 
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: ********Entered ****** !!!", __FUNCTION__);
-    if(rc < EOK)
-    {
-        ERR_CHK(rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     if(0 == ulInstanceNumber)
@@ -261,14 +220,7 @@ int Utopia_SetUserCfg(UtopiaContext *ctx, void *pUserCfg)
     }
 
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    errno_t  rc = -1;
-    rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: ********Entered ****** !!!", __FUNCTION__);
-    if(rc < EOK)
-    {
-        ERR_CHK(rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     userCfg_t *pUserCfg_t = (userCfg_t *)pUserCfg;
@@ -288,14 +240,7 @@ int Utopia_SetUserValues(UtopiaContext *ctx, unsigned long ulIndex, unsigned lon
     }
 
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    errno_t  rc = -1;
-    rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: ********Entered ****** !!!", __FUNCTION__);
-    if(rc < EOK)
-    {
-        ERR_CHK(rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     Utopia_SetIndexedInt(ctx, UtopiaValue_UserIndx_InsNum, (ulIndex + 1) ,ulInstanceNumber);
@@ -308,14 +253,7 @@ int Utopia_GetUserByIndex(UtopiaContext *ctx, unsigned long ulIndex, userCfg_t *
     int iVal = 0;
 
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    errno_t  rc = -1;
-    rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: ********Entered ****** !!!", __FUNCTION__);
-    if(rc < EOK)
-    {
-        ERR_CHK(rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     Utopia_GetIndexed(ctx,UtopiaValue_UserName,(ulIndex + 1),pUserCfg_t->Username,STR_SZ);
@@ -342,13 +280,7 @@ int Utopia_SetUserByIndex(UtopiaContext *ctx, unsigned long ulIndex, userCfg_t *
     char tmpBuf[STR_SZ] = {'\0'};
 
 #ifdef _DEBUG_
-    char ulog_msg[256];
-    rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: ********Entered ****** !!!", __FUNCTION__);
-    if(rc < EOK)
-    {
-        ERR_CHK(rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
     /* First delete the old username from Linux if its already there */
