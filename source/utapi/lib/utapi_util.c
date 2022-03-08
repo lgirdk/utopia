@@ -48,9 +48,6 @@
 #include <unistd.h>
 #include "safec_lib_common.h"
 
-// Global
-char ulog_msg[1024];
-
 
 /* Helper function to map from HDK_Enum to string */
 char* s_EnumToStr (EnumString_Map* pMap, int iEnum)

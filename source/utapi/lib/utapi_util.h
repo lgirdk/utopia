@@ -36,8 +36,6 @@
 #ifndef __UTAPI_UTIL_H__
 #define __UTAPI_UTIL_H__
 
-extern char ulog_msg[1024];
-
 /* 
  * Generic struct used to map between the various Enums and 
  * their syscfg string representations
