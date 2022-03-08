@@ -2489,6 +2489,7 @@ static int s_get_portmapdyn_count ()
 
 static int s_set_portmapdyn_count (int count)
 {
+    char ulog_msg[256];
     token_t  se_token;
     int      se_fd = s_sysevent_connect(&se_token);
     errno_t   rc = -1;
@@ -2701,6 +2702,7 @@ static int s_get_portmapdyn (int index, portMapDyn_t *portmap)
  */
 static int s_find_portmapdyn (const char *external_host, int external_port, protocol_t proto)
 {
+    char ulog_msg[256];
     int i, count = s_get_portmapdyn_count();
     errno_t  rc = -1;
 
@@ -6626,7 +6628,7 @@ int Utopia_Get_Http_User(UtopiaContext *ctx,  http_user_t *httpuser)
     if the status is user - UI page with Cable(primary provider), WAN(byoi) and None(no internet) will be provided*/
 int Utopia_Get_BYOI_allowed(UtopiaContext *ctx,  int *byoi_state)
 {  
-
+    char ulog_msg[256];
     char buf[TOKEN_SZ];
     errno_t  rc = -1;
 
@@ -6823,20 +6825,21 @@ int Utopia_Get_DeviceTime_NTPServer(UtopiaContext *ctx, char *server,int index)
 
 int Utopia_Set_DeviceTime_LocalTZ(UtopiaContext *ctx, char *tz)
 {
-  errno_t  rc = -1;
-  if (NULL == ctx || NULL == tz)
-  {
-     return ERR_UTCTX_INIT;
-  }
+    char ulog_msg[256];
+    errno_t  rc = -1;
+    if (NULL == ctx || NULL == tz)
+    {
+        return ERR_UTCTX_INIT;
+    }
 
-  UTOPIA_SET(ctx, UtopiaValue_TZ, tz);
-  rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: entered ", __FUNCTION__);
-  if(rc < EOK)
-  {
-      ERR_CHK(rc);
-  }
-  ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
-  return SUCCESS;
+    UTOPIA_SET(ctx, UtopiaValue_TZ, tz);
+    rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: entered ", __FUNCTION__);
+    if(rc < EOK)
+    {
+        ERR_CHK(rc);
+    }
+    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    return SUCCESS;
 }
 
 int Utopia_Get_DeviceTime_LocalTZ(UtopiaContext *ctx, char *tz)
@@ -6940,6 +6943,7 @@ int Utopia_Get_Mac_MgWan(UtopiaContext *ctx,  char *val)
 
 int Utopia_GetEthAssocDevices(int unitId, int portId ,unsigned char *macAddrList,int *numMacAddr)
 {
+    char ulog_msg[256];
     char line[LINE_SZ];
     char tok[] = "=";
     char *mac = NULL;

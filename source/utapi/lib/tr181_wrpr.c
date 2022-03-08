@@ -57,6 +57,7 @@ static void create_file()
 
 int Utopia_Get_TR181_Device_MoCA_Interface_i_Static(Obj_Device_MoCA_Interface_i_static *deviceMocaIntfStatic)
 {
+    char ulog_msg[256];
     char buf[BUF_SZ] = {'\0'};
     param_node *ptr = NULL;
     param_node *head = NULL;
@@ -227,6 +228,7 @@ int Utopia_Get_TR181_Device_MoCA_Interface_i_Static(Obj_Device_MoCA_Interface_i_
 
 int Utopia_Get_TR181_Device_MoCA_Interface_i_Dyn(Obj_Device_MoCA_Interface_i_dyn *deviceMocaIntfDyn)
 {
+    char ulog_msg[256];
     char buf[BUF_SZ] = {'\0'};
     param_node *ptr = NULL;
     param_node *head = NULL;
@@ -411,6 +413,7 @@ int Utopia_Get_TR181_Device_MoCA_Interface_i_Dyn(Obj_Device_MoCA_Interface_i_dyn
 
 int Utopia_Count_AssociateDeviceEntry(int *devCount)
 {
+    char ulog_msg[256];
     param_node *ptr = NULL;
     param_node *head = NULL;
     int retVal = ERR_GENERAL;
@@ -462,6 +465,7 @@ int Utopia_Count_AssociateDeviceEntry(int *devCount)
 
 int Utopia_Get_TR181_Device_MoCA_Interface_i_AssociateDevice(Obj_Device_MoCA_Interface_i_AssociatedDevice_i *mocaIntfAssociatedevice, int count)
 {
+    char ulog_msg[256];
     char buf[BUF_SZ] = {'\0'};
     param_node *ptr = NULL;
     param_node *head = NULL;

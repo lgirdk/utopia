@@ -41,6 +41,7 @@
 
 int file_parse(char* file_name, param_node **head)
 {
+    char ulog_msg[256];
     FILE *fp = NULL;
     param_node *curNode = NULL;
     param_node *node = NULL;
@@ -171,6 +172,7 @@ void free_paramList(param_node *head){
 
 int getMac(char * macAddress, int len, unsigned char * mac)
 {
+    char ulog_msg[256];
     char byte[3];
     int i, index, mc;
     errno_t  rc = -1;
@@ -233,6 +235,7 @@ int getMac(char * macAddress, int len, unsigned char * mac)
 
 int getHex(char *hex_val, unsigned char *hexVal, int hexLen)
 {
+    char ulog_msg[256];
     char byte[3];
     char str[MAX_HEX_LEN+1] = {'\0'};
     int i, index, val, j;
@@ -290,6 +293,7 @@ int getHex(char *hex_val, unsigned char *hexVal, int hexLen)
 
 int getHexGeneric(char *hex_val, unsigned char *hexVal, int hexLen)
 {
+    char ulog_msg[256];
     char byte[3];
     int i, index, val;
     errno_t  rc = -1;
