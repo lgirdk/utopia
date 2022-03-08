@@ -46,7 +46,6 @@
 #include "utapi_util.h"
 #include "utapi_wlan.h"
 #include "safec_lib_common.h"
-// extern char ulog_msg[1024];
 
 const wifiPlatformSetup_t wifiPlatform[WIFI_INTERFACE_COUNT] =  
 {
@@ -176,7 +175,6 @@ int Utopia_GetWifiRadioState (UtopiaContext *ctx, wifiInterface_t intf, boolean_
 {
     char value[64] = {0};
     char *prefix;
-    errno_t safec_rc = -1;
     if (NULL == ctx || NULL == enable || intf >= WIFI_INTERFACE_COUNT) {
         return ERR_INVALID_ARGS;
     }
@@ -193,11 +191,7 @@ int Utopia_GetWifiRadioState (UtopiaContext *ctx, wifiInterface_t intf, boolean_
             *enable = TRUE;
         }
     } else {
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"wlan_radio_state: syscfg get %s_state error", prefix);
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "wlan_radio_state: syscfg get %s_state error", prefix);
         return ERR_ITEM_NOT_FOUND;
     }
 
@@ -232,19 +226,11 @@ int Utopia_GetWifiRadioSettings (UtopiaContext *ctx, wifiInterface_t intf, wifiR
     if (Utopia_GetNamed(ctx, UtopiaValue_WLAN_NetworkMode, prefix, value, sizeof(value))) {
         info->mode = s_StrToEnum(g_wifiModeMap, value);
         if (info->mode == -1) {
-            safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"wlan_radio_settings: invalid %s_network_mode value %s", prefix, value);
-            if(safec_rc < EOK){
-              ERR_CHK(safec_rc);
-            }
-            ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+            ulog_errorf(ULOG_CONFIG, UL_UTAPI, "wlan_radio_settings: invalid %s_network_mode value %s", prefix, value);
             return ERR_WIFI_INVALID_MODE;
         } 
     } else {
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"wlan_radio_settings: syscfg get %s_network_mode error", prefix);
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "wlan_radio_settings: syscfg get %s_network_mode error", prefix);
         return ERR_ITEM_NOT_FOUND;
     }
   
@@ -254,19 +240,11 @@ int Utopia_GetWifiRadioSettings (UtopiaContext *ctx, wifiInterface_t intf, wifiR
     if (Utopia_GetNamed(ctx, UtopiaValue_WLAN_RadioBand, prefix, value, sizeof(value))) {
         info->band = s_StrToEnum(g_wifiBandMap, value);
         if (info->band == -1) {
-            safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"wlan_radio_settings: invalid %s_radio_band", prefix);
-            if(safec_rc < EOK){
-               ERR_CHK(safec_rc);
-            }
-            ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+            ulog_errorf(ULOG_CONFIG, UL_UTAPI, "wlan_radio_settings: invalid %s_radio_band", prefix);
             return ERR_WIFI_INVALID_MODE;
         }
     } else {
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"wlan_radio_settings: syscfg get %s_radio_band error", prefix);
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "wlan_radio_settings: syscfg get %s_radio_band error", prefix);
         return ERR_ITEM_NOT_FOUND;
     }
 
@@ -275,11 +253,7 @@ int Utopia_GetWifiRadioSettings (UtopiaContext *ctx, wifiInterface_t intf, wifiR
      */
     
     if (!Utopia_GetNamed(ctx, UtopiaValue_WLAN_Channel, prefix, value, sizeof(value))) {
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"wlan_radio_settings: syscfg get %s_channel error", prefix);
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "wlan_radio_settings: syscfg get %s_channel error", prefix);
         return ERR_ITEM_NOT_FOUND;
     }
     info->channel = atoi(value); 
@@ -295,11 +269,7 @@ int Utopia_GetWifiRadioSettings (UtopiaContext *ctx, wifiInterface_t intf, wifiR
      * Get SSID
      */
     if (!Utopia_GetNamed(ctx, UtopiaValue_WLAN_SSID, prefix, info->ssid, SSID_SIZE)) {
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"wlan_radio_settings: syscfg get %s_ssid error", prefix);
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "wlan_radio_settings: syscfg get %s_ssid error", prefix);
         return ERR_ITEM_NOT_FOUND;
     }
 
@@ -307,11 +277,7 @@ int Utopia_GetWifiRadioSettings (UtopiaContext *ctx, wifiInterface_t intf, wifiR
      * Get SSID broadcast
      */
     if (!Utopia_GetNamed(ctx, UtopiaValue_WLAN_SSIDBroadcast, prefix, value, sizeof(value))) {
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"wlan_radio_settings: syscfg get %s_ssid_broadcast error", prefix);
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "wlan_radio_settings: syscfg get %s_ssid_broadcast error", prefix);
         return ERR_ITEM_NOT_FOUND;
     }
     info->ssid_broadcast = atoi(value);
@@ -403,11 +369,7 @@ int Utopia_GetWifiSecuritySettings (UtopiaContext *ctx, wifiInterface_t intf, wi
             return ERR_INVALID_VALUE;
         }
     } else {
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"wlan_security_settings: syscfg get %s_security_mode error", prefix);
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "wlan_security_settings: syscfg get %s_security_mode error", prefix);
         return ERR_ITEM_NOT_FOUND;
     }
 
@@ -415,11 +377,7 @@ int Utopia_GetWifiSecuritySettings (UtopiaContext *ctx, wifiInterface_t intf, wi
      * Return if security is disabled.
      */
     if (info->mode == WIFI_SECURITY_DISABLED) {
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"wlan_security_settings: security disabled");
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
-        ulog_debug(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_debug(ULOG_CONFIG, UL_UTAPI, "wlan_security_settings: security disabled");
         return SUCCESS;
     }
 
@@ -427,11 +385,7 @@ int Utopia_GetWifiSecuritySettings (UtopiaContext *ctx, wifiInterface_t intf, wi
     if (Utopia_GetNamed(ctx, UtopiaValue_WLAN_Encryption, prefix, encrypt, sizeof(encrypt))) {
         info->encrypt = s_StrToEnum(g_wifiEncryptMap, encrypt);
         if (-1 == info->encrypt) {
-            safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"wifi config: invalid encrption %s_encryption [%s]", prefix, encrypt);
-            if(safec_rc < EOK){
-               ERR_CHK(safec_rc);
-            }
-            ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+            ulog_errorf(ULOG_CONFIG, UL_UTAPI, "wifi config: invalid encrption %s_encryption [%s]", prefix, encrypt);
         }
     }
 
@@ -481,11 +435,7 @@ int Utopia_SetWifiSecuritySettings (UtopiaContext *ctx, wifiSecurityInfo_t *info
      * Return if security is disabled.
      */
     if (info->mode == WIFI_SECURITY_DISABLED) {
-        safec_rc = sprintf_s(ulog_msg, sizeof(ulog_msg),"wlan_security_settings: security disabled");
-        if(safec_rc < EOK){
-           ERR_CHK(safec_rc);
-        }
-        ulog_debug(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_debug(ULOG_CONFIG, UL_UTAPI, "wlan_security_settings: security disabled");
         return SUCCESS;
     }
 
