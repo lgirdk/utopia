@@ -2560,10 +2560,8 @@ static int s_get_portmapdyn_count ()
 
 static int s_set_portmapdyn_count (int count)
 {
-    char ulog_msg[256];
     token_t  se_token;
     int      se_fd = s_sysevent_connect(&se_token);
-    errno_t   rc = -1;
     if (0 > se_fd) {
         return ERR_SYSEVENT_CONN;
     }
@@ -2572,12 +2570,7 @@ static int s_set_portmapdyn_count (int count)
     snprintf(val, sizeof(val), "%d", count);
     sysevent_set(se_fd, se_token, "portmap_dyn_count", val, 0);
 
-    rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: set count %d", __FUNCTION__, count);
-    if(rc < EOK)
-    {
-        ERR_CHK(rc);
-    }
-    ulog(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulogf(ULOG_CONFIG, UL_UTAPI, "%s: set count %d", __FUNCTION__, count);
 
     return UT_SUCCESS;
 }
@@ -2777,9 +2770,7 @@ static int s_get_portmapdyn (int index, portMapDyn_t *portmap)
  */
 static int s_find_portmapdyn (const char *external_host, int external_port, protocol_t proto)
 {
-    char ulog_msg[256];
     int i, count = s_get_portmapdyn_count();
-    errno_t  rc = -1;
 
     ulog_debugf(ULOG_CONFIG, UL_UTAPI, "%s: count %d", __FUNCTION__, count);
 
@@ -2792,13 +2783,8 @@ static int s_find_portmapdyn (const char *external_host, int external_port, prot
             if (external_port == pmap.external_port &&
                 proto == pmap.protocol &&
                 (0 == strcasecmp(external_host, pmap.external_host))) {
-                rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: found dynamic port map: entry %d (%s:%d<->%s:%d)",
+                ulogf(ULOG_CONFIG, UL_UTAPI, "%s: found dynamic port map: entry %d (%s:%d<->%s:%d)",
                         __FUNCTION__, i, pmap.external_host, pmap.external_port, pmap.internal_host, pmap.internal_port);
-                if(rc < EOK)
-                {
-                    ERR_CHK(rc);
-                }
-                ulog(ULOG_CONFIG, UL_UTAPI, ulog_msg);
                 return i;
             }
         }
@@ -6726,9 +6712,7 @@ int Utopia_Get_Http_User(UtopiaContext *ctx,  http_user_t *httpuser)
     if the status is user - UI page with Cable(primary provider), WAN(byoi) and None(no internet) will be provided*/
 int Utopia_Get_BYOI_allowed(UtopiaContext *ctx,  int *byoi_state)
 {  
-    char ulog_msg[256];
     char buf[TOKEN_SZ];
-    errno_t  rc = -1;
 
     if (NULL == ctx) {
         return ERR_UTCTX_INIT;
@@ -6750,12 +6734,7 @@ int Utopia_Get_BYOI_allowed(UtopiaContext *ctx,  int *byoi_state)
 
      *byoi_state = status;
 
-    rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: hsd_allowed %d", __FUNCTION__, *byoi_state);
-    if(rc < EOK)
-    {
-        ERR_CHK(rc);
-    }
-    ulog(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulogf(ULOG_CONFIG, UL_UTAPI, "%s: hsd_allowed %d", __FUNCTION__, *byoi_state);
 
     return UT_SUCCESS;
 
@@ -6923,7 +6902,6 @@ int Utopia_Get_DeviceTime_NTPServer(UtopiaContext *ctx, char *server,int index)
 
 int Utopia_Set_DeviceTime_LocalTZ(UtopiaContext *ctx, char *tz)
 {
-    char ulog_msg[256];
     errno_t  rc = -1;
     if (NULL == ctx || NULL == tz)
     {
@@ -6931,12 +6909,7 @@ int Utopia_Set_DeviceTime_LocalTZ(UtopiaContext *ctx, char *tz)
     }
 
     UTOPIA_SET(ctx, UtopiaValue_TZ, tz);
-    rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: entered ", __FUNCTION__);
-    if(rc < EOK)
-    {
-        ERR_CHK(rc);
-    }
-    ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+    ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: entered ", __FUNCTION__);
     return SUCCESS;
 }
 
@@ -7041,7 +7014,6 @@ int Utopia_Get_Mac_MgWan(UtopiaContext *ctx,  char *val)
 
 int Utopia_GetEthAssocDevices(int unitId, int portId ,unsigned char *macAddrList,int *numMacAddr)
 {
-    char ulog_msg[256];
     char line[LINE_SZ];
     char tok[] = "=";
     char *mac = NULL;
@@ -7049,16 +7021,10 @@ int Utopia_GetEthAssocDevices(int unitId, int portId ,unsigned char *macAddrList
     int index = 0;
     FILE *fp = NULL;
     int numAssocDev = 0;
-    errno_t  rc = -1;
 
     v_secure_system("switchcfg -a %d 'l2 show' | grep Learned | grep 'DestPort(s): %d' | cut -d'|' -f3 | awk '{print $1$2}' > " ETHERNET_ASSOC_DEVICE_FILE , unitId, portId);
     if((fp = fopen(ETHERNET_ASSOC_DEVICE_FILE, "r"))== NULL ) {
-        rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: Error in File Open !!!", __FUNCTION__);
-        if(rc < EOK)
-        {
-            ERR_CHK(rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Error in File Open !!!", __FUNCTION__);
         return ERR_FILE_OPEN_FAIL;
     }
     while((fgets(line, sizeof(line), fp)) != NULL)
@@ -7090,12 +7056,7 @@ int Utopia_GetEthAssocDevices(int unitId, int portId ,unsigned char *macAddrList
     *numMacAddr = numAssocDev;
 
     if(fclose(fp) != SUCCESS){
-        rc = sprintf_s(ulog_msg, sizeof(ulog_msg), "%s: File Close Error !!!", __FUNCTION__);
-        if(rc < EOK)
-        {
-            ERR_CHK(rc);
-        }
-        ulog_error(ULOG_CONFIG, UL_UTAPI, ulog_msg);
+        ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: File Close Error !!!", __FUNCTION__);
         return ERR_FILE_CLOSE_FAIL;
     }
 
