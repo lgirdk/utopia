@@ -224,6 +224,7 @@ ulog_get_mesgs (UCOMP comp, USUBCOMP sub, char *mesgbuf, unsigned int size)
 /*
  * Log and Command APIs
  */
+#if 0
 void ulog_runcmd (UCOMP comp, USUBCOMP sub, const char *cmd)
 {
     syslog(LOG_NOTICE, "%s.%s %s", getcomp(comp), getsubcomp(sub), cmd);
@@ -250,6 +251,7 @@ int ulog_runcmdf (UCOMP comp, USUBCOMP sub, const char *fmt, ...)
     va_end(ap_copy);
     return system(sfmt);
 }
+#endif
 
 void ulog_sys_Init(int prior, unsigned int enable)
 {
