@@ -388,22 +388,22 @@ void ulog_SetEnable(unsigned int enable)
 
 void ulog_sys(int prior, const char* fileName, int line, const char* fmt, ...)
 {
-    char buf[ULOG_STR_SIZE] = {'\0'};
     struct timeval tv;
     time_t curtime;
     va_list ap;
     char sfmt[512];
+    size_t len;
 
-    /*sprintf(buf, "Process Name	%s\nProcess ID	%d\nsyslog() Level   %s\n", sys_Log_Info.name, sys_Log_Info.pid, sys_Log_Info.prior);
+    /*sprintf(sfmt, "Process Name	%s\nProcess ID	%d\nsyslog() Level   %s\n", sys_Log_Info.name, sys_Log_Info.pid, sys_Log_Info.prior);
     if(sys_Log_Info.stream != NULL && sys_Log_Info.enable == 1)
-        fprintf(sys_Log_Info.stream, "%s", buf);*/
+        fprintf(sys_Log_Info.stream, "%s", sfmt);*/
 
     gettimeofday(&tv, NULL);
-    curtime=tv.tv_sec;
+    curtime = tv.tv_sec;
 
-    strftime(buf, sizeof(buf), "%Y-%m-%d  %T.", (const void *)localtime(&curtime));
+    len = strftime(sfmt, sizeof(sfmt), "%Y-%m-%d  %T.", (const void *)localtime(&curtime));
 
-    snprintf(sfmt, sizeof(sfmt), "%s, %s:%d, %s", buf, fileName, line, fmt);
+    snprintf(sfmt + len, sizeof(sfmt) - len, ", %s:%d, %s", fileName, line, fmt);
 
     va_start(ap, fmt);
     vsyslog(prior, sfmt, ap);
