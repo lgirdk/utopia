@@ -344,20 +344,13 @@ static int get_dhcpv6s_pool_cfg(struct serv_ipv6 *si6, dhcpv6s_pool_cfg_t *cfg)
     char dml_path[CMD_BUF_SIZE] = {0};
     char iface_name[64] = {0};
 #endif
-    char l_cSecWebUI_Enabled[8] = {0};
-    syscfg_get(NULL, "SecureWebUI_Enable", l_cSecWebUI_Enabled, sizeof(l_cSecWebUI_Enabled));
-    char l_cDhcpv6_Dns[256] = {0};
-    syscfg_get(NULL, "dhcpv6spool00::X_RDKCENTRAL_COM_DNSServers", l_cDhcpv6_Dns, sizeof(l_cDhcpv6_Dns));
+    char l_cDhcpv6_Dns[256];
+    syscfg_get("dhcpv6spool00", "X_RDKCENTRAL_COM_DNSServers", l_cDhcpv6_Dns, sizeof(l_cDhcpv6_Dns));
     if ( '\0' == l_cDhcpv6_Dns[ 0 ] )
     {
-        if (!strncmp(l_cSecWebUI_Enabled, "true", 4))	
-        {
-            syscfg_set_commit(NULL, "dhcpv6spool00::X_RDKCENTRAL_COM_DNSServersEnabled", "1");
-        }
-        else
-        {
-            syscfg_set_commit(NULL, "dhcpv6spool00::X_RDKCENTRAL_COM_DNSServersEnabled", "0");
-        }
+        char l_cSecWebUI_Enabled[8];
+        syscfg_get(NULL, "SecureWebUI_Enable", l_cSecWebUI_Enabled, sizeof(l_cSecWebUI_Enabled));
+        syscfg_set_commit("dhcpv6spool00", "X_RDKCENTRAL_COM_DNSServersEnabled", (strcmp(l_cSecWebUI_Enabled, "true") == 0) ? "1" : "0");
     } 
 
     DHCPV6S_SYSCFG_GETI(DHCPV6S_NAME, "pool", cfg->index, "", 0, "bEnabled", cfg->enable);
@@ -1541,7 +1534,7 @@ OPTIONS:
             for (tag_index = 0; tag_index < NELEMS(tag_list); tag_index++ ) {
                 if (tag_list[tag_index].tag == opt.tag) break;
             }
-            char l_cSecWebUI_Enabled[8] = {0};
+            char l_cSecWebUI_Enabled[8];
             syscfg_get(NULL, "SecureWebUI_Enable", l_cSecWebUI_Enabled, sizeof(l_cSecWebUI_Enabled));      
             if (!strncmp(l_cSecWebUI_Enabled, "true", 4))	
             {
@@ -1649,7 +1642,7 @@ static int dhcpv6s_start(struct serv_ipv6 *si6)
     daemon_stop(DHCPV6S_PID_FILE, "dibbler");
 #endif
 #if defined(_COSA_FOR_BCI_)
-    syscfg_get(NULL, "dhcpv6s00::serverenable", dhcpv6Enable , sizeof(dhcpv6Enable));
+    syscfg_get("dhcpv6s00", "serverenable", dhcpv6Enable , sizeof(dhcpv6Enable));
     if (!strncmp(dhcpv6Enable, "0", 1))
     {
        fprintf(stderr, "%s: DHCPv6 Disabled. Dibbler start not required !\n", __FUNCTION__);
