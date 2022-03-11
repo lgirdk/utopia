@@ -679,6 +679,7 @@ typedef enum _UtopiaValue
     UtopiaValue_LGFW_MACFilter_Enable,
     UtopiaValue_LGFW_MACFilter_Hostname,
     UtopiaValue_LGFW_MACFilter_MACAddress,
+    UtopiaValue_LGFW_MACFilter_Desc,
     UtopiaValue_LGFW_V4DayOfWeekCount,
     UtopiaValue_LGFW_V4DayOfWeek,
     UtopiaValue_LGFW_V4DayOfWeek_InsNum,
