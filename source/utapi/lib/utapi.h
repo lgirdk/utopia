@@ -1228,6 +1228,7 @@ typedef struct fwmacfilter
    char           Alias[256];
    char           Hostname[65];
    char           MACAddress[64];
+   char           Description[64];
    boolean_t      Enable;
 }fwmacfilter_t;
 
