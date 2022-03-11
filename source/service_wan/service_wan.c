@@ -1152,7 +1152,12 @@ static int wan_start(struct serv_wan *sw)
 
     sysevent_set(sw->sefd, sw->setok, "wan_service-status", "started", 0);
     sysevent_set(sw->sefd, sw->setok, "current_wan_state", "up", 0);
-    sysevent_set(sw->sefd, sw->setok, "wan-status", "started", 0);
+
+    // The wan-status is set to started from udhcp script in Dual stack or IPv4 mode. 
+    // set wan-status to started if and only if its not already set.
+    sysevent_get(sw->sefd, sw->setok, "wan-status", status, sizeof(status));
+    if(strcmp(status,"started") != 0)
+        sysevent_set(sw->sefd, sw->setok, "wan-status", "started", 0);
 
     fprintf(fp_wan_dbg, "[%s] start firewall fully\n", PROG_NAME);
 
