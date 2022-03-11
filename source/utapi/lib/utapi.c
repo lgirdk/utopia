@@ -8104,6 +8104,7 @@ int Utopia_GetMACFilterByIndex(UtopiaContext *ctx, unsigned long ulIndex, fwmacf
     Utopia_GetIndexed(ctx, UtopiaValue_LGFW_MACFilter_Alias, index, MACFilter->Alias, sizeof(MACFilter->Alias));
     Utopia_GetIndexed(ctx, UtopiaValue_LGFW_MACFilter_Hostname, index, MACFilter->Hostname, sizeof(MACFilter->Hostname));
     Utopia_GetIndexed(ctx, UtopiaValue_LGFW_MACFilter_MACAddress, index, MACFilter->MACAddress, sizeof(MACFilter->MACAddress));
+    Utopia_GetIndexed(ctx, UtopiaValue_LGFW_MACFilter_Desc, index, MACFilter->Description, sizeof(MACFilter->Description));
 
     return 0;
 }
@@ -8121,6 +8122,7 @@ int Utopia_SetMACFilterByIndex(UtopiaContext *ctx, unsigned long ulIndex, const 
     Utopia_SetIndexed(ctx, UtopiaValue_LGFW_MACFilter_Alias, index, (char*)MACFilter->Alias);
     Utopia_SetIndexed(ctx, UtopiaValue_LGFW_MACFilter_Hostname, index, (char *)MACFilter->Hostname);
     Utopia_SetIndexed(ctx, UtopiaValue_LGFW_MACFilter_MACAddress, index, (char *)MACFilter->MACAddress);
+    Utopia_SetIndexed(ctx, UtopiaValue_LGFW_MACFilter_Desc, index, (char *)MACFilter->Description);
 
     return 0;
 }
@@ -8181,6 +8183,7 @@ int Utopia_DelMACFilter(UtopiaContext *ctx, unsigned long ins)
     Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_MACFilter_Alias, count);
     Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_MACFilter_Hostname, count);
     Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_MACFilter_MACAddress, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_LGFW_MACFilter_Desc, count);
 
     g_fw_MACfilterCount--;
     Utopia_SetInt(ctx, UtopiaValue_LGFW_MACFilterCount, g_fw_MACfilterCount);
