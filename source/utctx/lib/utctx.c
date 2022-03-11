@@ -837,6 +837,7 @@ static struct
     { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "enable",                    UtopiaValue_LGFW_MACFilter },   /* UtopiaValue_LGFW_MACFilter_Enable */
     { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "hostName",                  UtopiaValue_LGFW_MACFilter },   /* UtopiaValue_LGFW_MACFilter_Hostname */
     { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "mac",                       UtopiaValue_LGFW_MACFilter },   /* UtopiaValue_LGFW_MACFilter_MACAddress */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "desc",                      UtopiaValue_LGFW_MACFilter },   /* UtopiaValue_LGFW_MACFilter_Desc */
     { Utopia_Type_Config,        Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_For__NONE__,   1, "lgFWV4DayOfWeekCount",          UtopiaValue__UNKNOWN__ },           /* UtopiaValue_LGFW_V4DayOfWeekCount */
     { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_Key, 1, "lgFWV4DayOfWeek_%d",            UtopiaValue__UNKNOWN__ },           /* UtopiaValue_LGFW_V4DayOfWeek */
     { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "ins_num",                          UtopiaValue_LGFW_V4DayOfWeek },  /* UtopiaValue_LGFW_V4DayOfWeek_InsNum */
