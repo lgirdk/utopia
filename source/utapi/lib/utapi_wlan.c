@@ -786,24 +786,16 @@ int Utopia_SetWifiConfigMode (UtopiaContext *ctx, wifiConfigMode_t config_mode)
 
 int Utopia_WPSPushButtonStart (void)
 {
-    char cmd[512];
-
-    snprintf(cmd, sizeof(cmd), "wlancfg eth0 wps-stop");
-    cmd[sizeof(cmd) - 1] = '\0';
-    system(cmd);
-    snprintf(cmd, sizeof(cmd), "wlancfg eth0 wps-pbc-start");
-    cmd[sizeof(cmd) - 1] = '\0';
-    system(cmd);
+    system("wlancfg eth0 wps-stop; wlancfg eth0 wps-pbc-start");
 
     return SUCCESS;
 }
 
 int Utopia_WPSPinStart (int pin)
 {
-    char cmd[512];
+    char cmd[128];
 
     snprintf(cmd, sizeof(cmd), "wlancfg eth0 wps-pin-start %d", pin);
-    cmd[sizeof(cmd) - 1] = '\0';
     system(cmd);
 
     return SUCCESS;
@@ -811,43 +803,37 @@ int Utopia_WPSPinStart (int pin)
 
 int Utopia_WPSStop (void)
 {
-    char cmd[512];
-
-    snprintf(cmd, sizeof(cmd), "wlancfg eth0 wps-stop");
-    cmd[sizeof(cmd) - 1] = '\0';
-    system(cmd);
+    system("wlancfg eth0 wps-stop");
 
     return SUCCESS;
 }
 
 int Utopia_GetWPSStatus (wpsStatus_t *wps_status)
 {
-    if (NULL == wps_status) {
-        return ERR_INVALID_ARGS;
-    }
-    
-    char cmd[512];
     FILE *fp;
     char wps_status_str[32];
     errno_t safec_rc = -1;
 
-    safec_rc = strcpy_s(cmd, sizeof(cmd),"wlancfg eth0 wps-status");
-    ERR_CHK(safec_rc);
-    fp = popen(cmd, "r");
-    
+    if (NULL == wps_status) {
+        return ERR_INVALID_ARGS;
+    }
+
+    fp = popen("wlancfg eth0 wps-status", "r");
+
     if (NULL == fp) {
         return ERR_FILE_NOT_FOUND;
     }
-    
+
     if (NULL == fgets(wps_status_str, sizeof(wps_status_str), fp)) {
         pclose(fp);
         return ERR_INVALID_VALUE;
     }
+
+    pclose(fp);
     
     int len = strlen(wps_status_str);
     
     if (len <= 0) {
-        pclose(fp);
         return ERR_INVALID_VALUE;
     }
     
@@ -868,8 +854,6 @@ int Utopia_GetWPSStatus (wpsStatus_t *wps_status)
     else {
         *wps_status = WPS_FAILED;
     }
-    
-    pclose(fp);
 
     return SUCCESS;
 }
