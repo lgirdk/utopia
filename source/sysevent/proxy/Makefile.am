@@ -16,7 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ##########################################################################
-AM_CFLAGS = -D_ANSC_LINUX -D_ANSC_USER -D_ANSC_LITTLE_ENDIAN_
+AM_CFLAGS =
 
 AM_LDFLAGS = $(top_builddir)/source/sysevent/lib/libsysevent.la \
              $(top_builddir)/source/syscfg/lib/libsyscfg.la \
