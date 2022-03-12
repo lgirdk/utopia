@@ -222,7 +222,6 @@ int Utopia_Get_TR181_Device_MoCA_Interface_i_Dyn(Obj_Device_MoCA_Interface_i_dyn
     retVal = ERR_GENERAL;
     ptr = head = NULL;
     
-    memset(buf, 0, BUF_SZ);
     rc = sprintf_s (buf, sizeof(buf), "cat %s|grep -A %d 'NodeID:%d' > %s", MOCA_ASSOC_DEV, INST_SIZE, (int)deviceMocaIntfDyn->NodeID, MOCA_MAC_NODE);
     if(rc < EOK)
     {
