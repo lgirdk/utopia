@@ -116,7 +116,6 @@ int Utopia_GetMocaIntf_Cfg(UtopiaContext *pCtx, void *str_handle)
     Utopia_Get(pCtx, UtopiaValue_Moca_Alias, (char *)&deviceMocaIntfCfg->Alias, UTOPIA_TR181_PARAM_SIZE);
     
     Utopia_Get(pCtx, UtopiaValue_Moca_FreqCurMaskSet, buf, sizeof(buf));
-    buf[strlen(buf)] = '\0';
     getHex(buf, deviceMocaIntfCfg->FreqCurrentMaskSetting, HEX_SZ);
 
     if(Utopia_Get(pCtx, UtopiaValue_Moca_KeyPassPhrase, (char *)&deviceMocaIntfCfg->KeyPassphrase, KEYPASS_SZ) == 0)
@@ -136,7 +135,7 @@ int Utopia_SetMocaIntf_Cfg(UtopiaContext *pCtx, void *str_handle)
     Obj_Device_MoCA_Interface_i_cfg *deviceMocaIntfCfg = NULL;
     int iVal = -1;
     char buf[64] = {'\0'};
-    char cmd[128] = {'\0'};
+    char cmd[128];
     char key_val[64] = {'\0'};
     errno_t rc = -1;
     
@@ -149,13 +148,12 @@ int Utopia_SetMocaIntf_Cfg(UtopiaContext *pCtx, void *str_handle)
     iVal = (deviceMocaIntfCfg->Enable == FALSE)? 0:1;
     if(iVal == 1){
         system("mocacfg moca up");
-	Utopia_Set(pCtx, UtopiaValue_Moca_Enable, "up");
+        Utopia_Set(pCtx, UtopiaValue_Moca_Enable, "up");
     }else{
-	system("mocacfg moca down");
-	Utopia_Set(pCtx, UtopiaValue_Moca_Enable, "down");
+        system("mocacfg moca down");
+        Utopia_Set(pCtx, UtopiaValue_Moca_Enable, "down");
     }
 
-    memset(cmd, 0, sizeof(cmd));
     if(deviceMocaIntfCfg->PreferredNC == FALSE)
     {
         rc = strcpy_s(buf, sizeof(buf), "slave");
@@ -174,7 +172,6 @@ int Utopia_SetMocaIntf_Cfg(UtopiaContext *pCtx, void *str_handle)
     }
     system(cmd);
 
-    memset(cmd, 0, sizeof(cmd));
     if(deviceMocaIntfCfg->PrivacyEnabledSetting == FALSE)
     {
         rc = strcpy_s(buf, sizeof(buf),"disable");
@@ -195,17 +192,15 @@ int Utopia_SetMocaIntf_Cfg(UtopiaContext *pCtx, void *str_handle)
 
     Utopia_Set(pCtx, UtopiaValue_Moca_Alias, deviceMocaIntfCfg->Alias);
 
-    memset(cmd, 0, sizeof(cmd));
     rc = sprintf_s(buf, sizeof(buf), "%02X%02X%02X%02X%02X%02X%02X%02X", 
-                 deviceMocaIntfCfg->FreqCurrentMaskSetting[0],
-		 deviceMocaIntfCfg->FreqCurrentMaskSetting[1],
-		 deviceMocaIntfCfg->FreqCurrentMaskSetting[2],
-		 deviceMocaIntfCfg->FreqCurrentMaskSetting[3],
-		 deviceMocaIntfCfg->FreqCurrentMaskSetting[4],
-		 deviceMocaIntfCfg->FreqCurrentMaskSetting[5],
-		 deviceMocaIntfCfg->FreqCurrentMaskSetting[6],
-		 deviceMocaIntfCfg->FreqCurrentMaskSetting[7]
-	   );
+                   deviceMocaIntfCfg->FreqCurrentMaskSetting[0],
+                   deviceMocaIntfCfg->FreqCurrentMaskSetting[1],
+                   deviceMocaIntfCfg->FreqCurrentMaskSetting[2],
+                   deviceMocaIntfCfg->FreqCurrentMaskSetting[3],
+                   deviceMocaIntfCfg->FreqCurrentMaskSetting[4],
+                   deviceMocaIntfCfg->FreqCurrentMaskSetting[5],
+                   deviceMocaIntfCfg->FreqCurrentMaskSetting[6],
+                   deviceMocaIntfCfg->FreqCurrentMaskSetting[7]);
     if(rc < EOK)
     {
         ERR_CHK(rc);
@@ -221,7 +216,6 @@ int Utopia_SetMocaIntf_Cfg(UtopiaContext *pCtx, void *str_handle)
     }
     system(cmd);
 
-    memset(cmd, 0, sizeof(cmd));
     Utopia_Set(pCtx, UtopiaValue_Moca_KeyPassPhrase, deviceMocaIntfCfg->KeyPassphrase);
     rc = sprintf_s(cmd, sizeof(cmd), "mocacfg -s moca ppassword %s", deviceMocaIntfCfg->KeyPassphrase);
     if(rc < EOK)

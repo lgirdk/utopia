@@ -47,9 +47,9 @@
 
 int Utopia_Get_DeviceDnsRelayForwarding(UtopiaContext *pCtx, int index, void *str_handle)
 {
-    char tokenBuf[64] = {'\0'};
-    char tokenVal[64] = {'\0'};
-    errno_t  rc = -1;
+    char tokenBuf[64];
+    char tokenVal[64];
+    errno_t rc = -1;
 
     if(!str_handle){
         ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Invalid Input Parameter", __FUNCTION__);
@@ -63,41 +63,36 @@ int Utopia_Get_DeviceDnsRelayForwarding(UtopiaContext *pCtx, int index, void *st
     {
         ERR_CHK(rc);
     }
-    tokenBuf[strlen(tokenBuf)] = '\0';
+    tokenVal[0] = 0;
     Utopia_RawGet(pCtx, NULL, tokenBuf, tokenVal, sizeof(tokenVal));
-    deviceDnsRelay->Enable = (!strncasecmp(tokenVal, "false", 5))? FALSE : TRUE ;  
+    deviceDnsRelay->Enable = (strcasecmp(tokenVal, "false") == 0) ? FALSE : TRUE;
     ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Get Enable key & val = %s, %u", __FUNCTION__, tokenBuf, deviceDnsRelay->Enable);
 
-    memset(tokenVal, 0, sizeof(tokenVal));
     rc = sprintf_s(tokenBuf, sizeof(tokenBuf), "tr_dns_relay_forwarding_server_%d", index);
     if(rc < EOK)
     {
         ERR_CHK(rc);
     }
-    tokenBuf[strlen(tokenBuf)] = '\0';
+    tokenVal[0] = 0;
     Utopia_RawGet(pCtx, NULL, tokenBuf, tokenVal, sizeof(tokenVal));
     deviceDnsRelay->DNSServer.Value = inet_addr(tokenVal);
-    
-    memset(tokenVal, 0, sizeof(tokenVal));
+
     rc = sprintf_s(tokenBuf, sizeof(tokenBuf), "tr_dns_relay_forwarding_interface_%d", index);
     if(rc < EOK)
     {
         ERR_CHK(rc);
     }
-    tokenBuf[strlen(tokenBuf)] = '\0';
-    Utopia_RawGet(pCtx, NULL, tokenBuf, tokenVal, sizeof(tokenVal));
-    tokenVal[strlen(tokenVal)] = '\0';
-    rc = strcpy_s(deviceDnsRelay->Interface, sizeof(deviceDnsRelay->Interface), tokenVal);
-    ERR_CHK(rc);
+    deviceDnsRelay->Interface[0] = 0;
+    Utopia_RawGet(pCtx, NULL, tokenBuf, deviceDnsRelay->Interface, sizeof(deviceDnsRelay->Interface));
 
     return UT_SUCCESS;
 }
 
 int Utopia_Set_DeviceDnsRelayForwarding(UtopiaContext *pCtx, int index, void *str_handle)
 {
-    char tokenBuf[64] = {'\0'};
-    char tokenVal[64] = {'\0'};
-    errno_t  rc = -1;
+    char tokenBuf[64];
+    char tokenVal[64];
+    errno_t rc = -1;
 
     if (!pCtx || !str_handle) {
         ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Invalid Input Parameter", __FUNCTION__);
@@ -111,19 +106,14 @@ int Utopia_Set_DeviceDnsRelayForwarding(UtopiaContext *pCtx, int index, void *st
     {
         ERR_CHK(rc);
     }
-    tokenBuf[strlen(tokenBuf)] = '\0';
     ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: Set Enable key & val = %s, %u", __FUNCTION__, tokenBuf, deviceDnsRelay->Enable);
-    if(deviceDnsRelay->Enable == FALSE){
-        Utopia_RawSet(pCtx, NULL, tokenBuf, "false");
-    }else{
-        Utopia_RawSet(pCtx, NULL, tokenBuf, "true");
-    }
+    Utopia_RawSet(pCtx, NULL, tokenBuf, (deviceDnsRelay->Enable == FALSE) ? "false" : "true");
+
     rc = sprintf_s(tokenBuf, sizeof(tokenBuf), "tr_dns_relay_forwarding_server_%d", index);
     if(rc < EOK)
     {
         ERR_CHK(rc);
     }
-    tokenBuf[strlen(tokenBuf)] = '\0';
     rc = sprintf_s(tokenVal, sizeof(tokenVal), "%d.%d.%d.%d", 
                       (int)(deviceDnsRelay->DNSServer.Value) & 0xFF,
                       (int)(deviceDnsRelay->DNSServer.Value >> 8)  & 0xFF,
@@ -133,19 +123,14 @@ int Utopia_Set_DeviceDnsRelayForwarding(UtopiaContext *pCtx, int index, void *st
     {
         ERR_CHK(rc);
     }
-    tokenVal[strlen(tokenVal)] = '\0';
     Utopia_RawSet(pCtx, NULL, tokenBuf, tokenVal);
 
-    memset(tokenVal, 0, sizeof(tokenVal));
     rc = sprintf_s(tokenBuf, sizeof(tokenBuf), "tr_dns_relay_forwarding_interface_%d", index);
     if(rc < EOK)
     {
         ERR_CHK(rc);
     }
-    tokenBuf[strlen(tokenBuf)] = '\0';
-    strncpy(tokenVal, deviceDnsRelay->Interface, strlen(deviceDnsRelay->Interface));
-    tokenVal[strlen(deviceDnsRelay->Interface)] = '\0';
-    Utopia_RawSet(pCtx, NULL, tokenBuf, tokenVal);
-    
+    Utopia_RawSet(pCtx, NULL, tokenBuf, deviceDnsRelay->Interface);
+
     return UT_SUCCESS;
 }
