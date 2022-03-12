@@ -119,7 +119,6 @@ int Utopia_SetDsliteCfg(UtopiaContext *ctx,DsLiteCfg_t *pDsliteCfg)
     ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
-    memset(&DsLiteCfg_tmp, 0, sizeof(DsLiteCfg_t));
     memcpy(&DsLiteCfg_tmp, pDsliteCfg, sizeof(DsLiteCfg_t));
 
     if(0 == DsLiteCfg_tmp.InstanceNumber)
@@ -144,7 +143,6 @@ int Utopia_AddDsliteEntry(UtopiaContext *ctx, DsLiteCfg_t *pDsliteCfg)
     ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
 #endif
 
-    memset(&DsLiteCfg_tmp, 0, sizeof(DsLiteCfg_t));
     memcpy(&DsLiteCfg_tmp, pDsliteCfg, sizeof(DsLiteCfg_t));
 
     if(0 == DsLiteCfg_tmp.InstanceNumber)
