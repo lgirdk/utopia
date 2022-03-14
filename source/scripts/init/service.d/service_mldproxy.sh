@@ -57,6 +57,10 @@ do_start_mldproxy () {
    echo "protocol MLDv2;" >> $LOCAL_CONF_FILE
    if [ "started" = "$CURRENT_WAN_STATUS" ] ; then
       echo "pinstance v6Proxy: $WAN_IFNAME ==> $SYSCFG_lan_ifname;" >> $LOCAL_CONF_FILE
+      echo "pinstance v6Proxy downstream $SYSCFG_lan_ifname out whitelist table {(ff38::8000:0000 - ff38::ffff:ffff | *)};" >> $LOCAL_CONF_FILE
+      echo "pinstance v6Proxy downstream $SYSCFG_lan_ifname in blacklist table {(* | *)};" >> $LOCAL_CONF_FILE
+      echo "pinstance v6Proxy upstream $WAN_IFNAME in whitelist table {(ff38::8000:0000 - ff38::ffff:ffff | *)};" >> $LOCAL_CONF_FILE
+      echo "pinstance v6Proxy upstream $WAN_IFNAME out blacklist table {(* | *)};" >> $LOCAL_CONF_FILE
    fi
 
 #   Commenting brlan0 downstream from mldproxy config (RDKB-10413)
