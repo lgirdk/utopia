@@ -70,6 +70,10 @@ do_start_igmpproxy () {
    #echo "quickleave" >> $LOCAL_CONF_FILE
    if [ "started" = "$CURRENT_WAN_STATUS" ] ; then
       echo "pinstance v4Proxy: $WAN_IFNAME ==> $SYSCFG_lan_ifname;" >> $LOCAL_CONF_FILE
+      echo "pinstance v4Proxy downstream $SYSCFG_lan_ifname out whitelist table {(232.0.1.0 - 232.255.255.255 | *)};" >> $LOCAL_CONF_FILE
+      echo "pinstance v4Proxy downstream $SYSCFG_lan_ifname in blacklist table {(* | *)};" >> $LOCAL_CONF_FILE
+      echo "pinstance v4Proxy upstream $WAN_IFNAME in whitelist table {(232.0.1.0 - 232.255.255.255 | *)};" >> $LOCAL_CONF_FILE
+      echo "pinstance v4Proxy upstream $WAN_IFNAME out blacklist table {(* | *)};" >> $LOCAL_CONF_FILE
       #echo "altnet 0.0.0.0/0" >> $LOCAL_CONF_FILE
    fi
 
