@@ -12900,8 +12900,8 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    /* If both PSM and syscfg values are true then SET the DNS redirection to GW*/    
    if(isInCaptivePortal()==1 && (!rfstatus))
    {   
-      fprintf(nat_fp, "-I PREROUTING -i %s -p udp --dport 53 -j DNAT --to %s\n", lan_ifname, lan_ipaddr);
-      fprintf(nat_fp, "-I PREROUTING -i %s -p tcp --dport 53 -j DNAT --to %s\n", lan_ifname, lan_ipaddr);
+      fprintf(nat_fp, "-I PREROUTING -i %s -s %s/%s ! -d %s/%s -p tcp --dport 80 -j DNAT --to-destination %s:80\n", lan_ifname, lan_ipaddr, lan_netmask, lan_ipaddr,lan_netmask,lan_ipaddr);
+      fprintf(nat_fp, "-I PREROUTING -i %s -s %s/%s ! -d %s/%s -p tcp --dport 443 -j DNAT --to-destination %s:80\n", lan_ifname, lan_ipaddr, lan_netmask, lan_ipaddr,lan_netmask,lan_ipaddr);
    }
 
 #if (defined(FEATURE_MAPT) && defined(NAT46_KERNEL_SUPPORT)) || defined(FEATURE_SUPPORT_MAPT_NAT46)
