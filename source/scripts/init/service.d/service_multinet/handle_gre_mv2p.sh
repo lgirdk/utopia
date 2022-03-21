@@ -445,7 +445,7 @@ update_vlan()
 
     LOWERBRIDGE=`psmcli get $HS_PSM_BASE.${TUNNELINST}.interface.1.$GRE_PSM_BRIDGES`
     BRIDGEINST=`echo $LOWERBRIDGE |cut -d . -f 4`
-    BRIDGENAME=`dmcli eRT getv Device.Bridging.Bridge.${BRIDGEINST}.Name | grep string, | awk '{print $5}'`
+    BRIDGENAME=`dmcli eRT retv Device.Bridging.Bridge.${BRIDGEINST}.Name`
 
     #remove oldvlan
     if [ $OLDVLANID != "0" ]; then
@@ -472,7 +472,7 @@ destroy_bridges_interfaces()
     LOWERBRIDGE=`psmcli get $HS_PSM_BASE.${TUNNELINST}.interface.1.$GRE_PSM_BRIDGES`
     BRIDGEINST=`echo $LOWERBRIDGE |cut -d . -f 4`
 
-    BRIDGENAME=`dmcli eRT getv Device.Bridging.Bridge.${BRIDGEINST}.Name | grep string, | awk '{print $5}'`
+    BRIDGENAME=`dmcli eRT retv Device.Bridging.Bridge.${BRIDGEINST}.Name`
     ifconfig $BRIDGENAME down
     brctl delbr $BRIDGENAME
 }
@@ -484,12 +484,12 @@ create_bridges_interfaces()
     LOWERBRIDGE=`psmcli get $HS_PSM_BASE.${TUNNELINST}.interface.1.$GRE_PSM_BRIDGES`
     BRIDGEINST=`echo $LOWERBRIDGE |cut -d . -f 4`
 
-    BRIDGENAME=`dmcli eRT getv Device.Bridging.Bridge.${BRIDGEINST}.Name | grep string, | awk '{print $5}'`
+    BRIDGENAME=`dmcli eRT retv Device.Bridging.Bridge.${BRIDGEINST}.Name`
     BRIDGEEXITS=`ls /sys/devices/virtual/net/${BRIDGENAME}`
 
     #get wifi interface name
-    WIFI24G=`dmcli eRT getv Device.WiFi.SSID.5.Name | grep string, | awk '{print $5}'`
-    WIFI5G=`dmcli eRT getv Device.WiFi.SSID.6.Name | grep string, | awk '{print $5}'`
+    WIFI24G=`dmcli eRT retv Device.WiFi.SSID.5.Name`
+    WIFI5G=`dmcli eRT retv Device.WiFi.SSID.6.Name`
 
     #Create Bridge
     brctl addbr $BRIDGENAME
@@ -606,9 +606,7 @@ case "$1" in
 
          if [ x"NULL" != x${2} ] || [ $recover = "true" ]; then
               if [ $recover = "true" ] ; then                                    
-                  TUNNEL_EP="dmcli eRT getv Device.X_COMCAST-COM_GRE.Tunnel.1.PrimaryRemoteEndpoint"
-                  TUNNEL_IP=`$TUNNEL_EP`                                                            
-                  curep=`echo "$TUNNEL_IP" | grep value | cut -f3 -d : | cut -f2 -d " "`            
+                  curep="dmcli eRT retv Device.X_COMCAST-COM_GRE.Tunnel.1.PrimaryRemoteEndpoint"
                   echo "dmcli ip : $curep"                                   
                   create_tunnel $curep $GRE_IFNAME
               else
