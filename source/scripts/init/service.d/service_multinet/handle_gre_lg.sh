@@ -531,9 +531,7 @@ case "$1" in
 
          if [ x"NULL" != x${2} ] || [ $recover = "true" ]; then
               if [ $recover = "true" ] ; then                                    
-                  TUNNEL_EP="dmcli eRT getv Device.X_COMCAST-COM_GRE.Tunnel.1.PrimaryRemoteEndpoint"
-                  TUNNEL_IP=`$TUNNEL_EP`                                                            
-                  curep=`echo "$TUNNEL_IP" | grep value | cut -f3 -d : | cut -f2 -d " "`            
+                  curep="dmcli eRT retv Device.X_COMCAST-COM_GRE.Tunnel.1.PrimaryRemoteEndpoint"
                   echo "dmcli ip : $curep"                                   
                   create_tunnel $curep $GRE_IFNAME
               else

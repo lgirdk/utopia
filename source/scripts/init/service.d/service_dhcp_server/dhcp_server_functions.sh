@@ -1051,7 +1051,7 @@ then
     then
         if [ "$RF_CP_FEATURE_EN" = "true" ] && [ "$RF_CP_MODE" = "true" ]
         then 
-            RF_SIGNAL_STATUS=`dmcli eRT getv Device.DeviceInfo.X_RDKCENTRAL-COM_CableRfSignalStatus | grep value | cut -f3 -d : | cut -f2 -d" "`
+            RF_SIGNAL_STATUS=`dmcli eRT retv Device.DeviceInfo.X_RDKCENTRAL-COM_CableRfSignalStatus`
             if [ "$RF_SIGNAL_STATUS" = "false" ]
             then
                noRf=1
@@ -1154,15 +1154,15 @@ fi
    echo "expand-hosts" >> $LOCAL_DHCP_CONF
 
    #Fill vendor option details
-   MFC_OUI=`dmcli eRT getv Device.DeviceInfo.ManufacturerOUI | grep value | cut -f3 -d :`
+   MFC_OUI=`dmcli eRT retv Device.DeviceInfo.ManufacturerOUI`
    if [ $? -eq 0 ]; then
       echo "dhcp-option-force=tag:cpewan-id,vi-encap:3561,4,\"${MFC_OUI}\"" >> $LOCAL_DHCP_CONF
    fi
-   SRNUM=`dmcli eRT getv Device.DeviceInfo.SerialNumber | grep value | cut -f3 -d :`
+   SRNUM=`dmcli eRT retv Device.DeviceInfo.SerialNumber`
    if [ $? -eq 0 ]; then
       echo "dhcp-option-force=tag:cpewan-id,vi-encap:3561,5,\"${SRNUM}\"" >> $LOCAL_DHCP_CONF
    fi
-   PRD_CLASS=`dmcli eRT getv Device.DeviceInfo.ProductClass | grep value | cut -f3 -d :`
+   PRD_CLASS=`dmcli eRT retv Device.DeviceInfo.ProductClass`
    if [ $? -eq 0 ]; then
       echo "dhcp-option-force=tag:cpewan-id,vi-encap:3561,6,\"${PRD_CLASS}\"" >> $LOCAL_DHCP_CONF
    fi
