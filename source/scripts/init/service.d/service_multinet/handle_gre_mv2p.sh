@@ -663,12 +663,20 @@ case "$1" in
         else
             inst=$2
         fi
-        TunnelEnable="`psmcli get $HS_PSM_BASE.$inst.$HS_PSM_ENABLE`"
-        if [ -n "$TunnelEnable" ]; then
-            if [ "$TunnelEnable" != "true" ]; then
-               dmcli eRT setv Device.X_COMCAST-COM_GRE.Tunnel.$inst.Enable bool $TunnelEnable
-            fi
+
+        #Following handles GRE tunnel when enabled from boot config and backup value incase of SPV failing so that during hotspot-restart it will set from backup value.
+        #and GRE tunnel for reboot scenario when not set from boot configuration
+
+        sysTunnelEnable="`sysevent get tunnel_enable_$inst`"
+        CurrentTunnelStatus="`psmcli get $HS_PSM_BASE.$inst.$HS_PSM_ENABLE`"
+        if [ -n "$sysTunnelEnable" ]; then
+            TunnelEnable=$sysTunnelEnable
+            sysevent set tunnel_enable_$inst ""
+        else
+            TunnelEnable=$CurrentTunnelEnable
         fi
+
+        dmcli eRT setv Device.X_COMCAST-COM_GRE.Tunnel.$inst.Enable bool $TunnelEnable
     ;;
     
     #args: hotspot gre instance
