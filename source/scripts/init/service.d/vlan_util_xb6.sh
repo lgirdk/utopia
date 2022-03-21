@@ -474,26 +474,24 @@ check_port_2(){
         #XFinity Private LAN
         1)
             PORT_NUM=`psmcli get dmsb.MultiLAN.PrimaryLAN_HsPorts`
-            PORT_CMD="dmcli eRT getv Device.Bridging.Bridge.1.Port.${PORT_NUM}.Enable"
+            PORT_CMD="dmcli eRT retv Device.Bridging.Bridge.1.Port.${PORT_NUM}.Enable"
         ;;
         #XFinity Home
         2)
             PORT_NUM=`psmcli get dmsb.MultiLAN.HomeSecurity_HsPorts`
-            PORT_CMD="dmcli eRT getv Device.Bridging.Bridge.2.Port.${PORT_NUM}.Enable"        
+            PORT_CMD="dmcli eRT retv Device.Bridging.Bridge.2.Port.${PORT_NUM}.Enable"
         ;;    
     esac
         
     while [ "$PORT_ERR" != "" -a $COUNTER -lt $MAXTRIES ] ; do
         PORT_CHECK=`$PORT_CMD`
-        PORT_ERR=`echo "$PORT_CHECK"|grep "Can't find"`
-        
-        if [ -n "$PORT_ERR" ] ; then
+        if [ -z "$PORT_CHECK" ] ; then
             echo_t "Waiting for dmcli port 2 configuration to be available..."
             COUNTER=`expr $COUNTER + 1`
             isport2enable="false"
             sleep 1
         else
-            isport2enable=`echo "$PORT_CHECK" | grep value | cut -f3 -d : | cut -f2 -d " "`
+            isport2enable=$PORT_CHECK
         fi
         
     done
