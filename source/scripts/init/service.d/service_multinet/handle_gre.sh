@@ -161,7 +161,7 @@ read_greInst()
         for i in $@; do
             count=`expr $count + 1`
             eval bridgeinfo=\${BRIDGE_INST_${count}}
-            succeed_check=`dmcli eRT getv Device.WiFi.SSID.$i.Enable | grep value | cut -f3 -d : | cut -f2 -d " "`
+            succeed_check=`dmcli eRT retv Device.WiFi.SSID.$i.Enable`
             if [ "true" = "$succeed_check" ]; then
                   BRIDGE_INSTS="$BRIDGE_INSTS $bridgeinfo"
             fi
@@ -556,7 +556,7 @@ get_ssids() {
        for i in $@; do          
             count=`expr $count + 1`
             eval localinfo=\${localif_${count}}
-            succeed_check=`dmcli eRT getv Device.WiFi.SSID.$i.Enable | grep value | cut -f3 -d : | cut -f2 -d " "`
+            succeed_check=`dmcli eRT retv Device.WiFi.SSID.$i.Enable`
             if [ "true" = "$succeed_check" ]; then
                localifs="$localifs $localinfo"                                                                                             
             fi
@@ -569,7 +569,7 @@ get_ssids() {
         for i in $localifs; do                                                                                                                                                 
             winst=`echo $i |cut -d . -f 4`                                                                                                                                     
             ssids="$ssids $winst"                                                                                                                                              
-            radio=`dmcli eRT getv ${i}LowerLayers  | grep string,  | awk '{print $5}' | cut -d . -f 4 `                                                                         
+            radio=`dmcli eRT retv ${i}LowerLayers | cut -d . -f 4 `
             expr match "$radios" '.*\b\('$radio'\)\b.*' > /dev/null                                                                                                             
             if [ 0 != $? ]; then                                                                                                                                                
               #add this radio instance                                                                                                                                         
@@ -714,7 +714,7 @@ hotspot_up() {
                     for i in $@; do
                         count=`expr $count + 1`
                         eval bridgeinfo=\${BRIDGE_INST_${count}}
-                        succeed_check=`dmcli eRT getv Device.WiFi.SSID.$i.Enable | grep value | cut -f3 -d : | cut -f2 -d " "`               
+                        succeed_check=`dmcli eRT retv Device.WiFi.SSID.$i.Enable`
                          if [ "true" = "$succeed_check" ]; then
                            bridgeFQDM="$bridgeFQDM $bridgeinfo"
                          fi
@@ -930,9 +930,7 @@ case "$1" in
 
          if [ x"NULL" != x${2} ] || [ $recover = "true" ]; then
               if [ $recover = "true" ] ; then                                    
-                  TUNNEL_EP="dmcli eRT getv Device.X_COMCAST-COM_GRE.Tunnel.1.PrimaryRemoteEndpoint"
-                  TUNNEL_IP=`$TUNNEL_EP`                                                            
-                  curep=`echo "$TUNNEL_IP" | grep value | cut -f3 -d : | cut -f2 -d " "`            
+                  curep="dmcli eRT retv Device.X_COMCAST-COM_GRE.Tunnel.1.PrimaryRemoteEndpoint"
                   echo "dmcli ip : $curep"                                   
                   create_tunnel $curep $GRE_IFNAME
                   if [ "$BOX_TYPE" = "XB3" ] ; then
