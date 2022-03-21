@@ -343,7 +343,7 @@ service_start ()
    # If WAN_IP is still empty potentially Database of WAN Interface Failed. As one last ditch effort try legacy device.properties interface
    if [ "$WAN_IP" = "" ]; then
        PROVISIONED_TYPE=""
-       PROVISIONED_TYPE=$(dmcli eRT getv Device.X_CISCO_COM_CableModem.ProvIpType | grep value | awk '/value/{print $5}')
+       PROVISIONED_TYPE=$(dmcli eRT retv Device.X_CISCO_COM_CableModem.ProvIpType)
 
        echo_t "SERVICE_NTPD : WAN_IP Empty Trying device.properties interface: $STATIC_INTERFACE" >> $NTPD_LOG_NAME
 
