@@ -236,7 +236,7 @@ service_start ()
        erouter_wait WAN_IP
    else
        PROVISIONED_TYPE=""
-       PROVISIONED_TYPE=$(dmcli eRT getv Device.X_CISCO_COM_CableModem.ProvIpType | grep value | awk '/value/{print $5}')
+       PROVISIONED_TYPE=$(dmcli eRT retv Device.X_CISCO_COM_CableModem.ProvIpType)
 
        if [ "$PROVISIONED_TYPE" == "IPV4" ]; then
            WAN_IP=`ifconfig -a $NTPD_INTERFACE | grep inet | grep -v inet6 | tr -s " " | cut -d ":" -f2 | cut -d " " -f1`
