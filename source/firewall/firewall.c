@@ -2715,15 +2715,9 @@ static int prepare_globals_from_configuration(void)
    isCacheActive     = (0 == strcmp("started", transparent_cache_state)) ? 1 : 0;
    isRipEnabled      = (0 == (strcmp("1", rip_enabled))) ? 1 : 0;
    isBrlanStaticEnabled   = ((isRipEnabled) && (0 == (strcmp("true", brlan_static_enable)))) ? 1 : 0;
-   if (isBrlanStaticEnabled)
-   {
-       isFirewallEnabled = 0;
-   }
-   else
-   {
-       isFirewallEnabled = (0 == strcmp("0", firewall_enabled)) ? 0 : 1;
-   }
-
+   
+   isFirewallEnabled = (0 == strcmp("0", firewall_enabled)) ? 0 : 1;
+   
    isFirewallEnabledV6 = (0 == strcmp("0", firewall_enabledv6)) ? 0 : 1;
 
 #if defined (FEATURE_MAPT) || defined (FEATURE_SUPPORT_MAPT_NAT46)
