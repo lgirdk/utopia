@@ -16562,27 +16562,29 @@ memset(buf,0,200);
  */
 static int do_blockfragippktsv4(FILE *fp)
 {
-    int enable=0;
-    char query[MAX_QUERY]={0};
-    char cfgcmd[128]={0};
+    char buf[160];
+    int enable = 0;
 
-    syscfg_get(NULL, V4_BLOCKFRAGIPPKT, query, sizeof(query));
-    if (query[0] != '\0')
+    if (strcasecmp(firewall_level, "None") != 0)
     {
-        enable = atoi(query);
+        if (syscfg_get(NULL, "v4_BlockFragIPPkts", buf, sizeof(buf)) == 0)
+        {
+            enable = atoi(buf);
+        }
     }
     if (enable)
     {
-	system("echo 0 > /proc/sys/net/ipv4/ipfrag_low_thresh");
-	system("echo 0 > /proc/sys/net/ipv4/ipfrag_high_thresh");
+        system("echo 0 > /proc/sys/net/ipv4/ipfrag_low_thresh ; "
+               "echo 0 > /proc/sys/net/ipv4/ipfrag_high_thresh");
     } else {
-	sprintf(cfgcmd,"echo %d > /proc/sys/net/ipv4/ipfrag_high_thresh", 
-			DEFAULT_FRAG_HIGH_THRESH_VALUE);
-	system(cfgcmd);
-	sprintf(cfgcmd,"echo %d > /proc/sys/net/ipv4/ipfrag_low_thresh", 
-			DEFAULT_FRAG_LOW_THRESH_VALUE);
-	system(cfgcmd);
+        snprintf(buf, sizeof(buf),
+                 "echo %d > /proc/sys/net/ipv4/ipfrag_high_thresh ; "
+                 "echo %d > /proc/sys/net/ipv4/ipfrag_low_thresh",
+                 DEFAULT_FRAG_HIGH_THRESH_VALUE,
+                 DEFAULT_FRAG_LOW_THRESH_VALUE);
+        system(buf);
     }
+
     return 0;
 }
 
@@ -16753,29 +16755,31 @@ static void do_icmpflooddetectv4(FILE *fp)
  */
 static int do_blockfragippktsv6(FILE *fp)
 {
-    int enable=0;
-    char query[MAX_QUERY]={0};
-    char cfgcmd[128]={0};
+    char buf[160];
+    int enable = 0;
 
-    syscfg_get(NULL, V6_BLOCKFRAGIPPKT, query, sizeof(query));
-    if (query[0] != '\0')
+    if (strcasecmp(firewall_level, "None") != 0)
     {
-        enable = atoi(query);
+        if (syscfg_get(NULL, "v6_BlockFragIPPkts", buf, sizeof(buf)) == 0)
+        {
+            enable = atoi(buf);
+        }
     }
     if (enable)
     {
-	//Blocking fragments is no more part of ip6tables 
-	//configure frag buffer in kernel to '0' so the frags gets dropped
-	system("echo 0 > /proc/sys/net/netfilter/nf_conntrack_frag6_low_thresh");
-	system("echo 0 > /proc/sys/net/netfilter/nf_conntrack_frag6_high_thresh");
+        //Blocking fragments is no more part of ip6tables
+        //configure frag buffer in kernel to '0' so the frags gets dropped
+        system("echo 0 > /proc/sys/net/netfilter/nf_conntrack_frag6_low_thresh ; "
+               "echo 0 > /proc/sys/net/netfilter/nf_conntrack_frag6_high_thresh");
     } else {
-	sprintf(cfgcmd,"echo %d > /proc/sys/net/netfilter/nf_conntrack_frag6_high_thresh", 
-			DEFAULT_FRAG_HIGH_THRESH_VALUE);
-	system(cfgcmd);
-	sprintf(cfgcmd,"echo %d > /proc/sys/net/netfilter/nf_conntrack_frag6_low_thresh", 
-			DEFAULT_FRAG_LOW_THRESH_VALUE);
-	system(cfgcmd);
+        snprintf(buf, sizeof(buf),
+                 "echo %d > /proc/sys/net/netfilter/nf_conntrack_frag6_high_thresh ; "
+                 "echo %d > /proc/sys/net/netfilter/nf_conntrack_frag6_low_thresh",
+                 DEFAULT_FRAG_HIGH_THRESH_VALUE,
+                 DEFAULT_FRAG_LOW_THRESH_VALUE);
+        system(buf);
     }
+
     return 0;
 }
 
