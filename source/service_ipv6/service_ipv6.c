@@ -1315,7 +1315,6 @@ static int lan_addr6_set(struct serv_ipv6 *si6)
         sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/accept_dad", iface_name, "0");
         sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/autoconf", iface_name, "1");
 
-        sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/disable_ipv6", iface_name, "1");
         sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/disable_ipv6", iface_name, "0");
 
         sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/forwarding", iface_name, "1");
