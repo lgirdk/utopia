@@ -12818,6 +12818,24 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
          }
    }
 
+#if defined (WAN_SSHACCESS)
+   {
+      char buf[8];
+      static int dropbear_found = 0;
+
+      if (dropbear_found == 0) {
+         dropbear_found = (access("/usr/sbin/dropbear", F_OK) == 0) ? 1 : -1;
+      }
+
+      if ((dropbear_found == 1) &&
+          (syscfg_get(NULL, "mgmt_wan_sshaccess", buf, sizeof(buf)) == 0) &&
+          (atoi(buf) == 1))
+      {
+         fprintf(filter_fp, "-A INPUT -i erouter0 -p tcp -m tcp --dport 22 -j ACCEPT\n");
+      }
+   }
+#endif
+
    //SNMPv3 chains for logging and filtering
    fprintf(filter_fp, "%s\n", ":SNMPDROPLOG - [0:0]");
    fprintf(filter_fp, "%s\n", ":SNMP_FILTER - [0:0]");
