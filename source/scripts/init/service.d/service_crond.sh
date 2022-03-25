@@ -125,6 +125,12 @@ service_start ()
       
       echo "1 */6 * * *  /rdklogger/rxtx100.sh" >> $CRONTAB_FILE
 
+      #Add cronjob for scheduling log backup
+      echo "*/15 * * * * /rdklogger/plume_log_backup.sh" >> $CRONTAB_FILE
+      if [ "$BOX_TYPE" = "MV1" ] ; then
+         echo "*/15 * * * *  rpcclient2 \"/bin/sh /rdklogger/plume_log_backup_atom.sh\"" >> $CRONTAB_FILE
+      fi
+
       echo "10 */6 * * *  /usr/ccsp/tad/getSsidNames.sh" >> $CRONTAB_FILE
 
 #rdkb-4297 Runs on the 1st minute of every 12th hour
