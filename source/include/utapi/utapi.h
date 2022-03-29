@@ -89,7 +89,7 @@ typedef int boolean_t;
 #define NAME_SZ 64      // generic friendly name size
 #define IAP_KEYWORD_SZ    64
 #define TR_ALIAS_SZ 65
-
+#define DEST_NAME_SZ 256
 
 /*
  * Platform specific settings
@@ -364,8 +364,9 @@ typedef struct portFwdSingle {
     protocol_t protocol;
     int        external_port;
     int        internal_port;
-    char       dest_ip[IPADDR_SZ];              
-    char       dest_ipv6[64];              
+    char       dest_ip[DEST_NAME_SZ];
+    char       dest_ipv6[64];
+    char       remotehost[IPADDR_SZ];
 } portFwdSingle_t;
 
 typedef struct portMapDyn {
@@ -390,9 +391,10 @@ typedef struct portFwdRange {
     int        end_port;
     int        internal_port;
     int        internal_port_range_size;
-    char       dest_ip[IPADDR_SZ];              
-    char       dest_ipv6[64];    
-	char       public_ip[IPADDR_SZ];              
+    char       dest_ip[DEST_NAME_SZ];
+    char       dest_ipv6[64];
+    char       remotehost[IPADDR_SZ];
+	char       public_ip[IPADDR_SZ];
 } portFwdRange_t;
 
 typedef struct portRangeTrig {
