@@ -13029,6 +13029,15 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(filter_fp, "-A OUTPUT -o %s -j self2lan\n", lan_ifname);
    prepare_multinet_filter_output(filter_fp);
    fprintf(filter_fp, "-A self2lan -j self2lan_plugins\n");
+   /* RIPv2 response should only go through erouter0's primary ip */
+   if(isRipEnabled)
+   {
+      char erouter_static_ip[20];
+      if(get_erouter_secondary_ip(erouter_static_ip, sizeof(erouter_static_ip)))
+      {
+         fprintf(filter_fp, "-A OUTPUT -p udp -s %s -d 224.0.0.9 -j DROP\n", erouter_static_ip);
+      }
+   }
    fprintf(filter_fp, "-A OUTPUT -m state --state NEW -j ACCEPT\n");
 
 #if defined(_COSA_BCM_MIPS_)
