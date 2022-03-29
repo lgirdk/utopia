@@ -597,7 +597,7 @@ static int do_wpad_isatap_blockv4(FILE *fp);
 static int do_wpad_isatap_blockv6(FILE* fp);
 //LGI Add End
 
-static int get_erouter_secondary_ip(char *ip, int size);
+static int get_erouter_static_ip(char *ip, int size);
 
 FILE *firewallfp = NULL;
 
@@ -756,6 +756,7 @@ static char lan0_ipaddr[20];       // ipv4 address of the lan0 interface used to
 static char rip_enabled[20];      // is rip enabled
 static char rip_interface_wan[20];  // if rip is enabled, then is it enabled on the wan interface
 static char brlan_static_enable[20];  // is static ip enabled for /30 and more subnets for rip.
+static char erouter_static_enable[8];  // is erouter0 static ip enabled for rip.
 static char nat_enabled[20];      // is nat enabled
 static char dmz_enabled[20];      // is dmz enabled
 static char firewall_enabled[20]; // is the firewall enabled
@@ -799,6 +800,7 @@ static int allowOpenPorts;
 static int isRipEnabled;
 static int isRipWanEnabled;
 static int isBrlanStaticEnabled;
+static int isErouterStaticEnabled;
 static int isNatEnabled;
 
 static int isDmzEnabled;
@@ -2565,6 +2567,7 @@ static int prepare_globals_from_configuration(void)
    memset(rip_enabled, 0, sizeof(rip_enabled));
    memset(rip_interface_wan, 0, sizeof(rip_interface_wan));
    memset(brlan_static_enable, 0, sizeof(brlan_static_enable));
+   memset(erouter_static_enable, 0, sizeof(erouter_static_enable));
    memset(nat_enabled, 0, sizeof(nat_enabled));
    memset(dmz_enabled, 0, sizeof(dmz_enabled));
    memset(firewall_enabled, 0, sizeof(firewall_enabled));
@@ -2583,6 +2586,7 @@ static int prepare_globals_from_configuration(void)
    syscfg_get(NULL, "rip_enabled", rip_enabled, sizeof(rip_enabled)); 
    syscfg_get(NULL, "rip_interface_wan", rip_interface_wan, sizeof(rip_interface_wan));
    syscfg_get(NULL, "brlan_static_ip_enable", brlan_static_enable, sizeof(brlan_static_enable));
+   syscfg_get(NULL, "erouter_static_ip_enable", erouter_static_enable, sizeof(erouter_static_enable));
    syscfg_get(NULL, "nat_enabled", nat_enabled, sizeof(nat_enabled)); 
    syscfg_get(NULL, "dmz_enabled", dmz_enabled, sizeof(dmz_enabled)); 
    syscfg_get(NULL, "firewall_enabled", firewall_enabled, sizeof(firewall_enabled)); 
@@ -3347,7 +3351,7 @@ static int do_single_port_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, 
    /* If rip is enabled and erouter has static IP then swap the NAT IP. */
    char temp_natip4[20];
    memcpy(temp_natip4, natip4, sizeof(temp_natip4));
-   nat_swapped = get_erouter_secondary_ip(natip4, sizeof(natip4));
+   nat_swapped = get_erouter_static_ip(natip4, sizeof(natip4));
 
    //LGI ADD START
    rc = syscfg_get(NULL, "CosaNAT::port_forward_enabled", query, sizeof(query));
@@ -3768,7 +3772,7 @@ static int do_port_range_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, F
    /* If rip is enabled and erouter has static IP then swap the NAT IP. */
    char temp_natip4[20];
    memcpy(temp_natip4, natip4, sizeof(temp_natip4));
-   nat_swapped = get_erouter_secondary_ip(natip4, sizeof(natip4));
+   nat_swapped = get_erouter_static_ip(natip4, sizeof(natip4));
 
    //LGI ADD START
    rc = syscfg_get(NULL, "CosaNAT::port_forward_enabled", query, sizeof(query));
@@ -4967,7 +4971,7 @@ if(status_http_ert == 0){
    /* If rip is enabled and erouter has static IP then swap the NAT IP. */
    char temp_natip4[20];
    memcpy(temp_natip4, natip4, sizeof(temp_natip4));
-   nat_swapped = get_erouter_secondary_ip(natip4, sizeof(natip4));
+   nat_swapped = get_erouter_static_ip(natip4, sizeof(natip4));
 
    switch (src_type) {
       case(0):
@@ -5634,25 +5638,15 @@ static int do_wan_nat_lan_clients(FILE *fp)
   }
   else
   {
-      char erouter_static_enable[8];
       char erouter_static_ip[20];
-      char brlan_static_enable[8];
-      if(isRipEnabled)
+      if(get_erouter_static_ip(erouter_static_ip, sizeof(erouter_static_ip)))
       {
-         syscfg_get(NULL, "erouter_static_ip_enable", erouter_static_enable, sizeof(erouter_static_enable));
-         syscfg_get(NULL, "brlan_static_ip_enable", brlan_static_enable, sizeof(brlan_static_enable));
-         if(strcmp(erouter_static_enable, "true") == 0)
-         {
-            if(syscfg_get(NULL, "erouter_static_ip_address", erouter_static_ip, sizeof(erouter_static_ip)) ==0)
-            {
-               fprintf(fp, "-A postrouting_towan -s %s/%s -j SNAT --to-source %s\n", lan_ipaddr,lan_netmask,erouter_static_ip);
-            }
-         }
-         else if (strcmp(brlan_static_enable, "true") == 0)
-        {
-            //In the /30 static IP or more, the gateway MUST have NAT disabled on the eRouter WAN interface
-            fprintf(fp, "-A postrouting_towan -s %s/%s -j ACCEPT\n", lan_ipaddr,lan_netmask);
-        }
+         fprintf(fp, "-A postrouting_towan -s %s/%s -j SNAT --to-source %s\n", lan_ipaddr,lan_netmask,erouter_static_ip);
+      }
+      else if (isBrlanStaticEnabled)
+      {
+         //In the /30 static IP or more, the gateway MUST have NAT disabled on the eRouter WAN interface
+         fprintf(fp, "-A postrouting_towan -s %s/%s -j ACCEPT\n", lan_ipaddr,lan_netmask);
       }
 
 #if defined (FEATURE_MAPT) || defined (FEATURE_SUPPORT_MAPT_NAT46)
@@ -13018,7 +13012,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    if(isRipEnabled)
    {
       char erouter_static_ip[20];
-      if(get_erouter_secondary_ip(erouter_static_ip, sizeof(erouter_static_ip)))
+      if(get_erouter_static_ip(erouter_static_ip, sizeof(erouter_static_ip)))
       {
          fprintf(filter_fp, "-A OUTPUT -p udp -s %s -d 224.0.0.9 -j DROP\n", erouter_static_ip);
       }
@@ -18395,20 +18389,15 @@ static int do_wpad_isatap_blockv6 (FILE* filter_fp)
 Api to retrieve erouter0's static ip
 reutrn : 1 if erouter0 has static ip else 0
 */
-static int get_erouter_secondary_ip(char *ip, int size)
+static int get_erouter_static_ip(char *ip, int size)
 {
-   char erouter_static_enable[8];
    char erouter_static_ip[20];
-   if(isRipEnabled)
+   if(isErouterStaticEnabled)
    {
-      syscfg_get(NULL, "erouter_static_ip_enable", erouter_static_enable, sizeof(erouter_static_enable));
-      if(strcmp(erouter_static_enable, "true") == 0)
+      if(syscfg_get(NULL, "erouter_static_ip_address", erouter_static_ip, sizeof(erouter_static_ip)) == 0)
       {
-         if(syscfg_get(NULL, "erouter_static_ip_address", erouter_static_ip, sizeof(erouter_static_ip)) == 0)
-         {
-            memcpy(ip,erouter_static_ip,size);
-            return 1;
-         }
+         memcpy(ip,erouter_static_ip,size);
+         return 1;
       }
    }
    return 0;
