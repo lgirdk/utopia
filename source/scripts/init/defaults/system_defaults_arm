@@ -569,6 +569,7 @@ $mgmt_lan_telnetaccess=0
 $mgmt_lan_sshaccess=0
 $mgmt_mta_telnetaccess=0
 $mgmt_mta_sshaccess=0
+$session_ssh_timer=1800
 
 # NAT
 # ---
