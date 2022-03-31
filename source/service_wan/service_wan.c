@@ -186,7 +186,7 @@ static int wan_dhcp_restart(struct serv_wan *sw);
 static int wan_dhcp_release(struct serv_wan *sw);
 static int wan_dhcp_renew(struct serv_wan *sw);
 
-#if !defined(_WAN_MANAGER_ENABLED_)
+#if !defined(FEATURE_RDKB_WAN_MANAGER)
 static int wan_static_start(struct serv_wan *sw);
 static int wan_static_stop(struct serv_wan *sw);
 #endif
@@ -986,14 +986,14 @@ static int wan_start(struct serv_wan *sw)
     syscfg_get(NULL, "last_erouter_mode", buf, sizeof(buf));
     sysevent_set(sw->sefd, sw->setok, "last_erouter_mode", buf, 0);
 
-#if !defined(_WAN_MANAGER_ENABLED_)
+#if !defined(FEATURE_RDKB_WAN_MANAGER)
     if (wan_iface_up(sw) != 0) {
         fprintf(fp_wan_dbg, "%s: wan_iface_up error\n", __FUNCTION__);
         sysevent_set(sw->sefd, sw->setok, "wan_service-status", "error", 0);
         return -1;
     }
 
-#endif /*_WAN_MANAGER_ENABLED_*/
+#endif /*FEATURE_RDKB_WAN_MANAGER*/
 
      //Intel Proposed RDKB Generic Bug Fix from XB6 SDK
     /* set current_wan_ifname at wan-start, for all erouter modes */
@@ -1005,13 +1005,13 @@ static int wan_start(struct serv_wan *sw)
  #ifndef DSLITE_FEATURE_SUPPORT	
     if (sw->rtmod == WAN_RTMOD_IPV4 || sw->rtmod == WAN_RTMOD_DS)
     {
-            #if !defined(_WAN_MANAGER_ENABLED_)
+            #if !defined(FEATURE_RDKB_WAN_MANAGER)
                 if (wan_addr_set(sw) != 0) {
                     fprintf(fp_wan_dbg, "%s: wan_addr_set error\n", __FUNCTION__);
                     sysevent_set(sw->sefd, sw->setok, "wan_service-status", "error", 0);
                     return -1;
                 }
-            #endif /*_WAN_MANAGER_ENABLED_*/
+            #endif /*FEATURE_RDKB_WAN_MANAGER*/
 
 #if defined (_BWG_PRODUCT_REQ_)
                 /*Adding default gateway */
@@ -1098,13 +1098,13 @@ static int wan_start(struct serv_wan *sw)
      
  if (sw->rtmod == WAN_RTMOD_IPV4 || sw->rtmod == WAN_RTMOD_DS)
     {
-            #if !defined(_WAN_MANAGER_ENABLED_)
+            #if !defined(FEATURE_RDKB_WAN_MANAGER)
                 if (wan_addr_set(sw) != 0) {
                     fprintf(fp_wan_dbg, "%s: wan_addr_set error\n", __FUNCTION__);
                     sysevent_set(sw->sefd, sw->setok, "wan_service-status", "error", 0);
                     return -1;
                 }
-            #endif /*_WAN_MANAGER_ENABLED_*/
+            #endif /*FEATURE_RDKB_WAN_MANAGER*/
 
                 if (route_config(sw->ifname) != 0) {
                     fprintf(fp_wan_dbg, "%s: route_config error\n", __FUNCTION__);
@@ -1317,13 +1317,13 @@ static int wan_stop(struct serv_wan *sw)
         }
     }
 
-#if !defined(_PLATFORM_IPQ_) && !defined(_WAN_MANAGER_ENABLED_) && !defined(_PROPOSED_BUG_FIX_)
+#if !defined(_PLATFORM_IPQ_) && !defined(FEATURE_RDKB_WAN_MANAGER) && !defined(_PROPOSED_BUG_FIX_)
     if (wan_iface_down(sw) != 0) {
         fprintf(fp_wan_dbg, "%s: wan_iface_down error\n", __FUNCTION__);
         sysevent_set(sw->sefd, sw->setok, "wan_service-status", "error", 0);
         return -1;
     }
-#endif  /*_PLATFORM_IPQ_ && _WAN_MANAGER_ENABLED_*/
+#endif  /*_PLATFORM_IPQ_ && FEATURE_RDKB_WAN_MANAGER*/
 
     v_secure_system("rm -rf /tmp/ipv4_renew_dnsserver_restart");
     v_secure_system("rm -rf /tmp/ipv6_renew_dnsserver_restart");
@@ -1479,7 +1479,7 @@ static int wan_addr_set(struct serv_wan *sw)
 #if !defined(_COSA_BCM_MIPS_)
     char mischandler_ready[10] ={0};
 #endif
-#if !defined(_PLATFORM_IPQ_) && !defined(_WAN_MANAGER_ENABLED_) && !defined(_PROPOSED_BUG_FIX_)
+#if !defined(_PLATFORM_IPQ_) && !defined(FEATURE_RDKB_WAN_MANAGER) && !defined(_PROPOSED_BUG_FIX_)
     char state[16];
     int timo = 0;
 #endif
@@ -1494,7 +1494,7 @@ static int wan_addr_set(struct serv_wan *sw)
 
     sysevent_set(sw->sefd, sw->setok, "wan-errinfo", NULL, 0);
 
-#if !defined(_WAN_MANAGER_ENABLED_)
+#if !defined(FEATURE_RDKB_WAN_MANAGER)
     switch (sw->prot) {
     case WAN_PROT_DHCP:
         if (wan_dhcp_start(sw) != 0) {
@@ -1514,9 +1514,9 @@ static int wan_addr_set(struct serv_wan *sw)
         fprintf(fp_wan_dbg, "%s: unknow wan protocol\n", __FUNCTION__);
         return -1;
     }
-#endif /*_WAN_MANAGER_ENABLED_*/
+#endif /*FEATURE_RDKB_WAN_MANAGER*/
 
-#if !defined(_PLATFORM_IPQ_) && !defined(_WAN_MANAGER_ENABLED_) && !defined(_PROPOSED_BUG_FIX_)
+#if !defined(_PLATFORM_IPQ_) && !defined(FEATURE_RDKB_WAN_MANAGER) && !defined(_PROPOSED_BUG_FIX_)
     /*
      * The trigger of 'current_ipv4_link_state' to 'up' is moved to WAN service
      * from Gateway provisioning App. This is done to save the delay in getting
@@ -1534,7 +1534,7 @@ static int wan_addr_set(struct serv_wan *sw)
     else
         fprintf(fp_wan_dbg, "[%s] wait for protocol SUCCESS !\n", PROG_NAME);
 
-#endif /*_PLATFORM_IPQ_ && _WAN_MANAGER_ENABLED_*/
+#endif /*_PLATFORM_IPQ_ && FEATURE_RDKB_WAN_MANAGER*/
 
     memset(val, 0 ,sizeof(val));
     sysevent_get(sw->sefd, sw->setok, "ipv4_wan_subnet", val, sizeof(val));
@@ -1649,10 +1649,10 @@ static int wan_addr_set(struct serv_wan *sw)
     sysctl_iface_set("/proc/sys/net/ipv4/ip_forward", NULL, "1");
     sysevent_set(sw->sefd, sw->setok, "firewall_flush_conntrack", "1", 0);
 
-#if !defined(_WAN_MANAGER_ENABLED_)
+#if !defined(FEATURE_RDKB_WAN_MANAGER)
     fprintf(fp_wan_dbg, "[%s] Synching DNS to ATOM...\n", PROG_NAME);
     vsystem("/etc/utopia/service.d/service_wan/dns_sync.sh &");
-#endif /*_WAN_MANAGER_ENABLED_*/
+#endif /*FEATURE_RDKB_WAN_MANAGER*/
 
     return 0;
 }
@@ -1679,7 +1679,7 @@ static int wan_addr_unset(struct serv_wan *sw)
     sysevent_set(sw->sefd, sw->setok, "dhcp_mta_option", NULL, 0);
 #endif
 
-#if !defined(_WAN_MANAGER_ENABLED_)
+#if !defined(FEATURE_RDKB_WAN_MANAGER)
     switch (sw->prot) {
     case WAN_PROT_DHCP:
         if (wan_dhcp_stop(sw) != 0) {
@@ -1702,7 +1702,7 @@ static int wan_addr_unset(struct serv_wan *sw)
 
     v_secure_system("ip -4 addr flush dev %s", sw->ifname);
 
-#endif /*_WAN_MANAGER_ENABLED_*/
+#endif /*FEATURE_RDKB_WAN_MANAGER*/
 
     printf("%s Triggering RDKB_FIREWALL_RESTART\n",__FUNCTION__);
     t2_event_d("SYS_SH_RDKB_FIREWALL_RESTART", 1);
@@ -1838,7 +1838,7 @@ static int wan_dhcp_renew(struct serv_wan *sw)
     return 0;
 }
 
-#if !defined(_WAN_MANAGER_ENABLED_)
+#if !defined(FEATURE_RDKB_WAN_MANAGER)
 static int resolv_static_config(struct serv_wan *sw)
 {
     FILE *fp = NULL;
