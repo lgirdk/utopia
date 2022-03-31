@@ -609,10 +609,10 @@ typedef enum _UtopiaValue
 	UtopiaValue_PFR_PrevRuleEnabledState,
 	UtopiaValue_PRT_PrevRuleEnabledState,
     UtopiaValue_HashPassword,
-    #if defined(_WAN_MANAGER_ENABLED_)
+    #if defined(FEATURE_RDKB_WAN_MANAGER)
       UtopiaValue_WanMode,
       UtopiaValue_WanConnEnabled,
-    #endif /*_WAN_MANAGER_ENABLED_*/
+    #endif /*FEATURE_RDKB_WAN_MANAGER*/
     #if defined(DSLITE_FEATURE_SUPPORT)
     UtopiaValue_Dslite_Enable,
     UtopiaValue_Dslite_Count,
