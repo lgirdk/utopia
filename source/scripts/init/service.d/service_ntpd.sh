@@ -251,6 +251,12 @@ service_start ()
         fi
        # Start NTP Config Creation with Multiple Server Setup
        echo_t "SERVICE_NTPD : Creating NTP config with New NTP Enabled" >> $NTPD_LOG_NAME
+       # Set the dhcp acquired ntp server first
+       dhcpv4_ntp_server=`sysevent get dhcpv4_ntp_server | cut -d" " -f1`
+       if [ -n "$dhcpv4_ntp_server" ]; then
+           echo "server $dhcpv4_ntp_server iburst" >> $NTP_CONF_TMP
+           VALID_SERVER="true"
+       fi
        if [ "x$SYSCFG_ntp_server1" != "x" ] && [ "x$SYSCFG_ntp_server1" != "xno_ntp_address" ]; then
            echo "server $SYSCFG_ntp_server1 true" >> $NTP_CONF_TMP
            echo "restrict $SYSCFG_ntp_server1 nomodify notrap noquery" >> $NTP_CONF_TMP
@@ -287,6 +293,12 @@ service_start ()
            fi
        fi
    else
+       # Set the dhcp acquired ntp server first
+       dhcpv4_ntp_server=`sysevent get dhcpv4_ntp_server | cut -d" " -f1`
+       if [ -n "$dhcpv4_ntp_server" ]; then
+           echo "server $dhcpv4_ntp_server iburst" >> $NTP_CONF_TMP
+           VALID_SERVER="true"
+       fi
 
        PARTNER_ID=`syscfg get PartnerID`
 
