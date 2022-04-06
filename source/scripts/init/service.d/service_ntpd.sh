@@ -429,7 +429,7 @@ service_start ()
        killall $BIN
 
        echo_t "SERVICE_NTPD : Starting NTP Daemon" >> $NTPD_LOG_NAME
-       systemctl start $BIN
+       $BIN -u ntp:ntp -p /run/ntpd.pid -l $NTPD_LOG_NAME -c $NTP_CONF_TMP -g
 
        if [ "$BOX_TYPE" = "HUB4" ] || [ "$BOX_TYPE" = "SR300" ] || [ "$BOX_TYPE" = "SE501" ] || [ "$BOX_TYPE" = "SR213" ] || [ "$BOX_TYPE" = "WNXL11BWL" ]; then
            sysevent set firewall-restart
@@ -463,7 +463,7 @@ service_start ()
            killall $BIN
 
            echo_t "SERVICE_NTPD : Starting NTP Daemon" >> $NTPD_LOG_NAME
-           systemctl start $BIN
+           $BIN -u ntp:ntp -p /run/ntpd.pid -l $NTPD_LOG_NAME -c $NTP_CONF_TMP -g
        fi
    fi
 
