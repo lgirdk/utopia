@@ -299,7 +299,7 @@ static int save_dhcp_offer (udhcpc_script_t *pinfo)
     printf("\n timezone: %s \n",getenv("timezone"));
     printf("\n timesvr: %s \n",getenv("timesvr"));
     printf("\n namesvr: %s \n",getenv("namesvr"));
-    printf("\n ntpsvr: %s \n",getenv("ntpsvr"));
+    printf("\n ntpsrv: %s \n",getenv("ntpsrv"));
     printf("\n dns: %s \n",getenv("dns"));
     printf("\n wins: %s \n",getenv("wins"));
     printf("\n logsvr: %s \n",getenv("logsvr"));
@@ -902,6 +902,7 @@ static int handle_wan (udhcpc_script_t *pinfo)
     OnboardLog("[%s][%d] TimeZone        = %s \n", __FUNCTION__, __LINE__, data.timeZone);
     OnboardLog("[%s][%d] DHCP Server ID  = %s \n", __FUNCTION__, __LINE__, data.dhcpServerId);
     OnboardLog("[%s][%d] DHCP State      = %s \n", __FUNCTION__, __LINE__, data.dhcpState);
+    OnboardLog("[%s][%d] NTP Server      = %s \n", __FUNCTION__, __LINE__, data.ntpServer);
 
     ret = send_dhcp_data_to_wanmanager(&data);
     if (ret != 0)
@@ -1331,6 +1332,11 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
         else
         {
             OnboardLog("[%s-%d] Upstreamrate is not available in dhcp ack \n",  __FUNCTION__,__LINE__);
+        }
+
+        if ((env = getenv("ntpsrv")) != NULL)
+        {
+            strncpy(dhcpv4_data->ntpServer, env, sizeof(dhcpv4_data->ntpServer));
         }
     }
     else if ((strcmp(pinfo->input_option, "leasefail") == 0))
