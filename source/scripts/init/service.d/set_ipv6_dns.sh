@@ -105,25 +105,29 @@ done
 
 if [ "$tool" == "dibbler" ] ; then
     ips="${ips// /,}"
-    sed -ri "s/ *dns-server.*$/ dns-server $ips/g" $dibbler_conf
+    if [ -n "$ips" ] ; then
+        sed -ri "s/ *dns-server.*$/ dns-server $ips/g" $dibbler_conf
+    fi
 elif [ "$tool" == "zebra" ] ; then
     ops=""
-    for ip in $ips;
-    do
-        if [ -z "$ops" ] ; then
-            ops="   ipv6 nd rdnss $ip 300"
-        else
-            ops="$ops\n   ipv6 nd rdnss $ip 300"
-        fi
-    done
+    if [ -n "$ips" ] ; then
+        for ip in $ips;
+        do
+            if [ -z "$ops" ] ; then
+                ops="   ipv6 nd rdnss $ip 300"
+            else
+                ops="$ops\n   ipv6 nd rdnss $ip 300"
+            fi
+        done
 
-    sed -ri "/ipv6 nd rdnss.*$/d" $zebra_conf
-    IFS=
-    while read -r line
-    do
-        echo "$line"
-        if [[ "$line" == *"router-preference"* ]] ; then
-            echo -e "$ops"
-        fi
-    done < $zebra_conf > $zebra_conf".tmp" && mv $zebra_conf".tmp" $zebra_conf
+        sed -ri "/ipv6 nd rdnss.*$/d" $zebra_conf
+        IFS=
+        while read -r line
+        do
+            echo "$line"
+            if [[ "$line" == *"router-preference"* ]] ; then
+                echo -e "$ops"
+            fi
+        done < $zebra_conf > $zebra_conf".tmp" && mv $zebra_conf".tmp" $zebra_conf
+    fi  
 fi
