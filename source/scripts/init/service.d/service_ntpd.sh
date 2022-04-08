@@ -252,7 +252,12 @@ service_start ()
        # Start NTP Config Creation with Multiple Server Setup
        echo_t "SERVICE_NTPD : Creating NTP config with New NTP Enabled" >> $NTPD_LOG_NAME
        # Set the dhcp acquired ntp server first
+       dhcpv6_ntp_server=`sysevent get dhcpv6_ntp_server | cut -d" " -f1`
        dhcpv4_ntp_server=`sysevent get dhcpv4_ntp_server | cut -d" " -f1`
+       if [ -n "$dhcpv6_ntp_server" ]; then
+           echo "server $dhcpv6_ntp_server iburst" >> $NTP_CONF_TMP
+           VALID_SERVER="true"
+       fi
        if [ -n "$dhcpv4_ntp_server" ]; then
            echo "server $dhcpv4_ntp_server iburst" >> $NTP_CONF_TMP
            VALID_SERVER="true"
@@ -295,6 +300,11 @@ service_start ()
    else
        # Set the dhcp acquired ntp server first
        dhcpv4_ntp_server=`sysevent get dhcpv4_ntp_server | cut -d" " -f1`
+       dhcpv6_ntp_server=`sysevent get dhcpv6_ntp_server | cut -d" " -f1`
+       if [ -n "$dhcpv6_ntp_server" ]; then
+           echo "server $dhcpv6_ntp_server iburst" >> $NTP_CONF_TMP
+           VALID_SERVER="true"
+       fi
        if [ -n "$dhcpv4_ntp_server" ]; then
            echo "server $dhcpv4_ntp_server iburst" >> $NTP_CONF_TMP
            VALID_SERVER="true"
