@@ -70,6 +70,10 @@ do_start_igmpproxy () {
    #echo "quickleave" >> $LOCAL_CONF_FILE
    if [ "started" = "$CURRENT_WAN_STATUS" ] ; then
       echo "pinstance v4Proxy: $WAN_IFNAME ==> $SYSCFG_lan_ifname;" >> $LOCAL_CONF_FILE
+      echo "pinstance v4Proxy throttle $SYSCFG_igmp_mld_throttle_rate holdtime $SYSCFG_igmp_mld_throttle_holdtime;" >> $LOCAL_CONF_FILE
+      if [ "$SYSCFG_igmp_mld_proxy_fastleave" = "0" ]; then
+         echo "pinstance v4Proxy fastleave disable;" >> $LOCAL_CONF_FILE
+      fi
       echo "pinstance v4Proxy downstream $SYSCFG_lan_ifname out whitelist table {(232.0.1.0 - 232.255.255.255 | *)};" >> $LOCAL_CONF_FILE
       echo "pinstance v4Proxy downstream $SYSCFG_lan_ifname in blacklist table {(* | *)};" >> $LOCAL_CONF_FILE
       echo "pinstance v4Proxy upstream $WAN_IFNAME in whitelist table {(232.0.1.0 - 232.255.255.255 | *)};" >> $LOCAL_CONF_FILE
@@ -138,7 +142,7 @@ fi
 
 service_init ()
 {
-   queries="igmpproxy_enabled lan_ifname dslite_enable dslite_tunnel_interface_1 last_erouter_mode"
+   queries="igmpproxy_enabled lan_ifname dslite_enable dslite_tunnel_interface_1 last_erouter_mode igmp_mld_throttle_rate igmp_mld_throttle_holdtime igmp_mld_proxy_fastleave"
    get_utctx_val "$queries"
    eval `sysevent batchget current_wan_ifname wan-status lan-status bridge-status`
    WAN_IFNAME=$SYSEVENT_1
