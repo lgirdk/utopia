@@ -57,6 +57,10 @@ do_start_mldproxy () {
    echo "protocol MLDv2;" >> $LOCAL_CONF_FILE
    if [ "started" = "$CURRENT_WAN_STATUS" ] ; then
       echo "pinstance v6Proxy: $WAN_IFNAME ==> $SYSCFG_lan_ifname;" >> $LOCAL_CONF_FILE
+      echo "pinstance v6Proxy throttle $SYSCFG_igmp_mld_throttle_rate holdtime $SYSCFG_igmp_mld_throttle_holdtime;" >> $LOCAL_CONF_FILE
+      if [ "$SYSCFG_igmp_mld_proxy_fastleave" = "0" ]; then
+         echo "pinstance v6Proxy fastleave disable;" >> $LOCAL_CONF_FILE
+      fi
       echo "pinstance v6Proxy downstream $SYSCFG_lan_ifname out whitelist table {(ff38::8000:0000 - ff38::ffff:ffff | *)};" >> $LOCAL_CONF_FILE
       echo "pinstance v6Proxy downstream $SYSCFG_lan_ifname in blacklist table {(* | *)};" >> $LOCAL_CONF_FILE
       echo "pinstance v6Proxy upstream $WAN_IFNAME in whitelist table {(ff38::8000:0000 - ff38::ffff:ffff | *)};" >> $LOCAL_CONF_FILE
@@ -73,7 +77,7 @@ do_start_mldproxy () {
 
 service_init ()
 {
-   queries="mldproxy_enabled lan_ifname last_erouter_mode dslite_enable"
+   queries="mldproxy_enabled lan_ifname last_erouter_mode dslite_enable igmp_mld_throttle_rate igmp_mld_throttle_holdtime igmp_mld_proxy_fastleave"
    get_utctx_val "$queries"
    eval `sysevent batchget current_wan_ifname wan-status lan-status`
    WAN_IFNAME=$SYSEVENT_1
