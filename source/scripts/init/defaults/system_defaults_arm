@@ -528,6 +528,11 @@ $igmpproxy_enabled=1
 # MLD Proxy
 $mldproxy_enabled=1
 
+# IGMP/MLD Proxy defaults
+$igmp_mld_throttle_rate=32
+$igmp_mld_throttle_holdtime=10
+$igmp_mld_proxy_fastleave=1
+
 # UPnP InternetGatewayDevice (IGD) settings
 $upnp_igd_enabled=1
 $igd_allow_userconfig=1
