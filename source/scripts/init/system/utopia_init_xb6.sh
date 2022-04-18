@@ -444,6 +444,10 @@ fi
       rm -f "$HOTSPOT_BLOB"
    fi
 
+   if [ -f /nvram/dnsmasq.vendorclass ]; then
+      rm -f /nvram/dnsmasq.vendorclass
+   fi
+
    # Remove lxy L2 dir
    LOG_FILE=/rdklogs/logs/lxy.log
    echo_t "[FR] Removing lxy L2 Dir" >> $LOG_FILE

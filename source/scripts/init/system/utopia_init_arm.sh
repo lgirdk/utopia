@@ -334,6 +334,10 @@ fi
     if [ -f "$HOTSPOT_BLOB" ];then
       rm -f "$HOTSPOT_BLOB"
    fi
+   
+   if [ -f /nvram/dnsmasq.vendorclass ]; then
+      rm -f /nvram/dnsmasq.vendorclass
+   fi
 
      touch /nvram/.apply_partner_defaults   
    #>>zqiu

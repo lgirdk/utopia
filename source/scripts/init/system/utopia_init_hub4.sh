@@ -284,7 +284,11 @@ fi
     if [ -f "$HOTSPOT_BLOB" ];then
       rm -f "$HOTSPOT_BLOB"
    fi
-  
+
+   if [ -f /nvram/dnsmasq.vendorclass ]; then
+      rm -f /nvram/dnsmasq.vendorclass
+   fi
+
    if [ -f /etc/WEBCONFIG_ENABLE ]; then
       #Remove webconfig_db.bin on factory reset on all RDKB platforms
       rm -f /nvram/webconfig_db.bin
