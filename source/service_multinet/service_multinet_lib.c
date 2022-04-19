@@ -297,6 +297,12 @@ static void nethelper_bridgeCreate (char *brname)
 
     MNET_DEBUG("SYSTEM CALL: \"%s\"\n" COMMA cmdBuff)
     system(cmdBuff);
+
+    if (!strcmp(brname, "brlan0")) {
+        system("ebtables -t filter -I OUTPUT -o l2sd0.200 -p IPv4 --ip-dst 232.0.0.0/8 --ip-protocol udp -j DROP");
+        system("ebtables -t filter -I OUTPUT -o l2sd0.200 -p IPv6 --ip6-dst FF38::8000:0000/97 --ip6-protocol udp -j DROP");
+        system("brctl addif brlan0 l2sd0.200");
+    }
 }
 
 #endif
