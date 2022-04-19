@@ -448,10 +448,20 @@ void addVlan(int net_id, int vlan_id, char *ports_add)
 		//swctl -c 16 -p 7 -v <vlan_id> -m 2 -q 1
             swctl(16, 7, vlan_id, TAGGING_MODE, 1, -1, NULL, NULL);
 	}
-	if (strstr(ports_add, "cei0")) /* CBN Mv1 */
-		swctl(16, 5, vlan_id, TAGGING_MODE, 1, -1, NULL, NULL);
-	if (strstr(ports_add, "wdev0ap")) /* CBN Mv1 */
+
+	/* Primary SSIDs should go into port 6 */
+	if (strstr(ports_add, "cei00") || strstr(ports_add, "wdev0ap0"))
 		swctl(16, 6, vlan_id, TAGGING_MODE, 1, -1, NULL, NULL);
+	else
+	{
+		/* 2G MBSSes -> Port 5
+		 * 5G MBSSes -> Port 6
+		 */
+		if (strstr(ports_add, "cei0")) /* CBN Mv1 */
+			swctl(16, 5, vlan_id, TAGGING_MODE, 1, -1, NULL, NULL);
+		if (strstr(ports_add, "wdev0ap")) /* CBN Mv1 */
+			swctl(16, 6, vlan_id, TAGGING_MODE, 1, -1, NULL, NULL);
+	}
     sw_add_ports(vlan_id, ports_add, &atom_port, &ext_port);
 	
 	l_iLen = strlen(vidPorts);		
@@ -528,7 +538,7 @@ void addVlan(int net_id, int vlan_id, char *ports_add)
 			swctl(20, 0, -1, -1, -1, -1, NULL, NULL); //swctl -c 20 -p 0
 			sysevent_set(hdl_sw_sysevent_fd, hdl_sw_sysevent_token, "sw_port_atom_venable", "1", 0);
 		}
-		if (!atom_vidPorts[0])
+		if (!atom_vidPorts[0] && vlan_id != 100)
 		{
 			MNET_DEBUG("--SW handler, swctl %s -v %d -m %d -q 1\n" COMMA PORTMAP_atom COMMA vlan_id COMMA TAGGING_MODE)
 			swctl(16, 0, vlan_id, TAGGING_MODE, 1, -1, NULL, NULL); //swctl -c 16 -p 0 -v <vlan_id> -m 2 -q 1
@@ -620,10 +630,19 @@ void delVlan(int net_id, int vlan_id, char *ports_add)
 	    MNET_DEBUG("Removing vlan %s.%d\n" COMMA MGMT_PORT_LINUX_IFNAME COMMA vlan_id)
 		system(l_cCmd_Buff);*/
     }
-    if (strstr(ports_add, "cei0")) /* CBN Mv1 */
-        swctl(17, 5, vlan_id, -1, -1, -1, NULL, NULL);
-    if (strstr(ports_add, "wdev0ap")) /* CBN Mv1 */
-        swctl(17, 6, vlan_id, -1, -1, -1, NULL, NULL);
+    /* Primary SSIDs is in port 6 */
+    if (strstr(ports_add, "cei00") || strstr(ports_add, "wdev0ap0"))
+	    swctl(17, 6, vlan_id, TAGGING_MODE, 1, -1, NULL, NULL);
+    else
+    {
+	    /* 2G MBSSes -> Port 5
+	     * 5G MBSSes -> Port 6
+	     */
+	    if (strstr(ports_add, "cei0")) /* CBN Mv1 */
+		    swctl(17, 5, vlan_id, TAGGING_MODE, 1, -1, NULL, NULL);
+	    if (strstr(ports_add, "wdev0ap")) /* CBN Mv1 */
+		    swctl(17, 6, vlan_id, TAGGING_MODE, 1, -1, NULL, NULL);
+    }
     snprintf(l_cCmd_Buff, sizeof(l_cCmd_Buff), "sw_vid_%d_ports",vlan_id);
     sysevent_set(hdl_sw_sysevent_fd, hdl_sw_sysevent_token, l_cCmd_Buff, l_cVid_Ports, 0);
         
@@ -650,7 +669,7 @@ void delVlan(int net_id, int vlan_id, char *ports_add)
     sysevent_set(hdl_sw_sysevent_fd, hdl_sw_sysevent_token, l_cCmd_Buff, l_cExt_Vid_Ports, 0);
         
     // check for atom port removal (implicit rule)
-	if (0 == l_cAtom_Vid_Ports[0])
+	if (0 == l_cAtom_Vid_Ports[0] && vlan_id != 100)
 	{
 		MNET_DEBUG("--SW handler, swctl %s -v %d\n" COMMA PORTMAP_REM_atom COMMA vlan_id)
 		swctl(17, 0, vlan_id, -1, -1, -1, NULL, NULL);
@@ -705,12 +724,12 @@ void addMeshBhaulVlan()
 void createMeshVlan()
 {
 	
-	swctl(16, 0, 112, TAGGING_MODE, 1, -1, NULL, NULL); 
-        swctl(16, 5, 112, TAGGING_MODE, 1, -1, NULL, NULL);
+	//swctl(16, 0, 112, TAGGING_MODE, 1, -1, NULL, NULL); 
+        swctl(16, 6, 112, TAGGING_MODE, 1, -1, NULL, NULL);
 	swctl(16, 7, 112, TAGGING_MODE, 1, -1, NULL, NULL);
         v_secure_system("vconfig add l2sd0 112; ifconfig l2sd0.112 169.254.0.2 netmask 255.255.255.0 up");
 	
-	swctl(16, 0, 113, TAGGING_MODE, 1, -1, NULL, NULL);
+	//swctl(16, 0, 113, TAGGING_MODE, 1, -1, NULL, NULL);
         swctl(16, 6, 113, TAGGING_MODE, 1, -1, NULL, NULL);
 	swctl(16, 7, 113, TAGGING_MODE, 1, -1, NULL, NULL);
 	v_secure_system("vconfig add l2sd0 113; ifconfig l2sd0.113 169.254.1.2 netmask 255.255.255.0 up");
