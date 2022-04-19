@@ -14278,8 +14278,10 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    fprintf(filter_fp, "-A http2self -j DROP\n");
 #ifdef _PUMA6_ARM_
    fprintf(filter_fp, "-I http2self 2 -m physdev --physdev-in l2sd0.100 -d 192.168.100.1 -j ACCEPT\n");
+   fprintf(filter_fp, "-I http2self 2 -m physdev --physdev-in l2sd0.200 -d 192.168.100.1 -j ACCEPT\n");
 #else
    fprintf(filter_fp, "-I http2self -m physdev --physdev-in l2sd0.100 -d 192.168.100.1 -j ACCEPT\n");
+   fprintf(filter_fp, "-I http2self -m physdev --physdev-in l2sd0.200 -d 192.168.100.1 -j ACCEPT\n");
 #endif
    /* To be enabled with proper values for CSR login. Right now, CSR Login is always disabled in bridge mode.
     * syscfg_get(NULL, "mgmt_wan_access", query, sizeof(query));
@@ -15952,6 +15954,7 @@ v6GPFirewallRuleNext:
       fprintf(fp, "-A FORWARD -m physdev --physdev-in %s -j ACCEPT\n", emta_wan_ifname);
       fprintf(fp, "-A FORWARD -m physdev --physdev-out %s -j ACCEPT\n", emta_wan_ifname);
 #endif
+      fprintf(fp, "-A FORWARD -i brlan0 -o brlan0 -j ACCEPT\n");
       fprintf(fp, "-A FORWARD -i brlan2 -o brlan2 -j ACCEPT\n");
       fprintf(fp, "-A FORWARD -i brlan3 -o brlan3 -j ACCEPT\n");
       fprintf(fp, "-A FORWARD -i brlan4 -o brlan4 -j ACCEPT\n");
