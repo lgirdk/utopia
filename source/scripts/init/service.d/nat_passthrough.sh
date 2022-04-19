@@ -64,7 +64,9 @@ init_ebtables()
         ebtables -N nat_passthrough_to_lan  -P RETURN
 
         ebtables -t filter -A FORWARD -i l2sd0.100 -j nat_passthrough_from_host
+        ebtables -t filter -A FORWARD -i l2sd0.200 -j nat_passthrough_from_host
         ebtables -t filter -A FORWARD -o l2sd0.100 -j nat_passthrough_to_host
+        ebtables -t filter -A FORWARD -o l2sd0.200 -j nat_passthrough_to_host
         ebtables -t filter -A FORWARD -i lbr0 -j DROP
         ebtables -t filter -A FORWARD -o lbr0 -j DROP
 
@@ -117,7 +119,9 @@ service_stop()
     ebtables -F nat_passthrough_to_lan
 
     ebtables -t filter -D FORWARD -i l2sd0.100 -j nat_passthrough_from_host
+    ebtables -t filter -D FORWARD -i l2sd0.200 -j nat_passthrough_from_host
     ebtables -t filter -D FORWARD -o l2sd0.100 -j nat_passthrough_to_host
+    ebtables -t filter -D FORWARD -o l2sd0.200 -j nat_passthrough_to_host
     ebtables -t filter -D FORWARD -i lbr0 -j DROP
     ebtables -t filter -D FORWARD -o lbr0 -j DROP
     ebtables -t filter -D INPUT   -j nat_passthrough_to_lan
