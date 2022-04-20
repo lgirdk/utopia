@@ -2695,6 +2695,7 @@ static int prepare_globals_from_configuration(void)
    isCacheActive     = (0 == strcmp("started", transparent_cache_state)) ? 1 : 0;
    isRipEnabled      = (0 == (strcmp("1", rip_enabled))) ? 1 : 0;
    isBrlanStaticEnabled   = ((isRipEnabled) && (0 == (strcmp("true", brlan_static_enable)))) ? 1 : 0;
+   isErouterStaticEnabled   = ((isRipEnabled) && (0 == (strcmp("true", erouter_static_enable)))) ? 1 : 0;
    
    isFirewallEnabled = (0 == strcmp("0", firewall_enabled)) ? 0 : 1;
    
