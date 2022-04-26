@@ -564,6 +564,7 @@ $mgmt_http_enable=1
 $mgmt_https_enable=0
 $mgmt_wifi_access=1
 
+$$wan_password_set=0
 $$mgmt_wan_access=0
 $mgmt_wan_httpaccess=0
 $mgmt_wan_httpsaccess=0
