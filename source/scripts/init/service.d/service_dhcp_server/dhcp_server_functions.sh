@@ -886,12 +886,21 @@ prepare_whitelist_urls()
 
 prepare_static_dns_urls()
 {
+  # Disable support for /etc/static_dns_urls (Comcast specific and not
+  # required in generic builds). It would perhaps be cleaner to just not
+  # install static_dns_urls in the rootfs however certain badly behaved
+  # SOC layers provide their own version and install it directly from a
+  # .bbappend so completely ignoring the file is a more robust solution.
+
+  if false
+  then
   if [ -f $STATIC_DNS_URLS_FILE ]; then
      STATIC_DNS_URL_LIST=`cat $STATIC_DNS_URLS_FILE`
      for static_dns_url in $STATIC_DNS_URL_LIST
      do
         echo "server=/$static_dns_url/" >> "$1"
      done
+  fi
   fi
 }
 
