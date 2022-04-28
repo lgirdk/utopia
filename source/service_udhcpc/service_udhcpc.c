@@ -86,13 +86,7 @@
 
 #define RESOLVE_CONF_BIN_FULL_PATH  "/sbin/resolvconf"
 #define IP_UTIL_BIN_FULL_PATH "/sbin/ip.iproute2"
-
-#if defined (_XB6_PRODUCT_REQ_) || defined(_CBR_PRODUCT_REQ_) || defined (_XB7_PRODUCT_REQ_)
-#define CONSOLE_LOG_FILE "/rdklogs/logs/Consolelog.txt.0"
-#else
-#define CONSOLE_LOG_FILE   "/rdklogs/logs/ArmConsolelog.txt.0"
-#endif
-
+#define ARM_CONSOLE_LOG_FILE   "/rdklogs/logs/ArmConsolelog.txt.0"
 #define RESOLV_CONF "/etc/resolv.conf"
 #define RESOLV_CONF_TMP "/tmp/resolv_temp.conf"
 #define  BUFSIZE 4196
@@ -450,7 +444,7 @@ int update_dns_tofile(udhcpc_script_t *pinfo)
                     if (0 == result)
                     {
                         printf ("\nuptime  %s tok : %s\n",uptime,tok);
-                        snprintf(buf,sizeof(buf),"echo %s DNS_server_IP_changed:%s >> %s",utc_time,uptime,CONSOLE_LOG_FILE);
+                        snprintf(buf,sizeof(buf),"echo %s DNS_server_IP_changed:%s >> %s",utc_time,uptime,ARM_CONSOLE_LOG_FILE);
 			OnboardLog("DNS_server_IP_changed:%s\n",uptime);
                         t2_event_s("bootuptime_dnsIpChanged_split", uptime);
                         system(buf);
