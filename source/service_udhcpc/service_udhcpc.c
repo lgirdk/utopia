@@ -152,6 +152,7 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
 static int send_dhcp_data_to_wanmanager (ipc_dhcpv4_data_t *dhcpv4_data);
 #endif
 
+static int get_and_pass_acs_info (void);
 static void compare_and_delete_old_dns (udhcpc_script_t *pinfo);
 static int read_cmd_output (char *cmd, char *output_buf, int size_buf);
 static int set_dns_sysevents (udhcpc_script_t *pinfo);
@@ -875,7 +876,13 @@ static int handle_wan (udhcpc_script_t *pinfo)
         OnboardLog("[%s][%d] Invalid argument error!!! \n", __FUNCTION__,__LINE__);
         return -1;
     }
- 
+
+    if (get_and_pass_acs_info() != 0)
+    {
+        OnboardLog("[%s][%d] Failed to get dhcpv4 acs data from env \n", __FUNCTION__,__LINE__);
+        return -1;
+    }
+
     OnboardLog("[%s][%d] Received [%s] event from udhcpc \n", __FUNCTION__,__LINE__,pinfo->input_option);
     int ret = 0;
     ipc_dhcpv4_data_t data;
@@ -1137,6 +1144,145 @@ static int init_udhcpc_script_info (udhcpc_script_t *pinfo, char *option)
     }
     return 0;
 }
+
+static int hex2string (char *out, size_t outlen, const char *hex, size_t hexlen)
+{
+    if ((hexlen & 0x01) || (outlen <= (hexlen / 2)))
+    {
+        return -1;
+    }
+
+    while (hexlen)
+    {
+        unsigned int val = 0;
+
+        sscanf(hex, "%2x", &val);
+
+        /* Fixme: validate that after decoding the resulting char is safe to write to a string... */
+
+        *out++ = (val & 0xFF);
+
+        hex += 2;
+        hexlen -= 2;
+    }
+
+    *out = 0;
+
+    return 0;
+}
+
+static int extract_substring (char *data, size_t size, const char *option, size_t len)
+{
+    if (size < (len + 1))
+    {
+        return -1;
+    }
+
+    memcpy(data, option, len);
+    data[len] = 0;
+
+    return 0;
+}
+
+static int get_and_pass_acs_info (void)
+{
+    char url[256];
+    char provisioning_code[64];
+    char sub_opt[4];
+    char data[8];
+    char *option;
+    unsigned int dec_length;
+    unsigned int option_len;
+    unsigned int len;
+
+    option = getenv("opt43");
+
+    if (option == NULL)
+    {
+        return 0;
+    }
+
+    option_len = strlen(option);
+
+    if (option_len < 4)
+    {
+        return 0;
+    }
+
+    url[0] = 0;
+    provisioning_code[0] = 0;
+    dec_length = 0;
+
+    while (1)
+    {
+        if ((dec_length + 2) > option_len)
+        {
+            break;
+        }
+
+        extract_substring(sub_opt, sizeof(sub_opt), option + dec_length, 2);
+        dec_length += 2;
+
+        if (memcmp(sub_opt, "ff", 2) == 0)
+        {
+            break;
+        }
+
+        if ((dec_length + 2) > option_len)
+        {
+            break;
+        }
+
+        extract_substring(data, sizeof(data), option + dec_length, 2);
+        dec_length += 2;
+
+        len = strtol(data, NULL, 16);
+
+        if ((dec_length + (len * 2)) > option_len)
+        {
+            break;
+        }
+
+        if (memcmp(sub_opt, "01", 2) == 0)
+        {
+            hex2string(url, sizeof(url), option + dec_length, len * 2);
+        }
+        else if (memcmp(sub_opt, "02", 2) == 0)
+        {
+            hex2string(provisioning_code, sizeof(provisioning_code), option + dec_length, len * 2);
+        }
+
+        dec_length += (len * 2);
+    }
+
+    if (url[0] != 0)
+    {
+        FILE *fp;
+
+        fp = fopen("/var/tmp/acs-url-from-dhcp-option.txt","w+");
+        if (fp != NULL)
+        {
+            fprintf(fp,"%s",url);
+            fclose(fp);
+        }
+        else
+        {
+            return -1;
+        }
+
+        if (provisioning_code[0] != 0)
+        {
+            syscfg_set(NULL, "tr_prov_code", provisioning_code);
+        }
+    }
+    else
+    {
+        return -1;
+    }
+
+    return 0;
+}
+
 #ifdef FEATURE_RDKB_WAN_MANAGER
 static uint32_t hex2dec(char *hex)
 {
