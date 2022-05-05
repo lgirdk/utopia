@@ -546,6 +546,8 @@ void prepare_dhcp_options_wan_dns()
         if ((strcmp(g_rl_cWanStatus, "stopped") != 0) && (strcmp(relay_enable, "1") != 0))
         {
             char l_cDnsOverride[8];
+            char dns_override_mode[8];
+            char erouter_mode[8];
             sysevent_get(g_iSyseventfd, g_tSysevent_token, "wan_dhcp_dns", l_cWan_Dhcp_Dns, sizeof(l_cWan_Dhcp_Dns));
             if (0 != l_cWan_Dhcp_Dns[0])
             {
@@ -563,7 +565,9 @@ void prepare_dhcp_options_wan_dns()
             }
 
             syscfg_get(NULL, "dns_override", l_cDnsOverride, sizeof(l_cDnsOverride));
-            if (strcmp(l_cDnsOverride, "true") == 0)
+            syscfg_get(NULL, "dns_override_mode", dns_override_mode, sizeof(dns_override_mode));
+            syscfg_get(NULL, "last_erouter_mode", erouter_mode, sizeof(erouter_mode));
+            if (strcmp(l_cDnsOverride, "true") == 0 && (strlen(dns_override_mode) == 0 || strcmp(dns_override_mode, erouter_mode) == 0))
             {
                 char l_cDnsIpv4Preferred[16], l_cDnsIpv4Alternate[16];
                 char l_cDhcpOptionString[128];
