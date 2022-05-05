@@ -28,11 +28,15 @@ tool=$1
 ips=""
 STATIC_DNS_IPv6=""
 
-queries="dns_relay_enable dns_override dns_static_server_count dns_ipv6_preferred dns_ipv6_alternate"
+queries="dns_relay_enable dns_override dns_static_server_count dns_ipv6_preferred dns_ipv6_alternate dns_override_mode last_erouter_mode"
 get_utctx_val "$queries"
 dns_proxy=$SYSCFG_dns_relay_enable
 dhcp_dns_ips=`sysevent get ipv6_nameserver`
 DNS_OVERRIDE=$SYSCFG_dns_override
+
+if [ -n "$SYSCFG_dns_override_mode" ] && [ "$SYSCFG_dns_override_mode" != "$SYSCFG_last_erouter_mode" ]; then
+    DNS_OVERRIDE="false"
+fi
 
 get_static_dns_ips () {
     ind=1
