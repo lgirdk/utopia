@@ -151,6 +151,10 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
 static int send_dhcp_data_to_wanmanager (ipc_dhcpv4_data_t *dhcpv4_data);
 #endif
 
+#define DHCP_OPT_43 "opt43"
+#define DHCP_OPT_125 "opt125"
+#define VENDOR_OPTIONS_LENGTH 512
+static int get_and_pass_acs_info ();
 void compare_and_delete_old_dns(udhcpc_script_t *pinfo);
 int read_cmd_output(char *cmd, char *output_buf, int size_buf);
 int set_dns_sysevents(udhcpc_script_t *pinfo);
@@ -888,7 +892,12 @@ int handle_wan(udhcpc_script_t *pinfo)
         OnboardLog("[%s][%d] Invalid argument error!!! \n", __FUNCTION__,__LINE__);
         return -1;
     }
- 
+
+    if ( 0 != get_and_pass_acs_info())
+    {
+        OnboardLog("[%s][%d] Failed to get dhcpv4 acs data from env \n", __FUNCTION__,__LINE__);
+    }
+
     OnboardLog("[%s][%d] Received [%s] event from udhcpc \n", __FUNCTION__,__LINE__,pinfo->input_option);
     int ret = 0;
     ipc_dhcpv4_data_t data;
@@ -1156,6 +1165,99 @@ int init_udhcpc_script_info(udhcpc_script_t *pinfo, char *option)
     }
     return 0;
 }
+
+
+int hex2string (char* hex , char* str) {
+    unsigned int len = strlen(hex);
+
+    if ( len > 0)
+    {
+        int i = 0;
+        int j = 0;
+        for (int j = 0; j < len;j += 2) {
+            int val[1];
+            sscanf(hex + j, "%2x", val);
+            str[i] = val[0];
+            i = i + 1;
+        }
+        str[i] = '\0';
+    }
+    return 0;
+}
+
+static int copy_data_from_option(char* data, char* option, size_t len, size_t size)
+{
+    if ( (len) > size )
+        return -1;
+    memcpy(data,option,len);
+    if( (size - len) > 0)
+        memset(data+len,0, (size - (len + 1)));
+    return 0;
+}
+
+static int get_and_pass_acs_info ()
+{
+    char option[VENDOR_OPTIONS_LENGTH];
+    char data[VENDOR_OPTIONS_LENGTH];
+    char url[256];
+    char provisioning_code[64];
+    unsigned int len = 0;
+    char sub_opt[2];
+    unsigned int dec_length = 0;
+    FILE *fp = NULL;
+
+    url[0] = '0';
+    provisioning_code[0] = '0';
+
+    if( getenv(DHCP_OPT_43) != NULL )
+    {
+        strncpy(option, getenv(DHCP_OPT_43), VENDOR_OPTIONS_LENGTH);
+        while ( dec_length < VENDOR_OPTIONS_LENGTH && memcmp(option + dec_length, "ff",2) )
+        {
+            copy_data_from_option(sub_opt,option + dec_length, 2, 2);
+            dec_length = dec_length + 2;
+            copy_data_from_option(data,option + dec_length, 2, VENDOR_OPTIONS_LENGTH);
+            dec_length = dec_length + 2;
+            len = strtol(data,NULL,16);
+            if ( !memcmp(sub_opt, "01" ,2 ))
+            {
+                if ( !copy_data_from_option(data, option + dec_length, len * 2 , VENDOR_OPTIONS_LENGTH) )
+                {
+                    hex2string(data,url);
+                }
+                else
+                {
+                    return -1;
+                }
+            }
+            else if ( !memcmp(sub_opt, "02" ,2 ) )
+            {
+                if ( !copy_data_from_option(data, option + dec_length, len * 2 , VENDOR_OPTIONS_LENGTH) )
+                {
+                    hex2string(data,provisioning_code);
+                }
+            }
+            dec_length = dec_length + (len * 2);
+         }
+         if ( url[0] != '0' )
+         {
+            fp = fopen("/var/tmp/acs-url-from-dhcp-option.txt","w+");
+            if ( fp != NULL )
+            {
+                fprintf(fp,"%s",url);
+                fclose(fp);
+            }
+            else
+            {
+                return -1;
+            }
+            if ( provisioning_code [0] != '0' )
+                syscfg_set(NULL, "tr_prov_code", provisioning_code);
+         }
+    }
+    return 0;
+}
+
 #ifdef FEATURE_RDKB_WAN_MANAGER
 static uint32_t hex2dec(char *hex)
 {
