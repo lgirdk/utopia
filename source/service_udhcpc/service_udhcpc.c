@@ -151,10 +151,7 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
 static int send_dhcp_data_to_wanmanager (ipc_dhcpv4_data_t *dhcpv4_data);
 #endif
 
-#define DHCP_OPT_43 "opt43"
-#define DHCP_OPT_125 "opt125"
-#define VENDOR_OPTIONS_LENGTH 512
-static int get_and_pass_acs_info ();
+static int get_and_pass_acs_info (void);
 void compare_and_delete_old_dns(udhcpc_script_t *pinfo);
 int read_cmd_output(char *cmd, char *output_buf, int size_buf);
 int set_dns_sysevents(udhcpc_script_t *pinfo);
@@ -893,7 +890,7 @@ int handle_wan(udhcpc_script_t *pinfo)
         return -1;
     }
 
-    if ( 0 != get_and_pass_acs_info())
+    if (get_and_pass_acs_info() != 0)
     {
         OnboardLog("[%s][%d] Failed to get dhcpv4 acs data from env \n", __FUNCTION__,__LINE__);
     }
@@ -1166,95 +1163,137 @@ int init_udhcpc_script_info(udhcpc_script_t *pinfo, char *option)
     return 0;
 }
 
-
-int hex2string (char* hex , char* str) {
-    unsigned int len = strlen(hex);
-
-    if ( len > 0)
+static int hex2string (char *out, size_t outlen, const char *hex, size_t hexlen)
+{
+    if ((hexlen & 0x01) || (outlen <= (hexlen / 2)))
     {
-        int i = 0;
-        int j = 0;
-        for (int j = 0; j < len;j += 2) {
-            int val[1];
-            sscanf(hex + j, "%2x", val);
-            str[i] = val[0];
-            i = i + 1;
-        }
-        str[i] = '\0';
-    }
-    return 0;
-}
-
-static int copy_data_from_option(char* data, char* option, size_t len, size_t size)
-{
-    if ( (len) > size )
         return -1;
-    memcpy(data,option,len);
-    if( (size - len) > 0)
-        memset(data+len,0, (size - (len + 1)));
+    }
+
+    while (hexlen)
+    {
+        unsigned int val = 0;
+
+        sscanf(hex, "%2x", &val);
+
+        /* Fixme: validate that after decoding the resulting char is safe to write to a string... */
+
+        *out++ = (val & 0xFF);
+
+        hex += 2;
+        hexlen -= 2;
+    }
+
+    *out = 0;
+
     return 0;
 }
 
-static int get_and_pass_acs_info ()
+static int extract_substring (char *data, size_t size, const char *option, size_t len)
 {
-    char option[VENDOR_OPTIONS_LENGTH];
-    char data[VENDOR_OPTIONS_LENGTH];
+    if (size < (len + 1))
+    {
+        return -1;
+    }
+
+    memcpy(data, option, len);
+    data[len] = 0;
+
+    return 0;
+}
+
+static int get_and_pass_acs_info (void)
+{
     char url[256];
     char provisioning_code[64];
-    unsigned int len = 0;
-    char sub_opt[2];
-    unsigned int dec_length = 0;
-    FILE *fp = NULL;
+    char sub_opt[4];
+    char data[8];
+    char *option;
+    unsigned int dec_length;
+    unsigned int option_len;
+    unsigned int len;
 
-    url[0] = '0';
-    provisioning_code[0] = '0';
+    option = getenv("opt43");
 
-    if( getenv(DHCP_OPT_43) != NULL )
+    if (option == NULL)
     {
-        strncpy(option, getenv(DHCP_OPT_43), VENDOR_OPTIONS_LENGTH);
-        while ( dec_length < VENDOR_OPTIONS_LENGTH && memcmp(option + dec_length, "ff",2) )
-        {
-            copy_data_from_option(sub_opt,option + dec_length, 2, 2);
-            dec_length = dec_length + 2;
-            copy_data_from_option(data,option + dec_length, 2, VENDOR_OPTIONS_LENGTH);
-            dec_length = dec_length + 2;
-            len = strtol(data,NULL,16);
-            if ( !memcmp(sub_opt, "01" ,2 ))
-            {
-                if ( !copy_data_from_option(data, option + dec_length, len * 2 , VENDOR_OPTIONS_LENGTH) )
-                {
-                    hex2string(data,url);
-                }
-                else
-                {
-                    return -1;
-                }
-            }
-            else if ( !memcmp(sub_opt, "02" ,2 ) )
-            {
-                if ( !copy_data_from_option(data, option + dec_length, len * 2 , VENDOR_OPTIONS_LENGTH) )
-                {
-                    hex2string(data,provisioning_code);
-                }
-            }
-            dec_length = dec_length + (len * 2);
-         }
-         if ( url[0] != '0' )
-         {
-            fp = fopen("/var/tmp/acs-url-from-dhcp-option.txt","w+");
-            if ( fp != NULL )
-            {
-                fprintf(fp,"%s",url);
-                fclose(fp);
-            }
-            else
-            {
-                return -1;
-            }
-            if ( provisioning_code [0] != '0' )
-                syscfg_set(NULL, "tr_prov_code", provisioning_code);
-         }
+        return 0;
     }
+
+    option_len = strlen(option);
+
+    if (option_len < 4)
+    {
+        return 0;
+    }
+
+    url[0] = 0;
+    provisioning_code[0] = 0;
+    dec_length = 0;
+
+    while (1)
+    {
+        if ((dec_length + 2) > option_len)
+        {
+            break;
+        }
+
+        extract_substring(sub_opt, sizeof(sub_opt), option + dec_length, 2);
+        dec_length += 2;
+
+        if (memcmp(sub_opt, "ff", 2) == 0)
+        {
+            break;
+        }
+
+        if ((dec_length + 2) > option_len)
+        {
+            break;
+        }
+
+        extract_substring(data, sizeof(data), option + dec_length, 2);
+        dec_length += 2;
+
+        len = strtol(data, NULL, 16);
+
+        if ((dec_length + (len * 2)) > option_len)
+        {
+            break;
+        }
+
+        if (memcmp(sub_opt, "01", 2) == 0)
+        {
+            hex2string(url, sizeof(url), option + dec_length, len * 2);
+        }
+        else if (memcmp(sub_opt, "02", 2) == 0)
+        {
+            hex2string(provisioning_code, sizeof(provisioning_code), option + dec_length, len * 2);
+        }
+
+        dec_length += (len * 2);
+    }
+
+    if (url[0] != 0)
+    {
+        FILE *fp;
+
+        fp = fopen("/var/tmp/acs-url-from-dhcp-option.txt","w+");
+        if (fp != NULL)
+        {
+            fprintf(fp,"%s",url);
+            fclose(fp);
+        }
+        else
+        {
+            return -1;
+        }
+
+        if (provisioning_code[0] != 0)
+        {
+            syscfg_set(NULL, "tr_prov_code", provisioning_code);
+        }
+    }
+
     return 0;
 }
 
