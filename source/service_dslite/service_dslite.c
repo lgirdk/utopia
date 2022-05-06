@@ -347,7 +347,6 @@ static int dslite_start (struct serv_dslite *sd)
     char rule[256];
     char rule2[256];
     char return_buffer[256];
-    FILE *fpresolv = NULL;
     char dslite_mode[16], dslite_addr_type[16];
     size_t len;
     
@@ -424,7 +423,6 @@ static int dslite_start (struct serv_dslite *sd)
 
     buf[0] = 'x';
     sysevent_get (sd->sefd, sd->setok, "ipv6_nameserver", buf, sizeof(buf));
-    // fpresolv = fopen ("/etc/resolv.conf", "r");
     if (buf[0] == 'x')
     {
         sysevent_set (sd->sefd, sd->setok, "dslite_service-status", "error", 0);
