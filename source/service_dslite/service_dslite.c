@@ -123,7 +123,6 @@ static void route_deconfig (struct serv_dslite *sd)
 {
     char val[64];
 
-    val[0] = 0;
     sysevent_get (sd->sefd, sd->setok, "current_wan_ipaddr", val, sizeof(val));
 
     vsystem ("ip rule del from %s lookup all_lans" "; "
@@ -372,7 +371,6 @@ static int dslite_start (struct serv_dslite *sd)
         fprintf(fp_dslt_dbg, "%s: DSLite is enabled *********\n", __FUNCTION__);
     }
 
-    val[0] = 0;
     sysevent_get(sd->sefd, sd->setok, "dslite_service-status", val, sizeof(val));
     if (strcmp (val, "started") == 0)
     {
@@ -382,7 +380,6 @@ static int dslite_start (struct serv_dslite *sd)
     }
 
     /* get the WAN side IPv6 global address */
-    gw_ipv6[0] = 0;
     sysevent_get (sd->sefd, sd->setok, "wan6_ipaddr", gw_ipv6, sizeof(gw_ipv6));
     fprintf (fp_dslt_dbg, "%s: The GW IPv6 address is %s\n", __FUNCTION__, gw_ipv6);
 
@@ -422,10 +419,9 @@ static int dslite_start (struct serv_dslite *sd)
     }
     fprintf (fp_dslt_dbg, "%s: AFTR address is %s\n", __FUNCTION__, DSLITE_AFTR);
 
-    buf[0] = 'x';
     sysevent_get (sd->sefd, sd->setok, "ipv6_nameserver", buf, sizeof(buf));
     // fpresolv = fopen ("/etc/resolv.conf", "r");
-    if (buf[0] == 'x')
+    if (buf[0] == 0)
     {
         sysevent_set (sd->sefd, sd->setok, "dslite_service-status", "error", 0);
         fprintf (fp_dslt_dbg, "%s: ipv6_nameserver is empty !\n", __FUNCTION__);
@@ -480,7 +476,6 @@ static int dslite_start (struct serv_dslite *sd)
             dns_retry_count++;
 
             /* Stop the dslite service if dslite is disabled at time of AFTR FQDN retry. */
-            val[0] = 0;
             syscfg_get (NULL, "dslite_enable", val, sizeof(val));
             if (strcmp (val, "0") == 0)
             {
@@ -648,7 +643,6 @@ static int dslite_stop (struct serv_dslite *sd)
     DSLite stop operations are executed or not*/
     dslite_clear_status (sd);
 
-    val[0] = 0;
     sysevent_get (sd->sefd, sd->setok, "dslite_service-status", val, sizeof(val));
     if (strcmp (val, "stopped") == 0)
     {
@@ -710,20 +704,16 @@ static int dslite_stop (struct serv_dslite *sd)
     }
 
     // Delete the firewall rules for DSLite tunnel interface
-    return_buffer[0] = 0;
     sysevent_get (sd->sefd, sd->setok, "dslite_rule_sysevent_id_1", return_buffer, sizeof(return_buffer));
     sysevent_set (sd->sefd, sd->setok, return_buffer, "", 0);
 
-    return_buffer[0] = 0;
     sysevent_get (sd->sefd, sd->setok, "dslite_rule_sysevent_id_2", return_buffer, sizeof(return_buffer));
     sysevent_set (sd->sefd, sd->setok, return_buffer, "", 0);
 
     /* Whether or not the TCPMSS Clamping is enabled, the firewall rules need to be deleted */
-    return_buffer[0] = 0;
     sysevent_get (sd->sefd, sd->setok, "dslite_rule_sysevent_id_3", return_buffer, sizeof(return_buffer));
     sysevent_set (sd->sefd, sd->setok, return_buffer, "", 0);
 
-    return_buffer[0] = 0;
     sysevent_get (sd->sefd, sd->setok, "dslite_rule_sysevent_id_4", return_buffer, sizeof(return_buffer));
     sysevent_set (sd->sefd, sd->setok, return_buffer, "", 0);
 
