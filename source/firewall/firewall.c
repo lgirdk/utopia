@@ -14323,6 +14323,19 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    }
 #endif
 
+#ifdef _PUMA6_ARM_
+   char cm_addr[64];
+   if (getCMAddress(AF_INET, cm_addr, sizeof(cm_addr)) == 0)
+   {
+      char cmd[256];
+      snprintf(cmd, sizeof(cmd), "ebtables -D FORWARD -p IPV4 --ip-dst %s -j DROP ; "
+                                 "ebtables -A FORWARD -p IPV4 --ip-dst %s -j DROP",
+                                 cm_addr,
+                                 cm_addr);
+      system(cmd);
+   }
+#endif
+
 #if defined(_COSA_INTEL_XB3_ARM_) || defined(_PUMA6_ARM_)
    if (!isBridgeMode)
        fprintf(filter_fp, "-A OUTPUT ! -s %s -p icmp -m icmp --icmp-type 3 -j DROP\n", lan_ipaddr);
@@ -15366,6 +15379,19 @@ static void do_ipv6_filter_table(FILE *fp){
        {
            lan_telnet_ssh(fp, AF_INET6);
        }
+
+#ifdef _PUMA6_ARM_
+       char cm_addr[64];
+       if (getCMAddress(AF_INET6, cm_addr, sizeof(cm_addr)) == 0)
+       {
+          char cmd[256];
+          snprintf(cmd, sizeof(cmd), "ebtables -D FORWARD -p IPV6 --ip6-dst %s -j DROP ; "
+                                     "ebtables -A FORWARD -p IPV6 --ip6-dst %s -j DROP",
+                                     cm_addr,
+                                     cm_addr);
+          system(cmd);
+       }
+#endif
 
        goto end_of_ipv6_firewall;
    }
