@@ -705,7 +705,6 @@ static char           sysevent_ip[19];
 static char default_wan_ifname[50]; // name of the regular wan interface
 char current_wan_ifname[50]; // name of the ppp interface or the regular wan interface if no ppp
 static char ecm_wan_ifname[20];
-static char ecm_wan_ipaddr[20];
 static char emta_wan_ifname[20];
 static char eth_wan_enabled[20];
 static BOOL bEthWANEnable = FALSE;
@@ -2455,28 +2454,39 @@ static int prepare_multinet_prerouting_raw (FILE *raw_fp)
 }
 #endif
 
-static void get_ecm_wan_ipaddr (void)
+#ifdef _PUMA6_ARM_
+static int getCMAddress (int family, char *addr, size_t len)
 {
     FILE *fp;
-    char *p = NULL;
 
-    fp = v_secure_popen("r", "ip -4 addr show dev wan0 scope global | awk '/inet/{print $2}' | cut -d '/' -f1");
+    addr[0] = 0;
 
-    if (fp == NULL) {
-        fprintf(stderr, "<%s>:<%d> Error popen\n", __FUNCTION__, __LINE__);
-        return;
+    if (family == AF_INET)
+    {
+        fp = v_secure_popen("r", "ip -4 addr show dev wan0 scope global | awk '/inet/{print $2}' | cut -d '/' -f1");
+    }
+    else
+    {
+        fp = v_secure_popen("r", "ip -6 addr show dev wan0 scope global | awk '/inet/{print $2}' | cut -d '/' -f1");
     }
 
-    if (fgets(ecm_wan_ipaddr, sizeof(ecm_wan_ipaddr), fp) != NULL) {
-        if (ecm_wan_ipaddr[0] != 0) {
-            if ((p = strchr(ecm_wan_ipaddr, '\n'))) {
-                *p = '\0';
+    if (fp)
+    {
+        if (fgets(addr, len, fp) != NULL)
+        {
+            len = strlen (addr);
+            if ((len > 0) && (addr[len - 1] == '\n'))
+            {
+                addr[len - 1] = 0;
             }
         }
+
+        v_secure_pclose(fp);
     }
 
-    v_secure_pclose(fp);
+    return (addr[0] == 0) ? -1 : 0;
 }
+#endif
 
 /*
  *  Procedure     : prepare_globals_from_configuration
@@ -2521,8 +2531,6 @@ static int prepare_globals_from_configuration(void)
 
    sysevent_get(sysevent_fd, sysevent_token, "current_lan_ipaddr", lan_ipaddr, sizeof(lan_ipaddr));
    
-   get_ecm_wan_ipaddr();
-
 #if defined(CONFIG_CISCO_FEATURE_CISCOCONNECT) || defined(CONFIG_CISCO_PARCON_WALLED_GARDEN) 
    FILE *gwIpFp = fopen("/var/.gwip", "w");
    fprintf(gwIpFp, "%s", lan_ipaddr);
@@ -5744,9 +5752,13 @@ static int do_lan2self_attack(FILE *fp)
 
    fprintf(fp, "-A lanattack -d 127.0.0.1 -j xlog_drop_lanattack\n");
 
-    if (ecm_wan_ipaddr[0]) {
-        fprintf(fp, "-A lanattack -d %s -p icmp --icmp-type 8 -j xlog_drop_lan2self\n", ecm_wan_ipaddr);
-    } 
+#ifdef _PUMA6_ARM_
+   char cm_addr[64];
+   if (getCMAddress(AF_INET, cm_addr, sizeof(cm_addr)) == 0)
+   {
+      fprintf(fp, "-A lanattack -d %s -p icmp --icmp-type 8 -j xlog_drop_lan2self\n", cm_addr);
+   }
+#endif
 
            FIREWALL_DEBUG("Exiting do_lan2self_attack\n");       
    return(0);
