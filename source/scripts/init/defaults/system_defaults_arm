@@ -1248,6 +1248,7 @@ $Mem_Frag_Threshold=0
 #Xconf Entries
 $XconfSelector=prod
 $XconfUrl=
+$XconfRecoveryUrl=https://recovery.xconfds.coast.xcal.tv/xconf/swu/stb
 
 #Defaults for Telemetry T2 Enable
 $T2Enable=true
