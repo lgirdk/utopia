@@ -720,6 +720,9 @@ fi
 
 syscfg commit
 
+#Printing the last reboot reason on device console
+echo " Last Reboot Reason is $rebootReason" >> /dev/console
+
 #ifdef CISCO_XB3_PLATFORM_CHANGES
 ## Remove after setting last reboot reason
 if [ -f "/nvram/RDKB3939-500_RebootNotByPwrOff" ]; then
