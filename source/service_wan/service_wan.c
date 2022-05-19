@@ -346,6 +346,9 @@ static int writeTOHexFromAscii(char *options, const int length, int opt_len, cha
     return opt_len;
 }
 
+/*
+   Warning: This function should be kept aligned with prepare_dhcp43_optvalue() in ccsp-misc/source/dhcp_client_utils/dhcpv4_client_utils.c
+*/
 static int dhcp_parse_vendor_info( char *options, const int length, char *ethWanMode )
 {
     FILE *fp;
@@ -361,16 +364,14 @@ static int dhcp_parse_vendor_info( char *options, const int length, char *ethWan
 
     if ((fp = fopen(VENDOR_SPEC_FILE, "ra")) != NULL) {
         while ((num_read = fscanf(fp, "%7s %11s %63s", mode, subopt_num, subopt_value)) == 3) {
-            char *ptr;
-     
             if (length - opt_len < 6) {
                 fprintf( fp_wan_dbg, "%s: Too many options\n", __FUNCTION__ );
-		fclose(fp);   //CID 61631 : Resource leak
+                fclose(fp);   //CID 61631 : Resource leak
                 return -1;
             }
-           
+
 #if defined (EROUTER_DHCP_OPTION_MTA) 
-	    if ( ( strcmp(mode,"DOCSIS") == 0 ) && ( strcmp (ethWanMode,"true") == 0) )
+            if ( ( strcmp(mode,"DOCSIS") == 0 ) && ( strcmp (ethWanMode,"true") == 0) )
             {
                 continue;
             }
@@ -380,12 +381,12 @@ static int dhcp_parse_vendor_info( char *options, const int length, char *ethWan
                 continue;
             }
 #else
-            if ( ( strcmp(mode,"ETHWAN") == 0 )) 
-          {
+            if ((strcmp(mode,"ETHWAN") == 0))
+            {
                 continue;
-          }
+            }
 #endif
- 
+
             //Print the option number
             if (strcmp(subopt_num, "SUBOPTION2") == 0) {
                 if (!verifyBufferSpace(length, opt_len, 2)) {
@@ -402,11 +403,11 @@ static int dhcp_parse_vendor_info( char *options, const int length, char *ethWan
                 opt_len += sprintf(options + opt_len, "03");
             }
             else {
-                fprintf( fp_wan_dbg, "%s: Invalid suboption\n", __FUNCTION__ );
+                fprintf(fp_wan_dbg, "%s: Invalid suboption\n", __FUNCTION__ );
                 fclose(fp);
                 return -1;
             }
-            
+
             //Print the length of the sub-option value
             if (!verifyBufferSpace(length, opt_len, 2)) {
                 fclose(fp);
@@ -421,10 +422,11 @@ static int dhcp_parse_vendor_info( char *options, const int length, char *ethWan
                 return -1;
             }
         } //while
-        
+
+        fclose(fp);
+
         if ((num_read != EOF) && (num_read != 3)) {
             fprintf(fp_wan_dbg, "%s: Error parsing file\n", __FUNCTION__);
-            fclose(fp);
             return -1;
         }
     }
@@ -432,7 +434,6 @@ static int dhcp_parse_vendor_info( char *options, const int length, char *ethWan
         fprintf(fp_wan_dbg, "%s: Cannot read %s\n", __FUNCTION__, VENDOR_SPEC_FILE);
         return -1;
     }
-    fclose(fp);
 
     /*
        Sub-option code 4 - serial number
@@ -519,15 +520,18 @@ static int dhcp_parse_vendor_info( char *options, const int length, char *ethWan
     /*
        Sub-option code 9 - Model Number
     */
-    subopt = 9;
-    len = strlen (CONFIG_MODEL_ID);
-    if (len > 0)
+    if (platform_hal_GetModelName(buf) == RETURN_OK)
     {
-        if ((len > 0xFF) || !verifyBufferSpace(length, opt_len, 2 + 2 + (2 * len))) {
-            return -1;
+        subopt = 9;
+        len = strlen (buf);
+        if (len > 0)
+        {
+            if ((len > 0xFF) || !verifyBufferSpace(length, opt_len, 2 + 2 + (2 * len))) {
+              return -1;
         }
-        opt_len += sprintf(options + opt_len, "%02x%02x", subopt, len);
-        opt_len = writeTOHexFromAscii(options, length, opt_len, CONFIG_MODEL_ID);
+            opt_len += sprintf(options + opt_len, "%02x%02x", subopt, len);
+            opt_len = writeTOHexFromAscii(options, length, opt_len, buf);
+        }
     }
 
     /*
