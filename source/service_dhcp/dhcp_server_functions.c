@@ -211,84 +211,55 @@ static void getErotuerMacAddress (char *mac)
 
 int prepare_hostname()
 {
-    char l_cHostName[16] = {0}, l_cCurLanIP[16] = {0}, l_clocFqdn[16] = {0}, l_cSecWebUI_Enabled[8] = {0};
-	FILE *l_fHosts_File = NULL;
-	FILE *l_fHosts_Name_File = NULL;
-	int l_iRes = 0;
-    
-    syscfg_get(NULL, "hostname", l_cHostName, sizeof(l_cHostName));
-	sysevent_get(g_iSyseventfd, g_tSysevent_token, "current_lan_ipaddr", l_cCurLanIP, sizeof(l_cCurLanIP));
-        syscfg_get(NULL, "SecureWebUI_LocalFqdn", l_clocFqdn, sizeof(l_clocFqdn));
-        syscfg_get(NULL, "SecureWebUI_Enable", l_cSecWebUI_Enabled, sizeof(l_cSecWebUI_Enabled));
+    char l_cCurLanIP[16];
+    char l_cSecWebUI_Enabled[8];
+    FILE *l_fHosts_File = NULL;
 
     // Open in Write mode each time for avoiding duplicate entries RDKB- 12295
-	l_fHosts_File = fopen(HOSTS_FILE, "w+");
-    l_fHosts_Name_File = fopen(HOSTNAME_FILE, "w+");
 
-    if (0 != l_cHostName[0]) 
+    if ((l_fHosts_File = fopen(HOSTS_FILE, "w+")) == NULL)
     {
-		l_iRes = sethostname(l_cHostName, sizeof(l_cHostName));
-		if (ERROR == l_iRes)
-		{
-			fprintf(stderr, "Un-Successful in setting hostname error is:%d\n", errno);
-		}
-		if (NULL == l_fHosts_Name_File)
-	    {
-    		fprintf(stderr, "Hosts Name file: %s creation failed \n", HOSTNAME_FILE);					
-    	}
-		else
-		{
-			fprintf(l_fHosts_Name_File, "%s\n", l_cHostName);
-			fclose(l_fHosts_Name_File);
-			l_fHosts_Name_File = NULL;
-			if (NULL != l_fHosts_File)
-			{
-                                if (strncmp(l_cSecWebUI_Enabled, "true", 4))
-                                {
-				    fprintf(l_fHosts_File, "%s		%s\n", l_cCurLanIP, l_cHostName);
-                                } 
-			}
-			else
-            {
-				fprintf(stderr, "Hosts file: %s creation failed \n", HOSTS_FILE);
-				return 0;
-			}
-		}	
+        fprintf(stderr, "Hosts file: %s creation failed \n", HOSTS_FILE);
+        return 0;
+    }
+
+    fprintf(l_fHosts_File, "127.0.0.1 localhost\n"
+                           "::1       localhost\n");
+
+    sysevent_get(g_iSyseventfd, g_tSysevent_token, "current_lan_ipaddr", l_cCurLanIP, sizeof(l_cCurLanIP));
+    syscfg_get(NULL, "SecureWebUI_Enable", l_cSecWebUI_Enabled, sizeof(l_cSecWebUI_Enabled));
+
+    if (strcmp(l_cSecWebUI_Enabled, "true") == 0)
+    {
+        char l_clocFqdn[16];
+
+        syscfg_get(NULL, "SecureWebUI_LocalFqdn", l_clocFqdn, sizeof(l_clocFqdn));
+
+        if (l_clocFqdn[0] != 0)
+        {
+            fprintf(l_fHosts_File, "%s %s\n", l_cCurLanIP, l_clocFqdn);
+        }
     }
     else
-	{
-		fprintf(stderr, "Hostname is empty not writing to %s file\n", HOSTNAME_FILE);
-	}	
-	
-   	if (NULL != l_fHosts_File) 
-	{
-   		fprintf(l_fHosts_File, "127.0.0.1       localhost\n");
-		fprintf(l_fHosts_File, "::1             localhost\n");
-                if (NULL != l_clocFqdn)
-                {
-                        if (!strncmp(l_cSecWebUI_Enabled, "true", 4))
-                        {
-                            fprintf(l_fHosts_File, "%s              %s\n", l_cCurLanIP, l_clocFqdn);
-                        }
-                }
+    {
+        char l_cHostName[65];
 
-		//The following lines are desirable for IPv6 capable hosts
-   		fprintf(l_fHosts_File, "::1             ip6-localhost ip6-loopback\n");
-   		fprintf(l_fHosts_File, "fe00::0         ip6-localnet\n");
-   		fprintf(l_fHosts_File, "ff00::0         ip6-mcastprefix\n");
-   		fprintf(l_fHosts_File, "ff02::1         ip6-allnodes\n");
-   		fprintf(l_fHosts_File, "ff02::2         ip6-allrouters\n");
-   		fprintf(l_fHosts_File, "ff02::3         ip6-allhosts\n");
-		fclose(l_fHosts_File);
-	}
-	else
-	{
-		fprintf(stderr, "Hosts file: %s creation failed \n", HOSTS_FILE);
-	}
-	if (NULL != l_fHosts_Name_File) { /*RDKB-12965 & CID:-34535*/
-		fclose(l_fHosts_Name_File);
-	}
-	return 0;
+        if (gethostname(l_cHostName, sizeof(l_cHostName)) == 0)
+        {
+            fprintf(l_fHosts_File, "%s %s\n", l_cCurLanIP, l_cHostName);
+        }
+    }
+
+    fprintf(l_fHosts_File, "::1     ip6-localhost ip6-loopback\n"
+                           "fe00::0 ip6-localnet\n"
+                           "ff00::0 ip6-mcastprefix\n"
+                           "ff02::1 ip6-allnodes\n"
+                           "ff02::2 ip6-allrouters\n"
+                           "ff02::3 ip6-allhosts\n");
+
+    fclose(l_fHosts_File);
+
+    return 0;
 }
 
 void calculate_dhcp_range (FILE *local_dhcpconf_file, char *prefix)
