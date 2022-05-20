@@ -94,12 +94,7 @@ LAN_IFNAME=`syscfg get lan_ifname`
 #--------------------------------------------------------------
 service_init ()
 {
-   FOO=`utctx_cmd get hostname`
-   eval "$FOO"
-
-  if [ -z "$SYSCFG_hostname" ] ; then
-     SYSCFG_hostname="Utopia"
-  fi
+  SYSCFG_hostname="$(hostname)"
   UDHCPC_OPTIONS=`syscfg get udhcpc_options_lan`
   ulog dhcp_link status "initing dhcp UDHCPC_OPTIONS: $UDHCPC_OPTIONS"  
 }
