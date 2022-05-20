@@ -101,11 +101,7 @@ fi
 #--------------------------------------------------------------
 service_init ()
 {
-   SYSCFG_hostname=`syscfg get hostname`
-  
-   if [ -z "$SYSCFG_hostname" ] ; then
-     SYSCFG_hostname="Utopia"
-   fi 
+  SYSCFG_hostname="$(hostname)"
   UDHCPC_OPTIONS=`syscfg get udhcpc_options_wan`
   ulog dhcp_link status "initing dhcp UDHCPC_OPTIONS: ${UDHCPC_OPTIONS}"
 }
