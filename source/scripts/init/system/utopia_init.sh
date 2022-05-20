@@ -604,6 +604,15 @@ else
       echo_t "[utopia][init] Setting last reboot reason as unknown"
       syscfg set X_RDKCENTRAL-COM_LastRebootReason "unknown"
    fi
+
+   # Check and set last reboot reason for Power-On Reset ( Broadcom specific )
+   if [ -f /proc/device-tree/bolt/reset-list ]; then
+      if [ "$(cat /proc/device-tree/bolt/reset-list)" = "power_on" ]; then
+         syscfg set X_RDKCENTRAL-COM_LastRebootReason "HW or Power-On Reset"
+         syscfg set X_RDKCENTRAL-COM_LastRebootCounter "1"
+      fi
+   fi
+
       if [ "`cat /proc/P-UNIT/status|grep "Last reset origin"|awk '{ print $9 }'`" == "RESET_ORIGIN_HW" ]; then
          syscfg set X_RDKCENTRAL-COM_LastRebootReason "HW or Power-On Reset"
          syscfg set X_RDKCENTRAL-COM_LastRebootCounter "1"
