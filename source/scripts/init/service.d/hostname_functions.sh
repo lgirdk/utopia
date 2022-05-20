@@ -42,30 +42,14 @@ source /etc/device.properties
 # set the hostname files
 #-----------------------------------------------------------------
 prepare_hostname () {
-   HOSTNAME=`syscfg get hostname`
+   HOSTNAME="$(hostname)"
    LAN_IPADDR=`sysevent get current_lan_ipaddr`
    SYSEVT_lan_ipaddr_v6=`sysevent get lan_ipaddr_v6`
    LOCDOMAIN_NAME=`syscfg get SecureWebUI_LocalFqdn`
    SECUREWEBUI_ENABLED=`syscfg get SecureWebUI_Enable`
 
-   if [ -n "$HOSTNAME" ] ; then
-      if [ "$MODEL_NUM" == "PX5001B" ] && [ "$SECUREWEBUI_ENABLED" == "true" ]; then
-          if [[ $HOSTNAME != *-bci* ]] ; then
-              HOSTNAME=$HOSTNAME"-bci"
-              syscfg set hostname "$HOSTNAME"
-              syscfg commit
-          fi
-      fi
-      echo "$HOSTNAME" > $HOSTNAME_FILE
-      hostname "$HOSTNAME"
-   fi
-       
-   if [ -n "$HOSTNAME" ] ; then
-      echo "$LAN_IPADDR     $HOSTNAME" > $HOSTS_FILE
-   else
-      echo -n > $HOSTS_FILE
-   fi
-       
+   echo "$LAN_IPADDR     $HOSTNAME" > $HOSTS_FILE
+
    echo "127.0.0.1       localhost" >> $HOSTS_FILE
    echo "::1             localhost" >> $HOSTS_FILE
    if [ "$SECUREWEBUI_ENABLED" = "true" ]; then
