@@ -1159,6 +1159,7 @@ static int wan_start(struct serv_wan *sw)
     if(strcmp(status,"started") != 0)
         sysevent_set(sw->sefd, sw->setok, "wan-status", "started", 0);
 
+    t2_event_s("RF_INFO_Wan_stat_starting_split","started");
     fprintf(fp_wan_dbg, "[%s] start firewall fully\n", PROG_NAME);
 
 /*XB6 brlan0 comes up earlier so ned to find the way to restart the firewall
