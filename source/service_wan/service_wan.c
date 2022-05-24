@@ -1211,10 +1211,10 @@ static int wan_start(struct serv_wan *sw)
 	    sysevent_close(sysevent_led_fd, sysevent_led_token);
 #endif
 
-        fprintf(stderr, "[%s] start firewall fully\n", PROG_NAME);
         /*XB6 brlan0 comes up earlier so ned to find the way to restart the firewall
         IPv6 not yet supported so we can't restart in service routed  because of missing zebra.conf*/
 
+        t2_event_s("RF_INFO_Wan_stat_starting_split","started");
 	fprintf(stderr, "[%s] start firewall fully\n", PROG_NAME);
         printf("%s Triggering RDKB_FIREWALL_RESTART\n",__FUNCTION__);
         t2_event_d("SYS_SH_RDKB_FIREWALL_RESTART", 1);
