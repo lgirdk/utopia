@@ -1301,6 +1301,9 @@ static int wan_stop(struct serv_wan *sw)
        if (sw->prot == WAN_PROT_DHCP) {
                fprintf(fp_wan_dbg, "Disabling DHCPv6 Client\n");
                v_secure_system("/etc/utopia/service.d/service_dhcpv6_client.sh disable");
+               if (sw->rtmod == WAN_RTMOD_IPV6) {
+                   sysevent_set(sw->sefd, sw->setok, "wan-status", "stopped", 0);
+               }
        } else if (sw->prot == WAN_PROT_STATIC) {
                if (wan_static_stop_v6(sw) != 0) {
                        fprintf(fp_wan_dbg, "%s: wan_static_stop_v6 error\n", __FUNCTION__);
