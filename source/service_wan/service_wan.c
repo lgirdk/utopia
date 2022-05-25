@@ -1405,6 +1405,11 @@ static int wan_stop(struct serv_wan *sw)
                     v_secure_system("/etc/utopia/service.d/service_dhcpv6_client.sh disable");
 #endif
        }
+
+       if (sw->rtmod == WAN_RTMOD_IPV6) {
+           sysevent_set(sw->sefd, sw->setok, "wan-status", "stopped", 0);
+       }
+
        } else if (sw->prot == WAN_PROT_STATIC) {
 #if defined(FEATURE_TAD_HEALTH_CHECK)
            if((nConnCheck == NET_CONNNECTIVITY_CHECK_DISABLED) ||
