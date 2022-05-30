@@ -278,6 +278,13 @@ service_start ()
            VALID_SERVER="true"
        fi
 
+       # Set the dhcp acquired ntp servers
+       dhcpv6_ntp_server=`sysevent get dhcpv6_ntp_server | awk -F' ' '{print $1}'`
+       if [ -n "$dhcpv6_ntp_server" ]; then
+           echo "server $dhcpv6_ntp_server iburst" >> $NTP_CONF_TMP
+           VALID_SERVER="true"
+       fi
+
        if [ -z "$VALID_SERVER" ]; then
            if [ -f "/nvram/ETHWAN_ENABLE" ]; then
               echo_t "SERVICE_NTPD : NTP SERVERS 1-5 not available, using the default ntp server." >> $NTPD_LOG_NAME
