@@ -1499,7 +1499,6 @@ $ssam_updaterenable=0
 
 $Available_Languages=en,tr,fr,de,nl,ro,it,pl,cz,hu,es,sk
 $Current_Language=en
-$version_db=1
 $default_erouter_mode=3
 $dhcp_offline_lease_time=120
 $dhcp_server_relay_acs_discovery=both
