@@ -314,15 +314,15 @@ static int dhcp_parse_vendor_info( char *options, const int length, char *ethWan
 
         while ((num_read = fscanf(fp, "%7s %11s %63s", mode, subopt_num, subopt_value)) == 3) {
             char *ptr;
-     
+
             if (length - opt_len < 6) {
                 fprintf( stderr, "%s: Too many options\n", __FUNCTION__ );
-		fclose(fp);   //CID 61631 : Resource leak
+                fclose(fp);   //CID 61631 : Resource leak
                 return -1;
             }
-           
+
 #if defined (EROUTER_DHCP_OPTION_MTA) 
-	    if ( ( strcmp(mode,"DOCSIS") == 0 ) && ( strcmp (ethWanMode,"true") == 0) )
+            if ( ( strcmp(mode,"DOCSIS") == 0 ) && ( strcmp (ethWanMode,"true") == 0) )
             {
                 continue;
             }
@@ -332,12 +332,12 @@ static int dhcp_parse_vendor_info( char *options, const int length, char *ethWan
                 continue;
             }
 #else
-            if ( ( strcmp(mode,"ETHWAN") == 0 )) 
-          {
+            if ((strcmp(mode,"ETHWAN") == 0))
+            {
                 continue;
-          }
+            }
 #endif
- 
+
             //Print the option number
             if (strcmp(subopt_num, "SUBOPTION2") == 0) {
                 rc = sprintf_s(options + opt_len, (length - opt_len), "02");
@@ -360,7 +360,7 @@ static int dhcp_parse_vendor_info( char *options, const int length, char *ethWan
                 fclose(fp);
                 return -1;
             }
-            
+
             //Print the length of the sub-option value
             rc = sprintf_s(options + opt_len, (length - opt_len), "%02x", strlen(subopt_value));
             if(rc < EOK)
@@ -384,10 +384,11 @@ static int dhcp_parse_vendor_info( char *options, const int length, char *ethWan
                 opt_len += rc;
             }
         } //while
-        
+
+        fclose(fp);
+
         if ((num_read != EOF) && (num_read != 3)) {
             fprintf(stderr, "%s: Error parsing file\n", __FUNCTION__);
-            fclose(fp);
             return -1;
         }
     }
@@ -395,7 +396,7 @@ static int dhcp_parse_vendor_info( char *options, const int length, char *ethWan
         fprintf(stderr, "%s: Cannot read %s\n", __FUNCTION__, VENDOR_SPEC_FILE);
         return -1;
     }
-    fclose(fp);
+
     return 0;
 }
 
