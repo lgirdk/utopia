@@ -284,6 +284,11 @@ service_start ()
            echo "server $dhcpv6_ntp_server" >> $NTP_CONF_TMP
            VALID_SERVER="true"
        fi
+       dhcpv4_ntp_server=`sysevent get dhcpv4_ntp_server | awk -F' ' '{print $1}'`
+       if [ -n "$dhcpv4_ntp_server" ]; then
+           echo "server $dhcpv4_ntp_server" >> $NTP_CONF_TMP
+           VALID_SERVER="true"
+       fi
 
        if [ -z "$VALID_SERVER" ]; then
            if [ -f "/nvram/ETHWAN_ENABLE" ]; then
