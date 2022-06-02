@@ -250,32 +250,39 @@ service_start ()
                 VALID_SEVER="true"
             fi
         fi
+        valid_server_count=0
+
        # Start NTP Config Creation with Multiple Server Setup
        echo_t "SERVICE_NTPD : Creating NTP config with New NTP Enabled" >> $NTPD_LOG_NAME
        if [ -n "$SYSCFG_ntp_server1" ] && [ "$SYSCFG_ntp_server1" != "no_ntp_address" ]; then
            echo "server $SYSCFG_ntp_server1 true" >> $NTP_CONF_TMP
            echo "restrict $SYSCFG_ntp_server1 nomodify notrap noquery" >> $NTP_CONF_TMP
            VALID_SERVER="true"
+           valid_server_count=$((valid_server_count + 1))
        fi
        if [ -n "$SYSCFG_ntp_server2" ] && [ "$SYSCFG_ntp_server2" != "no_ntp_address" ]; then
            echo "server $SYSCFG_ntp_server2" >> $NTP_CONF_TMP
            echo "restrict $SYSCFG_ntp_server2 nomodify notrap noquery" >> $NTP_CONF_TMP
            VALID_SERVER="true"
+           valid_server_count=$((valid_server_count + 1))
        fi
        if [ -n "$SYSCFG_ntp_server3" ] && [ "$SYSCFG_ntp_server3" != "no_ntp_address" ]; then
            echo "server $SYSCFG_ntp_server3" >> $NTP_CONF_TMP
            echo "restrict $SYSCFG_ntp_server3 nomodify notrap noquery" >> $NTP_CONF_TMP
            VALID_SERVER="true"
+           valid_server_count=$((valid_server_count + 1))
        fi
        if [ -n "$SYSCFG_ntp_server4" ] && [ "$SYSCFG_ntp_server4" != "no_ntp_address" ]; then
            echo "server $SYSCFG_ntp_server4" >> $NTP_CONF_TMP
            echo "restrict $SYSCFG_ntp_server4 nomodify notrap noquery" >> $NTP_CONF_TMP
            VALID_SERVER="true"
+           valid_server_count=$((valid_server_count + 1))
        fi
        if [ -n "$SYSCFG_ntp_server5" ] && [ "$SYSCFG_ntp_server5" != "no_ntp_address" ]; then
            echo "server $SYSCFG_ntp_server5" >> $NTP_CONF_TMP
            echo "restrict $SYSCFG_ntp_server5 nomodify notrap noquery" >> $NTP_CONF_TMP
            VALID_SERVER="true"
+           valid_server_count=$((valid_server_count + 1))
        fi
 
        # Set NTP server(s) acquired from DHCP
@@ -283,11 +290,33 @@ service_start ()
        if [ -n "$dhcpv6_ntp_server" ]; then
            echo "server $dhcpv6_ntp_server" >> $NTP_CONF_TMP
            VALID_SERVER="true"
+           valid_server_count=$((valid_server_count + 1))
        fi
        dhcpv4_ntp_server=`sysevent get dhcpv4_ntp_server | awk -F' ' '{print $1}'`
        if [ -n "$dhcpv4_ntp_server" ]; then
            echo "server $dhcpv4_ntp_server" >> $NTP_CONF_TMP
            VALID_SERVER="true"
+           valid_server_count=$((valid_server_count + 1))
+
+           # If total NTP servers are less than three then
+           # try to make the count three by parsing addtional
+           # ntp servers from DHCPv4 option 42
+           if [ $valid_server_count -lt 3 ]; then
+               dhcpv4_ntp_server2=`sysevent get dhcpv4_ntp_server | awk -F' ' '{print $2}'`
+               if [ -n "$dhcpv4_ntp_server2" ]; then
+                   echo "server $dhcpv4_ntp_server2" >> $NTP_CONF_TMP
+                   VALID_SERVER="true"
+                   valid_server_count=$((valid_server_count + 1))
+                   if [ $valid_server_count -lt 3 ]; then
+                       dhcpv4_ntp_server3=`sysevent get dhcpv4_ntp_server | awk -F' ' '{print $3}'`
+                       if [ -n "$dhcpv4_ntp_server3" ]; then
+                           echo "server $dhcpv4_ntp_server3" >> $NTP_CONF_TMP
+                           VALID_SERVER="true"
+                           valid_server_count=$((valid_server_count + 1))
+                       fi
+                   fi
+               fi
+           fi
        fi
 
        if [ -z "$VALID_SERVER" ]; then
