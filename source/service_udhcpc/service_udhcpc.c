@@ -866,6 +866,7 @@ int handle_wan(udhcpc_script_t *pinfo)
     if ( 0 != get_and_pass_acs_info())
     {
         OnboardLog("[%s][%d] Failed to get dhcpv4 acs data from env \n", __FUNCTION__,__LINE__);
+        return -1;
     }
 
     OnboardLog("[%s][%d] Received [%s] event from udhcpc \n", __FUNCTION__,__LINE__,pinfo->input_option);
@@ -1228,6 +1229,10 @@ static int get_and_pass_acs_info ()
             }
             if ( provisioning_code [0] != '0' )
                 syscfg_set(NULL, "tr_prov_code", provisioning_code);
+         }
+         else
+         {
+             return -1;
          }
     }
     return 0;
