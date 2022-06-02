@@ -325,13 +325,8 @@ service_start ()
        fi
 
        if [ "x$VALID_SERVER" = "x" ]; then
-           if [ -f "/nvram/ETHWAN_ENABLE" ]; then
-              echo_t "SERVICE_NTPD : NTP SERVERS 1-5 not available, using the default ntp server." >> $NTPD_LOG_NAME
-              SYSCFG_ntp_server1="time1.google.com"
-           else
-              echo_t "SERVICE_NTPD : NTP SERVERS 1-5 not available, not starting ntpd" >> $NTPD_LOG_NAME
-              return 0
-           fi
+           echo_t "SERVICE_NTPD : NTP SERVERS(1-5 and from DHCPv4/6) are not available, not starting ntpd" >> $NTPD_LOG_NAME
+           return 0
        fi
    else
 
