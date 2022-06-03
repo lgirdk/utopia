@@ -58,7 +58,6 @@ enum {
     DYNDNS,
     DUCKDNS,
     AFRAID,
-    EASYDNS,
     SERVICE_LIMIT
 };
 
@@ -69,7 +68,6 @@ static char *markers[][8] = {
     { "dyndns", "good", "nochg", "nohost", "badauth", "badauth", "", "" },
     { "duckdns", "OK", "", "", "", "", "KO", "" },
     { "afraid", "Updated", "has not changed", "", "", "", "Unable to locate this record", "" },
-    { "easydns", "OK", "OK", "", "NO_AUTH", "NO_AUTH", "", "" },
 };
 
 static int se_fd = -1;
@@ -427,8 +425,6 @@ static int update_ddnsserver (void)
         cmd += sprintf(cmd, "-g --insecure --url 'https://www.duckdns.org/update?domains=%s&token=%s&ip=%s&verbose=true'", host_name, client_username, wan_ipaddr);
     else if (server_service == AFRAID)
         cmd += sprintf(cmd, "--user %s:%s --insecure --url 'https://freedns.afraid.org/nic/update?hostname=%s&myip=%s'", client_username, client_password, host_name, wan_ipaddr);
-    else if (server_service == EASYDNS)
-        cmd += sprintf(cmd, "--url 'https://%s:%s@api.cp.easydns.com/dyn/generic.php?hostname=%s&myip=%s'", client_username, client_password, host_name, wan_ipaddr);
     else
         goto EXIT;
 
