@@ -489,8 +489,9 @@ static int set_customer_defaults (void)
 
     /*
        Transfer default_LanAllowedSubnet to arLanAllowedSubnet_1::SubnetIP
-       Normally the last byte of arLanAllowedSubnet_1 is forced to 1, but
-       for legacy platforms, it's forced to 0 (see MVXREQ-1360 / OFW-2420)
+       The last byte of arLanAllowedSubnet_1 is forced to 1 for
+       non legacy (see MVXREQ-675) platforms, but for legacy platforms,
+       the last two bytes are forced to 0 (see MVXREQ-1360)
     */
     if ((sscanf(value, "%u.%u.%u.%u", &temp[0], &temp[1], &temp[2], &temp[3]) == 4) &&
         (temp[0] < 256) && (temp[1] < 256) && (temp[2] < 256) && (temp[3] < 256))
@@ -498,7 +499,7 @@ static int set_customer_defaults (void)
         char SubnetIp[32];
 
 #ifdef _PUMA6_ARM_
-        sprintf(SubnetIp, "%u.%u.%u.%u", temp[0], temp[1], temp[2], 0);
+        sprintf(SubnetIp, "%u.%u.%u.%u", temp[0], temp[1], 0, 0);
 #else
         sprintf(SubnetIp, "%u.%u.%u.%u", temp[0], temp[1], temp[2], 1);
 #endif
