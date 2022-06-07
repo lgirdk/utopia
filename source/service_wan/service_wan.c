@@ -470,7 +470,7 @@ static int dhcp_parse_vendor_info( char *options, const int length, char *ethWan
     }
 
     /*
-       Sub-option code 6 - Software version
+       Sub-option code 6 - Software version (must match SW version field in SNMP MIB object sysDescr)
     */
     if (platform_hal_GetSoftwareVersion (buf, sizeof(buf)) == RETURN_OK)
     {
