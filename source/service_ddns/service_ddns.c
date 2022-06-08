@@ -373,13 +373,6 @@ static int update_ddnsserver (void)
         goto EXIT;
     }
 
-    if ((server_service == NOIP) && (strchr (client_username, '@'))) {
-        printf("%s: FAILED because client_username %s\n", __FUNCTION__, "contains '@' for no-ip");
-        client_Lasterror = AUTHENTICATION_ERROR;
-        return_status = "error-auth";
-        goto EXIT;
-    }
-
     /************************************************************************/
 
     syscfg_get(NULL, "ddns_host_name_1", host_name, sizeof(host_name));
@@ -423,8 +416,11 @@ static int update_ddnsserver (void)
 
     if (server_service == CHANGEIP)
         cmd += sprintf(cmd, "--url 'http://nic.changeip.com/nic/update?u=%s&p=%s&hostname=%s&ip=%s'", client_username, client_password, host_name, wan_ipaddr);
-    else if (server_service == NOIP)
-        cmd += sprintf(cmd, "--url 'http://%s:%s@dynupdate.no-ip.com/nic/update?hostname=%s&myip=%s'", client_username, client_password, host_name, wan_ipaddr);
+    else if (server_service == NOIP) {
+        char username_encoded[64 * 3];
+        urlencoder(username_encoded, client_username, sizeof(username_encoded));
+        cmd += sprintf(cmd, "--url 'http://%s:%s@dynupdate.no-ip.com/nic/update?hostname=%s&myip=%s'", username_encoded, client_password, host_name, wan_ipaddr);
+    }
     else if (server_service == DYNDNS)
         cmd += sprintf(cmd, "--user %s:%s --url 'http://members.dyndns.org/nic/update?hostname=%s&myip=%s'", client_username, client_password, host_name, wan_ipaddr);
     else if (server_service == DUCKDNS)
