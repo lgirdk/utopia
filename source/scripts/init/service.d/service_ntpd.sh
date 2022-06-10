@@ -365,7 +365,8 @@ service_start ()
    echo "restrict 127.0.0.1" >> $NTP_CONF_TMP
    echo "restrict -6 ::1" >> $NTP_CONF_TMP
 
-   if [ "$SYSCFG_new_ntp_enabled" = "true" ]; then
+   # OFW: Assume syscfg new_ntp_enabled" is always true
+
        if [ "$BOX_TYPE" = "SR300" ] || [ "$BOX_TYPE" = "SR213" ]; then
            # Add public NTP server only when MAPT active. Else use Sky NTP servers for SR213/SR300 UK.
            MAPT_STATS=$(sysevent get mapt_config_flag)
@@ -451,45 +452,6 @@ service_start ()
            echo_t "SERVICE_NTPD : NTP SERVERS(1-5 and from DHCPv4/6) are not available, not starting ntpd" >> $NTPD_LOG_NAME
            return 0
        fi
-   else
-
-       PARTNER_ID=`syscfg get PartnerID`
-
-       if [ -z "$SYSCFG_ntp_server1" ] || [ "$SYSCFG_ntp_server1" = "no_ntp_address" ]; then
-           if [ -z "$PARTNER_ID" ]; then
-               echo_t "SERVICE_NTPD : NTP SERVER 1 not available & PARTNER_ID is null, using the default ntp server." >> $NTPD_LOG_NAME
-               SYSCFG_ntp_server1="time1.google.com"
-           else
-               if [ -f "/nvram/ETHWAN_ENABLE" ]; then
-                  echo_t "SERVICE_NTPD : NTP SERVER 1 not available, using the default ntp server." >> $NTPD_LOG_NAME
-                  SYSCFG_ntp_server1="time1.google.com"
-               else
-                  echo_t "SERVICE_NTPD : NTP SERVER 1 not available, not starting ntpd" >> $NTPD_LOG_NAME
-                  return 0
-               fi
-           fi
-       fi
-
-        if [ "$BOX_TYPE" = "SR300" ] || [ "$BOX_TYPE" = "SR213" ]; then
-            # Add public NTP server only when MAPT active. Else use Sky NTP servers for SR213/SR300 UK.
-            MAPT_STATS=$(sysevent get mapt_config_flag)
-            if [ "$MAPT_STATUS" = "set" ]; then
-                IPV4_CONN_STATE=$(sysevent get ipv4_connection_state)
-                if [ "$IPV4_CONN_STATE" != "up" ]; then
-                    SYSCFG_ntp_server1="time.google.com"
-                    SYSCFG_ntp_server2="time-e-g.nist.gov"
-                    VALID_SEVER="true"
-                fi
-            fi
-        fi
-
-       # Start NTP Config Creation with Legacy Single Server Setup
-       echo_t "SERVICE_NTPD : Creating NTP config" >> $NTPD_LOG_NAME
-
-       echo "server $SYSCFG_ntp_server1 true" >> $NTP_CONF_TMP
-       echo "restrict $SYSCFG_ntp_server1 nomodify notrap noquery" >> $NTP_CONF_TMP
-
-   fi # if [ "$SYSCFG_new_ntp_enabled" = "true" ]; then
 
    PARTNER_ID=$(syscfg get PartnerID)
    if [[ "$PARTNER_ID" != sky-* ]]; then
@@ -686,7 +648,7 @@ service_stop ()
 
 service_init ()
 {
-    queries="ntp_server1 ntp_server2 ntp_server3 ntp_server4 ntp_server5 ntp_enabled new_ntp_enabled"
+    queries="ntp_server1 ntp_server2 ntp_server3 ntp_server4 ntp_server5 ntp_enabled"
     get_utctx_val "$queries"
 }
 
