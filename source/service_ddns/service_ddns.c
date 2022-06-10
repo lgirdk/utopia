@@ -127,6 +127,43 @@ static char bin2hex (unsigned int a)
         return 'a' + (a - 10);
 }
 
+static void urlencoder (char *d, char *s, size_t n)
+{
+    char inch;
+    int space_available = n - 1;
+
+    // https://www.urlencoder.io/
+
+    while (1) {
+        if ((inch = *s++) == 0)
+            break;
+
+        if ((!((inch >= '0') && (inch <= '9'))) &&
+            (!((inch >= 'a') && (inch <= 'z'))) &&
+            (!((inch >= 'A') && (inch <= 'Z'))) &&
+            (inch != '-') &&
+            (inch != '_') &&
+            (inch != '.') &&
+            (inch != '~'))
+        {
+            if (space_available < 3)
+                break;
+            *d++ = '%';
+            *d++ = bin2hex(inch >> 4);
+            *d++ = bin2hex(inch & 0x0F);
+            space_available -= 3;
+        }
+        else {
+            if (space_available < 1)
+                break;
+            *d++ = inch;
+            space_available -= 1;
+        }
+    }
+
+    *d = 0;
+}
+
 /* system_function() call, setting the default SIGCHLD handler before calling system()
  * and restoring the old handler after the call.  Needed so that system_function() will
  * return success or failure.
@@ -174,7 +211,7 @@ static int update_ddnsserver (void)
 
     int client_enable = 0;
     char client_username[64];
-    char client_password[64];
+    char client_password[64 * 3]; /* raw value from syscfg may expand upto 3x if URL encoded */
 
     int host_enable = 0;
     char host_name[64];
@@ -362,10 +399,6 @@ static int update_ddnsserver (void)
 
     if (server_service != DUCKDNS)
     {
-        char inch;
-        char *s, *d;
-        int space_available;
-
         syscfg_get("arddnsclient_1", "Password", command, sizeof(command));
 
         if (command[0] == 0) {
@@ -375,40 +408,7 @@ static int update_ddnsserver (void)
             goto EXIT;
         }
 
-        s = command;
-        d = client_password;
-        space_available = sizeof(client_password) - 1;
-
-        // https://www.urlencoder.io/
-
-        while (1) {
-            if ((inch = *s++) == 0)
-                break;
-
-            if ((!((inch >= '0') && (inch <= '9'))) &&
-                (!((inch >= 'a') && (inch <= 'z'))) &&
-                (!((inch >= 'A') && (inch <= 'Z'))) &&
-                (inch != '-') &&
-                (inch != '_') &&
-                (inch != '.') &&
-                (inch != '~'))
-            {
-                if (space_available < 3)
-                    break;
-                *d++ = '%';
-                *d++ = bin2hex(inch >> 4);
-                *d++ = bin2hex(inch & 0x0F);
-                space_available -= 3;
-            }
-            else {
-                if (space_available < 1)
-                    break;
-                *d++ = inch;
-                space_available -= 1;
-            }
-        }
-
-        *d = 0;
+        urlencoder(client_password, command, sizeof(client_password));
     }
 
     /************************************************************************/
