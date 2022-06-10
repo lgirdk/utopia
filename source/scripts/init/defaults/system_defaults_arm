@@ -1240,7 +1240,7 @@ $wanlinkheal=true
 $CpuMemFrag_Interval=4
 
 #Partner support for NTP FQDN
-$$new_ntp_enabled=true
+$new_ntp_enabled=false
 
 #Enable PresenceDetect
 $PresenceDetectEnabled=false
