@@ -513,8 +513,11 @@ create_bridges_interfaces()
     nvram set lan2_ifname=$BRIDGENAME
     nvram set lan2_ifnames="$WIFI24G $WIFI5G"
     nvram commit
-    rc restart
-
+    hotspot_init_bootup="`sysevent get hotspot_bootup`"
+    if [ x = x$hotspot_init_bootup ] ; then
+       rc restart
+       sysevent set hotspot_bootup complete
+    fi
 }
 initialize_hotpsot()
 {
