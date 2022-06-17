@@ -582,10 +582,11 @@ fi
 # ------ Creating trunk port for ext switch ports of primary LAN --------------------
 if [ "$BOX_TYPE" = "MV1" ]; then
     l2switchPort=$SYSCFG_lan_ethernet_physical_ifnames
-    vconfig add ${l2switchPort%%.*} ${l2switchPort##*.}
-    ip link set dev ${l2switchPort} up
-    vconfig add ${l2switchPort%%.*} 200
-    ip link set dev ${l2switchPort%%.*}.200 up
+    for l2switchPort in $SYSCFG_lan_ethernet_physical_ifnames
+    do
+        vconfig add ${l2switchPort%%.*} ${l2switchPort##*.}
+        ip link set dev ${l2switchPort} up
+    done
 fi
 
 # ----------------------------------------------------------------------------
