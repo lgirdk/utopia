@@ -1257,13 +1257,18 @@ static int get_and_pass_acs_info (void)
 
     if (url[0] != 0)
     {
-        FILE *fp;
+        int fd;
 
-        fp = fopen("/var/tmp/acs-url-from-dhcp-option.txt","w+");
-        if (fp != NULL)
+        /* Write ACS URL into PIPE to notify CcspTr069 Agent */
+        fd = open("/tmp/dhcp_acs_url", O_WRONLY | O_APPEND);
+        if (fd >= 0)
         {
-            fprintf(fp,"%s",url);
-            fclose(fp);
+            char buf[sizeof(url) + 20];
+            len = snprintf(buf, sizeof(buf), "DHCPv4_ACS_URL %s", url);
+            write(fd, buf, len);
+            close(fd);
+
+            sysevent_set(sysevent_fd, sysevent_token, "DHCPv4_ACS_URL", url, 0);
         }
         else
         {
