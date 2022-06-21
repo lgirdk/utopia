@@ -90,6 +90,7 @@ GRE_PSM_ENABLE=enable
 HS_PSM_ENABLE=Enable
 GRE_PSM_LOCALIFS=LocalInterfaces   
 GRE_PSM_TCPMSS=GreTcpMss
+GRE_PSM_WIFIPORT=AssociatedBridgesWiFiPort
 WIFI_PSM_PREFIX=eRT.com.cisco.spvtg.ccsp.Device.WiFi.Radio.SSID
 WIFI_RADIO_INDEX=RadioIndex
 
@@ -355,14 +356,23 @@ update_bridge_config () {
             queue=`expr $queue + 1`
             continue
         fi
-        br_snoop_rule="`sysevent setunique GeneralPurposeFirewallRule " -A FORWARD -o $br -p udp --dport=67:68 -j NFQUEUE --queue-bypass --queue-num $queue"`"
-        sysevent set gre_${inst}_${br}_snoop_rule "$br_snoop_rule"
-
         br_snoop_rule_v6="`sysevent setunique v6GeneralPurposeFirewallRule " -A FORWARD -o $br -p udp --dport=546:547 -j NFQUEUE --queue-bypass --queue-num $queue"`"
         sysevent set gre_${inst}_${br}_snoop_rule_v6 "$br_snoop_rule_v6"
 
         br_mss_rule=`sysevent setunique GeneralPurposeMangleRule " -A POSTROUTING -o $br -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss $MSS_VAL"`
         sysevent set gre_${inst}_${br}_mss_rule "$br_mss_rule"
+    done
+
+    i=1 # First snoop queue
+    for ifx in 1 2 ; do
+        wifiport=`psmcli get $HS_PSM_BASE.${inst}.interface.${ifx}.$GRE_PSM_WIFIPORT`
+        wifiport_name=`dmcli eRT retv ${wifiport}Name`
+        gre_ssid_enable=`psmcli get $HS_PSM_BASE.1.interface.${ifx}.Enable`
+        if [ "$gre_ssid_enable" = "1" ]; then
+            dhcp_snoop_rule="`sysevent setunique GeneralPurposeFirewallRule " -A FORWARD -m physdev --physdev-in $wifiport_name -p udp --dport=67:68 -j NFQUEUE --queue-bypass --queue-num ${i}"`"
+            sysevent set gre_${inst}_${br}_snoop_rule "$dhcp_snoop_rule"
+        fi
+        i=$((i+1))
     done
 
     sysevent set gre_${inst}_current_bridges "$BRIDGES"
