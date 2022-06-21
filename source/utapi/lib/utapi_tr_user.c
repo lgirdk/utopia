@@ -39,6 +39,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <ctype.h>
+#include <syscfg/syscfg.h>
 #include <utctx/utctx.h>
 #include <utctx/utctx_api.h>
 #include "utapi.h"
@@ -251,6 +252,7 @@ int Utopia_SetUserValues(UtopiaContext *ctx, unsigned long ulIndex, unsigned lon
 int Utopia_GetUserByIndex(UtopiaContext *ctx, unsigned long ulIndex, userCfg_t *pUserCfg_t)
 {
     int iVal = 0;
+    char csr_user_name[16];
 
 #ifdef _DEBUG_
     ulog_errorf(ULOG_CONFIG, UL_UTAPI, "%s: ********Entered ****** !!!", __FUNCTION__);
@@ -268,7 +270,11 @@ int Utopia_GetUserByIndex(UtopiaContext *ctx, unsigned long ulIndex, userCfg_t *
     pUserCfg_t->RemoteAccessCapable = (0 == iVal) ? FALSE : TRUE;
 
     Utopia_GetIndexedInt(ctx,UtopiaValue_User_Access_Permissions,(ulIndex + 1),(int *)&(pUserCfg_t->AccessPermissions));
-    Utopia_GetIndexed(ctx,UtopiaValue_HashPassword,(ulIndex + 1),pUserCfg_t->HashedPassword,sizeof(pUserCfg_t->HashedPassword));
+
+    syscfg_get(NULL, "user_name_1", csr_user_name, sizeof(csr_user_name));
+    if (strcmp(pUserCfg_t->Username, csr_user_name) != 0) {
+        Utopia_GetIndexed(ctx,UtopiaValue_HashPassword,(ulIndex + 1),pUserCfg_t->HashedPassword,sizeof(pUserCfg_t->HashedPassword));
+    }
 
     return SUCCESS;
 
