@@ -603,6 +603,21 @@ FILE *firewallfp = NULL;
 
 #define CONFIG_BUILD_TRIGGER 1
 
+#ifdef XT_TIME_MODULE_SUPPORT
+#define ONEDAY_BITMASK_LEN      25
+#define DAY                     1
+#define DAYS_IN_WEEK            7
+static char v4BitMaskOfOneDay[ONEDAY_BITMASK_LEN];
+static char v6BitMaskOfOneDay[ONEDAY_BITMASK_LEN];
+static char macBitMaskOfOneDay[ONEDAY_BITMASK_LEN];
+static int shift_h, shift_m, shift_s;
+static int shift_sign = 0;
+static void block_timebitmask_findtimeslices(FILE *fp, unsigned long *pMaskDayOfWeek, unsigned long ulMaskType, char *Chain_id, char *Action, unsigned short min, unsigned short sec);
+static void shift_localtime_to_utc(int *hrs, int *mins, int *secs);
+static void shiftbits_back(char *buffer, unsigned short buf_length, unsigned short shift);
+static void shiftbits_forward(char *buffer, unsigned short buf_length, unsigned short shift);
+#endif
+
 /*
  * Service template declarations & definitions
  */
@@ -1739,11 +1754,15 @@ static int privateIpCheck(char *ip_to_check)
  * Procedure     : GetTimeOfDayMasks
  * Purpose       : Parses the string mask to pick every hours mask value
  * Parameters    :
- *    in         : pointer to ulong array[7] to hold per day mask value.
+ *    in         : pointer to ulong array[Days] to hold per day mask value.
  * Return Value  : None.
  * Note          : None.
 */
+#ifdef XT_TIME_MODULE_SUPPORT
+static void GetTimeOfDayMasks(unsigned long *pMaskDayOfWeek, char *pMask, int *Days)
+#else
 static void GetTimeOfDayMasks(unsigned long *pMaskDayOfWeek, char *pMask)
+#endif
 {
     char tmpBuf[24 + 1];
     int i;
@@ -1753,7 +1772,11 @@ static void GetTimeOfDayMasks(unsigned long *pMaskDayOfWeek, char *pMask)
               to copy into a temp buffer just so we can call strtoul().
     */
     tmpBuf[24] = 0;
+#ifdef XT_TIME_MODULE_SUPPORT
+    for (i = 0; i < Days; i++)
+#else
     for (i = 0; i < 7; i++)
+#endif
     {
         strncpy(tmpBuf, pMask, 24);
         pMaskDayOfWeek[i] = strtoul(tmpBuf, NULL, 2);
@@ -1775,7 +1798,11 @@ static void GetBlockTimeBitMaskForWeek(char *namespace, char *pMask, char *pMask
     char buf[64];
     int idx;
 
+#ifdef XT_TIME_MODULE_SUPPORT
+    for (idx = 7; idx >= 1; idx--)
+#else
     for (idx = 1; idx <= 7; idx++)
+#endif
     {
         snprintf(query, sizeof(query), "%s_%d", namespace, idx);
         syscfg_get(query, pMask, buf, sizeof(buf));
@@ -1783,6 +1810,79 @@ static void GetBlockTimeBitMaskForWeek(char *namespace, char *pMask, char *pMask
     }
 }
 
+#ifdef XT_TIME_MODULE_SUPPORT
+/*
+ * Procedure     : block_timebitmask_findtimeslices
+ * Purpose       : Updates iptables with the passed per day mask values.
+ * Parameters    :
+ *    in         : pointer to ulong array[] to hold per day mask value.
+ * Return Value  : None.
+ */
+
+static void block_timebitmask_findtimeslices(FILE *fp, unsigned long *pMaskDayOfWeek, unsigned long ulMaskType, char *Chain_id, char *Action, unsigned short min, unsigned short sec)
+{
+   int i = 0, j = 0;
+   int start_time, stop_time;
+
+   fprintf(fp, "-N %s\n", Chain_id);
+
+   for(i = 0; i < 7; i++)
+   {
+      BOOL bFindStopTime = FALSE;
+      if(pMaskDayOfWeek[i])
+      {
+         // Find the hours set in bitmask
+         for(j = 0; j < 24; j++)
+         {
+            // Construct rule for CHAIN using start and stop time.
+            if(pMaskDayOfWeek[i] & (1 << j))
+            {
+               if(!bFindStopTime)
+               {
+                  start_time = j;
+                  bFindStopTime = TRUE;
+               }
+            }
+            else
+            {
+               if(TRUE == bFindStopTime)
+               {
+                  stop_time = j;
+
+                  if(BTMASK_BYHOUR == ulMaskType)                                                     // ByHour Scheduler - same time slices for all days
+                     fprintf(fp, "-A %s -m time --timestart %d:%d:%d --timestop %d:%d:%d -j %s\n", Chain_id, start_time, min, sec, stop_time, min, sec, Action);
+                  else                                                                                // ByDayHour Scheduler - different time slices for each day
+                     fprintf(fp, "-A %s -m time --timestart %d:%d:%d --timestop %d:%d:%d --weekdays %d -j %s\n", Chain_id, start_time, min, sec, stop_time, min, sec, (i+1)%DAYS_IN_WEEK > 0 ? (DAYS_IN_WEEK-i-1) : DAYS_IN_WEEK, Action);
+
+                  bFindStopTime = FALSE;
+               }
+            }
+         }
+         if(TRUE == bFindStopTime)
+         {
+            if(min == 0)
+            {
+               if(BTMASK_BYHOUR == ulMaskType)
+                  fprintf(fp, "-A %s -m time --timestart %d:%d:%d --timestop 23:59:59 -j %s\n", Chain_id, start_time, min, sec, Action);
+               else
+                  fprintf(fp, "-A %s -m time --timestart %d:%d:%d --timestop 23:59:59 --weekdays %d -j %s\n", Chain_id, start_time, min, sec, (i+1)%DAYS_IN_WEEK > 0 ? (DAYS_IN_WEEK-i-1) : DAYS_IN_WEEK, Action);
+            }
+            else
+            {
+               stop_time = 0;
+               if(BTMASK_BYHOUR == ulMaskType)
+                  fprintf(fp, "-A %s -m time --timestart %d:%d:%d --timestop %d:%d:%d --contiguous -j %s\n", Chain_id, start_time, min, sec, stop_time, min, sec, Action);  // contiguous option for start > stop
+               else
+                  fprintf(fp, "-A %s -m time --timestart %d:%d:%d --timestop %d:%d:%d --contiguous --weekdays %d -j %s\n", Chain_id, start_time, min, sec, stop_time, min, sec, (i+1)%DAYS_IN_WEEK > 0 ? (DAYS_IN_WEEK-i-1) : DAYS_IN_WEEK, Action);  // contiguous option for start > stop
+            }
+         }
+      }
+
+      if(BTMASK_BYHOUR == ulMaskType)                                                                // Break the loop. Only to process Mask bits of one day and use the same for all other days.
+         break;
+   }
+}
+#else
 /*
  * Procedure     : BlockTimeBitMask_AddToCron
  * Purpose       : Updates CRONTAB with the passed per day mask values.
@@ -1866,6 +1966,7 @@ static int BlockTimeBitMask_AddToCron(unsigned long *pMaskDayOfWeek,
     return 0;
 }
 
+#endif
 /*
  * Procedure     : getCwmpPort
  * Purpose       : To get the value of CWMP Port from PSM if applicable.
@@ -2201,6 +2302,97 @@ static char *match_keyword(FILE *fp, char *keyword, char delim, char *line, int 
    return(NULL);
 }
 
+#ifdef XT_TIME_MODULE_SUPPORT
+/*
+ *  Procedure     : shiftbits_back
+ *  Purpose       : shift bitmask depending upon difference between UTC and the local tz
+ *  Parameters    :
+ *    buffer         : hours set in bitmask
+ *    buf_length     : length of buffer
+ *    shift          : difference in time (+ve/-ve)
+ *  Return Value  : no return value
+ */
+
+static void shiftbits_back(char *buffer, unsigned short buf_length, unsigned short shift)
+{
+    int i, j;
+    char temp[1];
+
+    for(j = 1; j <= shift; j++)
+    {
+        for(i = 0; i < buf_length-1; i++)
+        {
+            temp[0] = buffer[i];
+            buffer[i] = buffer[i+1];
+            buffer[i+1] = temp[0];
+        }
+    }
+}
+
+/*
+ *  Procedure     : shiftbits_forward
+ *  Purpose       : shift bitmask depending upon difference between UTC and the local tz
+ *  Parameters    :
+ *    buffer         : hours set in bitmask
+ *    buf_length     : length of buffer
+ *    shift          : difference in time (+ve/-ve)
+ *  Return Value  : no return value
+ */
+
+static void shiftbits_forward(char *buffer, unsigned short buf_length, unsigned short shift)
+{
+    int i, j;
+    char temp[1];
+
+    for(j = 1; j <= shift; j++)
+    {
+        for(i = (buf_length); i > 0; i--)
+        {
+            temp[0] = buffer[buf_length-1];
+            buffer[buf_length-1] = buffer[buf_length-i];
+            buffer[buf_length-i] = temp[0];
+        }
+    }
+}
+
+/*
+ *  Procedure     : shift_localtime_to_utc
+ *  Purpose       : get time difference between UTC and localtime.
+ *  Parameters    :
+ *    time_diff   : difference
+ *  Return Value  : no return value
+ */
+
+static void shift_localtime_to_utc(int *hrs, int *mins, int *secs)
+{
+   time_t ctime;
+   struct tm * timeinfo;
+   int offset = 0;
+   int hh = 0, mm = 0, ss = 0;
+
+   time(&ctime);
+   timeinfo = localtime(&ctime);
+
+   offset = timeinfo->tm_gmtoff;                                                  //get time difference between UTC and localtime
+   if (offset != 0)
+   {
+        hh = offset/3600;
+        mm = (offset -(3600*hh))/60;
+        ss = (offset -(3600*hh)-(mm*60));
+
+        if (offset < 0)
+            shift_sign = -1;
+        else
+            shift_sign = 1;
+   }
+
+   *hrs = hh;
+   *mins = mm;
+   *secs = ss;
+
+   FIREWALL_DEBUG("offset hours = %d | mins = %d | sec = %d\n" COMMA *hrs COMMA *mins COMMA *secs);
+}
+#endif
 
 /*
  *  Procedure     : to_syslog_level
@@ -13778,7 +13970,14 @@ void  redirect_dns_to_extender(FILE *nat_fp,int family)
  */
 static int prepare_enabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *filter_fp, char *strBlockTimeCmd)
 {
-   FIREWALL_DEBUG("Entering prepare_enabled_ipv4_firewall \n"); 
+   FIREWALL_DEBUG("Entering prepare_enabled_ipv4_firewall \n");
+#ifdef XT_TIME_MODULE_SUPPORT
+   char filter_count[3];
+   unsigned long ulMaskDayOfWeek[7];
+   int i, count_allow = 0, count_deny = 0;
+   char filter_action[6], cfg_action[60];
+   int minutes, seconds = shift_s;
+#endif
    /*
     * Add all of the tables and subtables that are required for the firewall
     */
@@ -13873,6 +14072,77 @@ static int prepare_enabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *na
 #if defined(MOCA_HOME_ISOLATION)
    prepare_MoCA_bridge_firewall(raw_fp, mangle_fp, nat_fp, filter_fp);
 #endif
+#ifdef XT_TIME_MODULE_SUPPORT
+   /* mac filtering */
+   syscfg_get(NULL, "lgFWMACFilterCount", filter_count, sizeof(filter_count));
+   FIREWALL_DEBUG("mac filter count = %s\n"COMMA filter_count);
+
+   if((BTMASK_ALWAYS != mac_dayofweek_block_time_bit_mask_type) && (strcmp(filter_count, "0") > 0))
+   {
+      if(mac_dayofweek_block_time_bit_mask_type == BTMASK_BYHOUR)
+         GetTimeOfDayMasks(ulMaskDayOfWeek, macBitMaskOfOneDay, DAY);
+
+      if(mac_dayofweek_block_time_bit_mask_type == BTMASK_BYDAYHOUR)
+         GetTimeOfDayMasks(ulMaskDayOfWeek, macDayOfWeekBlockTimeBitMask, DAYS_IN_WEEK);
+
+      if(shift_sign == -1)
+         minutes = (60 - shift_m)%60;
+      else if(shift_sign == 1)
+         minutes = (60 - shift_m)%60;
+      else
+         minutes = 0;
+
+      block_timebitmask_findtimeslices(filter_fp, ulMaskDayOfWeek, mac_dayofweek_block_time_bit_mask_type, "MAC_BLOCK_TIME", "DROP", minutes, seconds);
+   }
+
+   do_mac_filter(filter_fp);
+
+   /*  ipv4 filtering */
+   syscfg_get(NULL, "lgFwV4IpFilterCount", filter_count, sizeof(filter_count));
+   FIREWALL_DEBUG("ipv4 filter count = %s\n"COMMA filter_count);
+
+   if((BTMASK_ALWAYS != v4_dayofweek_block_time_bit_mask_type)  && (strcmp(filter_count, "0") > 0))
+   {
+      for (i = 1; i <= atoi(filter_count); i++)
+      {
+         snprintf(cfg_action, sizeof(cfg_action),"lgfwv4if_%d::action", i);
+         syscfg_get(NULL, cfg_action, filter_action, sizeof(filter_action));
+
+         if(strcmp(filter_action, "DENY") == 0)
+            count_deny++;
+
+         if(strcmp(filter_action, "ALLOW") == 0)
+            count_allow++;
+
+         if(count_deny > 0 && count_allow > 0)
+            break;
+      }
+
+      FIREWALL_DEBUG("count deny = %d\ncount allow = %d\n"COMMA count_deny COMMA count_allow);
+
+      if(v4_dayofweek_block_time_bit_mask_type == BTMASK_BYHOUR)
+         GetTimeOfDayMasks(ulMaskDayOfWeek, v4BitMaskOfOneDay, DAY);
+
+      if(v4_dayofweek_block_time_bit_mask_type == BTMASK_BYDAYHOUR)
+         GetTimeOfDayMasks(ulMaskDayOfWeek, v4DayOfWeekBlockTimeBitMask, DAYS_IN_WEEK);
+
+      if(shift_sign == -1)
+         minutes = (60 - shift_m)%60;
+      else if(shift_sign == 1)
+         minutes = (60 - shift_m)%60;
+      else
+         minutes = 0;
+
+      if(count_deny > 0)
+         block_timebitmask_findtimeslices(filter_fp, ulMaskDayOfWeek, v4_dayofweek_block_time_bit_mask_type, "V4_FILTER_DROP","DROP", minutes, seconds);
+
+      if(count_allow > 0)
+         block_timebitmask_findtimeslices(filter_fp, ulMaskDayOfWeek, v4_dayofweek_block_time_bit_mask_type, "V4_FILTER_ACCEPT","ACCEPT", minutes, seconds);
+
+    }
+
+   do_ip_filter_IpV4_service(filter_fp);
+#else
 // LGI ADD START
    if(BTMASK_ALWAYS == v4_dayofweek_block_time_bit_mask_type) {
        do_ip_filter_IpV4_service(filter_fp);
@@ -13987,6 +14257,7 @@ static int prepare_enabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *na
        }
    }
 // LGI ADD END
+#endif
    do_blockfragippktsv4(filter_fp);
    do_portscanprotectv4(filter_fp);
    do_ipflooddetectv4(filter_fp);
@@ -14953,6 +15224,15 @@ int prepare_ipv6_firewall(const char *fw_file, char* strBlockTimeCmd)
    if (NULL == fp) {
       return(-2);
    }
+
+#ifdef XT_TIME_MODULE_SUPPORT
+   char filter_count[3];
+   unsigned long ulMaskDayOfWeek[7];
+   int i, count_allow = 0, count_deny = 0;
+   char filter_action[6], cfg_action[60];
+   int minutes, seconds = shift_s;
+#endif
+
    sysevent_get(sysevent_fd, sysevent_token, "current_wan_ipv6_interface", wan6_ifname, sizeof(wan6_ifname));
    
    errno_t safec_rc = -1;
@@ -15042,6 +15322,76 @@ int prepare_ipv6_firewall(const char *fw_file, char* strBlockTimeCmd)
         if (isContainerEnabled) {
             do_container_allow(filter_fp, mangle_fp, nat_fp, AF_INET6);
         }
+
+#ifdef XT_TIME_MODULE_SUPPORT
+    /* mac filtering */
+    syscfg_get(NULL, "lgFWMACFilterCount", filter_count, sizeof(filter_count));
+    FIREWALL_DEBUG("mac filter count = %s\n"COMMA filter_count);
+
+    if((BTMASK_ALWAYS != mac_dayofweek_block_time_bit_mask_type) && (strcmp(filter_count, "0") > 0))
+    {
+        if(mac_dayofweek_block_time_bit_mask_type == BTMASK_BYHOUR)
+           GetTimeOfDayMasks(ulMaskDayOfWeek, macBitMaskOfOneDay, DAY);
+
+        if(mac_dayofweek_block_time_bit_mask_type == BTMASK_BYDAYHOUR)
+           GetTimeOfDayMasks(ulMaskDayOfWeek, macDayOfWeekBlockTimeBitMask, DAYS_IN_WEEK);
+
+        if(shift_sign == -1)
+           minutes = (60 - shift_m)%60;
+        else if(shift_sign == 1)
+           minutes = (60 - shift_m)%60;
+        else
+           minutes = 0;
+
+        block_timebitmask_findtimeslices(filter_fp, ulMaskDayOfWeek, mac_dayofweek_block_time_bit_mask_type, "MAC_BLOCK_TIME", "DROP", minutes, seconds);
+    }
+
+    do_mac_filter(filter_fp);
+
+    /* ipv6 filtering */
+    syscfg_get(NULL, "lgFwV6IpFilterCount", filter_count, sizeof(filter_count));
+    FIREWALL_DEBUG("ipv6 filter count = %s\n"COMMA filter_count);
+
+    if((BTMASK_ALWAYS != v6_dayofweek_block_time_bit_mask_type) && (strcmp(filter_count, "0") > 0))
+    {
+        for(i=1; i<=atoi(filter_count); i++)
+        {
+            snprintf(cfg_action, sizeof(cfg_action),"lgfwv6if_%d::filterAction", i);
+            syscfg_get(NULL, cfg_action, filter_action, sizeof(filter_action));
+
+            if(strcmp(filter_action, "DENY") == 0)
+                count_deny++;
+
+            if(strcmp(filter_action, "ALLOW") == 0)
+                count_allow++;
+
+            if(count_deny > 0 && count_allow > 0)
+                break;
+        }
+        FIREWALL_DEBUG("count odd = %d\ncount_even = %d\n"COMMA count_deny COMMA count_allow);
+
+        if(v6_dayofweek_block_time_bit_mask_type == BTMASK_BYHOUR)
+            GetTimeOfDayMasks(ulMaskDayOfWeek, v6BitMaskOfOneDay, DAY);
+
+        if(v6_dayofweek_block_time_bit_mask_type == BTMASK_BYDAYHOUR)
+            GetTimeOfDayMasks(ulMaskDayOfWeek, v6DayOfWeekBlockTimeBitMask, DAYS_IN_WEEK);
+
+        if(shift_sign == -1)
+            minutes = (60 - shift_m)%60;
+        else if(shift_sign == 1)
+            minutes = ( 60 - shift_m )%60;
+        else
+            minutes = 0;
+
+        if(count_deny > 0)
+            block_timebitmask_findtimeslices(filter_fp, ulMaskDayOfWeek, v6_dayofweek_block_time_bit_mask_type, "V6_FILTER_DROP","DROP", minutes, seconds);
+
+        if(count_allow > 0)
+            block_timebitmask_findtimeslices(filter_fp, ulMaskDayOfWeek, v6_dayofweek_block_time_bit_mask_type, "V6_FILTER_ACCEPT","ACCEPT", minutes, seconds);
+    }
+
+    do_ip_filter_IpV6_service(filter_fp);
+#else
 // LGI ADD START
       if(BTMASK_ALWAYS == v6_dayofweek_block_time_bit_mask_type) {
          do_ip_filter_IpV6_service(filter_fp);
@@ -15132,6 +15482,7 @@ int prepare_ipv6_firewall(const char *fw_file, char* strBlockTimeCmd)
       }
 
 // LGI ADD END
+#endif
 
       if (!isBridgeMode) {
           do_blockfragippktsv6(filter_fp);
@@ -17105,6 +17456,10 @@ static int service_start (char* strBlockTimeCmd)
    char buf[64] = {0};
    BOOL needs_flush = FALSE;
    char temp[20];
+#ifdef XT_TIME_MODULE_SUPPORT
+   int bshift;
+   unsigned long ulMaskOfOneDay[25];
+#endif
    //int res_rfcfile = -1, res_rfclock = -1;
 
    /* If firewall is starting for the first time, we need to flush connection tracking */
@@ -17146,10 +17501,68 @@ static int service_start (char* strBlockTimeCmd)
    memset(v6DayOfWeekBlockTimeBitMask, '\0', sizeof(v6DayOfWeekBlockTimeBitMask));
    memset(macDayOfWeekBlockTimeBitMask, '\0', sizeof(macDayOfWeekBlockTimeBitMask));
 
+#ifdef XT_TIME_MODULE_SUPPORT
+   memset(v4BitMaskOfOneDay, '\0', sizeof(v4BitMaskOfOneDay));
+   memset(v6BitMaskOfOneDay, '\0', sizeof(v6BitMaskOfOneDay));
+   memset(macBitMaskOfOneDay, '\0', sizeof(macBitMaskOfOneDay));
+#endif
    // Retrieve the IPv4, IPv6 and MAC Filter Block Time Bit Mask.
    GetBlockTimeBitMaskForWeek("lgfwv4dayofweek", "v4_dayofweek_block_time_bitmask", &v4DayOfWeekBlockTimeBitMask);
    GetBlockTimeBitMaskForWeek("lgfwv6dayofweek", "v6_dayofweek_block_time_bitmask", &v6DayOfWeekBlockTimeBitMask);
    GetBlockTimeBitMaskForWeek("lgfwmacdayofweek", "mac_dayofweek_block_time_bitmask", &macDayOfWeekBlockTimeBitMask);
+
+#ifdef XT_TIME_MODULE_SUPPORT
+   shift_localtime_to_utc(&shift_h, &shift_m, &shift_s);
+
+   bshift = abs(shift_h);
+   if(v4_dayofweek_block_time_bit_mask_type != BTMASK_ALWAYS)                             // v4 and v6 use the same scheduler type and bitmask so computing new bitmask once for v4 and use same for v6
+   {
+      if(v4_dayofweek_block_time_bit_mask_type == BTMASK_BYDAYHOUR)
+      {
+         if(shift_h < 0)
+             shiftbits_back(v4DayOfWeekBlockTimeBitMask, strlen(v4DayOfWeekBlockTimeBitMask), bshift);
+         else if(shift_h > 0)
+             shiftbits_forward(v4DayOfWeekBlockTimeBitMask, strlen(v4DayOfWeekBlockTimeBitMask), (shift_m != 0) ? bshift+1 : bshift);
+
+         strcpy(v6DayOfWeekBlockTimeBitMask, v4DayOfWeekBlockTimeBitMask);
+      }
+
+      if(v4_dayofweek_block_time_bit_mask_type == BTMASK_BYHOUR)
+      {
+         // take bits of one day and shift
+         syscfg_get(NULL, "lgfwv4dayofweek_1::v4_dayofweek_block_time_bitmask", v4BitMaskOfOneDay, sizeof(v4BitMaskOfOneDay));
+
+         if(shift_h < 0)
+             shiftbits_back(v4BitMaskOfOneDay, strlen(v4BitMaskOfOneDay), bshift);
+         else if(shift_h > 0)
+             shiftbits_forward(v4BitMaskOfOneDay, strlen(v4BitMaskOfOneDay), (shift_m != 0) ? bshift+1 : bshift);
+
+         strcpy(v6BitMaskOfOneDay, v4BitMaskOfOneDay);
+      }
+   }
+
+   if(mac_dayofweek_block_time_bit_mask_type != BTMASK_ALWAYS)
+   {
+      if(mac_dayofweek_block_time_bit_mask_type == BTMASK_BYDAYHOUR)
+      {
+         if(shift_h < 0)
+             shiftbits_back(macDayOfWeekBlockTimeBitMask, strlen(macDayOfWeekBlockTimeBitMask), bshift);
+         else if(shift_h > 0)
+             shiftbits_forward(macDayOfWeekBlockTimeBitMask, strlen(macDayOfWeekBlockTimeBitMask), (shift_m != 0) ? bshift+1 : bshift);
+      }
+
+      if(mac_dayofweek_block_time_bit_mask_type == BTMASK_BYHOUR)
+      {
+         // take bits of one day and shift
+         syscfg_get(NULL, "lgfwmacdayofweek_1::mac_dayofweek_block_time_bitmask", macBitMaskOfOneDay, sizeof(macBitMaskOfOneDay));
+
+         if(shift_h < 0)
+             shiftbits_back(macBitMaskOfOneDay, strlen(macBitMaskOfOneDay), bshift);
+         else if(shift_h > 0)
+             shiftbits_forward(macBitMaskOfOneDay, strlen(macBitMaskOfOneDay), (shift_m != 0) ? bshift+1 : bshift);
+      }
+   }
+#else
    if( (!strBlockTimeCmd) ||
        ( (strcmp(strBlockTimeCmd, "cron_block_time_start")) &&
          (strcmp(strBlockTimeCmd, "cron_block_time_stop")) &&
@@ -17178,6 +17591,7 @@ static int service_start (char* strBlockTimeCmd)
             }
    }
    // LGI ADD END
+#endif
    /*  ipv4 */
    prepare_ipv4_firewall(filename1, strBlockTimeCmd);
    v_secure_system("iptables-restore -c  < /tmp/.ipt 2> /tmp/.ipv4table_error");
@@ -17690,14 +18104,16 @@ static int do_ip_filter_IpV6_service(FILE *fp)
    char dstendport[10];
    char IPv6SrcPrefixLen[10];
    char IPv6DstPrefixLen[10];
-   char action[10];
+   char action[17];
    char direction[32];
    unsigned int  proto = 0;
 
+#ifndef XT_TIME_MODULE_SUPPORT
    char *cron_file = crontab_dir"/"crontab_filename;
    FILE *cron_fp = NULL; // the crontab file we use to set wakeups for timed firewall events
    cron_fp = fopen(cron_file, "a+");
 
+#endif
    syscfg_get(NULL, "lgFwV6IpFilterCount", query, sizeof(query));
    if (query[0] != '\0')
    {
@@ -17832,11 +18248,25 @@ static int do_ip_filter_IpV6_service(FILE *fp)
         {
            if (0 == strcasecmp("DENY", params))
            {
+#ifdef XT_TIME_MODULE_SUPPORT
+               if (BTMASK_ALWAYS == v6_dayofweek_block_time_bit_mask_type)
+                   strcpy(action,"DROP");
+               else
+                   strcpy(action,"V6_FILTER_DROP");
+#else
                strcpy(action,"DROP");
+#endif
            }
            else if (0 == strcasecmp("ALLOW", params))
            {
+#ifdef XT_TIME_MODULE_SUPPORT
+               if (BTMASK_ALWAYS == v6_dayofweek_block_time_bit_mask_type)
+                   strcpy(action,"ACCEPT");
+               else
+                   strcpy(action,"V6_FILTER_ACCEPT");
+#else
                strcpy(action,"ACCEPT");
+#endif
            }
         }
 
@@ -18020,11 +18450,13 @@ static int do_ip_filter_IpV6_service(FILE *fp)
             }
         }
    }
+#ifndef XT_TIME_MODULE_SUPPORT
 
    if(cron_fp)
    {
        fclose(cron_fp);
    }
+#endif
    return(0);
 }
 
@@ -18053,10 +18485,12 @@ static int do_ip_filter_IpV4_service(FILE *fp)
     char action_str[MAX_QUERY];
     unsigned int action = 0;
 
+#ifndef XT_TIME_MODULE_SUPPORT
     char *cron_file = crontab_dir"/"crontab_filename;
     FILE *cron_fp = NULL; // the crontab file we use to set wakeups for timed firewall events
     cron_fp = fopen(cron_file, "a+");
 
+#endif
     syscfg_get(NULL, "lgFwV4IpFilterCount", query, sizeof(query));
     if (query[0] != '\0')
     {
@@ -18241,11 +18675,25 @@ static int do_ip_filter_IpV4_service(FILE *fp)
 
         if (action == ACTION_DENY )                               //Action DROP
         {
+#ifdef XT_TIME_MODULE_SUPPORT
+            if (BTMASK_ALWAYS == v4_dayofweek_block_time_bit_mask_type)
+                strcat(iptableRule, "-I FORWARD -j DROP");
+            else
+                strcat(iptableRule, "-I FORWARD -j V4_FILTER_DROP");
+#else
             strcat(iptableRule, " -I FORWARD -j DROP ");
+#endif
         }
         if (action == ACTION_ALLOW)                                //Action ALLOW
         {
+#ifdef XT_TIME_MODULE_SUPPORT
+            if (BTMASK_ALWAYS == v4_dayofweek_block_time_bit_mask_type)
+                strcat(iptableRule, "-I FORWARD -j ACCEPT");
+            else
+                strcat(iptableRule, "-I FORWARD -j V4_FILTER_ACCEPT");
+#else
             strcat(iptableRule, " -I FORWARD -j ACCEPT ");
+#endif
         }
 
         int iSrcStart = atoi(srcstartport);
@@ -18273,12 +18721,14 @@ static int do_ip_filter_IpV4_service(FILE *fp)
             //Inserting IP Table rule for protocol ALL
             fprintf(fp, "%s\n", iptableRule);
         }
-}
+    }
 
+#ifndef XT_TIME_MODULE_SUPPORT
     if(cron_fp)
     {
         fclose(cron_fp);
     }
+#endif
     return(0);
 }
 
@@ -18325,8 +18775,15 @@ static int do_mac_filter(FILE *fp)
                 rc = syscfg_get(namespace, "mac", MACAddress, sizeof(MACAddress));
                 if ( (rc != 0) || ('\0' != MACAddress[0]) )
                 {
+#ifdef XT_TIME_MODULE_SUPPORT
+                    if (BTMASK_ALWAYS == mac_dayofweek_block_time_bit_mask_type)
+                        fprintf(fp, "-I FORWARD -m mac --mac-source %s -j DROP\n", MACAddress);
+                    else if (BTMASK_BYHOUR == mac_dayofweek_block_time_bit_mask_type || BTMASK_BYDAYHOUR == mac_dayofweek_block_time_bit_mask_type)
+                        fprintf(fp, "-I FORWARD -m mac --mac-source %s -j MAC_BLOCK_TIME\n", MACAddress);
+#else
                     fprintf(fp, "-I FORWARD -m mac --mac-source %s -j DROP\n", MACAddress);
 
+#endif
                 }
             }
             else
