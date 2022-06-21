@@ -215,6 +215,10 @@ else
    echo 204 > /var/tmp/networkresponse.txt
 fi
 
+# Get the values of FactoryResetSSID's from the psm xml backup file
+WIFI_FACTORY_RESET_SSID1=$(grep -ir '1.FactoryResetSSID' $PSM_BAK_XML_CONFIG_FILE_NAME | awk -F"[<>]" '{print $3}')
+WIFI_FACTORY_RESET_SSID2=$(grep -ir '2.FactoryResetSSID' $PSM_BAK_XML_CONFIG_FILE_NAME | awk -F"[<>]" '{print $3}')
+
 if [ -x /usr/bin/db_mig ]; then
    DB_MIG_COMPLETE=$(syscfg get db_migration_completed)
    echo_t "[utopia][init] db_mig = $DB_MIG_COMPLETE"
@@ -353,6 +357,16 @@ elif [ "$FACTORY_RESET_WIFI" = "$SYSCFG_FR_VAL" ]; then
     syscfg unset $FACTORY_RESET_KEY
 #<<zqiu
 fi
+
+# Set the wifi_factory_reset_ssid accordingly to the value fetched from the PSM backup file
+if [ "$WIFI_FACTORY_RESET_SSID1" = "1" ] || [ "$WIFI_FACTORY_RESET_SSID2" = "1" ]; then
+    syscfg set wifi_factory_reset_ssid 1
+    syscfg commit
+else
+    syscfg set wifi_factory_reset_ssid 0
+    syscfg commit
+fi
+
 #echo_t "[utopia][init] Cleaning up vendor nvram"
 # /etc/utopia/service.d/nvram_cleanup.sh
 
