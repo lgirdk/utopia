@@ -846,7 +846,7 @@ static int gen_zebra_conf(int sefd, token_t setok)
     else
     {
     #endif     
-        #if defined (_HUB4_PRODUCT_REQ_) && !defined (_WNXL11BWL_PRODUCT_REQ_)
+        #if ( defined (_HUB4_PRODUCT_REQ_) && !defined (_WNXL11BWL_PRODUCT_REQ_) ) || defined(_LG_OFW_)
             sysevent_get(sefd, setok, "ipv6_prefix", prefix, sizeof(prefix));
         #else
             sysevent_get(sefd, setok, "lan_prefix", prefix, sizeof(prefix));
