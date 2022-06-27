@@ -1466,8 +1466,8 @@ $$ntp_status=2
 #mTlsCrashdump is disabled by default.
 $mTlsCrashdumpUpload_Enable=false
 
-#AutoReboot is enabled by default
-$AutoReboot=true
+#AutoReboot should be disabled by default for OFW
+$$AutoReboot=false
 
 #WebUIRemoteMgtOption is Enabled by default.
 $WebUIRemoteMgtOptionEnable=true
