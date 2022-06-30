@@ -1542,6 +1542,8 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
     int                 primaryLan = 0;
     char                relayStr[1024];
     int                 Cnt;
+    char                buf[10] = {0};
+    int                 log_level = 0;
     unsigned long T1 = 0;
     unsigned long T2 = 0;
     int l_iRet_Val = 0;
@@ -1607,7 +1609,19 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
         7 : Info
         8 : Debug
     */
-    fprintf(fp, "log-level 3\n");
+    if (syscfg_get( NULL, "dibbler_log_level", buf, sizeof(buf)) == 0)
+    {
+        log_level = atoi(buf);
+    }
+    if (log_level < 1)
+    {
+        log_level = 1;
+    }
+    else if (log_level > 8)
+    {
+        log_level = 4;
+    }
+    fprintf(fp, "log-level %d\n", log_level);
     
     /*
        Enable inactive mode: When server begins operation and it detects that
