@@ -423,6 +423,8 @@ $UDHCPEnable=false
 
 $$dibbler_client_enable=true
 
+$dibbler_log_level=4
+
 #Bydefault dnsmasq uses new code changes
 $XDNS_RefacCodeEnable=1
 
