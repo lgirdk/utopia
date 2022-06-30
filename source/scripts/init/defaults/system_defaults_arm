@@ -659,6 +659,7 @@ $PPTPPassthrough=1
 $SinglePortForwardCount=0
 $PortRangeForwardCount=0
 $PortRangeTriggerCount=0
+$lgFwV4IpFilterCount=0
 $InternetAccessPolicyCount=0
 $W2LWellKnownFirewallRuleCount=0
 
