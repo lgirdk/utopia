@@ -1216,62 +1216,105 @@ static int get_and_pass_acs_info (void)
 
     option = getenv("opt43");
 
-    if (option == NULL)
+    if (option != NULL)
     {
-        return 0;
+        option_len = strlen(option);
+
+        if (option_len < 4)
+        {
+            return 0;
+        }
+
+        url[0] = 0;
+        provisioning_code[0] = 0;
+        dec_length = 0;
+
+        while (1)
+        {
+            if ((dec_length + 2) > option_len)
+            {
+                break;
+            }
+
+            extract_substring(sub_opt, sizeof(sub_opt), option + dec_length, 2);
+            dec_length += 2;
+
+            if (memcmp(sub_opt, "ff", 2) == 0)
+            {
+                break;
+            }
+
+            if ((dec_length + 2) > option_len)
+            {
+                break;
+            }
+
+            extract_substring(data, sizeof(data), option + dec_length, 2);
+            dec_length += 2;
+
+            len = strtol(data, NULL, 16);
+
+            if ((dec_length + (len * 2)) > option_len)
+            {
+                break;
+            }
+
+            if (memcmp(sub_opt, "01", 2) == 0)
+            {
+                hex2string(url, sizeof(url), option + dec_length, len * 2);
+            }
+            else if (memcmp(sub_opt, "02", 2) == 0)
+            {
+                hex2string(provisioning_code, sizeof(provisioning_code), option + dec_length, len * 2);
+            }
+
+            dec_length += (len * 2);
+        }
     }
-
-    option_len = strlen(option);
-
-    if (option_len < 4)
+    else
     {
-        return 0;
-    }
-
-    url[0] = 0;
-    provisioning_code[0] = 0;
-    dec_length = 0;
-
-    while (1)
-    {
-        if ((dec_length + 2) > option_len)
+        //As per current implementation ,Option125 is send along with the all request.
+        //if Option 43 is not reecived consider the data from option125.
+        option = getenv("opt125");
+        if (NULL == option)
         {
-            break;
+            return 0;
         }
-
-        extract_substring(sub_opt, sizeof(sub_opt), option + dec_length, 2);
-        dec_length += 2;
-
-        if (memcmp(sub_opt, "ff", 2) == 0)
+        option = getenv("opt125");
+        char enterpriseId[512];
+        char code[25]= {0};
+        char urltype[50]= {0};
+        int pos = 0;
+        int len = 0;
+        int acsurlLen = 0;
+        extract_substring(enterpriseId, 17, option + pos, 8);
+        pos = pos + 8;
+        if(0 == strcmp(enterpriseId, "0000000a"))
         {
-            break;
+            extract_substring(data, 3, option + pos,2);
+            len = strtol(data, NULL, 16);
+            pos = pos + 2;
+            extract_substring(provisioning_code, 3, option + pos, 2);
+            hex2string(provisioning_code, sizeof(provisioning_code), option + pos, len);
+            if(0 == strcmp(provisioning_code, "14"))
+            {
+                pos = pos + 2;
+                extract_substring(data, 3, option + pos, 2);
+                acsurlLen = strtol(data, NULL, 16);
+                pos = pos + 2;
+                extract_substring(urltype, 3, option + pos, 2);
+                if (0 == strcmp(urltype, "68"))
+                {
+                    pos = pos + 2;
+                    extract_substring(url, 2*acsurlLen +1, option + pos, 2*acsurlLen);
+                    hex2string(url, sizeof(url), option + pos, 2*acsurlLen);
+                }
+            }
         }
-
-        if ((dec_length + 2) > option_len)
+        else
         {
-            break;
+            return -1;
         }
-
-        extract_substring(data, sizeof(data), option + dec_length, 2);
-        dec_length += 2;
-
-        len = strtol(data, NULL, 16);
-
-        if ((dec_length + (len * 2)) > option_len)
-        {
-            break;
-        }
-
-        if (memcmp(sub_opt, "01", 2) == 0)
-        {
-            hex2string(url, sizeof(url), option + dec_length, len * 2);
-        }
-        else if (memcmp(sub_opt, "02", 2) == 0)
-        {
-            hex2string(provisioning_code, sizeof(provisioning_code), option + dec_length, len * 2);
-        }
-
-        dec_length += (len * 2);
     }
 
     if (url[0] != 0)
