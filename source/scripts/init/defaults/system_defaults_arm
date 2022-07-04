@@ -891,6 +891,7 @@ $$dhcpv6s00::poolnumber=5
 $dhcpv6spool00::instancenumber=1
 $dhcpv6spool00::bEnabled=1
 $$dhcpv6spool00::Interface=Device.IP.Interface.4.
+$$dhcpv6spool00::InterfaceName=brlan0
 $dhcpv6spool00::IANAEnable=1
 #$dhcpv6spool00::IANAManualPrefixes=Device.IP.Interface.1.IPv6Prefix.1.
 $$dhcpv6spool00::IANAPrefixes=Device.IP.Interface.4.IPv6Prefix.1.
@@ -934,6 +935,7 @@ $dhcpv6spool1option1::PassthroughClient=Device.DHCPv6.Client.1.
 # brlan7 start
 $$dhcpv6spool40::instancenumber=5
 $$dhcpv6spool40::bEnabled=1
+$$dhcpv6spool40::InterfaceName=brlan7
 $$dhcpv6spool40::Interface=Device.IP.Interface.6.
 $$dhcpv6spool40::IANAEnable=1
 $$dhcpv6spool40::IANAPrefixes=Device.IP.Interface.6.IPv6Prefix.1.
