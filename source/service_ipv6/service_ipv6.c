@@ -53,6 +53,7 @@
 #include <ccsp_base_api.h>
 #include "ccsp_memory.h"
 #endif
+#include <platform_hal.h>
 
 #define PROG_NAME       "SERVICE-IPV6"
 
@@ -381,7 +382,7 @@ static int get_dhcpv6s_pool_cfg(struct serv_ipv6 *si6, dhcpv6s_pool_cfg_t *cfg)
 #ifdef CISCO_CONFIG_DHCPV6_PREFIX_DELEGATION
     DHCPV6S_SYSCFG_GETS(DHCPV6S_NAME, "pool", cfg->index, "", 0, "IAInterface", iface_name);
 #else
-    DHCPV6S_SYSCFG_GETS(DHCPV6S_NAME, "pool", cfg->index, "", 0, "Interface", iface_name);
+    DHCPV6S_SYSCFG_GETS(DHCPV6S_NAME, "pool", cfg->index, "", 0, "InterfaceName", cfg->interface);
 #endif
 #else
     DHCPV6S_SYSCFG_GETS(DHCPV6S_NAME, "pool", cfg->index, "", 0, "IAInterface", cfg->interface);
@@ -390,12 +391,17 @@ static int get_dhcpv6s_pool_cfg(struct serv_ipv6 *si6, dhcpv6s_pool_cfg_t *cfg)
     DHCPV6S_SYSCFG_GETS(DHCPV6S_NAME, "pool", cfg->index, "", 0, "PrefixRangeEnd", cfg->prefix_range_end);
     DHCPV6S_SYSCFG_GETS(DHCPV6S_NAME, "pool", cfg->index, "", 0, "X_RDKCENTRAL_COM_DNSServers", cfg->X_RDKCENTRAL_COM_DNSServers);
 
-#ifdef MULTILAN_FEATURE
+#ifdef CISCO_CONFIG_DHCPV6_PREFIX_DELEGATION
     /* get Interface name from data model: Device.IP.Interface.%d.Name*/
     snprintf(dml_path, sizeof(dml_path), "%sName", iface_name);
     if ((iface_name[0] == '\0') || (mbus_get(dml_path, cfg->interface, sizeof(cfg->interface)) != 0))
         return -1;
 #endif
+
+    if(cfg->interface[0] == 0)
+    {
+        return -1;
+    }
 
     /*get interface prefix*/
     snprintf(buf, sizeof(buf), "ipv6_%s-prefix", cfg->interface);
@@ -1510,7 +1516,7 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
     dhcpv6s_pool_opt_t  opt;
     int                 tag_index;
     char                prefix_value[64] = {0};
-    char                deviceManufacturerOUI[6];
+    char                deviceManufacturerOUI[7];
     char                deviceSerialNumber[128];
     char                deviceProductClass[64];
     pd_pool_t           pd_pool;
@@ -1527,6 +1533,8 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
     int                 Cnt;
     unsigned long T1 = 0;
     unsigned long T2 = 0;
+    int l_iRet_Val = 0;
+    char *psm_get = NULL;
     FILE *ifd=NULL;
     char *HwAdrrPath = "/sys/class/net/brlan0/address";
     struct stat check_ConfigFile;
@@ -1555,9 +1563,28 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
     Cnt = 0;
     relayStr[0] = 0;
 
-    mbus_get("Device.DeviceInfo.ManufacturerOUI", deviceManufacturerOUI, sizeof(deviceManufacturerOUI));
-    mbus_get("Device.DeviceInfo.X_LGI-COM_SerialNumber", deviceSerialNumber, sizeof(deviceSerialNumber));
-    mbus_get("Device.DeviceInfo.ProductClass", deviceProductClass, sizeof(deviceProductClass));
+    l_iRet_Val = PSM_VALUE_GET_STRING("dmsb.device.deviceinfo.ManufacturerOUI", psm_get);
+    if((l_iRet_Val == CCSP_SUCCESS) && (psm_get != NULL))
+    {
+        strncpy(deviceManufacturerOUI, psm_get, sizeof(deviceManufacturerOUI));
+        deviceManufacturerOUI[6] = '\0';
+        fprintf(fp_v6_dbg, "deviceManufacturerOUI: %s\n", deviceManufacturerOUI);
+        Ansc_FreeMemory_Callback(psm_get);
+        psm_get = NULL;
+    }
+    if(platform_hal_GetSerialNumber(deviceSerialNumber) == 0)
+    {
+        fprintf(fp_v6_dbg, "deviceSerialNumber: %s\n", deviceSerialNumber);
+    }
+    l_iRet_Val = PSM_VALUE_GET_STRING("dmsb.device.deviceinfo.ProductClass", psm_get);
+    if((l_iRet_Val == CCSP_SUCCESS) && (psm_get != NULL))
+    {
+        strncpy(deviceProductClass, psm_get,sizeof(deviceProductClass));
+        deviceProductClass[strlen(deviceProductClass)] = '\0';
+        fprintf(fp_v6_dbg, "deviceProductClass: %s\n", deviceProductClass);
+        Ansc_FreeMemory_Callback(psm_get);
+        psm_get = NULL;
+    }
 
     /*Begin write dibbler configurations*/
 
@@ -2036,6 +2063,10 @@ static int serv_ipv6_start(struct serv_ipv6 *si6)
      */
 	/* For CBR product the lan(brlan0) v6 address set is done as part of PandM process*/
 #if !defined(_CBR_PRODUCT_REQ_) && !defined(_BWG_PRODUCT_REQ_)
+    /* Read from /tmp/ipv6_provisioned.config file and set the sysevents before lan interfaces */
+    ia_na_t             ia_na;
+    ia_pd_t             ia_pd;
+    get_ia_info(si6, PROVISIONED_V6_CONFIG_FILE, &ia_na, &ia_pd);
     if (lan_addr6_set(si6) !=0) {
         fprintf(fp_v6_dbg, "assign IPv6 address for lan interfaces error!\n");
         sysevent_set(si6->sefd, si6->setok, "service_ipv6-status", "error", 0);
