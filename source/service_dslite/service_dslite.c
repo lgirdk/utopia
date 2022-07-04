@@ -256,6 +256,32 @@ static int get_aftr (struct serv_dslite *sd, char *DSLITE_AFTR, char *dslite_mod
     return retvalue;
 }
 
+static void wan_dhcp_stop (void)
+{
+    char pid_str[12];
+    int pid = -1;
+    FILE *fp;
+
+    if ((fp = fopen("/tmp/udhcpc.erouter0.pid", "rb")) != NULL)
+    {
+        if (fgets(pid_str, sizeof(pid_str), fp) != NULL && atoi(pid_str) > 0)
+        {
+            pid = atoi(pid_str);
+        }
+        fclose(fp);
+    }
+
+    if (pid > 0)
+    {
+        kill(pid, SIGUSR2); // triger DHCP release
+        sleep(1);
+        kill(pid, SIGTERM); // terminate DHCP client
+    }
+
+    unlink("/tmp/udhcpc.erouter0.pid");
+    unlink("/tmp/udhcp.log");
+}
+
 static void restart_zebra (struct serv_dslite *sd)
 {
     FILE *zebra_pid_fd;
@@ -447,9 +473,7 @@ static int dslite_start (struct serv_dslite *sd)
 
     //Stop WAN IPv4 service
     route_deconfig (sd);
-
-    vsystem ("service_wan dhcp-release" "; "
-             "service_wan dhcp-stop");
+    wan_dhcp_stop();
 
     sysevent_set (sd->sefd, sd->setok, "current_wan_ipaddr", "0.0.0.0", 0);
 
