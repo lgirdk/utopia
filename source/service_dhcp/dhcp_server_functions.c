@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+ #include <ctype.h>
 #include "sysevent/sysevent.h"
 #include "syscfg/syscfg.h"
 #include "errno.h"
@@ -35,6 +36,7 @@
 #include "ccsp_memory.h"
 #include <telemetry_busmessage_sender.h>
 #include "safec_lib_common.h"
+#include "platform_hal.h"
 
 #define HOSTS_FILE              "/etc/hosts"
 #define HOSTNAME_FILE           "/etc/hostname"
@@ -179,73 +181,33 @@ static int isValidLANIP(const char* ipStr)
         return 1;
 }
 
-static int get_dmcli_value(char *param, char *out, size_t out_size, void* bus_handle)
+#if !defined (_PUMA6_ARM_)
+static void getErotuerMacAddress (char *mac)
 {
-    int valNum = 0;
-    parameterValStruct_t **parameterVal = NULL;
-    char *paramNames[1];
+    char buf[18];
+    FILE *fp;
+    int i;
 
-    if (!param || !out)
-        return ERROR;
-
-    out[0] = 0;
-    paramNames[0] = param;
-    if(CcspBaseIf_getParameterValues(bus_handle, pDestComponentName, pDestComponentPath, paramNames, 1, &valNum, &parameterVal) != CCSP_SUCCESS)
+    if (((fp = fopen("/sys/class/net/erouter0/address", "r")) != NULL) &&
+        (fgets(buf, sizeof(buf), fp) != NULL) &&
+        (strlen(buf) == 17))
     {
-        fprintf(stderr, "DHCP SERVER %d: failed get parameter value for %s\n", __LINE__, param);
-        return ERROR;
+        /* Drop ':' chars and convert to upper case */
+        for (i = 0; i < 6; i++) {
+            mac[(i * 2) + 0] = toupper(buf[(i * 3) + 0]);
+            mac[(i * 2) + 1] = toupper(buf[(i * 3) + 1]);
+        }
+        mac[12] = 0;
+    }
+    else {
+        mac[0] = 0;
     }
 
-    if (valNum > 0) {
-        strncpy(out, parameterVal[0]->parameterValue, out_size);
-        free_parameterValStruct_t(bus_handle, valNum, parameterVal);
+    if (fp) {
+        fclose(fp);
     }
-//    fprintf(stderr, "DHCP SERVER %d: out:%s\n",__LINE__,out);
-
-    return SUCCESS;
 }
-
-/*
-   Values for ManufacturerOUI, SerialNumber and ProductClass are static,
-   therefore cache results to avoid unnecessary repeated calls to dmcli (which
-   is very bad for performance). Fixme: maybe better to fix these at compile
-   time and avoid the overhead of dmcli completely?
-*/
-static char *get_dmcli_value_ProductClass (void* bus_handle)
-{
-    static char buf[32];
-
-    if (buf[0] == 0)
-        get_dmcli_value ("Device.DeviceInfo.ProductClass", buf, sizeof(buf), bus_handle);
-    if (buf[0] != 0)
-        return buf;
-
-    return "LG5678"; /* Fallback default value */
-}
-
-static char *get_dmcli_value_SerialNumber (void* bus_handle)
-{
-    static char buf[32];
-
-    if (buf[0] == 0)
-        get_dmcli_value ("Device.DeviceInfo.SerialNumber", buf, sizeof(buf), bus_handle);
-    if (buf[0] != 0)
-        return buf;
-
-    return "001234"; /* Fallback default value */
-}
-
-static char *get_dmcli_value_ManufacturerOUI (void* bus_handle)
-{
-    static char buf[32];
-
-    if (buf[0] == 0)
-        get_dmcli_value ("Device.DeviceInfo.ManufacturerOUI", buf, sizeof(buf), bus_handle);
-    if (buf[0] != 0)
-        return buf;
-
-    return "5C353B"; /* Fallback default value */
-}
+#endif
 
 int prepare_hostname()
 {
@@ -938,6 +900,10 @@ int prepare_dhcp_conf (char *input, void *bus_handle)
 		 l_bDhcpNs_Enabled = FALSE,
 		 l_bIsValidWanDHCPNs = FALSE;
 	errno_t safec_rc = -1;
+	char *l_psm_get = NULL;
+	char l_deviceManufacturerOUI[7];
+    char l_deviceSerialNumber[20];
+    char l_deviceProductClass[64];
 
 	if ((NULL != input) && (!strncmp(input, "dns_only", 8)))
 	{
@@ -1267,26 +1233,32 @@ int prepare_dhcp_conf (char *input, void *bus_handle)
             }
         }
 
-        while (1)
-        {
-            if ((access(PAM_FILE,  F_OK) == 0)) //PAM_FILE file exists
-            {
-               fprintf(stderr,"DHCP SERVER : file pam_initialized exists\n");
-               break;
-            }
-            else
-            {
-               fprintf(stderr,"DHCP SERVER : file pam_initialized doesn't exist wait until the PA is initialised\n");
-               sleep(2);
-            }
-        }
+		l_iRet_Val = PSM_VALUE_GET_STRING("dmsb.device.deviceinfo.ManufacturerOUI", l_psm_get);
+		if((l_iRet_Val == CCSP_SUCCESS) && (l_psm_get != NULL))
+		{
+		    strncpy(l_deviceManufacturerOUI, l_psm_get, sizeof(l_deviceManufacturerOUI));
+		    l_deviceManufacturerOUI[6] = '\0';
+		    Ansc_FreeMemory_Callback(l_psm_get);
+		    l_psm_get = NULL;
+		}
+		// Device.DeviceInfo.SerialNumber reports the mac address
+#if defined (_PUMA6_ARM_)
+		platform_hal_GetCmMacAddress(l_deviceSerialNumber,sizeof(l_deviceSerialNumber));
+#else
+		getErotuerMacAddress(l_deviceSerialNumber);
+#endif
+		l_iRet_Val = PSM_VALUE_GET_STRING("dmsb.device.deviceinfo.ProductClass", l_psm_get);
+		if((l_iRet_Val == CCSP_SUCCESS) && (l_psm_get != NULL))
+		{
+		    strncpy(l_deviceProductClass, l_psm_get,sizeof(l_deviceProductClass));
+		    l_deviceProductClass[strlen(l_deviceProductClass)] = '\0';
+		    Ansc_FreeMemory_Callback(l_psm_get);
+		    l_psm_get = NULL;
+		}
 
-        if (bus_handle)
-        {
-            fprintf(l_fLocal_Dhcp_ConfFile,"dhcp-option-force=tag:cpewan-id,vi-encap:3561,6,\"%s\"\n", get_dmcli_value_ProductClass(bus_handle));
-            fprintf(l_fLocal_Dhcp_ConfFile,"dhcp-option-force=tag:cpewan-id,vi-encap:3561,5,\"%s\"\n", get_dmcli_value_SerialNumber(bus_handle));
-            fprintf(l_fLocal_Dhcp_ConfFile,"dhcp-option-force=tag:cpewan-id,vi-encap:3561,4,\"%s\"\n", get_dmcli_value_ManufacturerOUI(bus_handle));
-        }
+        fprintf(l_fLocal_Dhcp_ConfFile,"dhcp-option-force=tag:cpewan-id,vi-encap:3561,6,\"%s\"\n", l_deviceProductClass);
+        fprintf(l_fLocal_Dhcp_ConfFile,"dhcp-option-force=tag:cpewan-id,vi-encap:3561,5,\"%s\"\n", l_deviceSerialNumber);
+        fprintf(l_fLocal_Dhcp_ConfFile,"dhcp-option-force=tag:cpewan-id,vi-encap:3561,4,\"%s\"\n", l_deviceManufacturerOUI);
 
         //Propagate Domain
         syscfg_get(NULL, "dhcp_server_propagate_wan_domain", l_cPropagate_Dom, sizeof(l_cPropagate_Dom));
