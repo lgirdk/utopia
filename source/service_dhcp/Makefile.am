@@ -31,7 +31,7 @@ service_dhcp_CPPFLAGS = -I$(top_srcdir)/source/include \
                         -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/dbus-1.0 \
                         -I${PKG_CONFIG_SYSROOT_DIR}$(libdir)/dbus-1.0/include
 
-service_dhcp_LDFLAGS = -lccsp_common -lhal_ethsw $(DBUS_LIBS) -lsecure_wrapper
+service_dhcp_LDFLAGS = -lccsp_common -lhal_ethsw -lhal_platform $(DBUS_LIBS) -lsecure_wrapper
 
 service_dhcp_LDADD = $(top_builddir)/source/util/utils/libutopiautil.la \
                      $(top_builddir)/source/sysevent/lib/libsysevent.la \
