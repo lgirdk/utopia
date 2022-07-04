@@ -226,7 +226,7 @@ static struct in6_addr *dslite_resolve_fqdn_to_ipv6addr (const char *name, unsig
     return in6_addrs;
 }
 
-static int get_aftr (char *DSLITE_AFTR, char *dslite_mode, char *dslite_addr_type, int size_aftr)
+static int get_aftr (struct serv_dslite *sd, char *DSLITE_AFTR, char *dslite_mode, char *dslite_addr_type, int size_aftr)
 {
     int retvalue = -1;
 
@@ -234,7 +234,7 @@ static int get_aftr (char *DSLITE_AFTR, char *dslite_mode, char *dslite_addr_typ
 
     if (strcmp (dslite_mode, "1") == 0) //AFTR got from DCHP mode
     {
-        syscfg_get (NULL, "dslite_addr_fqdn_1", DSLITE_AFTR, size_aftr);
+        sysevent_get (sd->sefd, sd->setok, "dslite_dhcpv6_endpointname", DSLITE_AFTR, size_aftr);
         retvalue = 1;
     }
     else if (strcmp (dslite_mode, "2") == 0) //AFTR got from static mode
@@ -311,7 +311,6 @@ static int dslite_start (struct serv_dslite *sd)
     char rule[256];
     char rule2[256];
     char return_buffer[256];
-    FILE *fptmp = NULL;
     char dslite_mode[16], dslite_addr_type[16];
     size_t len;
     
@@ -371,7 +370,7 @@ static int dslite_start (struct serv_dslite *sd)
     syscfg_get (NULL, "dslite_mode_1", dslite_mode, sizeof(dslite_mode));
     syscfg_get (NULL, "dslite_addr_type_1", dslite_addr_type, sizeof(dslite_addr_type));
 
-    dhcp_mode = get_aftr (DSLITE_AFTR, dslite_mode, dslite_addr_type, sizeof(DSLITE_AFTR));
+    dhcp_mode = get_aftr (sd, DSLITE_AFTR, dslite_mode, dslite_addr_type, sizeof(DSLITE_AFTR));
 
     if ((strlen (DSLITE_AFTR) == 0) || (strcmp (DSLITE_AFTR, "none") == 0))
     {
@@ -382,25 +381,15 @@ static int dslite_start (struct serv_dslite *sd)
     }
     fprintf (fp_dslt_dbg, "%s: AFTR address is %s\n", __FUNCTION__, DSLITE_AFTR);
 
-    /* Filter and store the WAN public IPv6 DNS server to a separate file */
-    vsystem ("cat /etc/resolv.conf | grep nameserver | grep : | grep -v \"nameserver ::1\" | awk '/nameserver/{print $2}' > /tmp/ipv6_dns_server.conf");
-    fptmp = fopen ("/tmp/ipv6_dns_server.conf", "r");
-    if (fptmp == NULL)
+    sysevent_get (sd->sefd, sd->setok, "ipv6_nameserver", buf, sizeof(buf));
+    if (buf[0] == 0)
     {
         sysevent_set (sd->sefd, sd->setok, "dslite_service-status", "error", 0);
-        fprintf (fp_dslt_dbg, "%s: IPv6 DNS server isn't present !\n", __FUNCTION__);
+        fprintf (fp_dslt_dbg, "%s: ipv6_nameserver is empty !\n", __FUNCTION__);
         SEM_POST;
         return 1;
     }
 
-    if (fgets (buf, sizeof(buf), fptmp) != NULL)
-    {
-        len = strlen (buf);
-        if ((len > 0) && (buf[len - 1] == '\n'))
-            buf[len - 1] = 0;
-    }
-
-    fclose (fptmp);
 
     resolved_ipv6[0] = 0;
 
