@@ -75,7 +75,7 @@ static const char* const service_routed_component_id = "ccsp.routed";
 #include "secure_wrapper.h"
 #define PROG_NAME       "SERVICE-ROUTED"
 
-#define ZEBRA_PID_FILE  "/var/run/quagga/zebra.pid"
+#define ZEBRA_PID_FILE  "/var/zebra.pid"
 #define RIPD_PID_FILE   "/var/ripd.pid"
 #define ZEBRA_CONF_FILE "/var/zebra.conf"
 
@@ -1682,7 +1682,7 @@ static int radv_start(struct serv_routed *sr)
     printf("DHCPv6 is %s. Starting zebra Process\n", (bEnabled?"Enabled":"Disabled"));
 #else
     v_secure_system("/bin/sh /etc/utopia/service.d/set_ipv6_dns.sh zebra");
-    vsystem("zebra -d -f %s -A 127.0.0.1", ZEBRA_CONF_FILE);
+    vsystem("zebra -d -f %s -A 127.0.0.1 -i %s", ZEBRA_CONF_FILE, ZEBRA_PID_FILE);
 #endif
 
     return 0;
