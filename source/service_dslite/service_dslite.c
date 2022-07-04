@@ -368,7 +368,7 @@ static int dslite_start (struct serv_dslite *sd)
     }
 
     /* get the WAN side IPv6 global address */
-    sysevent_get (sd->sefd, sd->setok, "tr_" ER_NETDEVNAME "_dhcpv6_client_v6addr", gw_ipv6, sizeof(gw_ipv6));
+    sysevent_get (sd->sefd, sd->setok, "wan6_ipaddr", gw_ipv6, sizeof(gw_ipv6));
     fprintf (fp_dslt_dbg, "%s: The GW IPv6 address is %s\n", __FUNCTION__, gw_ipv6);
 
     /*
