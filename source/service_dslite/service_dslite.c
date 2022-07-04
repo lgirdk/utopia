@@ -489,9 +489,7 @@ static int dslite_start (struct serv_dslite *sd)
     // If GW is the IPv6 only mode, we need to start the LAN to WAN IPv4 function
     if (sd->rtmod == WAN_RTMOD_IPV6)
     {
-        vsystem ("echo 1 > /proc/sys/net/ipv4/ip_forward" "; "                  // Enable the IPv4 forwarding
-                 "/etc/utopia/service.d/service_igd.sh lan-status" "; "         // Start Upnp & IGMP proxy
-                 "/etc/utopia/service.d/service_mcastproxy.sh lan-status");
+        sysctl_iface_set ("/proc/sys/net/ipv4/ip_forward", NULL, "1");
     }
     else
     {
@@ -639,9 +637,7 @@ static int dslite_stop (struct serv_dslite *sd)
     //if GW is the IPv6 only mode, we need to shutdown the LAN to WAN IPv4 function
     if (sd->rtmod == WAN_RTMOD_IPV6)
     {
-        vsystem ("echo 0 > /proc/sys/net/ipv4/ip_forward" "; "                  //Disable the IPv4 forwarding
-                 "/etc/utopia/service.d/service_igd.sh igd-stop" "; "           //Stop Upnp & IGMP proxy
-                 "/etc/utopia/service.d/service_mcastproxy.sh mcastproxy-stop");
+        sysctl_iface_set ("/proc/sys/net/ipv4/ip_forward", NULL, "0");
     }
     else
     {
