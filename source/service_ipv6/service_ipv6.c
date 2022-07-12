@@ -1878,7 +1878,11 @@ static int dhcpv6s_start(struct serv_ipv6 *si6)
        return 0;
     }
 #endif
+#if defined(_LG_MV3_)
+    sleep(5);
+#else
     sleep(1);
+#endif
     fprintf(fp_v6_dbg, "%s:%d calling dibbler-server start \n",__func__,__LINE__);
     v_secure_system("%s start", DHCPV6_SERVER);
     return 0;
