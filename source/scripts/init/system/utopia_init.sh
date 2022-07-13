@@ -567,13 +567,6 @@ if [ "$BOX_TYPE" = "XB3" ] || [ "$BOX_TYPE" = "MV1" ];then
 else
     $SWITCH_HANDLER addVlan 0 4090 sw_6
 fi
-vconfig add l2sd0 106
-brctl addbr br106
-ifconfig l2sd0.106 up
-ifconfig br106 192.168.106.1 netmask 255.255.255.0 up
-brctl addif br106 l2sd0.106
-ip rule add from all iif l2sd0.106 lookup erouter
-ip rule add from all iif br106 lookup erouter
 
 # ----------------------------------------------------------------------------
 # ----------------------------------------------------------------------------
