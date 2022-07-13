@@ -12224,6 +12224,7 @@ static int prepare_multinet_disabled_ipv4_firewall (FILE *filter_fp)
 #endif
 static void do_ipv4_UIoverWAN_filter(FILE* fp) {
  FIREWALL_DEBUG("Inside do_ipv4_UIoverWAN_filter \n"); 
+#ifndef _LG_OFW_
       if(strlen(current_wan_ipaddr)>0)
       {
          if (!isDefHttpPortUsed)
@@ -12258,6 +12259,7 @@ static void do_ipv4_UIoverWAN_filter(FILE* fp) {
 
         }
       }
+#endif
 
         #if defined (_COSA_BCM_ARM_)
         fprintf(fp, "-A PREROUTING -i %s -d 192.168.100.1 -p tcp -m tcp --dport 80 -j DROP\n", lan_ifname);
@@ -12975,6 +12977,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    {
        fprintf(filter_fp, "%s\n", ":http2self - [0:0]");
        fprintf(filter_fp, "-A INPUT -p tcp -m tcp --dport 80 -j http2self\n");
+       fprintf(filter_fp, "-A INPUT -p tcp -m tcp --dport 443 -j http2self\n");
 #ifdef _PUMA6_ARM_
        fprintf(filter_fp, "-A http2self -j lan2self_dos\n");
 #endif
@@ -14619,6 +14622,7 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
 
    fprintf(filter_fp, "-A INPUT -i %s -j lan2self_mgmt\n", cmdiag_ifname); //lan0 always exist
    fprintf(filter_fp, "-A INPUT -p tcp -m tcp --dport 80 -j http2self\n");
+   fprintf(filter_fp, "-A INPUT -p tcp -m tcp --dport 443 -j http2self\n");
 #ifdef _PUMA6_ARM_
    fprintf(filter_fp, "-A http2self -j lan2self_dos\n");
 #endif
@@ -15799,6 +15803,7 @@ static void do_ipv6_filter_table(FILE *fp){
 #endif
 
    fprintf(fp, "-A INPUT -p tcp -m tcp --dport 80 -j http2self\n");
+   fprintf(fp, "-A INPUT -p tcp -m tcp --dport 443 -j http2self\n");
 
    fprintf(fp, "-A http2self -j DROP\n");
    if (!isBridgeMode)
