@@ -1520,6 +1520,9 @@ $LatencyMeasure_IPv4Enable=false
 $LatencyMeasure_IPv6Enable=false
 $LatencyMeasure_TCPReportInterval=15
 
+#LED Brightness
+$led_brightness=10
+
 #Allowed Subnet Table
 $lglanAllowedSubnetCount=1
 $arLanAllowedSubnet_1::ins_num=1
