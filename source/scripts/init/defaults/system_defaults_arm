@@ -1555,6 +1555,8 @@ $TrackRemotePortUsage=NULL
 $RemoteDebuggerEnabled=false
 $RemoteDebuggerIssueType=NULL
 
+$led_brightness=50
+
 #Allowed Subnet Table
 $lglanAllowedSubnetCount=1
 $arLanAllowedSubnet_1::ins_num=1
