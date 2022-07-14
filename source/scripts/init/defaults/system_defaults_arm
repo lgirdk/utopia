@@ -1499,6 +1499,9 @@ $ClearDeviceList=false
 $StationModeTimeOut=30
 $HealthCheckTimeout=60
 
+#LED Brightness
+$led_brightness=10
+
 #Allowed Subnet Table
 $lglanAllowedSubnetCount=1
 $arLanAllowedSubnet_1::ins_num=1
