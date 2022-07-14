@@ -1547,6 +1547,8 @@ $NoSpeedBoost_Port_EndV4=65000
 $NoSpeedBoost_Port_StartV6=50000
 $NoSpeedBoost_Port_EndV6=65000
 
+$led_brightness=50
+
 #Allowed Subnet Table
 $lglanAllowedSubnetCount=1
 $arLanAllowedSubnet_1::ins_num=1
