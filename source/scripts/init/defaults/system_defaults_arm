@@ -1468,6 +1468,9 @@ $mTlsCrashdumpUpload_Enable=false
 #AutoReboot should be disabled by default for OFW
 $$AutoReboot=false
 
+#LED Brightness
+$led_brightness=10
+
 #Allowed Subnet Table
 $lglanAllowedSubnetCount=1
 $arLanAllowedSubnet_1::ins_num=1
