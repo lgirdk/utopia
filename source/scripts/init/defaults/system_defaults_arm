@@ -1490,6 +1490,9 @@ $DscpSleepInterval_2=0
 #Ccsp CMagent Docsis linkdown timeout default value is 900sec
 $DocsisLinkDownTimeOut=900
 
+#LED Brightness
+$led_brightness=10
+
 #Allowed Subnet Table
 $lglanAllowedSubnetCount=1
 $arLanAllowedSubnet_1::ins_num=1
