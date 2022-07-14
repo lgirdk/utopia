@@ -1519,6 +1519,9 @@ $LatencyMeasure_TCPReportInterval=15
 #DeviceType default value
 $DeviceType=TEST
 
+#LED Brightness
+$led_brightness=50
+
 #Allowed Subnet Table
 $lglanAllowedSubnetCount=1
 $arLanAllowedSubnet_1::ins_num=1
