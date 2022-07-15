@@ -420,7 +420,7 @@ service_start ()
                    QUICK_SYNC_PID=$!
                fi
            else
-               $BIN -c $NTP_CONF_QUICK_SYNC --interface "$QUICK_SYNC_WAN_IP" -x -gq -l $NTPD_LOG_NAME &
+               $BIN -c $NTP_CONF_QUICK_SYNC --interface "$NTPD_INTERFACE" -x -gq -l $NTPD_LOG_NAME &
                QUICK_SYNC_PID=$!
            fi
            if [ -n "$QUICK_SYNC_PID" ];then
