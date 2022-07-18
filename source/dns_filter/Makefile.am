@@ -2,7 +2,7 @@
 # If not stated otherwise in this file or this component's Licenses.txt
 # file the following copyright and licenses apply:
 #
-# Copyright 2015 RDK Management
+# Copyright 2022 Liberty Global B.V
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,33 +16,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ##########################################################################
-SUBDIRS = ulog syscfg sysevent services utctx utapi firewall firewall_log newhost macclone util pal pmon services service_wan trigger igd service_routed service_ipv6 scripts service_multinet service_udhcpc
+AM_CFLAGS =
 
-SUBDIRS += dns_filter
+bin_PROGRAMS = dns_filter
 
-#SUBDIRS += dhcpproxy
+dns_filter_SOURCES = dns_filter.c
 
-if DSLITE_FEATURE_SUPPORT
-SUBDIRS += service_dslite
-endif
+dns_filter_CPPFLAGS = -I$(top_srcdir)/source/ulog \
+                   -I$(top_srcdir)/source/include
 
-if WITH_GTEST_SUPPORT
-SUBDIRS += test
-endif
+dns_filter_LDFLAGS = -lnetfilter_queue -lnfnetlink -lresolv
 
-if CORE_NET_LIB_FEATURE_SUPPORT
-SUBDIRS += service_dhcp
-SUBDIRS += service_dhcpv6_client
-endif
-
-if FEATURE_RDKB_EXTENDER
-SUBDIRS += service_deviceMode
-endif
-
-#if FEATURE_RDKB_WANFAILOVER
-#SUBDIRS += NetworkMonitor
-#endif
-
-if DDNS_BINARY_CLIENT_SUPPORT
-SUBDIRS += service_ddns
-endif
+dns_filter_LDADD = $(top_builddir)/source/ulog/libulog.la \
+                $(top_builddir)/source/syscfg/lib/libsyscfg.la
