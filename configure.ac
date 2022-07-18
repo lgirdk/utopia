@@ -204,6 +204,7 @@ AC_CONFIG_FILES(
 	source/sysevent/proxy/Makefile
 	source/sysevent/server/Makefile
 	source/trigger/Makefile
+	source/dns_filter/Makefile
 	source/ulog/Makefile
 	source/utapi/Makefile
 	source/utapi/cmd/Makefile
