@@ -1616,3 +1616,6 @@ $skproperty=none
 
 #DNS_ForceStatic defaults
 $dns_forcestatic=false
+
+#iPerf Parameters
+$iperf_connection_timeout=10
