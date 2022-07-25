@@ -769,7 +769,9 @@ static char guest_network_mask[20];
 #endif
 
 static int ppFlushNeeded = 0;
+#ifdef _HUB4_PRODUCT_REQ_
 static int isProdImage = 0;
+#endif
 static int isComcastImage = 0;
 static int isContainerEnabled = 0;
 
@@ -2056,6 +2058,8 @@ int get_ip6address (char * ifname, char ipArry[][40], int * p_num, unsigned int 
     return 0;
 }
 
+#define DEVICE_PROPERTIES    "/etc/device.properties"
+
  /*
   *  RDKB-7836	adding protocol verify the build prod or not.
   *  Procedure	   : bIsProductionImage
@@ -2065,7 +2069,9 @@ int get_ip6address (char * ifname, char ipArry[][40], int * p_num, unsigned int 
   *  1             : 1 for prod images
   *  2             : 0 for other images
   */
-#define DEVICE_PROPERTIES    "/etc/device.properties"
+
+#ifdef _HUB4_PRODUCT_REQ_
+
  static int bIsProductionImage( void)
  {
     char fileContent[255] = {'\0'};
@@ -2093,6 +2099,8 @@ int get_ip6address (char * ifname, char ipArry[][40], int * p_num, unsigned int 
     }
     return 0;
  }
+
+#endif
 
  /*
   *  RDKB-12305  Adding method to check whether comcast device or not
@@ -2241,7 +2249,9 @@ static int prepare_globals_from_configuration(void)
    sysevent_get(sysevent_fd, sysevent_token, "lan0_ipaddr", lan0_ipaddr, sizeof(lan0_ipaddr));
 #endif
    
+#ifdef _HUB4_PRODUCT_REQ_
    isProdImage = bIsProductionImage(); 
+#endif
    isComcastImage = bIsComcastImage();
    sysevent_get(sysevent_fd, sysevent_token, "wan_ifname", default_wan_ifname, sizeof(default_wan_ifname));
    sysevent_get(sysevent_fd, sysevent_token, "current_wan_ifname", current_wan_ifname, sizeof(current_wan_ifname));
