@@ -894,6 +894,30 @@ static int wan_start(struct serv_wan *sw)
 	char buffer[64] = {0};
     FILE *fp;
     char line[64] = {0}, *cp;
+    int time_out = 5;
+
+    // Wait for interface to come up with time out of 5 sec 
+    sprintf(buffer,"/sys/class/net/%s/operstate",sw->ifname);
+    while(time_out > 0 && ((fp=fopen(buffer,"r")) != NULL))
+    {
+        if(fgets(buf,sizeof(buf),fp))
+        {
+            if(!strncmp(buf,"up",2))
+            {
+                 fclose(fp);
+                 fp = NULL;
+                 break;
+            }
+            time_out--;
+            sleep(1);
+        }
+        fclose(fp);
+        fp = NULL;
+    }
+
+    memset(buf,0,sizeof(buf));
+    memset(buffer,0,sizeof(buffer));
+
     get_dateanduptime(buffer,&uptime);
     print_uptime("Wan_init_start", NULL, NULL);
     OnboardLog("Wan_init_start:%d\n",uptime);
