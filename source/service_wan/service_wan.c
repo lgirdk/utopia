@@ -846,6 +846,21 @@ static int wait_till_dhcpv6_client_reply(struct serv_wan *sw)
 }
 #endif
 
+static void set_wan_mtu (char *wan_ifname)
+{
+    char wan_mtu[12];
+
+    if (syscfg_get(NULL, "wan_mtu", wan_mtu, sizeof(wan_mtu)) == 0)
+    {
+        int mtu = atoi(wan_mtu);
+
+        if ((mtu > 0) && (mtu < 1500))
+        {
+            v_secure_system("ip -4 link set %s mtu %s", wan_ifname, wan_mtu);
+        }
+    }
+}
+
 static int wan_start(struct serv_wan *sw)
 {
     char status[16];
@@ -891,6 +906,7 @@ static int wan_start(struct serv_wan *sw)
     /* state check */
     sysevent_get(sw->sefd, sw->setok, "wan_service-status", status, sizeof(status));
     if (strcmp(status, "starting") == 0 || strcmp(status, "started") == 0) {
+        set_wan_mtu(sw->ifname);
         fprintf(fp_wan_dbg, "%s: service wan has already %s !\n", __FUNCTION__, status);
         return 0;
     } else if (strcmp(status, "stopping") == 0) {
@@ -996,6 +1012,8 @@ static int wan_start(struct serv_wan *sw)
         sysevent_set(sw->sefd, sw->setok, "wan_service-status", "error", 0);
         return -1;
     }
+#else
+    set_wan_mtu(sw->ifname);
 
 #endif /*_WAN_MANAGER_ENABLED_*/
 
@@ -1401,7 +1419,6 @@ static int wan_iface_up(struct serv_wan *sw)
 {
 #if 1 // XXX: MOVE these code to IPv6 scripts, why put them in IPv4 service wan ??
     char proven[64];
-    char mtu[16];
 
     switch (sw->rtmod) {
     case WAN_RTMOD_IPV6:
@@ -1433,9 +1450,7 @@ static int wan_iface_up(struct serv_wan *sw)
     }
 #endif
 
-    syscfg_get(NULL, "wan_mtu", mtu, sizeof(mtu));
-    if (atoi(mtu) < 1500 && atoi(mtu) > 0)
-        v_secure_system("ip -4 link set %s mtu %s", sw->ifname, mtu);
+    set_wan_mtu(sw->ifname);
 
     sysctl_iface_set("/proc/sys/net/ipv4/conf/%s/arp_announce", sw->ifname, "1");
     v_secure_system("ip -4 link set %s up", sw->ifname);
