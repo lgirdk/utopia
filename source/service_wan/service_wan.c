@@ -827,6 +827,25 @@ static int wan_start(struct serv_wan *sw)
     char uptime[24];
     struct sysinfo si;
 
+#ifndef _PUMA6_ARM_
+    FILE *fp;
+    char buffer[64];
+    int time_out = 5;
+    // Wait for interface to come up with time out of 5 sec 
+    sprintf(buffer, "/sys/class/net/%s/operstate", sw->ifname);
+
+    while ((time_out > 0) && ((fp = fopen(buffer, "r")) != NULL))
+    {
+        char *p = fgets(buf, sizeof(buf), fp);
+        fclose(fp);
+        fp = NULL;
+        if (p && (strcmp(buf, "up") == 0))
+            break;
+        time_out--;
+        sleep(1);
+    }
+#endif
+
     print_uptime("Wan_init_start", NULL, NULL);
 
     sysinfo(&si);
