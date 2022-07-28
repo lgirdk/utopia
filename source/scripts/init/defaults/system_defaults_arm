@@ -1611,3 +1611,6 @@ $dns_forcestatic=false
 
 #iPerf Parameters
 $iperf_connection_timeout=10
+
+#Internet services defaults
+$internet_service_enable=1
