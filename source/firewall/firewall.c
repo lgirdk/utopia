@@ -12969,6 +12969,18 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
        fprintf(filter_fp, "%s\n", ":tr69_filter - [0:0]");
        fprintf(filter_fp, "-A INPUT -p tcp -m tcp --dport %s -j tr69_filter\n", cwmpPort);
    }
+
+#if defined(_LG_MV3_)
+   //Block the traffic in brlan0 and brlan7 interface if Internet service is disabled
+   char internetServiceEnable[8];
+   syscfg_get(NULL, "internet_service_enable", internetServiceEnable, sizeof(internetServiceEnable));
+   if (strcmp(internetServiceEnable, "0") == 0)
+   {
+       fprintf(filter_fp, "-I FORWARD -i brlan0 -j DROP\n");
+       fprintf(filter_fp, "-I FORWARD -i brlan7 -j DROP\n");
+   }
+#endif
+
 //Drop any packets to http(s) port by default and allow based on CSR login
    {
        fprintf(filter_fp, "%s\n", ":http2self - [0:0]");
@@ -15849,6 +15861,17 @@ static void do_ipv6_filter_table(FILE *fp){
        fprintf(fp, "-A LOG_TR69_DROP -j DROP\n");
        do_tr69_whitelistTable(fp, NULL, AF_INET6, current_wan_ifname, bus_handle);
    }
+
+#if defined(_LG_MV3_)
+   //Block the traffic in brlan0 and brlan7 interface if Internet service is disabled
+   char internetServiceEnable[8];
+   syscfg_get(NULL, "internet_service_enable", internetServiceEnable, sizeof(internetServiceEnable));
+   if (strcmp(internetServiceEnable, "0") == 0)
+   {
+       fprintf(fp, "-I FORWARD -i brlan0 -j DROP\n");
+       fprintf(fp, "-I FORWARD -i brlan7 -j DROP\n");
+   }
+#endif   
 
    /* Fixme: this duplicates some of the tests a few lines below. Should the two be combined? */
 
