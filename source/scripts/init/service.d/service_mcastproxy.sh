@@ -61,8 +61,8 @@ do_start_igmpproxy () {
    LOCAL_CONF_FILE=/tmp/mcproxy_v4.conf$$
    INTERFACE_LIST=`ip link show up | cut -d' ' -f2 | sed -e 's/:$//' | sed -e 's/@[_a-zA-Z0-9]*//'`
 
-   killall $BIN
-   killall $BIN2
+   while pidof $BIN; do killall $BIN; sleep 1; done
+   while pidof $BIN2; do killall $BIN2; sleep 1; done
 
    rm -rf $LOCAL_CONF_FILE
 
