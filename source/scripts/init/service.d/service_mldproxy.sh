@@ -46,10 +46,22 @@ SELF_NAME="`basename "$0"`"
 BIN=mcproxy_v6
 CONF_FILE=/tmp/mcproxy_v6.conf
 
+wait_while_tentative() {
+  local ifname=$1
+  local i=0
+
+  while [ $i -lt 10 ]; do
+    i=$((i+1))
+    awk -v ifname=$ifname '$6==ifname { flags="0x"$5; if (and(flags, 0x40)) exit 1; } ' /proc/net/if_inet6
+    [ $? -eq 0 ] && break
+    sleep 1
+  done
+}
+
 do_start_mldproxy () {
    LOCAL_CONF_FILE=/tmp/mcproxy_v6.conf$$
 
-   killall $BIN
+   while pidof $BIN; do killall $BIN; sleep 1; done
 
    rm -rf $LOCAL_CONF_FILE
 
@@ -72,6 +84,7 @@ do_start_mldproxy () {
 
    cat $LOCAL_CONF_FILE > $CONF_FILE
    rm -f $LOCAL_CONF_FILE 
+   wait_while_tentative $SYSCFG_lan_ifname
    $BIN -r -f $CONF_FILE &
 }
 
