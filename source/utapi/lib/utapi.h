@@ -740,6 +740,12 @@ typedef struct dmz {
     char      dest_ipv6[64];
 } dmz_t;
 
+typedef struct dns_whitelist_url
+{
+    int             InstanceNumber;
+    char            Url[2048];
+    char            Description[2048];
+} dns_whitelist_url_t;
 
 /*
  * Public APIs
@@ -1326,5 +1332,13 @@ int Utopia_AddNATPassthrough(UtopiaContext *ctx, const fwNATPassthrough_t *NATPa
 int Utopia_DelNATPassthrough(UtopiaContext *ctx, unsigned long ins);
 
 //LGI ADD END
+
+/* DNS rebind */
+int Utopia_GetDNSWhitelistInsNumByIndex(UtopiaContext *ctx, unsigned long uIndex, int *ins);
+int Utopia_GetNumberOfDNSWhitelistedUrl(UtopiaContext *ctx, int *num);
+int Utopia_GetDNSWhitelistByIndex(UtopiaContext *ctx, unsigned long ulIndex, dns_whitelist_url_t *dns_entry);
+int Utopia_SetDNSWhitelistByIndex(UtopiaContext *ctx, unsigned long ulIndex, const dns_whitelist_url_t *dns_entry);
+int Utopia_AddDNSWhitelist(UtopiaContext *ctx, const dns_whitelist_url_t *dns_entry);
+int Utopia_DelDNSWhitelist(UtopiaContext *ctx, unsigned long ins);
 
 #endif // _UTAPI_H_
