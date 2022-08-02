@@ -8578,3 +8578,98 @@ int Utopia_DelNATPassthrough(UtopiaContext *ctx, unsigned long ins)
 }
 //CR14 END
 // LGI ADD END
+
+int Utopia_GetDNSWhitelistInsNumByIndex(UtopiaContext *ctx, unsigned long uIndex, int *ins)
+{
+    return Utopia_GetIndexedInt(ctx, UtopiaValue_DNS_Whitelist_InsNum, uIndex+1, ins);
+}
+
+static int g_dns_whitelist_count = 0;
+
+int Utopia_GetNumberOfDNSWhitelistedUrl(UtopiaContext *ctx, int *num)
+{
+    int rc = SUCCESS;
+
+    if(g_dns_whitelist_count == 0)
+        Utopia_GetInt(ctx, UtopiaValue_DNS_Whitelist_Count, &g_dns_whitelist_count);
+
+    *num = g_dns_whitelist_count;
+    return rc;
+}
+
+int Utopia_GetDNSWhitelistByIndex(UtopiaContext *ctx, unsigned long ulIndex, dns_whitelist_url_t *dns_entry)
+{
+    int index = ulIndex+1;
+    Utopia_GetIndexedInt(ctx, UtopiaValue_DNS_Whitelist_InsNum, index, &dns_entry->InstanceNumber);
+    Utopia_GetIndexed(ctx, UtopiaValue_DNS_Whitelist_Url, index, dns_entry->Url, sizeof(dns_entry->Url));
+    Utopia_GetIndexed(ctx, UtopiaValue_DNS_Whitelist_Description, index, dns_entry->Description, sizeof(dns_entry->Description));
+
+    return 0;
+}
+
+int Utopia_SetDNSWhitelistByIndex(UtopiaContext *ctx, unsigned long ulIndex, const dns_whitelist_url_t *dns_entry)
+{
+    char tokenbuf[256];
+    int index = ulIndex+1;
+
+    snprintf(tokenbuf, sizeof(tokenbuf), "dnswhitelisted_%d", index);
+    Utopia_SetIndexed(ctx, UtopiaValue_DNS_Whitelist, index, tokenbuf);
+
+    Utopia_SetIndexedInt(ctx, UtopiaValue_DNS_Whitelist_InsNum, index, dns_entry->InstanceNumber);
+    Utopia_SetIndexed(ctx, UtopiaValue_DNS_Whitelist_Url, index, (char*)dns_entry->Url);
+    Utopia_SetIndexed(ctx, UtopiaValue_DNS_Whitelist_Description, index, (char*)dns_entry->Description);
+
+    return 0;
+}
+
+int Utopia_AddDNSWhitelist(UtopiaContext *ctx, const dns_whitelist_url_t *dns_entry)
+{
+    int index;
+
+    Utopia_GetNumberOfDNSWhitelistedUrl(ctx, &index);
+
+    g_dns_whitelist_count++;
+    Utopia_SetInt(ctx, UtopiaValue_DNS_Whitelist_Count, g_dns_whitelist_count);
+
+    Utopia_SetDNSWhitelistByIndex(ctx, index, dns_entry);
+
+    return 0;
+}
+
+int Utopia_DelDNSWhitelist(UtopiaContext *ctx, unsigned long ins)
+{
+    int count, index = 0;
+
+    Utopia_GetNumberOfDNSWhitelistedUrl(ctx, &count);
+    for (index = 0; index < count; index++)
+    {
+        int ins_num;
+        Utopia_GetDNSWhitelistInsNumByIndex(ctx, index, &ins_num);
+        if (ins_num == (int)ins)
+            break;
+    }
+
+    if (index >= count)
+    {
+        return -1;
+    }
+
+    if (index < count-1)
+    {
+        for (;index < count-1; index++)
+        {
+            dns_whitelist_url_t dns_entry;
+            Utopia_GetDNSWhitelistByIndex(ctx, index+1, &dns_entry);
+            Utopia_SetDNSWhitelistByIndex(ctx, index, &dns_entry);
+        }
+    }
+
+    Utopia_UnsetIndexed(ctx, UtopiaValue_DNS_Whitelist_InsNum, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_DNS_Whitelist_Url, count);
+    Utopia_UnsetIndexed(ctx, UtopiaValue_DNS_Whitelist_Description, count);
+
+    g_dns_whitelist_count--;
+    Utopia_SetInt(ctx, UtopiaValue_DNS_Whitelist_Count, g_dns_whitelist_count);
+
+    return 0;
+}
