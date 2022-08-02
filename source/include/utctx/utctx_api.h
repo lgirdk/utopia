@@ -731,6 +731,12 @@ typedef enum _UtopiaValue
     //LG ADD END CR14
     UtopiaValue_SPF_RuleSource,
     UtopiaValue_PFR_RuleSource,
+    // DNS Rebind
+    UtopiaValue_DNS_Whitelist_Count,
+    UtopiaValue_DNS_Whitelist,
+    UtopiaValue_DNS_Whitelist_InsNum,
+    UtopiaValue_DNS_Whitelist_Url,
+    UtopiaValue_DNS_Whitelist_Description,
 // LGI ADD END	
     UtopiaValue__LAST__
 } UtopiaValue;
