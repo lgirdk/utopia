@@ -889,6 +889,11 @@ static struct
 //LG ADD END CR14
     { Utopia_Type_IndexedConfig, Utopia_Event_Firewall_Restart,     Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "RuleSource",                UtopiaValue_SinglePortForward },   /* UtopiaValue_SPF_RuleSource */
     { Utopia_Type_IndexedConfig, Utopia_Event_Firewall_Restart,     Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "RuleSource",                UtopiaValue_PortRangeForward },    /* UtopiaValue_PFR_RuleSource */
+    { Utopia_Type_Config,        Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_For__NONE__,   1, "DNSRebindWhitelistUrlCount",    UtopiaValue__UNKNOWN__ },          /*  UtopiaValue_DNS_Whitelist_Count */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_Key, 1, "DNSRebindWhitelist_%d",      UtopiaValue__UNKNOWN__ },          /* UtopiaValue_DNS_Whitelist */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "ins_num",                   UtopiaValue_DNS_Whitelist },  /* UtopiaValue_DNS_Whitelist_InsNum */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "url",                      UtopiaValue_DNS_Whitelist },  /* UtopiaValue_DNS_Whitelist_Url */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "description",                      UtopiaValue_DNS_Whitelist },  /* UtopiaValue_DNS_Whitelist_Description */
     { Utopia_Type__UNKNOWN__, Utopia_Event__NONE__, Utopia_Static__NONE__, Utopia_For__NONE__, 0, 0, UtopiaValue__UNKNOWN__ }, /* UtopiaValue__LAST__ */
 };
 
