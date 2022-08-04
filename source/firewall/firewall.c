@@ -11061,6 +11061,31 @@ static void do_wan2lan_tsip_pm(FILE *filter_fp)
 #endif
 
 /*
+ *  Procedure     : do_wan2lan_dns_filter
+ *  Purpose       : if DNS rebind protection is enabled, this subchain
+ *                  sends all IPv4 DNS answers to a nfqueue user application
+ *
+ *  Parameters    :
+ *    filter_fp   : An open file to write wan2lan_dns_filter rules to
+ * Return Values  :
+ *
+ */
+static void do_wan2lan_dns_filter(FILE *filter_fp)
+{
+   char buf[8];
+
+   syscfg_get(NULL, "dns_rebind_protection_enable", buf, sizeof(buf));
+
+   if (strcmp(buf, "1") == 0)
+   {
+      fprintf(filter_fp, "-N wan2lan_dns_filter\n");
+      fprintf(filter_fp, "-I wan2lan -j wan2lan_dns_filter\n");
+      fprintf(filter_fp, "-A wan2lan_dns_filter -p udp --sport 53 -j NFQUEUE --queue-num 47 --queue-bypass\n");
+      fprintf(filter_fp, "-A wan2lan_dns_filter -p tcp --sport 53 -j NFQUEUE --queue-num 47 --queue-bypass\n");
+   }
+}
+
+/*
  *  Procedure     : do_wan2lan
  *  Purpose       : prepare the iptables-restore file that establishes all
  *                  ipv4 firewall rules pertaining to traffic
@@ -11080,6 +11105,7 @@ static int do_wan2lan(FILE *fp)
    do_wan2lan_staticip(fp);
    do_wan2lan_tsip_pm(fp);
    #endif
+   do_wan2lan_dns_filter(fp);
    FIREWALL_DEBUG("Exiting do_wan2lan\n"); 	  
    return(0);
 }
@@ -16621,6 +16647,17 @@ v6GPFirewallRuleNext:
       {
          // Everything from inside to Internet is allowed
          fprintf(fp, "-A lan2wan -j ACCEPT\n");
+      }
+
+      // Filter IPv6 DNS responses if DNS rebind protection is enabled
+      char syscfg_buff[8];
+      syscfg_get(NULL, "dns_rebind_protection_enable", syscfg_buff, sizeof(syscfg_buff));
+      if (strcmp(syscfg_buff, "1") == 0)
+      {
+         fprintf(fp, "-N wan2lan_dns_filter\n");
+         fprintf(fp, "-I FORWARD -j wan2lan_dns_filter\n");
+         fprintf(fp, "-A wan2lan_dns_filter -p udp --sport 53 -j NFQUEUE --queue-num 48 --queue-bypass\n");
+         fprintf(fp, "-A wan2lan_dns_filter -p tcp --sport 53 -j NFQUEUE --queue-num 48 --queue-bypass\n");
       }
 
       // established communication from WAN is accepted
