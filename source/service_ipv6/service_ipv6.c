@@ -47,6 +47,8 @@
 #include <syscfg/syscfg.h>
 #include <sysevent/sysevent.h>
 #include "safec_lib_common.h"
+#include <linux/netlink.h>
+#include <linux/rtnetlink.h>
 
 #if defined(MULTILAN_FEATURE) || defined(INTEL_PUMA7)
 #include "ccsp_psm_helper.h"
@@ -245,6 +247,103 @@ struct dhcpv6_tag tag_list[] =
     else if ( val[0] ) out = atoi(val); \
 } \
 
+
+static unsigned int g_enabled_iface_num = 0;
+static char **active_lan_interfaces = NULL;
+
+/* Check if any of the Ipv6 addresses of the interface is in tentative state */ 
+static int is_addr_tentative(int iface)
+{
+    int tentative = 0;
+    struct
+    {
+        struct nlmsghdr hdr;
+        struct ifaddrmsg msg;
+    }req;
+
+    int sock;
+
+    memset(&req, 0, sizeof(req));
+
+    if ((sock = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE)) == -1) 
+    {
+        fprintf(fp_v6_dbg, "Couldn't open NETLINK_ROUTE socket\n");
+        return -1;
+    }
+
+    req.hdr.nlmsg_len = NLMSG_LENGTH(sizeof(struct ifaddrmsg));
+    req.hdr.nlmsg_flags = NLM_F_REQUEST | NLM_F_ROOT;
+    req.hdr.nlmsg_type = RTM_GETADDR;
+    req.msg.ifa_family = AF_INET6;
+
+    if ((send(sock, &req, req.hdr.nlmsg_len, 0)) == -1) 
+    {
+        fprintf(fp_v6_dbg, "Couldn't send netlink socket\n");
+        tentative = -1;
+        goto RETURN;
+    }
+
+    struct nlmsghdr *nlh;
+    char buffer[BUFSIZ];
+    int msg_size;
+
+    memset(&buffer, 0, sizeof(buffer));
+
+    if ((msg_size = recv(sock, buffer, BUFSIZ, 0)) == -1) 
+    {
+        fprintf(fp_v6_dbg,"error receiving netlink message\n");
+        tentative = -1;
+        goto RETURN;
+    }
+
+    nlh = (struct nlmsghdr *)buffer;
+
+    while (msg_size > sizeof(*nlh))
+    {
+        int len = nlh->nlmsg_len;
+        int req_len = len - sizeof(*nlh);
+
+        if (req_len < 0 || len > msg_size) 
+        {
+            fprintf(fp_v6_dbg,"error reading netlink message\n");
+            goto RETURN;
+        }
+
+        if (!NLMSG_OK(nlh, msg_size)) 
+        {
+            fprintf(fp_v6_dbg,"netlink message is not NLMSG_OK\n");
+            tentative = -1;
+            goto RETURN;
+        }
+
+        struct ifaddrmsg *ifa = (struct ifaddrmsg *) NLMSG_DATA(nlh);
+        struct rtattr *rth = IFA_RTA(ifa);
+        int rtl = IFA_PAYLOAD(nlh);
+
+        if (ifa->ifa_index == iface && ifa->ifa_family==AF_INET6)
+        {
+
+            while (rtl && RTA_OK(rth, rtl)) 
+            {
+                if (rth->rta_type == IFA_ADDRESS && (ifa->ifa_flags & IFA_F_TENTATIVE))
+                {
+                    tentative = 1;
+                    fprintf(fp_v6_dbg,"tentative address \n");
+                    goto RETURN;
+                }
+                rth = RTA_NEXT(rth, rtl);
+            }
+
+        } 
+
+        msg_size -= NLMSG_ALIGN(len);
+        nlh = (struct nlmsghdr*)((char*)nlh + NLMSG_ALIGN(len));
+    }
+
+RETURN:
+    close(sock);
+    return tentative;
+}
 
 static uint64_t helper_ntoh64(const uint64_t *inputval)
 {
@@ -1256,7 +1355,6 @@ static int lan_addr6_set(struct serv_ipv6 *si6)
     unsigned int primary_l2_instance = 0;
 #endif
     char iface_name[16] = {0};
-    unsigned int enabled_iface_num = 0;
     int i = 0;
     char evt_name[64] = {0};
     char evt_val[64] = {0};
@@ -1288,8 +1386,8 @@ static int lan_addr6_set(struct serv_ipv6 *si6)
         return -1;
     }
 
-    get_active_lanif(si6, l2_insts, &enabled_iface_num);
-    if (enabled_iface_num == 0) {
+    get_active_lanif(si6, l2_insts, &g_enabled_iface_num);
+    if (g_enabled_iface_num == 0) {
         fprintf(fp_v6_dbg, "no active lan interface.\n");
         return -1;
     }
@@ -1302,13 +1400,20 @@ static int lan_addr6_set(struct serv_ipv6 *si6)
     snprintf(cmd, sizeof(cmd), "%%%dd", (sizeof(cmd) - 1));
     sscanf(iface_name, cmd, &primary_l2_instance);
 #endif
-
-    for (; i < enabled_iface_num; i++) {
+    active_lan_interfaces = malloc(g_enabled_iface_num * sizeof(char*));
+    for (; i < g_enabled_iface_num; i++) {
         snprintf(evt_name, sizeof(evt_name), "multinet_%d-name", l2_insts[i]);
         sysevent_get(si6->sefd, si6->setok, evt_name, iface_name, sizeof(iface_name));/*interface name*/
         snprintf(evt_name, sizeof(evt_name), "ipv6_%s-prefix", iface_name);
         sysevent_get(si6->sefd, si6->setok, evt_name, iface_prefix, sizeof(iface_prefix));
-
+        if (active_lan_interfaces != NULL)
+        {
+            active_lan_interfaces[i] = malloc(sizeof(iface_name));
+            if (active_lan_interfaces[i] != NULL)
+            {
+                memcpy(active_lan_interfaces[i],iface_name,sizeof(iface_name));
+            }
+        }
         /*enable ipv6 link local*/
         v_secure_system("ip -6 link set dev %s up", iface_name);
         /*Disable DAD*/
@@ -2026,7 +2131,29 @@ static int dhcpv6s_start(struct serv_ipv6 *si6)
        return 0;
     }
 #endif
-    sleep(1);
+
+    int if_index;
+    int i;
+    unsigned int time_out = 10;
+    if (active_lan_interfaces != NULL)
+    {
+       for (i = 0; i < g_enabled_iface_num; i++)
+       {
+          if (active_lan_interfaces[i] != NULL)
+          {
+              if_index = if_nametoindex(active_lan_interfaces[i]);
+              if (if_index != 0)
+              {
+                 // Wait for lan instances Ipv6 addresses complete DAD before triggering dibbler-server start: timeout 10 sec
+                 while (time_out-- > 0 && is_addr_tentative(if_index))
+                 {
+                    sleep(1);
+                 }
+              }
+          }
+       }
+    }
+
     fprintf(fp_v6_dbg, "%s:%d calling dibbler-server start \n",__func__,__LINE__);
     v_secure_system("%s start", DHCPV6_SERVER);
     return 0;
@@ -2216,6 +2343,7 @@ static int serv_ipv6_init(struct serv_ipv6 *si6)
 
 static int serv_ipv6_term(struct serv_ipv6 *si6)
 {
+    int i;
     sysevent_close(si6->sefd, si6->setok);
 #ifdef MULTILAN_FEATURE
     if (bus_handle != NULL) {
@@ -2223,6 +2351,20 @@ static int serv_ipv6_term(struct serv_ipv6 *si6)
         CCSP_Message_Bus_Exit(bus_handle);
     }
 #endif
+
+    if (active_lan_interfaces != NULL)
+    {
+        for (i = 0; i < g_enabled_iface_num; i++)
+        {
+            if (active_lan_interfaces[i] != NULL)
+            {
+               free(active_lan_interfaces[i]);
+               active_lan_interfaces[i] = NULL;
+            }
+        }
+        free(active_lan_interfaces);
+        active_lan_interfaces = NULL;
+    }
     return 0;
 }
 
