@@ -723,6 +723,7 @@ static char           sysevent_ip[19];
 
 static char default_wan_ifname[50]; // name of the regular wan interface
 char current_wan_ifname[50]; // name of the ppp interface or the regular wan interface if no ppp
+static char current_dslite_ifname[50];
 static char ecm_wan_ifname[20];
 static char emta_wan_ifname[20];
 static char eth_wan_enabled[20];
@@ -2741,6 +2742,9 @@ static int prepare_globals_from_configuration(void)
    fprintf(gwIpFp, "%s", lan_ipaddr);
    fclose(gwIpFp);
 #endif
+
+   current_dslite_ifname[0] = 0;
+   syscfg_get(NULL, "dslite_tunnel_interface_1", current_dslite_ifname, sizeof(current_dslite_ifname));
 
    sysevent_get(sysevent_fd, sysevent_token, "transparent_cache_state", transparent_cache_state, sizeof(transparent_cache_state));
    sysevent_get(sysevent_fd, sysevent_token, "byoi_bridge_mode", byoi_bridge_mode, sizeof(byoi_bridge_mode));
@@ -10336,7 +10340,7 @@ static void do_lan2wan_disable(FILE *filter_fp)
      if (isMAPTReady)
          return ;
 #endif
-    if(!isNatReady){
+    if(!isNatReady && !current_dslite_ifname[0]){
          fprintf(filter_fp, "-A lan2wan_disable -s %s/%s -o %s -j DROP\n", lan_ipaddr, lan_netmask, current_wan_ifname);
 
 #if defined (MULTILAN_FEATURE)
