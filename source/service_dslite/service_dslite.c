@@ -563,7 +563,7 @@ static int dslite_start (struct serv_dslite *sd)
 
     //Add the firewall rule for DSLite tunnel interface
     memset (return_buffer, 0, sizeof(return_buffer));
-    snprintf (rule, sizeof(rule), "-I FORWARD -o " TNL_NETDEVNAME " -j ACCEPT\n");
+    snprintf (rule, sizeof(rule), "-I FORWARD -o " TNL_NETDEVNAME " -j lan2wan\n");
     sysevent_set_unique (sd->sefd, sd->setok, "GeneralPurposeFirewallRule", rule, return_buffer, sizeof(return_buffer));
     sysevent_set (sd->sefd, sd->setok, "dslite_rule_sysevent_id_1", return_buffer, 0);
 
@@ -599,15 +599,15 @@ static int dslite_start (struct serv_dslite *sd)
         syscfg_set (NULL, "dslite_tcpmss_prev_1", buf); //Save the TCPMSS value added into the firewall rule
     }
 
-    system ("sysevent set firewall-restart" "; "       //restart firewall to install the rules
-            "conntrack_flush");
-
-    sysevent_set (sd->sefd, sd->setok, "dslite_service-status", "started", 0);
-
     // save tunnel interface details to syscfg here in case IPv4 functions use it, like IGMP proxy
     // (Currently dslite_tunnel_interface_1 is used but dslite_tunneled_interface_1 is not).
     syscfg_set (NULL, "dslite_tunnel_interface_1", TNL_NETDEVNAME);
     syscfg_set (NULL, "dslite_tunneled_interface_1", ER_NETDEVNAME);
+
+    system ("sysevent set firewall-restart" "; "       //restart firewall to install the rules
+            "conntrack_flush");
+
+    sysevent_set (sd->sefd, sd->setok, "dslite_service-status", "started", 0);
 
     syscfg_set (NULL, "dslite_status_1", "1");
     syscfg_set (NULL, "dslite_addr_inuse_1", resolved_ipv6);
