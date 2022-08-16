@@ -250,7 +250,8 @@ typedef struct wanInfo {
 typedef enum {
     BRIDGE_MODE_OFF    = 0,
     BRIDGE_MODE_DHCP   = 1,
-    BRIDGE_MODE_STATIC = 2
+    BRIDGE_MODE_STATIC = 2,
+    BRIDGE_MODE_FULL_STATIC = 3,
 } bridgeMode_t;
 
 typedef struct bridge_static {
@@ -563,6 +564,8 @@ typedef struct qosPolicy {
 int Utopia_GetQoSDefinedPolicyList (int *out_count, qosDefinedPolicy_t const **out_qoslist);
 int Utopia_SetQoSSettings (UtopiaContext *ctx, qosInfo_t *qos);
 int Utopia_GetQoSSettings (UtopiaContext *ctx, qosInfo_t *qos);
+int Utopia_get_lan_host_comments(UtopiaContext *ctx, unsigned char *pMac, unsigned char *pComments);
+int Utopia_set_lan_host_comments(UtopiaContext *ctx, unsigned char *pMac, unsigned char *pComments);
 
 /*
  * Log Settings
@@ -917,6 +920,10 @@ typedef struct firewall {
 int Utopia_SetFirewallSettings (UtopiaContext *ctx, firewall_t fw);
 int Utopia_GetFirewallSettings (UtopiaContext *ctx, firewall_t *fw);
 
+typedef struct ipv6Prefix {
+	char prefix[IPADDR_SZ];
+	int size;
+}ipv6Prefix_t;
 
 /*
  * IPv6 Settings and Status
@@ -1158,6 +1165,9 @@ typedef struct dns_client{
 int Utopia_SetDNSEnable(UtopiaContext *ctx, boolean_t enable);
 int Utopia_GetDNSEnable(UtopiaContext *ctx, boolean_t* enable);
 int Utopia_GetDNSServer(UtopiaContext *ctx, DNS_Client_t * dns);
+
+int Utopia_IPRule_ephemeral_port_forwarding( portMapDyn_t *pmap, boolean_t isCallForAdd );
+int Utopia_privateIpCheck(char *ip_to_check);
 
 #if defined(DDNS_BROADBANDFORUM)
 typedef struct DynamicDnsClient
