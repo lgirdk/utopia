@@ -251,8 +251,7 @@ typedef enum {
     BRIDGE_MODE_OFF    = 0,
     BRIDGE_MODE_DHCP   = 1,
     BRIDGE_MODE_STATIC = 2,
-	BRIDGE_MODE_FULL_STATIC = 3
-    
+    BRIDGE_MODE_FULL_STATIC = 3,
 } bridgeMode_t;
 
 typedef struct bridge_static {
