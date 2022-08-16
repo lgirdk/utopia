@@ -1605,3 +1605,6 @@ $iperf_connection_timeout=10
 
 #Internet services defaults
 $internet_service_enable=1
+
+#STP Enable defaults
+$stp_enable=false
