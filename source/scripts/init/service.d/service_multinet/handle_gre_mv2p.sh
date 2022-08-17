@@ -107,6 +107,23 @@ AB_DELIM=","
 
 BASEQUEUE=1
 
+wait_for_erouter0_ipv6_ready () {
+    if [ "$(sysevent get wan-status)" != "started" ]; then
+        echo_t "Wan status is not yet set to started returning"
+        return
+    fi
+    if [ "$(syscfg get last_erouter_mode)" = "3" ]; then
+        timeout=30
+        while [ -z "$(sysevent get wan6_ipaddr)" ]; do
+            sleep 1
+            timeout=$((timeout-1))
+            if [ $timeout -eq 0 ]; then
+                break
+            fi
+        done
+    fi
+}
+
 init_snooper_sysevents () {
     if [ x1 = x$SNOOP_CIRCUIT ]; then
         sysevent set snooper-circuit-enable 1
@@ -681,13 +698,13 @@ case "$1" in
         #and GRE tunnel for reboot scenario when not set from boot configuration
 
         sysTunnelEnable="`sysevent get tunnel_enable_$inst`"
-        CurrentTunnelStatus="`psmcli get $HS_PSM_BASE.$inst.$HS_PSM_ENABLE`"
         if [ -n "$sysTunnelEnable" ]; then
             TunnelEnable=$sysTunnelEnable
-            sysevent set tunnel_enable_$inst ""
         else
-            TunnelEnable=$CurrentTunnelEnable
+            TunnelEnable="`psmcli get $HS_PSM_BASE.$inst.$HS_PSM_ENABLE`"
         fi
+
+        wait_for_erouter0_ipv6_ready
 
         dmcli eRT setv Device.X_COMCAST-COM_GRE.Tunnel.$inst.Enable bool $TunnelEnable
     ;;
