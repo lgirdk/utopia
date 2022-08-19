@@ -106,7 +106,7 @@ static void _get_shell_output (FILE *fp, char *buf, size_t len)
 
 static void route_config (struct serv_dslite *sd)
 {
-    v_secure_system ("ip rule add iif " ER_NETDEVNAME " lookup all_lans" "; "
+    system ("ip rule add iif " ER_NETDEVNAME " lookup all_lans" "; "
             "ip rule add oif " ER_NETDEVNAME " lookup erouter");
 }
 
@@ -508,10 +508,10 @@ static int dslite_start (struct serv_dslite *sd)
      */
 
     // set default gateway through the tunnel in GW specific routing table
-    v_secure_system ("ip route add default dev " TNL_NETDEVNAME " table erouter");
+    system ("ip route add default dev " TNL_NETDEVNAME " table erouter");
 
     //set default gateway through the tunnel in routing table 14
-    v_secure_system ("ip route add default dev " TNL_NETDEVNAME " table 14");
+    system ("ip route add default dev " TNL_NETDEVNAME " table 14");
 
     // If GW is the IPv6 only mode, we need to start the LAN to WAN IPv4 function
     if (sd->rtmod == WAN_RTMOD_IPV6)
@@ -522,11 +522,11 @@ static int dslite_start (struct serv_dslite *sd)
     {
         /* Restart the LAN side DHCPv4 server, DNS proxy and IGMP proxy if in dual stack mode */
 #if defined(_LG_OFW_)
-        v_secure_system ("/etc/utopia/service.d/service_dhcp_server.sh dhcp_server-stop" "; "
+        system ("/etc/utopia/service.d/service_dhcp_server.sh dhcp_server-stop" "; "
                 "/etc/utopia/service.d/service_dhcp_server.sh dhcp_server-start" "; "
                 "/etc/utopia/service.d/service_mcastproxy.sh mcastproxy-restart");
 #else
-        v_secure_system ("systemctl stop dnsmasq.service" "; "
+        system ("systemctl stop dnsmasq.service" "; "
                 "systemctl start dnsmasq.service" "; "
                 "/etc/utopia/service.d/service_mcastproxy.sh mcastproxy-restart");
 #endif
@@ -570,7 +570,7 @@ static int dslite_start (struct serv_dslite *sd)
         syscfg_set (NULL, "dslite_tcpmss_prev_1", buf); //Save the TCPMSS value added into the firewall rule
     }
 
-    v_secure_system ("sysevent set firewall-restart" "; "       //restart firewall to install the rules
+    system ("sysevent set firewall-restart" "; "       //restart firewall to install the rules
             "conntrack_flush");
 
     sysevent_set (sd->sefd, sd->setok, "dslite_service-status", "started", 0);
@@ -653,13 +653,13 @@ static int dslite_stop (struct serv_dslite *sd)
     {
         //Start WAN IPv4 service
         route_config (sd);
-        v_secure_system ("service_wan dhcp-start");
+        system ("service_wan dhcp-start");
     }
 
     //Restore default gateway route rule
-    v_secure_system ("ip route del default dev " TNL_NETDEVNAME " table erouter");
+    system ("ip route del default dev " TNL_NETDEVNAME " table erouter");
 
-    v_secure_system ("ip route del default dev " TNL_NETDEVNAME " table 14");
+    system ("ip route del default dev " TNL_NETDEVNAME " table 14");
 
     //if GW is the IPv6 only mode, we need to shutdown the LAN to WAN IPv4 function
     if (sd->rtmod == WAN_RTMOD_IPV6)
@@ -670,11 +670,11 @@ static int dslite_stop (struct serv_dslite *sd)
     {
         /* Restart the LAN side DHCPv4 server, DNS proxy and IGMP proxy if in dual stack mode */
 #if defined(_LG_OFW_)
-        v_secure_system ("/etc/utopia/service.d/service_dhcp_server.sh dhcp_server-stop" "; "
+        system ("/etc/utopia/service.d/service_dhcp_server.sh dhcp_server-stop" "; "
                 "/etc/utopia/service.d/service_dhcp_server.sh dhcp_server-start" "; "
                 "/etc/utopia/service.d/service_mcastproxy.sh mcastproxy-restart");
 #else
-        v_secure_system ("systemctl stop dnsmasq.service" "; "
+        system ("systemctl stop dnsmasq.service" "; "
                 "systemctl start dnsmasq.service" "; "
                 "/etc/utopia/service.d/service_mcastproxy.sh mcastproxy-restart");
 #endif
@@ -694,7 +694,7 @@ static int dslite_stop (struct serv_dslite *sd)
     sysevent_get (sd->sefd, sd->setok, "dslite_rule_sysevent_id_4", return_buffer, sizeof(return_buffer));
     sysevent_set (sd->sefd, sd->setok, return_buffer, "", 0);
 
-    v_secure_system ("sysevent set firewall-restart" "; "        //restart firewall to install the rules
+    system ("sysevent set firewall-restart" "; "        //restart firewall to install the rules
             "conntrack_flush");
 
     sysevent_set (sd->sefd, sd->setok, "dslite_service-status", "stopped", 0);

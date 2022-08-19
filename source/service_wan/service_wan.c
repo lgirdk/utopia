@@ -613,7 +613,7 @@ static int Is_Dslite_Dhcpv6option64_received(struct serv_wan *sw)
                 sysevent_get(sw->sefd, sw->setok, "dslite_dhcpv6_endpointname", endpointname, sizeof(endpointname));
                 fprintf(stderr, "DHCP DS-Lite Option 64 received ok value: %s\n",endpointname);
                 //If dslite_addr_fqdn_1 is not set, dslite would have failed to start, adding a restart to create a tunnel
-                v_secure_system("service_dslite restart &");
+                system("service_dslite restart &");
                 return 1;
             }
             fprintf(stderr, "DHCP DS-Lite Option 64 Error\n");
@@ -1531,10 +1531,10 @@ static int wan_addr_set(struct serv_wan *sw)
     /* Should not be executed before wan_service-status is set to started for _PLATFORM_IPQ_ */
 #if !defined(_PLATFORM_IPQ_) && !defined(_PLATFORM_RASPBERRYPI_) && !defined(_PLATFORM_TURRIS_)
         #if defined (_XB6_PRODUCT_REQ_) && defined (_COSA_BCM_ARM_)
-            v_secure_system("firewall"); 
+            system("firewall"); 
         #else
             // TODO : gw_lan_refresh to be removed from here once udhcpc is made generic to all platforms
-            v_secure_system("firewall && gw_lan_refresh"); 
+            system("firewall && gw_lan_refresh"); 
         #endif
 #endif
     } else {
@@ -1565,7 +1565,7 @@ static int wan_addr_set(struct serv_wan *sw)
 
 #if !defined(_WAN_MANAGER_ENABLED_)
     fprintf(stderr, "[%s] Synching DNS to ATOM...\n", PROG_NAME);
-    v_secure_system("/etc/utopia/service.d/service_wan/dns_sync.sh &");
+    system("/etc/utopia/service.d/service_wan/dns_sync.sh &");
 #endif /*_WAN_MANAGER_ENABLED_*/
 
     return 0;
@@ -1651,7 +1651,7 @@ static int wan_addr_unset(struct serv_wan *sw)
     get_dateanduptime(buffer,&uptime);
     OnboardLog("RDKB_FIREWALL_RESTART:%d\n",uptime);
 
-    v_secure_system("killall -q dns_sync.sh");
+    system("killall -q dns_sync.sh");
     sysevent_set(sw->sefd, sw->setok, "wan-status", "stopped", 0);
     return 0;
 }
