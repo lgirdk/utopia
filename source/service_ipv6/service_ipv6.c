@@ -1071,8 +1071,6 @@ int compute_global_ip(char *prefix, char *if_name, char *ipv6_addr, unsigned int
  */
 static void report_no_prefix(int i)
 {
-    (void)i;
-
     vsystem("%s %d", EROUTER_NO_PREFIX_MESSAGE, i);
 }
 

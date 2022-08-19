@@ -447,14 +447,14 @@ static int route_set(struct serv_routed *sr)
 
 #if defined (_HUB4_PRODUCT_REQ_) && !defined (_WNXL11BWL_PRODUCT_REQ_)
     /*Clean 'iif brlan0 table erouter' if exist already*/
-    vsystem("ip -6 rule del iif brlan0 table erouter");
+    system("ip -6 rule del iif brlan0 table erouter");
 #endif
 
 #if defined (MULTILAN_FEATURE)
     /* Test to see if the default route for erouter0 is not empty and the default
        route for router table is missing before trying to add a new default route
-       for erouter table via erouter0 to prevent vsystem returning error */
-    if (vsystem("gw=$(ip -6 route show default dev erouter0 | awk '/via/ {print $3}');"
+       for erouter table via erouter0 to prevent system() returning error */
+    if (system("gw=$(ip -6 route show default dev erouter0 | awk '/via/ {print $3}');"
             "dr=$(ip -6 route show default dev erouter0 table erouter);"
             "if [ \"$gw\" != \"\" -a \"$dr\" = \"\" ]; then"
              "  ip -6 route add default via $gw dev erouter0 table erouter;"
@@ -462,7 +462,7 @@ static int route_set(struct serv_routed *sr)
          return -1;
     return 0;
 #else
-    if (vsystem("ip -6 rule add iif brlan0 table erouter;"
+    if (system("ip -6 rule add iif brlan0 table erouter;"
             "gw=$(ip -6 route show default dev erouter0 | awk '/via/ {print $3}');"
             "if [ \"$gw\" != \"\" ]; then"
             "  ip -6 route add default via $gw dev erouter0 table erouter;"
@@ -492,12 +492,12 @@ static int route_unset(struct serv_routed *sr)
     }
 
 #elif defined (_HUB4_PRODUCT_REQ_) && !defined (_WNXL11BWL_PRODUCT_REQ_)
-    vsystem("ip -6 rule del iif brlan0 table erouter");
-    if (vsystem("ip -6 route del default dev erouter0 table erouter") != 0) {
+    system("ip -6 rule del iif brlan0 table erouter");
+    if (system("ip -6 route del default dev erouter0 table erouter") != 0) {
         return -1;
     }
 #else
-    if (vsystem("ip -6 route del default dev erouter0 table erouter"
+    if (system("ip -6 route del default dev erouter0 table erouter"
             " && ip -6 rule del iif brlan0 table erouter") != 0)
         return -1;
 #endif
