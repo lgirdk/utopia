@@ -447,7 +447,7 @@ static int route_set(struct serv_routed *sr)
 
 #if defined (_HUB4_PRODUCT_REQ_) && !defined (_WNXL11BWL_PRODUCT_REQ_)
     /*Clean 'iif brlan0 table erouter' if exist already*/
-    vsystem("ip -6 rule del iif brlan0 table erouter");
+    system("ip -6 rule del iif brlan0 table erouter");
 #endif
 
     char wanIface[64] = {'\0'};
