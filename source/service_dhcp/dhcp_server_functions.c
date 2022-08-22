@@ -907,6 +907,7 @@ int prepare_dhcp_conf (char *input)
             fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-option=43,%s\n", buff);
         }
 
+        fclose(l_fLocal_Dhcp_ConfFile);
         return 0;        
     }
 
