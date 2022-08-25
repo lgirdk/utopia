@@ -897,6 +897,7 @@ $dhcpv6spool00::bEnabled=1
 $$dhcpv6spool00::Interface=Device.IP.Interface.4.
 $$dhcpv6spool00::InterfaceName=brlan0
 $dhcpv6spool00::IANAEnable=1
+$dhcpv6spool00::IAPDEnable=1
 #$dhcpv6spool00::IANAManualPrefixes=Device.IP.Interface.1.IPv6Prefix.1.
 $$dhcpv6spool00::IANAPrefixes=Device.IP.Interface.4.IPv6Prefix.1.
 $dhcpv6spool00::LeaseTime=604800
