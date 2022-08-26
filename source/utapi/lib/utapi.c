@@ -2188,6 +2188,7 @@ static int s_getportfwd (UtopiaContext *ctx, int index, portFwdSingle_t *portmap
 	}
 
     Utopia_GetIndexed(ctx, UtopiaValue_SPF_Name, index, portmap->name, NAME_SZ);
+    Utopia_GetIndexed(ctx, UtopiaValue_SPF_Interface, index, portmap->interface, NAME_SZ);
     Utopia_GetIndexedInt(ctx, UtopiaValue_SPF_ExternalPort, index, &portmap->external_port);
     Utopia_GetIndexedInt(ctx, UtopiaValue_SPF_InternalPort, index, &portmap->internal_port);
 //    Utopia_GetIndexedInt(ctx, UtopiaValue_SPF_ToIp, index, &portmap->dest_ip);
@@ -2213,6 +2214,7 @@ static int s_setportfwd (UtopiaContext *ctx, int index, portFwdSingle_t *portmap
     char *p = s_EnumToStr(g_ProtocolMap, portmap->protocol);
     UTOPIA_SETINDEXED(ctx, UtopiaValue_SPF_Protocol, index, p);
     UTOPIA_SETINDEXED(ctx, UtopiaValue_SPF_RuleSource, index, portmap->rule_source);
+    UTOPIA_SETINDEXED(ctx, UtopiaValue_SPF_Interface, index, portmap->interface);
     
     return SUCCESS;
 }
@@ -3117,6 +3119,7 @@ static int s_getportfwdrange (UtopiaContext *ctx, int index, portFwdRange_t *por
 	}
 
     Utopia_GetIndexed(ctx, UtopiaValue_PFR_Name, index, portmap->name, NAME_SZ);
+    Utopia_GetIndexed(ctx, UtopiaValue_PFR_Interface, index, portmap->interface, NAME_SZ);
     Utopia_GetIndexedInt(ctx, UtopiaValue_PFR_InternalPort, index, &portmap->internal_port);
     Utopia_GetIndexedInt(ctx, UtopiaValue_PFR_InternalPortRangeSize, index, &portmap->internal_port_range_size);
     //Utopia_GetIndexedInt(ctx, UtopiaValue_PFR_ToIp, index, &portmap->dest_ip);
@@ -3166,6 +3169,7 @@ static int s_setportfwdrange (UtopiaContext *ctx, int index, portFwdRange_t *por
     snprintf(port_range, sizeof(port_range), "%d %d", portmap->start_port, portmap->end_port);
     UTOPIA_SETINDEXED(ctx, UtopiaValue_PFR_ExternalPortRange, index, port_range);
     UTOPIA_SETINDEXED(ctx, UtopiaValue_PFR_RuleSource, index, portmap->rule_source);
+    UTOPIA_SETINDEXED(ctx, UtopiaValue_PFR_Interface, index, portmap->interface);
     
     return SUCCESS;
 }
