@@ -1626,3 +1626,6 @@ $internet_service_enable=1
 
 #STP Enable defaults
 $stp_enable=false
+
+#Reverse-SSH Parameters
+$rssh_bind_interface=wan0
