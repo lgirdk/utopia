@@ -11061,27 +11061,40 @@ static void do_wan2lan_tsip_pm(FILE *filter_fp)
 #endif
 
 /*
- *  Procedure     : do_wan2lan_dns_filter
+ *  Procedure     : prepare_ipv4_dns_filter
  *  Purpose       : if DNS rebind protection is enabled, this subchain
  *                  sends all IPv4 DNS answers to a nfqueue user application
  *
  *  Parameters    :
- *    filter_fp   : An open file to write wan2lan_dns_filter rules to
+ *    filter_fp   : An open file to write ipv4_dns_filter rules to then given chain
+ *    chain       : NULL terminated string
  * Return Values  :
  *
  */
-static void do_wan2lan_dns_filter(FILE *filter_fp)
+static void prepare_ipv4_dns_filter(FILE *filter_fp, char* chain)
 {
    char buf[8];
+   static uint8_t table_exist = 0;
 
    syscfg_get(NULL, "dns_rebind_protection_enable", buf, sizeof(buf));
-
    if (strcmp(buf, "1") == 0)
    {
-      fprintf(filter_fp, "-N wan2lan_dns_filter\n");
-      fprintf(filter_fp, "-I wan2lan -j wan2lan_dns_filter\n");
-      fprintf(filter_fp, "-A wan2lan_dns_filter -p udp --sport 53 -j NFQUEUE --queue-num 47 --queue-bypass\n");
-      fprintf(filter_fp, "-A wan2lan_dns_filter -p tcp --sport 53 -j NFQUEUE --queue-num 47 --queue-bypass\n");
+      if(table_exist == 0)
+      {
+         fprintf(filter_fp, "-N ipv4_dns_filter\n");
+         table_exist = 1;
+      }
+
+      if (strcmp(chain, "FORWARD") == 0)
+      {
+         fprintf(filter_fp, "-A FORWARD -j ipv4_dns_filter\n");
+      }
+      else
+      {
+         return;
+      }
+      fprintf(filter_fp, "-A ipv4_dns_filter -p udp --sport 53 -j NFQUEUE --queue-num 47 --queue-bypass\n");
+      fprintf(filter_fp, "-A ipv4_dns_filter -p tcp --sport 53 -j NFQUEUE --queue-num 47 --queue-bypass\n");
    }
 }
 
@@ -11105,7 +11118,6 @@ static int do_wan2lan(FILE *fp)
    do_wan2lan_staticip(fp);
    do_wan2lan_tsip_pm(fp);
    #endif
-   do_wan2lan_dns_filter(fp);
    FIREWALL_DEBUG("Exiting do_wan2lan\n"); 	  
    return(0);
 }
@@ -13291,6 +13303,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(filter_fp, "-I FORWARD 3 -i %s -o br403 -j ACCEPT\n", current_wan_ifname);
 #endif
 
+   prepare_ipv4_dns_filter(filter_fp, "FORWARD");
    fprintf(filter_fp, "-A FORWARD -j general_forward\n");
    fprintf(filter_fp, "-A FORWARD -i %s -o %s -j wan2lan\n", current_wan_ifname, lan_ifname);
    fprintf(filter_fp, "-A FORWARD -i %s -o %s -j lan2wan\n", lan_ifname, current_wan_ifname);
