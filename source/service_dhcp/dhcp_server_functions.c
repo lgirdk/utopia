@@ -1364,6 +1364,12 @@ int prepare_dhcp_conf (char *input, void *bus_handle)
     syscfg_get(NULL, "lost_and_found_enable", l_cIotEnabled, sizeof(l_cIotEnabled));
 	if (!strncmp(l_cIotEnabled, "true", 4))
 	{
+		char l_iotStatus[8];
+		sysevent_get(g_iSyseventfd, g_tSysevent_token, "multinet_6-status", l_iotStatus, sizeof(l_iotStatus));
+
+		if (strcmp(l_iotStatus, "ready") == 0)
+		{
+
     	fprintf(stderr, "IOT_LOG : DHCP server configuring for IOT\n");
 
 	    syscfg_get(NULL, "iot_ifname", l_cIotIfName, sizeof(l_cIotIfName));
@@ -1394,6 +1400,8 @@ int prepare_dhcp_conf (char *input, void *bus_handle)
 		{
 			fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-option=%s,6,%s\n", l_cIotIfName, l_cWan_Dhcp_Dns);
 			fprintf(stderr, "DHCP_SERVER : [%s] dhcp-option=%s,6,%s\n",l_cIotIfName, l_cIotIfName, l_cWan_Dhcp_Dns);
+		}
+
 		}
 	}
 
