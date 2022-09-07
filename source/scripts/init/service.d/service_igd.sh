@@ -100,7 +100,7 @@ resync_upnp() {
 	then
 			curr_ipv4_proc_status=$IPV4_PROC_STATUS
 			curr_resync_proc_status=$RESYNC_PROC_STATUS
-			if [ "$curr_ipv4_proc_status" = "" ] || [ "$curr_ipv4_proc_status" = "completed" ] || [ "$curr_resync_proc_status" = "completed" ]; then
+			if [ -z "$curr_ipv4_proc_status" ] || [ "$curr_ipv4_proc_status" = "completed" ] || [ "$curr_resync_proc_status" = "completed" ]; then
 	    	    handle_ipv4_status ${i} `sysevent get ipv4_${i}-status`
 			fi
 			
@@ -254,7 +254,7 @@ case "$1" in
 
 		curr_resync_proc_status=$RESYNC_PROC_STATUS
 		curr_ipv4_igd=$IPV4_PROC_STATUS
-		if [ "$curr_resync_proc_status" = "" ] || [ "$curr_resync_proc_status" = "completed" ] || [ "$curr_ipv4_igd" = "completed" ]; then
+		if [ -z "$curr_resync_proc_status" ] || [ "$curr_resync_proc_status" = "completed" ] || [ "$curr_ipv4_igd" = "completed" ]; then
 			sysevent set ipv4_status_process started	  
 	        handle_ipv4_status $INST $2
 			sysevent set ipv4_status_process completed	  

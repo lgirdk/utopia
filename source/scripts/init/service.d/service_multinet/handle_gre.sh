@@ -447,12 +447,12 @@ read_init_params () {
         echo "WARNING: handle_gre.sh read_init_params: psmcli return $status"
     fi
     echo "PRIMARY $PRIMARY SECONDARY $SECONDARY"
-    if [ "$PRIMARY" = "" ] || [ "$SECONDARY" = "" ]
+    if [ -z "$PRIMARY" ] || [ -z "$SECONDARY" ]
     then
         echo "WARNING: handle_gre.sh read_init_params: PRIMARY/SECONDARY NULL"
     fi
     echo "KA_INTERVAL $KA_INTERVAL KA_FAIL_INTERVAL $KA_FAIL_INTERVAL KA_POLICY $KA_POLICY"
-    if [ "$KA_INTERVAL" = "" ]
+    if [ -z "$KA_INTERVAL" ]
     then
         echo "WARNING: handle_gre.sh read_init_params: KA_INTERVAL NULL"
     fi
@@ -847,7 +847,7 @@ case "$1" in
             init_snooper_sysevents
             sysevent set snooper-log-enable 1
             HOTSPOT_PID=`pidof CcspHotspot`
-            if [ "$HOTSPOT_PID" = "" ]; then
+            if [ -z "$HOTSPOT_PID" ]; then
                echo_t "Starting hotspot component"
                $HOTSPOT_COMP -subsys eRT. > /dev/null &
             fi

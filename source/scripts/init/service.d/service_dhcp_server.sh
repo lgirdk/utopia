@@ -514,7 +514,7 @@ dhcp_server_start ()
 
    InterfaceInConf=`grep "interface=" $DHCP_CONF`
 
-   if [ "$InterfaceInConf" = "" ] && [ "0" != "$Bridge_Mode_t" ] ; then
+   if [ -z "$InterfaceInConf" ] && [ "0" != "$Bridge_Mode_t" ] ; then
         echo "dnsmasq.conf interface info not found"
         $PMON unsetproc dhcp_server
         sysevent set dhcp_server-status stopped

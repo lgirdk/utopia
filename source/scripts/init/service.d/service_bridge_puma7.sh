@@ -75,9 +75,9 @@ flush_connection_info(){
 
 get_wan_if_name(){
     WAN_IF=""
-    while [ "$WAN_IF" = "" ] ; do
+    while [ -z "$WAN_IF" ] ; do
         WAN_IF=`sysevent get wan_ifname`
-        if [ "$WAN_IF" = "" ] ; then
+        if [ -z "$WAN_IF" ] ; then
             echo "Waiting for wan_ifname value..."
             sleep 1
         fi
@@ -249,7 +249,7 @@ forward_wan_lan_traffic()
 
                    if [ "`sysevent get multinet_$INSTANCE-status`" = "ready" ];then
                         check_iface_exists_in_bridge=`brctl show brlan0  | grep lbr1`
-                        if [ "$check_iface_exists_in_bridge" = "" ];then
+                        if [ -z "$check_iface_exists_in_bridge" ];then
                             echo_t "multinet_$INSTANCE-status status is ready...,adding lbr1 to brlan0 and breaking the loop"  
                             brctl addif brlan0 lbr1
                         fi
@@ -433,7 +433,7 @@ BRIDGE_NAME="$SYSCFG_lan_ifname"
 CMDIAG_IF=`syscfg get cmdiag_ifname`
 CMDIAG_MAC=`ncpu_exec -ep service_bridge.sh get_cmdiag_mac`
 INSTANCE=`sysevent get primary_lan_l2net`
-if [ "$INSTANCE" = "" ];then
+if [ -z "$INSTANCE" ];then
 	INSTANCE=`psmcli get dmsb.MultiLAN.PrimaryLAN_l2net`
 fi
 LAN_NETMASK=`syscfg get lan_netmask`

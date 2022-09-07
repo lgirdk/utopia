@@ -39,7 +39,7 @@ if [ ! -f /usr/bin/GetConfigFile ];then
 fi
 
 #If we don't have an IP to copy the DNS settings to, there is no need to proceed
-if [ "$ATOM_INTERFACE_IP" = "" ] ; then
+if [ -z "$ATOM_INTERFACE_IP" ] ; then
     echo "DNS sync not needed"
     exit  0
 fi

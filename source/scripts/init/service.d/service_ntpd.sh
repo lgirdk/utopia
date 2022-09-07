@@ -61,7 +61,7 @@ QUICK_SYNC_DONE=0
 STATIC_INTERFACE=$NTPD_INTERFACE
 WAN_INTERFACE=$(getWanInterfaceName)
 
-if [ "$NTPD_LOG_NAME" = "" ];then
+if [ -z "$NTPD_LOG_NAME" ];then
 NTPD_LOG_NAME=/rdklogs/logs/ntpLog.log
 fi
 
@@ -162,7 +162,7 @@ set_ntp_driftsync_status ()
       while true
       do
         sync_status=`ntpq -c rv | grep "stratum=16"`
-        if [ "$sync_status" = "" ]; then
+        if [ -z "$sync_status" ]; then
            echo_t "SERVICE_NTPD : ntpd time synced , setting the status" >> $NTPD_LOG_NAME
            syscfg set ntp_status 3
            sysevent set ntp_time_sync 1
@@ -196,7 +196,7 @@ service_start ()
 # RDKB-37275 setting status as unsynchronised.
       syscfg set ntp_status 2
       sysevent set ${SERVICE_NAME}-status "stopped"
-      if [ "`pidof $BIN`" = "" ]; then
+      if [ -z "`pidof $BIN`" ]; then
           if [ "$MULTI_CORE" = "yes" ] && [ "$NTPD_IMMED_PEER_SYNC" != "true" ]; then
              echo_t "SERVICE_NTPD : NTPD is not running, starting in Server mode" >> $NTPD_LOG_NAME
              cp $NTP_CONF $NTP_CONF_TMP
@@ -325,13 +325,13 @@ service_start ()
            fi
        fi
 
-       if [ "$VALID_SERVER" = "" ]; then
+       if [ -z "$VALID_SERVER" ]; then
            echo_t "SERVICE_NTPD : NTP SERVERS(1-5 and from DHCPv4/6) are not available, not starting ntpd" >> $NTPD_LOG_NAME
            return 0
        fi
 
    # Continue with Rest of NTP Config Creation
-   if [ "$SOURCE_PING_INTF" = "" ]; then
+   if [ -z "$SOURCE_PING_INTF" ]; then
        MASK=ifconfig $SOURCE_PING_INTF | sed -rn '2s/ .*:(.*)$/\1/p'
    else
        MASK="255.255.255.0"

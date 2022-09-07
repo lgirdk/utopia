@@ -211,7 +211,7 @@ isValidLANIP () {
 calculate_dhcp_range () {
 	LAN_SUBNET=`subnet "$1" "$2"` 
    	# Do a sanity check to make sure we got start address from DB
-   	if [ "$DHCP_START" = "" ]
+   	if [ -z "$DHCP_START" ]
    	then
     	echo "DHCP_SERVER: Start IP is NULL"
  	   	DHCP_START=`syscfg get dhcp_start`
@@ -240,7 +240,7 @@ calculate_dhcp_range () {
    	if [ "$OCTET_NUM" -eq "3" ]
    	then
     	START_ADDR_LAST_OCTET=`echo "$DHCP_START" | awk -F '\.' '{print $NF}'`
-        if [ "$START_ADDR_LAST_OCTET" = "" ]
+        if [ -z "$START_ADDR_LAST_OCTET" ]
         then
             echo "DHCP_SERVER: Last octet of start IP is NULL"
             isStartIpValid=0
@@ -280,7 +280,7 @@ calculate_dhcp_range () {
       	# extract 1st 3 octets of the lan subnet and set the last octet to 2 for the start address
       	DHCP_START_ADDR=`echo "$LAN_SUBNET" | cut -d"." -f1-3`
 
-      	if [ "$START_ADDR_LAST_OCTET" = "" ]
+      	if [ -z "$START_ADDR_LAST_OCTET" ]
       	then
       	    DHCP_START=2
       	else
@@ -309,7 +309,7 @@ calculate_dhcp_range () {
 	if [ "$OCTET_NUM" -eq "3" ]
    	then
     	END_ADDR_LAST_OCTET=`echo "$ENDING_ADDRESS" | awk -F '\\.' '{print $NF}'`
-        if [ "$END_ADDR_LAST_OCTET" = "" ]
+        if [ -z "$END_ADDR_LAST_OCTET" ]
         then
             echo "DHCP_SERVER: Last octet of end IP is NULL"
             isEndIpValid=0
@@ -847,7 +847,7 @@ prepare_whitelist_urls()
 
 	#Check in what mode current wan iterface is in : ipv4/ipv6
 	isIPv4=`ifconfig $WAN_INTERFACE | grep inet | grep -v inet6`
-	if [ "$isIPv4" = "" ]
+	if [ -z "$isIPv4" ]
 	then
 		isIPv6=`ifconfig $WAN_INTERFACE | grep inet6`
 		if [ "$isIPv6" != "" ]
@@ -1107,7 +1107,7 @@ if [ "x$rdkb_extender" = "xtrue" ];then
 echo "DHCP SERVER : redirection_flag val is $REDIRECTION_ON"
 iter=0
 max_iter=2
-while [ "$WIFI_NOT_CONFIGURED" = "" ] && [ "$iter" -le $max_iter ]
+while [ -z "$WIFI_NOT_CONFIGURED" ] && [ "$iter" -le $max_iter ]
 do
 	iter=$((iter+1))
 	echo "DHCP SERVER : Inside while $iter iteration"
@@ -1162,7 +1162,7 @@ fi
    localServerCnt=0
    isLocalDNSOnly=0
    localServerCnt=`wc -l < /etc/resolv.conf`
-   if [ "$localServerCnt" = "" ]
+   if [ -z "$localServerCnt" ]
    then
        localServerCnt=0
    fi
