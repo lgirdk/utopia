@@ -774,7 +774,7 @@ case "$1" in
        inst=`echo $allGreInst | cut -f 1`
        eval `psmcli get -e MSS_VAL $HS_PSM_BASE.${inst}.$GRE_PSM_TCPMSS`
        BRIDGE=`sysevent get gre_${inst}_current_bridges | cut -d ':' -f1 | cut -d ' ' -f1`
-       if [ "x" == "x$BRIDGE" ]
+       if [ "" = "$BRIDGE" ]
        then
                echo "handle_gre : Bridge instance not found. Exiting.."
                exit 0;

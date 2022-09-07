@@ -145,7 +145,7 @@ lan_status_change ()
 
          DNS_ADDITIONAL_OPTION=""
          # Check for RFC Enable for DNS STRICT ORDER
-         if [ "x$DNSSTRICT_ORDER_ENABLE" == "xtrue" ]; then
+         if [ "$DNSSTRICT_ORDER_ENABLE" = "true" ]; then
               DNS_ADDITIONAL_OPTION=" -o "
               DNS_ADDITIONAL_OPTION=" $DNS_ADDITIONAL_OPTION --dhcp-authoritative "
               echo "Starting dnsmasq with additional dns strict order option: $DNS_ADDITIONAL_OPTION"
@@ -245,7 +245,7 @@ restart_request ()
 
    DNS_ADDITIONAL_OPTION=""
    # Check for RFC Enable for DNS STRICT ORDER
-   if [ "x$DNSSTRICT_ORDER_ENABLE" == "xtrue" ]; then
+   if [ "$DNSSTRICT_ORDER_ENABLE" = "true" ]; then
          DNS_ADDITIONAL_OPTION=" -o "
          echo "Starting dnsmasq with additional dns strict order option: $DNS_ADDITIONAL_OPTION"
    else
@@ -482,7 +482,7 @@ dhcp_server_start ()
 
    InterfaceInConf=`grep "interface=" $DHCP_CONF`
 
-   if [ "x$InterfaceInConf" = "x" ] && [ "0" != "$Bridge_Mode_t" ] ; then
+   if [ "$InterfaceInConf" = "" ] && [ "0" != "$Bridge_Mode_t" ] ; then
         echo "dnsmasq.conf interface info not found"
         $PMON unsetproc dhcp_server
         sysevent set dhcp_server-status stopped
@@ -501,7 +501,7 @@ dhcp_server_start ()
 
    DNS_ADDITIONAL_OPTION=""
    # Check for RFC Enable for DNS STRICT ORDER
-   if [ "x$DNSSTRICT_ORDER_ENABLE" == "xtrue" ]; then
+   if [ "$DNSSTRICT_ORDER_ENABLE" = "true" ]; then
          DNS_ADDITIONAL_OPTION=" -o "
          echo "Starting dnsmasq with additional dns strict order option: $DNS_ADDITIONAL_OPTION"
    else
@@ -642,7 +642,7 @@ dhcp_server_stop ()
 
    DNS_ADDITIONAL_OPTION=""
    # Check for RFC Enable for DNS STRICT ORDER
-   if [ "x$DNSSTRICT_ORDER_ENABLE" == "xtrue" ]; then
+   if [ "$DNSSTRICT_ORDER_ENABLE" = "true" ]; then
          DNS_ADDITIONAL_OPTION=" -o "
          echo "Starting dnsmasq with additional dns strict order option: $DNS_ADDITIONAL_OPTION"
    else
@@ -703,7 +703,7 @@ dns_start ()
 
    DNS_ADDITIONAL_OPTION=""
    # Check for RFC Enable for DNS STRICT ORDER
-   if [ "x$DNSSTRICT_ORDER_ENABLE" == "xtrue" ]; then
+   if [ "$DNSSTRICT_ORDER_ENABLE" = "true" ]; then
          DNS_ADDITIONAL_OPTION=" -o "
          echo "Starting dnsmasq with additional dns strict order option: $DNS_ADDITIONAL_OPTION"
    else
