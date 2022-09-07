@@ -91,7 +91,7 @@ do_start_static() {
            get_dns_number=`sysevent get ipv4_"${interface}"_dns_number`
            sed -i '/domain/d' "$RESOLV_CONF_TMP"
            sed -i '/nameserver 127.0.0.1/d' "$RESOLV_CONF_TMP"
-                if [ "$get_dns_number" != "" ]; then
+                if [ -n "$get_dns_number" ]; then
                         echo "Removing old DNS IPV4 SERVER configuration from resolv.conf " >> "$CONSOLEFILE"
                         counter=0;
                         while [ $counter -lt "$get_dns_number" ]; do
@@ -106,7 +106,7 @@ do_start_static() {
    if [ "0.0.0.0" != "$NAMESERVER_V6" ]  && [ -n "$NAMESERVER_V6" ]; then
            #Removing IPV6 old DNS Config.
            dns=`sysevent get wan6_ns`
-           if [ "$dns" != "" ]; then
+           if [ -n "$dns" ]; then
                 echo "Removing old DNS IPV6 SERVER configuration from resolv.conf " >> "$CONSOLEFILE"
                         for i in $dns; do
                                 dns_server="nameserver $i"

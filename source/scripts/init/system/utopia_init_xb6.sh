@@ -261,7 +261,7 @@ fi
 CheckAndReCreateDB()
 {
 	NVRAMFullStatus=`df -h $SYSCFG_MOUNT | grep "100%"`
-	if [ "$NVRAMFullStatus" != "" ]; then
+	if [ -n "$NVRAMFullStatus" ]; then
 		if [ -f "/rdklogger/rdkbLogMonitor.sh" ]
 		then
 			  #Remove Old backup files if there	
@@ -272,7 +272,7 @@ CheckAndReCreateDB()
 			  syscfg_oldDB=$?
 			  if [ $syscfg_oldDB -ne 0 ]; then
 				  NVRAMFullStatus=`df -h $SYSCFG_MOUNT | grep "100%"`
-				  if [ "$NVRAMFullStatus" != "" ]; then
+				  if [ -n "$NVRAMFullStatus" ]; then
 					 echo "[utopia][init] NVRAM Full(100%) and below is the dump"
 					 du -h $SYSCFG_MOUNT 
 					 ls -al $SYSCFG_MOUNT	 

@@ -188,9 +188,9 @@ case "$1" in
         SYSEVT_lan_ipaddr_v6=`sysevent get lan_ipaddr_v6`
         SYSEVT_lan_prefix_v6=`sysevent get lan_prefix_v6`
 
-        if [ x$SYSEVT_lan_ipaddr_v6_prev != x$SYSEVT_lan_ipaddr_v6 ] && [ "$SYSEVT_lan_ipaddr_v6" != "" ]
+        if [ x$SYSEVT_lan_ipaddr_v6_prev != x$SYSEVT_lan_ipaddr_v6 ] && [ -n "$SYSEVT_lan_ipaddr_v6" ]
 	 then
-            if [ "$SYSEVT_lan_ipaddr_v6_prev" != "" ]; then
+            if [ -n "$SYSEVT_lan_ipaddr_v6_prev" ]; then
                 ip -6 addr del $SYSEVT_lan_ipaddr_v6_prev/64 dev $LAN_IFNAME valid_lft forever preferred_lft forever
             fi
             ip -6 addr add $SYSEVT_lan_ipaddr_v6/64 dev $LAN_IFNAME valid_lft forever preferred_lft forever
@@ -227,7 +227,7 @@ case "$1" in
                     sysevent set parcon_nfq_status started
                 fi
                 isAvailablebrlan1=`ifconfig | grep brlan1`
-                if [ "$isAvailablebrlan1" != "" ]
+                if [ -n "$isAvailablebrlan1" ]
                 then
                     echo_t "LAN HANDLER : Refreshing LAN from handler"
                     gw_lan_refresh&
@@ -278,7 +278,7 @@ case "$1" in
             fi
 
             LAN_IPV6_PREFIX=`sysevent get ipv6_prefix`
-            if [ "$LAN_IPV6_PREFIX" != "" ] ; then
+            if [ -n "$LAN_IPV6_PREFIX" ] ; then
                     ip -6 route add $LAN_IPV6_PREFIX dev $LAN_IFNAME
             fi
         else
@@ -452,7 +452,7 @@ case "$1" in
             echo_t "LAN_RESTART : Check Lan Restart Status"
 
         if [ x$SYSEVT_lan_ipaddr_v6_prev != x$SYSEVT_lan_ipaddr_v6 ] || [ x"true" = x$LAN_RESTARTED ]; then
-            if [ "$SYSEVT_lan_ipaddr_v6_prev" != "" ]; then
+            if [ -n "$SYSEVT_lan_ipaddr_v6_prev" ]; then
                 ip -6 addr del $SYSEVT_lan_ipaddr_v6_prev/64 dev $LAN_IFNAME valid_lft forever preferred_lft forever
             fi
             ip -6 addr add $SYSEVT_lan_ipaddr_v6/64 dev $LAN_IFNAME valid_lft forever preferred_lft forever

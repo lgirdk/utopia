@@ -157,7 +157,7 @@ set_ntp_driftsync_status ()
   ####in worst case if we are not synced with server, break the loop after 20 mins
   #### Note we can't wait more than 300 secs in sysevent context, this supposed to be run
   #### in background
-   if [ "$(which ntpq)" != "" ];then
+   if [ -n "$(which ntpq)" ];then
       retry=1
       while true
       do
@@ -255,31 +255,31 @@ service_start ()
 
        # Start NTP Config Creation with Multiple Server Setup
        echo_t "SERVICE_NTPD : Creating NTP config with New NTP Enabled" >> $NTPD_LOG_NAME
-       if [ "$SYSCFG_ntp_server1" != "" ] && [ "$SYSCFG_ntp_server1" != "no_ntp_address" ]; then
+       if [ -n "$SYSCFG_ntp_server1" ] && [ "$SYSCFG_ntp_server1" != "no_ntp_address" ]; then
            echo "server $SYSCFG_ntp_server1 true" >> $NTP_CONF_TMP
            echo "restrict $SYSCFG_ntp_server1 nomodify notrap noquery" >> $NTP_CONF_TMP
            VALID_SERVER="true"
            valid_server_count=$((valid_server_count + 1))
        fi
-       if [ "$SYSCFG_ntp_server2" != "" ] && [ "$SYSCFG_ntp_server2" != "no_ntp_address" ]; then
+       if [ -n "$SYSCFG_ntp_server2" ] && [ "$SYSCFG_ntp_server2" != "no_ntp_address" ]; then
            echo "server $SYSCFG_ntp_server2" >> $NTP_CONF_TMP
            echo "restrict $SYSCFG_ntp_server2 nomodify notrap noquery" >> $NTP_CONF_TMP
            VALID_SERVER="true"
            valid_server_count=$((valid_server_count + 1))
        fi
-       if [ "$SYSCFG_ntp_server3" != "" ] && [ "$SYSCFG_ntp_server3" != "no_ntp_address" ]; then
+       if [ -n "$SYSCFG_ntp_server3" ] && [ "$SYSCFG_ntp_server3" != "no_ntp_address" ]; then
            echo "server $SYSCFG_ntp_server3" >> $NTP_CONF_TMP
            echo "restrict $SYSCFG_ntp_server3 nomodify notrap noquery" >> $NTP_CONF_TMP
            VALID_SERVER="true"
            valid_server_count=$((valid_server_count + 1))
        fi
-       if [ "$SYSCFG_ntp_server4" != "" ] && [ "$SYSCFG_ntp_server4" != "no_ntp_address" ]; then
+       if [ -n "$SYSCFG_ntp_server4" ] && [ "$SYSCFG_ntp_server4" != "no_ntp_address" ]; then
            echo "server $SYSCFG_ntp_server4" >> $NTP_CONF_TMP
            echo "restrict $SYSCFG_ntp_server4 nomodify notrap noquery" >> $NTP_CONF_TMP
            VALID_SERVER="true"
            valid_server_count=$((valid_server_count + 1))
        fi
-       if [ "$SYSCFG_ntp_server5" != "" ] && [ "$SYSCFG_ntp_server5" != "no_ntp_address" ]; then
+       if [ -n "$SYSCFG_ntp_server5" ] && [ "$SYSCFG_ntp_server5" != "no_ntp_address" ]; then
            echo "server $SYSCFG_ntp_server5" >> $NTP_CONF_TMP
            echo "restrict $SYSCFG_ntp_server5 nomodify notrap noquery" >> $NTP_CONF_TMP
            VALID_SERVER="true"
@@ -361,11 +361,11 @@ service_start ()
        fi
    fi
 
-   if [ "$QUICK_SYNC_WAN_IP" != "" ]; then
+   if [ -n "$QUICK_SYNC_WAN_IP" ]; then
        # Quick Sync doesn't allow NIC Rules in Configuration File So create Quick Sync Version Prior to writing NIC rules.
        echo_t "SERVICE_NTPD : Creating NTP Quick Sync Conf file: $NTP_CONF_QUICK_SYNC" >> $NTPD_LOG_NAME
        cp $NTP_CONF_TMP $NTP_CONF_QUICK_SYNC  
-   fi #if [ "$QUICK_SYNC_WAN_IP" != "" ]; then
+   fi #if [ -n "$QUICK_SYNC_WAN_IP" ]; then
 
    if [ "$BOX_TYPE" != "HUB4" ]  && [ "$BOX_TYPE" != "SR300" ] && [ "$BOX_TYPE" != "SE501" ] && [ "$BOX_TYPE" != "SR213" ] && [ "$BOX_TYPE" != "WNXL11BWL" ] && [ "$NTPD_IMMED_PEER_SYNC" != "true" ]; then
        echo "restrict $PEER_INTERFACE_IP mask $MASK nomodify notrap" >> $NTP_CONF_TMP
@@ -377,7 +377,7 @@ service_start ()
    echo "interface listen ::1" >> $NTP_CONF_TMP
 
    if [ "$BOX_TYPE" != "MV2PLUS" ] && [ "$BOX_TYPE" != "MV1" ]; then
-       if [ "$WAN_IP" != "" ]; then
+       if [ -n "$WAN_IP" ]; then
            echo "interface listen $WAN_IP" >> $NTP_CONF_TMP
        fi
    fi
@@ -388,7 +388,7 @@ service_start ()
 
        if [ "up" = "$CURRENT_WAN_IPV6_STATUS" ] ; then
            CURRENT_WAN_V6_PREFIX=`syscfg get ipv6_prefix_address`
-           if [ "$CURRENT_WAN_V6_PREFIX" != "" ]; then
+           if [ -n "$CURRENT_WAN_V6_PREFIX" ]; then
                echo "interface listen $CURRENT_WAN_V6_PREFIX" >> $NTP_CONF_TMP
                sysevent set ntp_ipv6_listen "set"
            else
@@ -427,7 +427,7 @@ service_start ()
                $BIN -c $NTP_CONF_QUICK_SYNC --interface "$NTPD_INTERFACE" -x -gq -l $NTPD_LOG_NAME &
                QUICK_SYNC_PID=$!
            fi
-           if [ "$QUICK_SYNC_PID" != "" ];then
+           if [ -n "$QUICK_SYNC_PID" ];then
               set_ntp_quicksync_status
            fi
        else
@@ -461,7 +461,7 @@ service_start ()
                echo_t "SERVICE_NTPD : Starting NTP Quick Sync" >> $NTPD_LOG_NAME
                $BIN -c $NTP_CONF_QUICK_SYNC --interface "$QUICK_SYNC_WAN_IP" -x -gq -l $NTPD_LOG_NAME &
 	       QUICK_SYNC_PID=$!
-	       if [ "$QUICK_SYNC_PID" != "" ];then
+	       if [ -n "$QUICK_SYNC_PID" ];then
                   set_ntp_quicksync_status
                fi
            else
@@ -558,7 +558,7 @@ case "$1" in
       if [ "started" = "$CURRENT_WAN_STATUS" ] ; then
          if [ "$BOX_TYPE" = "HUB4" ] || [ "$BOX_TYPE" = "SR300" ] || [ "$BOX_TYPE" = "SE501" ] || [ "$BOX_TYPE" = "SR213" ] || [ "$BOX_TYPE" = "WNXL11BWL" ]; then
             NTPD_PROCESS=`pidof $BIN`
-            if [ "$NTPD_PROCESS" != "" ];then
+            if [ -n "$NTPD_PROCESS" ];then
                echo_t "SERVICE_NTPD : ntp process is already running and pid is = $NTPD_PROCESS" >> $NTPD_LOG_NAME
             else
                echo_t "SERVICE_NTPD : wan-status calling service_start" >> $NTPD_LOG_NAME
@@ -577,7 +577,7 @@ case "$1" in
               CURRENT_WAN_V6_PREFIX=`syscfg get ipv6_prefix_address`
               NTP_PREFIX=`sysevent get ntp_prefix`
               NTP_IPV6_LISTEN=`sysevent get ntp_ipv6_listen`
-              if [ "$CURRENT_WAN_V6_PREFIX" != "" ] && ([ "$NTP_PREFIX" != "$CURRENT_WAN_V6_PREFIX" ] || [ "set" != "$NTP_IPV6_LISTEN" ]) ; then
+              if [ -n "$CURRENT_WAN_V6_PREFIX" ] && ([ "$NTP_PREFIX" != "$CURRENT_WAN_V6_PREFIX" ] || [ "set" != "$NTP_IPV6_LISTEN" ]) ; then
                   echo_t "SERVICE_NTPD : ipv6_connection_state calling service_start" >> $NTPD_LOG_NAME
                   sysevent set ntp_prefix $CURRENT_WAN_V6_PREFIX
                   service_start

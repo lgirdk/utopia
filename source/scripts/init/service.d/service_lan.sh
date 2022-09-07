@@ -189,7 +189,7 @@ bringup_wireless_interfaces() {
             MAC=`syscfg get macwifi0${WIFI_IF_INDEX}bssid1`
             OUI=`cat /sys/class/net/"$loop"/address|awk -F: '{print $1 $2 $3}'`
             NIC=`cat /sys/class/net/"$loop"/address|awk -F: '{print $4 $5 $6}'`
-            if [ "$MAC" != "" ]; then
+            if [ -n "$MAC" ]; then
                 ulog lan status "setting $loop hw address to $MAC"
             else
                 MAC=$OUI$NIC
@@ -203,14 +203,14 @@ bringup_wireless_interfaces() {
             WIFI_VIF_INDEX=1
             VIFS=`syscfg get wl$(($WIFI_IF_INDEX-1))_virtual_ifnames`
 
-            if [ "$VIFS" != "" ]; then
+            if [ -n "$VIFS" ]; then
                 for vif in $VIFS
                 do
                     # Create a virtual interface in prompt first 
                     wl -i "$loop" ssid -C $WIFI_VIF_INDEX "" 
 
                     MAC=`syscfg get macwifi0${WIFI_IF_INDEX}bssid$(($WIFI_VIF_INDEX+1))`
-                    if [ "$MAC" != "" ]; then
+                    if [ -n "$MAC" ]; then
                         ulog lan status "setting $vif hw address to $MAC"
                     else
                         MAC=$OUI`printf "%06x" $((0x$NIC+$WIFI_VIF_INDEX))`
@@ -229,7 +229,7 @@ bringup_wireless_interfaces() {
             wlancfg "$loop" up
 
             ip link set "$loop" up
-            if [ "$VIFS" != "" ] ; then
+            if [ -n "$VIFS" ] ; then
                 for vif in $VIFS
                 do
                     ip link set "$vif" up
@@ -252,7 +252,7 @@ teardown_wireless_interfaces() {
         for loop in $SYSCFG_lan_wl_physical_ifnames
         do
             VIFS=`syscfg get wl$(($WIFI_IF_INDEX-1))_virtual_ifnames`
-            if [ "$VIFS" != "" ] ; then
+            if [ -n "$VIFS" ] ; then
                 for vif in $VIFS
                 do
                     ip link set "$vif" down
@@ -349,7 +349,7 @@ do_start()
    
    #to add ipv6 prefix for this interface
    LAN_IPV6_PREFIX=`sysevent get ipv6_prefix`
-   if [ "$LAN_IPV6_PREFIX" != "" ] ; then
+   if [ -n "$LAN_IPV6_PREFIX" ] ; then
         ip -6 route add "$LAN_IPV6_PREFIX" dev "$SYSCFG_lan_ifname"
    fi
 #song:add	
@@ -731,7 +731,7 @@ service_stop ()
 add_docsis_bridge () 
 {
 	 VAR=`sysevent get lan_created`
-	 if [ "$VAR" != "" ] ; then
+	 if [ -n "$VAR" ] ; then
 	 		exit
 	 fi
 

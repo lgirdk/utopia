@@ -95,10 +95,10 @@ get_listen_params() {
     if ([ "$BOX_TYPE" = "XB6" -a "$MANUFACTURE" = "Arris" ]); then
         CM_IP6=`ip -6 addr show dev $CMINTERFACE scope global | awk '/inet/{print $2}' | cut -d '/' -f1 | head -1`
     fi
-    if [ "$CM_IP4" != "" ] ; then
+    if [ -n "$CM_IP4" ] ; then
         LISTEN_PARAMS="-p [${CM_IP4}]:22"
     fi
-    if [ "$CM_IP6" != "" ] ; then
+    if [ -n "$CM_IP6" ] ; then
         LISTEN_PARAMS="$LISTEN_PARAMS -p [${CM_IP6}]:22"
     fi
     #If there is no ipv4 or ipv6 address to listen on, bind to local address only

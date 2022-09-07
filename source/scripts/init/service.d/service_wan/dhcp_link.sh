@@ -495,7 +495,7 @@ case "$1" in
 	   get_dns_number=`sysevent get ipv4_${interface}_dns_number`
            sed -i '/domain/d' "$RESOLV_CONF_TMP"
            sed -i '/nameserver 127.0.0.1/d' "$RESOLV_CONF_TMP"
-           	if [ "$get_dns_number" != "" ]; then
+           	if [ -n "$get_dns_number" ]; then
         		echo "Removing old DNS IPV4 SERVER configuration from resolv.conf " >> $LOG_FILE
         		counter=0;
         		while [ $counter -lt $get_dns_number ]; do

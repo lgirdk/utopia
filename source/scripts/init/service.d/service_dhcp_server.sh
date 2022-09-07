@@ -103,7 +103,7 @@ dnsmasq_server_start ()
                 SYSCFG_XDNS_FLAG=`syscfg get X_RDKCENTRAL-COM_XDNS`
                 SYSCFG_DNSSEC_FLAG=`syscfg get XDNS_DNSSecEnable`
                 SYSCFG_XDNSREFAC_FLAG=`syscfg get XDNS_RefacCodeEnable`
-                if ([ "$MODEL_NUM" = "CGA4131COM" ] || [ "$MODEL_NUM" = "CGA4332COM" ]) && [ "$SYSCFG_XDNS_FLAG" != "" ] && [ "$SYSCFG_XDNS_FLAG" = "1" ] && [ "$SYSCFG_DNSSEC_FLAG" = "1" ] ; then
+                if ([ "$MODEL_NUM" = "CGA4131COM" ] || [ "$MODEL_NUM" = "CGA4332COM" ]) && [ -n "$SYSCFG_XDNS_FLAG" ] && [ "$SYSCFG_XDNS_FLAG" = "1" ] && [ "$SYSCFG_DNSSEC_FLAG" = "1" ] ; then
                         if [ "$SYSCFG_XDNSREFAC_FLAG" = "1" ] && [ "$SYSCFG_XDNS_FLAG" = "1" ] ; then
                                 $SERVER -q --clear-on-reload --bind-dynamic --add-mac --add-cpe-id=abcdefgh -P 4096 -C $DHCP_CONF $DNS_ADDITIONAL_OPTION --proxy-dnssec --cache-size=0 --xdns-refac-code  #--enable-dbus
                         else
@@ -607,7 +607,7 @@ dhcp_server_start ()
        isAvailableXHS=`ifconfig | grep $XHS_INTERFACE`
    fi
 
-   if [ "$isAvailableXHS" != "" ]; then
+   if [ -n "$isAvailableXHS" ]; then
        echo_t "Xfinityhome service is UP"
        if [ ! -f "/tmp/xhome_start" ]; then
            print_uptime "boot_to_XHOME_uptime"
@@ -637,7 +637,7 @@ dhcp_server_start ()
    then
        has_dns_127=`grep 127.0.0.1 $RESOLV_CONF`
        had_dns_127=`sysevent get clients-have-dns-127`
-       if [ "$has_dns_127" != "" ]
+       if [ -n "$has_dns_127" ]
        then
            echo_t "clients have DNS 127"
            sysevent set clients-have-dns-127 true
