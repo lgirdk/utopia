@@ -142,7 +142,7 @@ changeFilePermissions() {
 CheckAndReCreateDB()
 {
 	NVRAMFullStatus=`df -h $SYSCFG_MOUNT | grep "100%"`
-	if [ "$NVRAMFullStatus" != "" ]; then
+	if [ -n "$NVRAMFullStatus" ]; then
 		if [ -f "/rdklogger/rdkbLogMonitor.sh" ]
 		then
 			  #Remove Old backup files if there	
@@ -152,7 +152,7 @@ CheckAndReCreateDB()
 			  syscfg_create -f $SYSCFG_FILE
 			  if [ $? != 0 ]; then
 				  NVRAMFullStatus=`df -h $SYSCFG_MOUNT | grep "100%"`
-				  if [ "$NVRAMFullStatus" != "" ]; then
+				  if [ -n "$NVRAMFullStatus" ]; then
 					 echo_t "[utopia][init] NVRAM Full(100%) and below is the dump"
 					 du -h $SYSCFG_MOUNT 
 					 ls -al $SYSCFG_MOUNT	 
@@ -668,7 +668,7 @@ else
       else
          RESET_DURATION=`cat /proc/P-UNIT/status|grep "Last reset duration"|awk '{ print $7 }'`
          result=`echo "$RESET_DURATION $BUTTON_THRESHOLD"| awk '{if ($1 > 0 && $1 < $2) print $1}'`
-         if [ "$result" != "" ]; then
+         if [ -n "$result" ]; then
             syscfg set X_RDKCENTRAL-COM_LastRebootReason "pin-reset"
             syscfg set X_RDKCENTRAL-COM_LastRebootCounter "1"
 	    if [ -e "/usr/bin/onboarding_log" ]; then

@@ -244,7 +244,7 @@ create_tunnel () {
     isgretap0Present=`ip link show | grep gretap0`
     echo_t  "isgretap0Present:$isgretap0Present"
 
-    if [ "$isgretap0Present" != "" ]; then
+    if [ -n "$isgretap0Present" ]; then
         echo "gretap0 is already present rename it before creating"
         ip link set dev $GRE_IFNAME name $GRE_IFNAME_DUMMY
     fi

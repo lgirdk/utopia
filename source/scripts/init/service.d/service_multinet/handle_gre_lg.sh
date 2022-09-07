@@ -177,7 +177,7 @@ create_tunnel () {
     WAN_IF=`sysevent get current_wan_ifname`
     
     isgretap0Present=`ip link show | grep gretap0`
-    if [ "$isgretap0Present" != "" ]; then
+    if [ -n "$isgretap0Present" ]; then
         echo "gretap0 is already present rename it before creating"
         ip link set dev $GRE_IFNAME name $GRE_IFNAME_DUMMY
     fi

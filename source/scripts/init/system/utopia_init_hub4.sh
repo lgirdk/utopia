@@ -137,7 +137,7 @@ fi
 CheckAndReCreateDB()
 {
 	NVRAMFullStatus=`df -h $SYSCFG_MOUNT | grep "100%"`
-	if [ "$NVRAMFullStatus" != "" ]; then
+	if [ -n "$NVRAMFullStatus" ]; then
 		if [ -f "/rdklogger/rdkbLogMonitor.sh" ]
 		then
 			  #Remove Old backup files if there	
@@ -148,7 +148,7 @@ CheckAndReCreateDB()
 			  syscfg_oldDB=$?
 			  if [ $syscfg_oldDB -ne 0 ]; then
 				  NVRAMFullStatus=`df -h $SYSCFG_MOUNT | grep "100%"`
-				  if [ "$NVRAMFullStatus" != "" ]; then
+				  if [ -n "$NVRAMFullStatus" ]; then
 					 echo "[utopia][init] NVRAM Full(100%) and below is the dump"
 					 du -h $SYSCFG_MOUNT 
 					 ls -al $SYSCFG_MOUNT	 
@@ -582,7 +582,7 @@ if [ "$FACTORY_RESET_REASON" = "true" ]; then
 
    echo "[utopia][init] After FR - LAN_IF_NAME:$LAN_IF_NAME Current LAN_IP:$LAN_CURRENT_IP Default LAN_IP:$LAN_DEFAULT_IP"
 
-   if [ "$LAN_IF_NAME" != "" ] && [ "$LAN_CURRENT_IP" != "" ] && [ "$LAN_DEFAULT_IP" != "" ] && [ "$LAN_DEFAULT_IP" != "$LAN_CURRENT_IP" ]; then
+   if [ -n "$LAN_IF_NAME" ] && [ -n "$LAN_CURRENT_IP" ] && [ -n "$LAN_DEFAULT_IP" ] && [ "$LAN_DEFAULT_IP" != "$LAN_CURRENT_IP" ]; then
        echo "[utopia][init] Current and Default LAN IP mismatch. so needs to change LAN IP as $LAN_DEFAULT_IP"
 
        LAN_DEFAULT_NETMASK=`cat /usr/ccsp/config/bbhm_def_cfg.xml | grep dmsb.l3net.4.V4SubnetMask | cut -d ">" -f 2 | cut -d "<" -f 1`

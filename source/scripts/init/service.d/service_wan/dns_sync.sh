@@ -63,13 +63,13 @@ done
 DNS_STR_IPV4=`cat $RESOLV_CONF | grep nameserver | grep -v 127.0.0.1 | grep "\."`
 DNS_STR_IPV6=`cat $RESOLV_CONF  | grep nameserver | grep -v 127.0.0.1 | grep "\:"`
 
-if [ "$DNS_STR_IPV4" != "" ];then
+if [ -n "$DNS_STR_IPV4" ];then
     echo "$DNS_STR_IPV4" > $TMP_RESOLV_FILE
 else
     > $TMP_RESOLV_FILE
 fi
 
-if [ "$DNS_STR_IPV6" != "" ];then
+if [ -n "$DNS_STR_IPV6" ];then
     echo "$DNS_STR_IPV6" >> $TMP_RESOLV_FILE
 fi
 
