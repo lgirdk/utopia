@@ -319,10 +319,10 @@ case "$1" in
       NTPSERVER1=
       NTPSERVER2=
       for ii in $ntpsrv ; do
-         if [ "" = "$NTPSERVER1" ] ; then
+         if [ -z "$NTPSERVER1" ] ; then
             NTPSERVER1=$ii
             `sysevent set dhcpc_ntp_server1 "$NTPSERVER1"`
-         elif [ "" = "$NTPSERVER2" ] ; then
+         elif [ -z "$NTPSERVER2" ] ; then
             NTPSERVER2=$ii
             `sysevent set dhcpc_ntp_server2 "$NTPSERVER2"`
          else

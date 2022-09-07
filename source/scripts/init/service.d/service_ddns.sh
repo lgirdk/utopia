@@ -59,7 +59,7 @@ CACHE_FILE=${CACHE_FILE_PREFIX}${WAN_IFNAME}
 #--------------------------------------------------------------
 prepare_ddns_config_file() {
    LOCAL_CONF_FILE=/tmp/ez-ipupdate.conf$$
-   if [ "" = "$SYSCFG_ddns_service" ] ; then
+   if [ -z "$SYSCFG_ddns_service" ] ; then
       SYSCFG_ddns_service=dyndns
    fi
 
@@ -224,7 +224,7 @@ do_start() {
 
    # 2. Its been a long time since our last update
    if [ "0" = "$UPDATE_NEEDED" ] ; then
-      if [ "" = "$SYSCFG_ddns_last_update" ] || [ "0" = "$SYSCFG_ddns_last_update" ] ; then
+      if [ -z "$SYSCFG_ddns_last_update" ] || [ "0" = "$SYSCFG_ddns_last_update" ] ; then
          UPDATE_NEEDED=1
          ulog ddns status "$PID ddns update required due to no previous update on record"
       else
@@ -298,7 +298,7 @@ update_ddns_if_needed () {
    *)
       PRIORERROR=`sysevent get ddns_return_status`
       if [ "0" != "$SYSCFG_ddns_enable" ] ; then
-         if [ "" = "$PRIORERROR" ] || [ "success" = "$PRIORERROR" ] ; then
+         if [ -z "$PRIORERROR" ] || [ "success" = "$PRIORERROR" ] ; then
             # if the wan ip address changed, then the system requires a few secs to stabilize
             # eg. firewall needs to be reset. Give it a few secs to do so
             sleep 5 

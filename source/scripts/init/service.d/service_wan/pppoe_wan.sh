@@ -90,7 +90,7 @@ prepare_pppoe() {
    echo "$INTERFACE_NAME" >> "$PPPOE_PEERS_FILE"
    USER=`syscfg get wan_proto_username`
    DOMAIN=`syscfg get wan_domain`
-   if [ "" = "$DOMAIN" ] ; then
+   if [ -z "$DOMAIN" ] ; then
       echo "user $USER" >> "$PPPOE_PEERS_FILE"
    else
       echo "user $DOMAIN\\\\$USER"  >> "$PPPOE_PEERS_FILE"

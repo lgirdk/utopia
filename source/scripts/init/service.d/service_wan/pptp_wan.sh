@@ -167,7 +167,7 @@ prepare_pptp() {
    USER=`syscfg get wan_proto_username`
    DOMAIN=`syscfg get wan_domain`
    echo "pty \"$PPTP_BIN $WAN_SERVER_IPADDR --nolaunchpppd\"" >> $PPTP_PEERS_FILE
-   if [ "" =  "$DOMAIN" ] ; then
+   if [ -z "$DOMAIN" ] ; then
       echo "name $USER"  >> $PPTP_PEERS_FILE
    else
       echo "name $DOMAIN\\\\$USER"  >> $PPTP_PEERS_FILE
