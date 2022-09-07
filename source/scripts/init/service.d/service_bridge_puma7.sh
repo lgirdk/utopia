@@ -127,7 +127,7 @@ cmdiag_ebtables_rules()
         ebtables -I FORWARD -j BRIDGE_FORWARD_FILTER
         ebtables -A BRIDGE_FORWARD_FILTER -s "$CMDIAG_MAC" -o lbr0 -j DROP
         ebtables -A BRIDGE_FORWARD_FILTER -s "$MUX_MAC" -o lbr0 -j DROP
-        if [ "x$ETHWAN_ENABLED" = "xtrue" ];then
+        if [ "$ETHWAN_ENABLED" = "true" ];then
             ebtables -A BRIDGE_FORWARD_FILTER -s "$CMDIAG_MAC" -o nsgmii0 -j DROP
         fi
         ebtables -A BRIDGE_FORWARD_FILTER -j RETURN
@@ -325,7 +325,7 @@ service_start(){
         
         routing_rules enable
        
-        if [ "x$ETHWAN_ENABLED" = "xtrue" ];then
+        if [ "$ETHWAN_ENABLED" = "true" ];then
             forward_wan_lan_traffic enable &
         fi
         #Sync bridge ports
@@ -387,7 +387,7 @@ service_stop(){
         
         #Flush connection tracking and packet processor sessions to avoid stale information
         flush_connection_info
-        if [ "x$ETHWAN_ENABLED" = "xtrue" ];then
+        if [ "$ETHWAN_ENABLED" = "true" ];then
             forward_wan_lan_traffic disable &
         fi
         sysevent set ${SERVICE_NAME}-errinfo

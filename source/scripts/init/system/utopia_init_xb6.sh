@@ -396,7 +396,7 @@ fi
 
 SYSCFG_FR_VAL="`syscfg get $FACTORY_RESET_KEY`"
 
-if [ "x$FACTORY_RESET_RGWIFI" = "x$SYSCFG_FR_VAL" ]; then
+if [ "$FACTORY_RESET_RGWIFI" = "$SYSCFG_FR_VAL" ]; then
    echo "[utopia][init] Performing factory reset"
    
 SYSCFG_PARTNER_FR="`syscfg get PartnerID_FR`"
@@ -491,7 +491,7 @@ fi
    echo 204 > /var/tmp/networkresponse.txt
     
 
-elif [ "x$FACTORY_RESET_WIFI" = "x$SYSCFG_FR_VAL" ]; then
+elif [ "$FACTORY_RESET_WIFI" = "$SYSCFG_FR_VAL" ]; then
     echo "[utopia][init] Performing wifi reset"
     create_wifi_default
     syscfg unset $FACTORY_RESET_KEY
@@ -520,7 +520,7 @@ fi
 MSG_SIZE_MAX=`cat /proc/sys/fs/mqueue/msgsize_max`
 MSG_MAX_SYS=`ulimit -q`
 TOT_MSG_MAX=50
-if [ "x$MSG_MAX_SYS" = "x" ]; then
+if [ "$MSG_MAX_SYS" = "" ]; then
 echo "ulimit cmd not avail assign mq msg_max :$TOT_MSG_MAX"
 else
 TOT_MSG_MAX=$((MSG_MAX_SYS/MSG_SIZE_MAX))

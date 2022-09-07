@@ -285,7 +285,7 @@ apply_config () {
     sysevent set ${SERVICE_NAME}_${1}-ipv4subnet $CUR_IPV4_SUBNET       
     if [ xbrlan0 == x${IFNAME} ]; then
 	UPNP_STATUS=`syscfg get start_upnp_service`     
-        if [ "xtrue" == "x$UPNP_STATUS" ] ;
+        if [ "true" = "$UPNP_STATUS" ] ;
         then
             if [ -f /lib/rdk/start-upnp-service ] ;
             then
@@ -336,7 +336,7 @@ remove_config () {
 	fi
    
 	UPNP_STATUS=`syscfg get start_upnp_service`     
-        if [ "xtrue" == "x$UPNP_STATUS" ] ;
+        if [ "true" = "$UPNP_STATUS" ] ;
         then
             if [ -f /lib/rdk/start-upnp-service ] ;
             then
