@@ -173,7 +173,7 @@ prepare_pptp() {
       echo "name $DOMAIN\\\\$USER"  >> $PPTP_PEERS_FILE
    fi
    REMOTE_NAME=`syscfg get wan_proto_remote_name`
-   if [ "" != "$REMOTE_NAME" ] ; then
+   if [ -n "$REMOTE_NAME" ] ; then
       echo "remotename \"$REMOTE_NAME\"" >> $PPTP_PEERS_FILE
    fi
 

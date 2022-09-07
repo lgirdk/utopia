@@ -138,7 +138,7 @@ config_vlan () {
    # our approach is to consider vlan1 the normal mac
    # and to increment each subsequent vlan mac by 1
    REPLACEMENT=`sysevent get vlan"$2"_mac`
-   if [ "" != "$REPLACEMENT" ] ; then
+   if [ -n "$REPLACEMENT" ] ; then
        ip link set vlan"$2" addr "$REPLACEMENT"
 #      echo "[utopia] [interface] Setting vlan$2 hw address to $REPLACEMENT" > /dev/console
    else

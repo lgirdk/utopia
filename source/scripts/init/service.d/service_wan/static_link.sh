@@ -81,7 +81,7 @@ do_start_static() {
 
    cp $RESOLV_CONF $RESOLV_CONF_TMP
 
-   if [ "" != "$WAN_DOMAIN" ] ; then
+   if [ -n "$WAN_DOMAIN" ] ; then
        sed -i '/domain/d' "$RESOLV_CONF_TMP"
    fi
 
@@ -103,7 +103,7 @@ do_start_static() {
                 fi
    fi
 
-   if [ "0.0.0.0" != "$NAMESERVER_V6" ]  && [ "" != "$NAMESERVER_V6" ]; then
+   if [ "0.0.0.0" != "$NAMESERVER_V6" ]  && [ -n "$NAMESERVER_V6" ]; then
            #Removing IPV6 old DNS Config.
            dns=`sysevent get wan6_ns`
            if [ "$dns" != "" ]; then
@@ -123,21 +123,21 @@ do_start_static() {
    echo -n "$N" > "$RESOLV_CONF"
    rm -rf $RESOLV_CONF_TMP
 
-   if [ "" != "$WAN_DOMAIN" ] ; then
+   if [ -n "$WAN_DOMAIN" ] ; then
       echo "search $WAN_DOMAIN" >> $RESOLV_CONF
       sysevent set dhcp_domain "$WAN_DOMAIN"
    fi
 
-   if [ "0.0.0.0" != "$NAMESERVER1" ] && [ "" != "$NAMESERVER1" ] ; then
+   if [ "0.0.0.0" != "$NAMESERVER1" ] && [ -n "$NAMESERVER1" ] ; then
       echo "nameserver $NAMESERVER1" >> $RESOLV_CONF
    fi
-   if [ "0.0.0.0" != "$NAMESERVER2" ]  && [ "" != "$NAMESERVER2" ]; then
+   if [ "0.0.0.0" != "$NAMESERVER2" ]  && [ -n "$NAMESERVER2" ]; then
       echo "nameserver $NAMESERVER2" >> $RESOLV_CONF
    fi
-   if [ "0.0.0.0" != "$NAMESERVER3" ]  && [ "" != "$NAMESERVER3" ]; then
+   if [ "0.0.0.0" != "$NAMESERVER3" ]  && [ -n "$NAMESERVER3" ]; then
       echo "nameserver $NAMESERVER3" >> $RESOLV_CONF
    fi
-   if [ "0.0.0.0" != "$NAMESERVER_V6" ]  && [ "" != "$NAMESERVER_V6" ]; then
+   if [ "0.0.0.0" != "$NAMESERVER_V6" ]  && [ -n "$NAMESERVER_V6" ]; then
       echo "nameserver $NAMESERVER_V6" >> $RESOLV_CONF
    fi
 

@@ -82,7 +82,7 @@ retrys=1
 #daemon
 EOM
 
-   if [ "" != "$SYSCFG_ddns_mx" ]; then
+   if [ -n "$SYSCFG_ddns_mx" ]; then
       echo "mx=$SYSCFG_ddns_mx" >> $LOCAL_CONF_FILE
       if [ "1" = "$SYSCFG_ddns_mx_backup" ] ; then
          echo "backmx=YES" >> $LOCAL_CONF_FILE
@@ -101,7 +101,7 @@ EOM
 #--------------------------------------------------------------
 prepare_extra_commandline_params () {
    EXTRA_PARAMS=""
-   if [ "" != "$SYSCFG_ddns_server" ] ; then
+   if [ -n "$SYSCFG_ddns_server" ] ; then
       EXTRA_PARAMS="$EXTRA_PARAMS --server $SYSCFG_ddns_server"
    fi
 
@@ -140,7 +140,7 @@ update_ddns_server() {
        DnsIdx=`expr $DnsIdx + 1`
    done
            
-   if [ "" != "${EXTRA_PARAMS}" ]; then
+   if [ -n "${EXTRA_PARAMS}" ]; then
        echo "/usr/bin/ez-ipupdate ${EXTRA_PARAMS} " 
        /usr/bin/ez-ipupdate ${EXTRA_PARAMS} 
        RET_CODE=$?
@@ -243,7 +243,7 @@ do_start() {
    
    ulog ddns status "$PID ddns update required status is $UPDATE_NEEDED"
    LAST_FAIL_TIME=`sysevent get ddns_failure_time`
-   if [ "" != "$LAST_FAIL_TIME" ] ; then
+   if [ -n "$LAST_FAIL_TIME" ] ; then
       NOW=`get_current_time`
       DELTA=`delta_mins "$LAST_FAIL_TIME" "$NOW"`
       if [ -n "$DELTA" ] ; then

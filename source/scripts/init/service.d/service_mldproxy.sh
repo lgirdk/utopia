@@ -102,7 +102,7 @@ service_start ()
 {
    ulog ${SERVICE_NAME} status "starting ${SERVICE_NAME} service" 
 
-   if [ "" != "$WAN_IFNAME" ] && [ "1" == "$SYSCFG_mldproxy_enabled" ] && [ "$SYSCFG_dslite_enable" = "1" -o "$SYSCFG_last_erouter_mode" = "3" ] ; then
+   if [ -n "$WAN_IFNAME" ] && [ "1" == "$SYSCFG_mldproxy_enabled" ] && [ "$SYSCFG_dslite_enable" = "1" -o "$SYSCFG_last_erouter_mode" = "3" ] ; then
       do_start_mldproxy
       sysevent set ${SERVICE_NAME}-errinfo
       sysevent set ${SERVICE_NAME}-status "started"
