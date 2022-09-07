@@ -12913,7 +12913,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
 #endif
 #endif
    fprintf(filter_fp, "%s\n", ":lan2self - [0:0]");
-#ifdef _PUMA6_ARM_
+#ifdef _LG_OFW_
    fprintf(filter_fp, "%s\n", ":lan2self_dos - [0:0]");
    fprintf(filter_fp, "%s\n", ":lan2self_dos_tcp - [0:0]");
    fprintf(filter_fp, "%s\n", ":lan2self_dos_udp - [0:0]");
@@ -12964,7 +12964,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
 #endif //_HUB4_PRODUCT_REQ_
 
 
-#ifdef _PUMA6_ARM_
+#ifdef _LG_OFW_
    fprintf(filter_fp, "-A lan2self_dos -p tcp -j lan2self_dos_tcp\n");
    fprintf(filter_fp, "-A lan2self_dos -p udp -j lan2self_dos_udp\n");
    fprintf(filter_fp, "-A lan2self_dos -p icmp -j lan2self_dos_icmp\n");
@@ -12996,7 +12996,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
        fprintf(filter_fp, "%s\n", ":http2self - [0:0]");
        fprintf(filter_fp, "-A INPUT -p tcp -m tcp --dport 80 -j http2self\n");
        fprintf(filter_fp, "-A INPUT -p tcp -m tcp --dport 443 -j http2self\n");
-#ifdef _PUMA6_ARM_
+#ifdef _LG_OFW_
        fprintf(filter_fp, "-A http2self -j lan2self_dos\n");
 #endif
        fprintf(filter_fp, "-A http2self -j DROP\n");
@@ -13454,7 +13454,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(filter_fp, "-A lan2self -j lan2self_mgmt\n");
    fprintf(filter_fp, "-A lan2self -j lanattack\n");
    fprintf(filter_fp, "-A lan2self -j host_detect\n");
-#ifdef _PUMA6_ARM_
+#ifdef _LG_OFW_
    fprintf(filter_fp, "-A lan2self -j lan2self_dos\n");
 #endif
    fprintf(filter_fp, "-A lan2self -j lan2self_plugins\n");
@@ -14483,7 +14483,7 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    fprintf(filter_fp, "%s\n", ":xlog_drop_lan2self - [0:0]");
    //>>UI Access
    fprintf(filter_fp, "%s\n", ":http2self - [0:0]");
-#ifdef _PUMA6_ARM_
+#ifdef _LG_OFW_
    fprintf(filter_fp, "%s\n", ":lan2self_dos - [0:0]");
    fprintf(filter_fp, "%s\n", ":lan2self_dos_tcp - [0:0]");
    fprintf(filter_fp, "%s\n", ":lan2self_dos_udp - [0:0]");
@@ -14521,7 +14521,7 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
        do_filter_table_general_rules(filter_fp);
    }
   
-#ifdef _PUMA6_ARM_
+#ifdef _LG_OFW_
     int enable = 0;
     char query[12];
 
@@ -14609,7 +14609,7 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    fprintf(filter_fp, "-A INPUT -i %s -j lan2self_mgmt\n", cmdiag_ifname); //lan0 always exist
    fprintf(filter_fp, "-A INPUT -p tcp -m tcp --dport 80 -j http2self\n");
    fprintf(filter_fp, "-A INPUT -p tcp -m tcp --dport 443 -j http2self\n");
-#ifdef _PUMA6_ARM_
+#ifdef _LG_OFW_
    fprintf(filter_fp, "-A http2self -j lan2self_dos\n");
 #endif
    if(isRipEnabled && isBrlanStaticEnabled)
@@ -15725,7 +15725,7 @@ static void do_ipv6_filter_table(FILE *fp){
    fprintf(fp, ":wan2lan - [0:0]\n");
    fprintf(fp, ":isolate_lans - [0:0]\n");
    fprintf(fp, ":http2self - [0:0]\n");
-#ifdef _PUMA6_ARM_
+#ifdef _LG_OFW_
    fprintf(fp, "%s\n", ":lan2self_dos - [0:0]");
    fprintf(fp, "%s\n", ":lan2self_dos_tcp - [0:0]");
    fprintf(fp, "%s\n", ":lan2self_dos_udp - [0:0]");
@@ -15742,7 +15742,7 @@ static void do_ipv6_filter_table(FILE *fp){
    if (!isBridgeMode)
    {
       fprintf(fp, "-I http2self -i %s -j ACCEPT\n", lan_ifname);
-#ifdef _PUMA6_ARM_
+#ifdef _LG_OFW_
       fprintf(fp, "-I http2self -j lan2self_dos\n");
 #endif
    }
@@ -17190,7 +17190,7 @@ static int do_ipflooddetectv4(FILE *fp)
         fprintf(fp, "-A DOS_TCP -i erouter0 -p tcp --syn %s -j RETURN\n", WAN_DoS);
         fprintf(fp, "-A DOS_TCP -j DOS_DROP\n");
 
-#ifdef _PUMA6_ARM_
+#ifdef _LG_OFW_
         fprintf(fp, "-A lan2self_dos_tcp -p tcp ! --syn -m state --state NEW -j DROP\n");
         fprintf(fp, "-A lan2self_dos_tcp -m state --state ESTABLISHED,RELATED -j RETURN\n");
         fprintf(fp, "-A lan2self_dos_tcp -m recent --set --name lan2self_dos_tcp\n");
@@ -17201,7 +17201,7 @@ static int do_ipflooddetectv4(FILE *fp)
         fprintf(fp, "-A DOS_UDP -i erouter0 -p udp %s -j RETURN\n", WAN_DoS);
         fprintf(fp, "-A DOS_UDP -j DOS_DROP\n");
 
-#ifdef _PUMA6_ARM_
+#ifdef _LG_OFW_
         fprintf(fp, "-A lan2self_dos_udp -m conntrack --ctstate RELATED,ESTABLISHED -m connmark --mark 0x1000/0x1000 -j RETURN\n");
         fprintf(fp, "-A lan2self_dos_udp -m recent --set --name lan2self_dos_udp\n");
         fprintf(fp, "-A lan2self_dos_udp -m recent --update --seconds 1 --hitcount 15 --name lan2self_dos_udp -j DROP\n");
@@ -17259,7 +17259,7 @@ static void do_icmpflooddetectv4(FILE *fp)
         fprintf(fp, "-A DOS_ICMP -i erouter0 -m limit --limit %u/second --limit-burst %u -j RETURN\n", icmpRate, icmpRate);
         fprintf(fp, "-A DOS_ICMP -i erouter0 -m limit --limit 5/min --limit-burst 5 -j LOG --log-prefix \"ICMP Flood: \" --log-level 5\n");
         fprintf(fp, "-A DOS_ICMP -i erouter0 -j DROP\n");
-#ifdef _PUMA6_ARM_
+#ifdef _LG_OFW_
         fprintf(fp, "-A lan2self_dos_icmp -m recent --set --name lan2self_dos_icmp\n");
         fprintf(fp, "-A lan2self_dos_icmp -m recent --update --seconds 1 --hitcount %u --name lan2self_dos_icmp -j DROP\n", icmpRate);
 #endif
@@ -17398,7 +17398,7 @@ static int do_ipflooddetectv6(FILE *fp)
         fprintf(fp, "-A DOS_TCP -i erouter0 -p tcp --syn %s -j RETURN\n", WAN_DoS);
         fprintf(fp, "-A DOS_TCP -j DOS_DROP\n");
 
-#ifdef _PUMA6_ARM_
+#ifdef _LG_OFW_
         fprintf(fp, "-A lan2self_dos_tcp -p tcp ! --syn -m state --state NEW -j DROP\n");
         fprintf(fp, "-A lan2self_dos_tcp -m state --state ESTABLISHED,RELATED -j RETURN\n");
         fprintf(fp, "-A lan2self_dos_tcp -m recent --set --name lan2self_dos_tcp\n");
@@ -17409,7 +17409,7 @@ static int do_ipflooddetectv6(FILE *fp)
         fprintf(fp, "-A DOS_UDP -i erouter0 -p udp %s -j RETURN\n", WAN_DoS);
         fprintf(fp, "-A DOS_UDP -j DOS_DROP\n");
 
-#ifdef _PUMA6_ARM_
+#ifdef _LG_OFW_
         fprintf(fp, "-A lan2self_dos_udp -m conntrack --ctstate RELATED,ESTABLISHED -m connmark --mark 0x1000/0x1000 -j RETURN\n");
         fprintf(fp, "-A lan2self_dos_udp -m recent --set --name lan2self_dos_udp\n");
         fprintf(fp, "-A lan2self_dos_udp -m recent --update --seconds 1 --hitcount 15 --name lan2self_dos_udp -j DROP\n");
@@ -17459,7 +17459,7 @@ static void do_icmpflooddetectv6 (FILE *fp)
         fprintf(fp, "-A DOS_ICMP -i erouter0 -m limit --limit %u/second --limit-burst %u -j RETURN\n", icmpRate, icmpRate);
         fprintf(fp, "-A DOS_ICMP -i erouter0 -m limit --limit 5/min --limit-burst 5 -j LOG --log-prefix \"ICMP Flood: \" --log-level 5\n");
         fprintf(fp, "-A DOS_ICMP -i erouter0 -j DROP\n");
-#ifdef _PUMA6_ARM_
+#ifdef _LG_OFW_
         fprintf(fp, "-A lan2self_dos_icmp -m recent --set --name lan2self_dos_icmp\n");
         fprintf(fp, "-A lan2self_dos_icmp -m recent --update --seconds 1 --hitcount %u --name lan2self_dos_icmp -j DROP\n", icmpRate);
 #endif
