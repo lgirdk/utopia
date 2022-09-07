@@ -645,7 +645,7 @@ service_init ()
    fi
    
   LAN_CREATED=`sysevent get lan_created`
-	 if [ "$LAN_CREATED" = "" ] ; then
+	 if [ -z "$LAN_CREATED" ] ; then
 	 		lan_create
 	 		sysevent set lan_created 1
 	 fi

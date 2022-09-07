@@ -103,13 +103,13 @@ else
     MLD_PID=`pidof mcproxy_v6`
     IGMP_PID=`pidof mcproxy_v4`
 
-    if [ "$IGMP_PID" = "" ]; then
+    if [ -z "$IGMP_PID" ]; then
       if [ "$RG_MD" = "1" -o "$RG_MD" = "3" ]; then
     	/etc/utopia/service.d/service_mcastproxy.sh lan-status&
       fi
     fi
 
-    if [ "$MLD_PID" = "" ]; then
+    if [ -z "$MLD_PID" ]; then
       if [ "$RG_MD" = "2" -o "$RG_MD" = "3" ]; then
     	/etc/utopia/service.d/service_mldproxy.sh lan-status&
       fi

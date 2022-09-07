@@ -383,7 +383,7 @@ fi
 MSG_SIZE_MAX=`cat /proc/sys/fs/mqueue/msgsize_max`
 MSG_MAX_SYS=`ulimit -q`
 TOT_MSG_MAX=50
-if [ "$MSG_MAX_SYS" = "" ]; then
+if [ -z "$MSG_MAX_SYS" ]; then
 echo "ulimit cmd not avail assign mq msg_max :$TOT_MSG_MAX"
 else
 TOT_MSG_MAX=$((MSG_MAX_SYS/MSG_SIZE_MAX))

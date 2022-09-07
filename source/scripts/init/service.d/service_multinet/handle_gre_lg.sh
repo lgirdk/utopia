@@ -328,11 +328,11 @@ read_init_params () {
         echo "WARNING: handle_gre.sh read_init_params: psmcli return $status"
     fi
     echo "PRIMARY $PRIMARY SECONDARY $SECONDARY"
-    if [ "$PRIMARY" = "" ] || [ "$SECONDARY" = "" ]
+    if [ -z "$PRIMARY" ] || [ -z "$SECONDARY" ]
     then
         echo "WARNING: handle_gre.sh read_init_params: PRIMARY/SECONDARY NULL"
     fi
-    if [ "$KA_INTERVAL" = "" ]
+    if [ -z "$KA_INTERVAL" ]
     then
         echo "WARNING: handle_gre.sh read_init_params: KA_INTERVAL NULL"
     fi
