@@ -326,12 +326,6 @@ service_start ()
        fi
 
    # Continue with Rest of NTP Config Creation
-   if [ -z "$SOURCE_PING_INTF" ]; then
-       MASK=ifconfig $SOURCE_PING_INTF | sed -rn '2s/ .*:(.*)$/\1/p'
-   else
-       MASK="255.255.255.0"
-   fi
-
    WAN_IP=""
    QUICK_SYNC_WAN_IP=""
 
@@ -362,8 +356,15 @@ service_start ()
        cp $NTP_CONF_TMP $NTP_CONF_QUICK_SYNC  
    fi #if [ -n "$QUICK_SYNC_WAN_IP" ]; then
 
-   if [ "$BOX_TYPE" != "HUB4" ]  && [ "$BOX_TYPE" != "SR300" ] && [ "$BOX_TYPE" != "SE501" ] && [ "$BOX_TYPE" != "SR213" ] && [ "$BOX_TYPE" != "WNXL11BWL" ] && [ "$NTPD_IMMED_PEER_SYNC" != "true" ]; then
-       echo "restrict $PEER_INTERFACE_IP mask $MASK nomodify notrap" >> $NTP_CONF_TMP
+   if [ -n "$PEER_INTERFACE_IP" ]; then
+       if [ "$BOX_TYPE" != "HUB4" ]  && [ "$BOX_TYPE" != "SR300" ] && [ "$BOX_TYPE" != "SE501" ] && [ "$BOX_TYPE" != "SR213" ] && [ "$BOX_TYPE" != "WNXL11BWL" ] && [ "$NTPD_IMMED_PEER_SYNC" != "true" ]; then
+           if [ -z "$SOURCE_PING_INTF" ]; then
+               MASK="255.255.255.0"
+           else
+               MASK=$(ifconfig $SOURCE_PING_INTF | sed -rn '2s/ .*:(.*)$/\1/p')
+           fi
+           echo "restrict $PEER_INTERFACE_IP mask $MASK nomodify notrap" >> $NTP_CONF_TMP
+       fi
    fi
 
    # interface rules can't be written to quick sync conf file so write here after quick sync conf file creation.
