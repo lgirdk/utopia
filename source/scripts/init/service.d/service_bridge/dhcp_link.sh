@@ -207,7 +207,7 @@ case "$1" in
       OLDIP=`/sbin/ip addr show dev "$interface"  | grep "inet " | awk '{split($2,foo, "/"); print(foo[1]);}'`
       if [ "$OLDIP" != "$ip" ] ; then
          RESULT=`arping -q -c 2 -w 3 -D -I "$interface" "$ip"`
-         if [ "" != "$RESULT" ] &&  [ "0" != "$RESULT" ] ; then
+         if [ -n "$RESULT" ] &&  [ "0" != "$RESULT" ] ; then
             echo "[utopia][dhcp client script] duplicate address detected $ip on $interface." > /dev/console
             echo "[utopia][dhcp client script] ignoring duplicate ... hoping for the best" > /dev/console
          fi
@@ -289,15 +289,15 @@ case "$1" in
       NAMESERVER1=`syscfg get nameserver1`
       NAMESERVER2=`syscfg get nameserver2`
       NAMESERVER3=`syscfg get nameserver3`
-      if [ "0.0.0.0" != "$NAMESERVER1" ] && [ "" != "$NAMESERVER1" ] ; then
+      if [ "0.0.0.0" != "$NAMESERVER1" ] && [ -n "$NAMESERVER1" ] ; then
          echo nameserver "$NAMESERVER1" >> $RESOLV_CONF
          WAN_DNS=`echo "$WAN_DNS" "$NAMESERVER1"`
       fi
-      if [ "0.0.0.0" != "$NAMESERVER2" ]  && [ "" != "$NAMESERVER2" ]; then
+      if [ "0.0.0.0" != "$NAMESERVER2" ]  && [ -n "$NAMESERVER2" ]; then
          echo nameserver "$NAMESERVER2" >> $RESOLV_CONF
          WAN_DNS=`echo "$WAN_DNS" "$NAMESERVER2"`
       fi
-      if [ "0.0.0.0" != "$NAMESERVER3" ]  && [ "" != "$NAMESERVER3" ]; then
+      if [ "0.0.0.0" != "$NAMESERVER3" ]  && [ -n "$NAMESERVER3" ]; then
          echo nameserver "$NAMESERVER3" >> $RESOLV_CONF
          WAN_DNS=`echo "$WAN_DNS" "$NAMESERVER3"`
       fi

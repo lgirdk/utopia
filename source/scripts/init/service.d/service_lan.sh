@@ -140,7 +140,7 @@ bringup_ethernet_interfaces() {
    # if we are using virtual ethernet interfaces then
    # create them now
 #   echo "[lan] bringup_ethernet_interfaces called" > /dev/console
-   if [ "" != "$SYSCFG_lan_ethernet_virtual_ifnums" ] ; then
+   if [ -n "$SYSCFG_lan_ethernet_virtual_ifnums" ] ; then
        for loop in $SYSCFG_lan_ethernet_physical_ifnames
        do
          config_vlan "$loop" "$SYSCFG_lan_ethernet_virtual_ifnums"
@@ -181,7 +181,7 @@ bringup_wireless_interfaces() {
 
     WIFI_IF_INDEX=1
 
-    if [ "" != "$SYSCFG_lan_wl_physical_ifnames" ] ; then
+    if [ -n "$SYSCFG_lan_wl_physical_ifnames" ] ; then
         for loop in $SYSCFG_lan_wl_physical_ifnames
         do
             ### Set the main interface (eth*) ###
@@ -248,7 +248,7 @@ teardown_wireless_interfaces() {
 
     WIFI_IF_INDEX=1
 
-    if [ "" != "$SYSCFG_lan_wl_physical_ifnames" ] ; then
+    if [ -n "$SYSCFG_lan_wl_physical_ifnames" ] ; then
         for loop in $SYSCFG_lan_wl_physical_ifnames
         do
             VIFS=`syscfg get wl$(($WIFI_IF_INDEX-1))_virtual_ifnames`
@@ -630,17 +630,17 @@ service_init ()
    fi
 
    # if we are using wireless interfafes then add them
-   if [ "" != "$SYSCFG_lan_wl_physical_ifnames" ] ; then
+   if [ -n "$SYSCFG_lan_wl_physical_ifnames" ] ; then
       LAN_IFNAMES="$LAN_IFNAMES $SYSCFG_lan_wl_physical_ifnames"
    fi
 
    # TODO: have to create additional bridges and move vifs to them
    VIFS0=`syscfg get "wl0_virtual_ifnames"`
-   if [ "" != "$VIFS0" ] ; then
+   if [ -n "$VIFS0" ] ; then
       LAN_IFNAMES="$LAN_IFNAMES $VIFS0"
    fi
    VIFS1=`syscfg get "wl1_virtual_ifnames"`
-   if [ "" != "$VIFS1" ] ; then
+   if [ -n "$VIFS1" ] ; then
       LAN_IFNAMES="$LAN_IFNAMES $VIFS1"
    fi
    
@@ -665,7 +665,7 @@ service_start ()
    if [ "started" != "$STATUS" ] ; then
       sysevent set ${SERVICE_NAME}-errinfo
       sysevent set ${SERVICE_NAME}-status starting
-      if [ "" != "$LAN_IFNAMES" ]; then
+      if [ -n "$LAN_IFNAMES" ]; then
          do_start
       else
          do_start_no_bridge
@@ -707,7 +707,7 @@ service_stop ()
    if [ "stopped" != "$STATUS" ] ; then
       sysevent set ${SERVICE_NAME}-errinfo
       sysevent set ${SERVICE_NAME}-status stopping
-      if [ "" != "$LAN_IFNAMES" ]; then
+      if [ -n "$LAN_IFNAMES" ]; then
          do_stop
       else
          do_stop_no_bridge

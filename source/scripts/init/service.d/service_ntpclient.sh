@@ -108,7 +108,7 @@ service_start ()
 
    # also, if we got ntp servers through dhcp, then we use those
    NTP_SERVER=`sysevent get dhcpc_ntp_server1`
-   if [ "" != "$NTP_SERVER" ] ; then
+   if [ -n "$NTP_SERVER" ] ; then
       USE_DHCP=1
    else
       USE_DHCP=0
@@ -157,7 +157,7 @@ service_start ()
 
    `sysevent set ntp_pool_index $INDEX`
 
-   if [ "" != "$SYSCFG_TZ" ] ; then
+   if [ -n "$SYSCFG_TZ" ] ; then
       echo "$SYSCFG_TZ" > $TZ_FILE
    fi
 

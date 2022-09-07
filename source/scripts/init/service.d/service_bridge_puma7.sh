@@ -420,7 +420,7 @@ service_init ()
     LAN_IFNAMES="$SYSCFG_lan_ethernet_physical_ifnames"
     
     # if we are using wireless interfafes then add them
-    if [ "" != "$SYSCFG_lan_wl_physical_ifnames" ] ; then
+    if [ -n "$SYSCFG_lan_wl_physical_ifnames" ] ; then
         LAN_IFNAMES="$LAN_IFNAMES $SYSCFG_lan_wl_physical_ifnames"
     fi
 }

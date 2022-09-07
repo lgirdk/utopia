@@ -237,7 +237,7 @@ update_ddns_server() {
               UPDATE_UTIL="/usr/bin/curl"
         fi
 
-         if [ "" != "${EXTRA_PARAMS}" ]; then
+         if [ -n "${EXTRA_PARAMS}" ]; then
 
               if [ "" = "$ddns_hostname_x" ]; then
                    echo "###### sysevent set ddns_return_status error-domain"
@@ -380,7 +380,7 @@ update_ddns_server() {
 
                    return_str_name="register_success_${ddns_service_name_mod}"
                    return_str=`eval echo '$'"$return_str_name"`
-                   if [ "" != "$return_str" ]; then
+                   if [ -n "$return_str" ]; then
                        grep -q "$return_str" /var/tmp/ipupdate."${ddns_service_name_mod}"
                        if [ "0" = "$?" ]; then
                            sysevent set ddns_return_status"${DnsIdx}" success
@@ -395,7 +395,7 @@ update_ddns_server() {
 
                    return_str_name="update_success_${ddns_service_name_mod}"
                    return_str=`eval echo '$'"$return_str_name"`
-                   if [ "" != "$return_str" ]; then
+                   if [ -n "$return_str" ]; then
                        grep -q "$return_str" /var/tmp/ipupdate."${ddns_service_name_mod}"
                        if [ "0" = "$?" ]; then
                            sysevent set ddns_return_status"${DnsIdx}" success
@@ -409,7 +409,7 @@ update_ddns_server() {
                    fi
                    return_str_name="token_error_${ddns_service_name_mod}"
                    return_str=`eval echo '$'"$return_str_name"`
-                   if [ "" != "$return_str" ]; then
+                   if [ -n "$return_str" ]; then
                        grep -q "$return_str" /var/tmp/ipupdate."${ddns_service_name_mod}"
                        if [ "0" = "$?" ]; then
                            syscfg set ddns_client_Status $CLIENT_ERROR
@@ -423,7 +423,7 @@ update_ddns_server() {
 
                    return_str_name="hostname_error_${ddns_service_name_mod}"
                    return_str=`eval echo '$'"$return_str_name"`
-                   if [ "" != "$return_str" ]; then
+                   if [ -n "$return_str" ]; then
                        grep -q "$return_str" /var/tmp/ipupdate."${ddns_service_name_mod}"
                        if [ "0" = "$?" ]; then
                            syscfg set ddns_client_Status $CLIENT_ERROR
@@ -436,7 +436,7 @@ update_ddns_server() {
 
                    return_str_name="username_error_${ddns_service_name_mod}"
                    return_str=`eval echo '$'"$return_str_name"`
-                   if [ "" != "$return_str" ]; then
+                   if [ -n "$return_str" ]; then
                        grep -q "$return_str" /var/tmp/ipupdate."${ddns_service_name_mod}"
                        if [ "0" = "$?" ]; then
                            syscfg set ddns_client_Status $CLIENT_ERROR
@@ -448,7 +448,7 @@ update_ddns_server() {
                    fi
                    return_str_name="password_error_${ddns_service_name_mod}"
                    return_str=`eval echo '$'"$return_str_name"`
-                   if [ "" != "$return_str" ]; then
+                   if [ -n "$return_str" ]; then
                        grep -q "$return_str" /var/tmp/ipupdate."${ddns_service_name_mod}"
                        if [ "0" = "$?" ]; then
                             syscfg set ddns_client_Status $CLIENT_ERROR
@@ -470,7 +470,7 @@ update_ddns_server() {
 
                    return_str_name="general_error_${ddns_service_name_mod}"
                    return_str=`eval echo '$'"$return_str_name"`
-                   if [ "" != "$return_str" ]; then
+                   if [ -n "$return_str" ]; then
                        grep -q "$return_str" /var/tmp/ipupdate."${ddns_service_name_mod}"
                        if [ "0" = "$?" ]; then
                            #sysevent set ddns_return_status error-auth

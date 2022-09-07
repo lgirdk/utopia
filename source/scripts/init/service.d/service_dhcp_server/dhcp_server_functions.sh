@@ -436,7 +436,7 @@ prepare_dhcp_options() {
     NAMESERVER3=`syscfg get dhcp_nameserver_3`
    
     if [ "1" = "$NAMESERVERENABLED" ] ; then
-      if [ "0.0.0.0" != "$NAMESERVER1" ] && [ "" != "$NAMESERVER1" ] ; then
+      if [ "0.0.0.0" != "$NAMESERVER1" ] && [ -n "$NAMESERVER1" ] ; then
          if [ "" = "$DHCP_OPTION_STR" ] ; then
             DHCP_OPTION_STR="option:dns-server, "$NAMESERVER1
          else
@@ -444,7 +444,7 @@ prepare_dhcp_options() {
          fi
       fi
     
-      if [ "0.0.0.0" != "$NAMESERVER2" ]  && [ "" != "$NAMESERVER2" ]; then
+      if [ "0.0.0.0" != "$NAMESERVER2" ]  && [ -n "$NAMESERVER2" ]; then
          if [ "" = "$DHCP_OPTION_STR" ] ; then
             DHCP_OPTION_STR="option:dns-server, "$NAMESERVER2
          else
@@ -452,7 +452,7 @@ prepare_dhcp_options() {
          fi
       fi
     
-      if [ "0.0.0.0" != "$NAMESERVER3" ]  && [ "" != "$NAMESERVER3" ]; then
+      if [ "0.0.0.0" != "$NAMESERVER3" ]  && [ -n "$NAMESERVER3" ]; then
          if [ "" = "$DHCP_OPTION_STR" ] ; then
             DHCP_OPTION_STR="option:dns-server, "$NAMESERVER3
          else
@@ -468,7 +468,7 @@ prepare_dhcp_options() {
 
         #Wan static DNS
         NS=`syscfg get nameserver1`
-        if [ "0.0.0.0" != "$NS" ]  && [ "" != "$NS" ] ; then
+        if [ "0.0.0.0" != "$NS" ]  && [ -n "$NS" ] ; then
            if [ "" = "$DHCP_OPTION_STR" ] ; then
               DHCP_OPTION_STR="option:dns-server, "$NS
            else
@@ -477,7 +477,7 @@ prepare_dhcp_options() {
         fi
     
         NS=`syscfg get nameserver2`
-        if [ "0.0.0.0" != "$NS" ] && [ "" != "$NS" ] ; then
+        if [ "0.0.0.0" != "$NS" ] && [ -n "$NS" ] ; then
            if [ "" = "$DHCP_OPTION_STR" ] ; then
               DHCP_OPTION_STR="option:dns-server, "$NS
            else
@@ -486,7 +486,7 @@ prepare_dhcp_options() {
         fi
     
         NS=`syscfg get nameserver3`
-        if [ "0.0.0.0" != "$NS" ] && [ "" != "$NS" ] ; then
+        if [ "0.0.0.0" != "$NS" ] && [ -n "$NS" ] ; then
            if [ "" = "$DHCP_OPTION_STR" ] ; then
              DHCP_OPTION_STR="option:dns-server, "$NS
            else
@@ -497,7 +497,7 @@ prepare_dhcp_options() {
       else   
         #Wan Dynamic DNS from dhcp protocol
         NS=`sysevent get wan_dhcp_dns`
-        if [ "" != "$NS" ] ; then
+        if [ -n "$NS" ] ; then
            NS=`echo "$NS" | sed "s/ /,/g"`
            if [ "" = "$DHCP_OPTION_STR" ] ; then
               DHCP_OPTION_STR="option:dns-server, "$NS
@@ -512,7 +512,7 @@ prepare_dhcp_options() {
 #/*USG needs to support DNS Passthrough, so don't add it as a dns svr. soyou*/
    # add utopia as nameserver of last resort
 #   NS=` syscfg get lan_ipaddr `
-#   if [ "" != "$NS" ] ; then
+#   if [ -n "$NS" ] ; then
 #      if [ "" = "$DHCP_OPTION_STR" ] ; then
 #         DHCP_OPTION_STR="option:dns-server, "$NS
 #      else
@@ -524,7 +524,7 @@ prepare_dhcp_options() {
    # if we need to provision a wins server
    # we use netbios-ns instead of option 44
    WINS_SERVER=`syscfg get dhcp_wins_server`
-   if [ "" != "$WINS_SERVER" ] && [ "0.0.0.0" != "$WINS_SERVER" ] ; then
+   if [ -n "$WINS_SERVER" ] && [ "0.0.0.0" != "$WINS_SERVER" ] ; then
       echo "option:netbios-ns,$WINS_SERVER" >> $LOCAL_DHCP_OPTIONS_FILE
    fi
 
@@ -544,7 +544,7 @@ get_dhcp_option_for_brlan0() {
     CURR_LAN_IP=`sysevent get current_lan_ipaddr`
     SECUREWEBUI_ENABLED=`syscfg get SecureWebUI_Enable`
    
-	  if [ "0.0.0.0" != "$NAMESERVER1" ] && [ "" != "$NAMESERVER1" ] ; then
+	  if [ "0.0.0.0" != "$NAMESERVER1" ] && [ -n "$NAMESERVER1" ] ; then
 	     if [ "" = "$DHCP_OPTION_STR" ] ; then
 	        DHCP_OPTION_STR="dhcp-option=brlan0,6,"$NAMESERVER1
 	     else
@@ -552,7 +552,7 @@ get_dhcp_option_for_brlan0() {
 	     fi
 	  fi
 
-	  if [ "0.0.0.0" != "$NAMESERVER2" ]  && [ "" != "$NAMESERVER2" ]; then
+	  if [ "0.0.0.0" != "$NAMESERVER2" ]  && [ -n "$NAMESERVER2" ]; then
 	     if [ "" = "$DHCP_OPTION_STR" ] ; then
 	        DHCP_OPTION_STR="dhcp-option=brlan0,6,"$NAMESERVER2
 	     else
@@ -560,7 +560,7 @@ get_dhcp_option_for_brlan0() {
 	     fi
 	  fi
 
-	  if [ "0.0.0.0" != "$NAMESERVER3" ]  && [ "" != "$NAMESERVER3" ]; then
+	  if [ "0.0.0.0" != "$NAMESERVER3" ]  && [ -n "$NAMESERVER3" ]; then
 	     if [ "" = "$DHCP_OPTION_STR" ] ; then
 	        DHCP_OPTION_STR="dhcp-option=brlan0,6,"$NAMESERVER3
 	     else
@@ -570,22 +570,22 @@ get_dhcp_option_for_brlan0() {
           
           if [ "$SECUREWEBUI_ENABLED" = "true" ]; then
               NS=`sysevent get wan_dhcp_dns`
-              if [ "" != "$NS" ] ; then
+              if [ -n "$NS" ] ; then
                   NS=`echo "$NS" | sed "s/ /,/g"`
 	      else
 	          NS=`cat $RESOLV_CONF | grep nameserver | grep "\." | head -n 2 | cut -d" " -f2`
-		  if [ "" != "$NS" ] ; then
+		  if [ -n "$NS" ] ; then
                       NS=`echo $NS | sed 's/\( \)\{1,\}/,/g'`
 		  fi
               fi    
               if [ "" = "$DHCP_OPTION_STR" ] ; then
-                 if [ "" != "$NS" ] ; then
+                 if [ -n "$NS" ] ; then
                      DHCP_OPTION_STR="dhcp-option=brlan0,6,$CURR_LAN_IP,"$NS
                  else
                      DHCP_OPTION_STR="dhcp-option=brlan0,6,"$CURR_LAN_IP
                  fi
               else
-                 if [ "" != "$NS" ] ; then
+                 if [ -n "$NS" ] ; then
                      DHCP_OPTION_STR=$DHCP_OPTION_STR",$CURR_LAN_IP,"$NS
                  else
                      DHCP_OPTION_STR=$DHCP_OPTION_STR","$CURR_LAN_IP
@@ -788,7 +788,7 @@ prepare_dhcp_options_wan_dns()
    if [ "1" = "$PROPAGATE_NS" ] ; then
       #Wan Dynamic DNS from dhcp protocol
       NS=`sysevent get wan_dhcp_dns`
-      if [ "" != "$NS" ] ; then
+      if [ -n "$NS" ] ; then
          NS=`echo "$NS" | sed "s/ /,/g"`
          if [ "" = "$DHCP_OPTION_STR" ] ; then
             DHCP_OPTION_STR="option:dns-server, "$NS
@@ -1044,7 +1044,7 @@ if [ "x$rdkb_extender" = "xtrue" ];then
    LAN_IFNAME=`syscfg get lan_ifname`
    NAMESERVERENABLED=`syscfg get dhcp_nameserver_enabled`
    WAN_DHCP_NS=`sysevent get wan_dhcp_dns`
-   if [ "" != "$WAN_DHCP_NS" ] ; then
+   if [ -n "$WAN_DHCP_NS" ] ; then
 		WAN_DHCP_NS=`echo "$WAN_DHCP_NS" | sed "s/ /,/g"`
    fi	 
 
@@ -1215,7 +1215,7 @@ fi
          if [ "" = "$LAN_DOMAIN" ] ; then
             LAN_DOMAIN=`syscfg get lan_domain`
          fi
-         if [ "" != "$LAN_DOMAIN" ] ; then
+         if [ -n "$LAN_DOMAIN" ] ; then
             echo "domain=$LAN_DOMAIN" >> $LOCAL_DHCP_CONF
             echo "local=/$LAN_DOMAIN/" >> $LOCAL_DHCP_CONF
          fi

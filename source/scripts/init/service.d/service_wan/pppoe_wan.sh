@@ -97,16 +97,16 @@ prepare_pppoe() {
    fi
    # What should be in the second column in /etc/ppp/*-secrets
    REMOTE_NAME=`syscfg get wan_proto_remote_name`
-   if [ "" != "$REMOTE_NAME" ] ; then
+   if [ -n "$REMOTE_NAME" ] ; then
       echo "remotename \"$REMOTE_NAME\"" >> "$PPPOE_PEERS_FILE"
    fi
    # If needed, specify the service and the access concentrator name
    SERVICE=`syscfg get pppoe_service_name`
-   if [ "" != "$SERVICE" ] ; then
+   if [ -n "$SERVICE" ] ; then
       echo "rp_pppoe_service $SERVICE" >> "$PPPOE_PEERS_FILE"
    fi
    AC_NAME=`syscfg get pppoe_access_concentrator_name`
-   if [ "" != "$AC_NAME" ] ; then
+   if [ -n "$AC_NAME" ] ; then
       echo "rp_pppoe_ac $AC_NAME" >> "$PPPOE_PEERS_FILE"
    fi
    # The settings below usually don't need to be changed
