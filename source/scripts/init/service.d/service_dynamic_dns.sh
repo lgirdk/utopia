@@ -239,7 +239,7 @@ update_ddns_server() {
 
          if [ -n "${EXTRA_PARAMS}" ]; then
 
-              if [ "" = "$ddns_hostname_x" ]; then
+              if [ -z "$ddns_hostname_x" ]; then
                    echo "###### sysevent set ddns_return_status error-domain"
                    syscfg set ddns_client_Status $CLIENT_ERROR
                    syscfg set ddns_host_status_1 $HOST_ERROR
@@ -248,7 +248,7 @@ update_ddns_server() {
                    continue
               fi
 
-              if [ "" == "$ddns_stoken_x" ] && ([ "" = "$ddns_username_x" ] || [ "" = "$ddns_password_x" ]); then
+              if [ "" == "$ddns_stoken_x" ] && ([ -z "$ddns_username_x" ] || [ -z "$ddns_password_x" ]); then
                   echo "$PID ddns_return_status error-auth"
                   syscfg set ddns_client_Status $CLIENT_ERROR
                   syscfg set ddns_host_status_1 $HOST_ERROR
@@ -617,7 +617,7 @@ update_ddns_if_needed () {
       PRIORERROR=`sysevent get ddns_return_status`
       service_ddns_enable="$DDNS_ENABLE"
       if [ "0" != "$service_ddns_enable" ] ; then
-         if [ "" = "$PRIORERROR" ] || [ "success" = "$PRIORERROR" ] ; then
+         if [ -z "$PRIORERROR" ] || [ "success" = "$PRIORERROR" ] ; then
             # if the wan ip address changed, then the system requires a few secs to stabilize
             # eg. firewall needs to be reset. Give it a few secs to do so
             if [ "$WAN_LAST_IPADDR" != "$CURRENT_WAN_IPADDR" ] ; then

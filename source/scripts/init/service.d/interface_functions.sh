@@ -51,7 +51,7 @@ get_network () {
    IFS=.
    for p in $1
    do
-       if [ "" = "$LAST" ] ; then
+       if [ -z "$LAST" ] ; then
           LAST=$TEMP
        else
           LAST=$LAST"."$TEMP

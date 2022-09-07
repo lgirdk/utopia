@@ -133,7 +133,7 @@ set_ntp_quicksync_status ()
              syscfg set ntp_status 3
              #Set FirstUseDate in Syscfg if this is the first time we are doing a successful NTP Sych
              DEVICEFIRSTUSEDATE=`syscfg get device_first_use_date`
-             if [ "" = "$DEVICEFIRSTUSEDATE" ] || [ "0" = "$DEVICEFIRSTUSEDATE" ]; then
+             if [ -z "$DEVICEFIRSTUSEDATE" ] || [ "0" = "$DEVICEFIRSTUSEDATE" ]; then
                 FIRSTUSEDATE=`date +%Y-%m-%dT%H:%M:%S`
                 syscfg set device_first_use_date "$FIRSTUSEDATE"
              fi
@@ -167,7 +167,7 @@ set_ntp_driftsync_status ()
            sysevent set ntp_time_sync 1
            #Set FirstUseDate in Syscfg if this is the first time we are doing a successful NTP Sych
            DEVICEFIRSTUSEDATE=`syscfg get device_first_use_date`
-           if [ "" = "$DEVICEFIRSTUSEDATE" ] || [ "0" = "$DEVICEFIRSTUSEDATE" ]; then
+           if [ -z "$DEVICEFIRSTUSEDATE" ] || [ "0" = "$DEVICEFIRSTUSEDATE" ]; then
               FIRSTUSEDATE=`date +%Y-%m-%dT%H:%M:%S`
               syscfg set device_first_use_date "$FIRSTUSEDATE"
            fi
@@ -479,7 +479,7 @@ service_start ()
 
        #Set FirstUseDate in Syscfg if this is the first time we are doing a successful NTP Sych
        DEVICEFIRSTUSEDATE=`syscfg get device_first_use_date`
-       if [ "" = "$DEVICEFIRSTUSEDATE" ] || [ "0" = "$DEVICEFIRSTUSEDATE" ]; then
+       if [ -z "$DEVICEFIRSTUSEDATE" ] || [ "0" = "$DEVICEFIRSTUSEDATE" ]; then
            FIRSTUSEDATE=`date +%Y-%m-%dT%H:%M:%S`
            syscfg set device_first_use_date "$FIRSTUSEDATE"
        fi

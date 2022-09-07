@@ -159,7 +159,7 @@ bringup_ethernet_interfaces() {
 #--------------------------------------------------------------
 teardown_ethernet_interfaces() {
 #   echo "[lan] teardown_ethernet_interfaces called" > /dev/console
-   if [ "" = "$SYSCFG_lan_ethernet_virtual_ifnums" ] ; then
+   if [ -z "$SYSCFG_lan_ethernet_virtual_ifnums" ] ; then
       for loop in $SYSCFG_lan_ethernet_physical_ifnames
       do
          ip link set "$loop" down
@@ -618,7 +618,7 @@ service_init ()
    #figure out the interfaces that are part of the lan
    # if we are not using virtual ethernet interfaces then
    # use the physical ethernet names
-   if [ "" = "$SYSCFG_lan_ethernet_virtual_ifnums" ] ; then
+   if [ -z "$SYSCFG_lan_ethernet_virtual_ifnums" ] ; then
       LAN_IFNAMES="$SYSCFG_lan_ethernet_physical_ifnames"
     else
        # in this architecture, vlans are used to separate the physical
