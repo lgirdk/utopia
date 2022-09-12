@@ -11081,6 +11081,10 @@ static void prepare_ipv4_dns_filter(FILE *filter_fp, char* chain)
       {
          fprintf(filter_fp, "-A FORWARD -j ipv4_dns_filter\n");
       }
+      else if (strcmp(chain, "OUTPUT") == 0)
+      {
+         fprintf(filter_fp, "-A OUTPUT -j ipv4_dns_filter\n");
+      }
       else
       {
          return;
@@ -13265,6 +13269,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
 #if defined(_COSA_BCM_MIPS_)
    fprintf(filter_fp, "-A OUTPUT -m physdev --physdev-in %s -j ACCEPT\n", emta_wan_ifname);
 #endif
+   prepare_ipv4_dns_filter(filter_fp, "OUTPUT");
    fprintf(filter_fp, "-A OUTPUT -j general_output\n");
    fprintf(filter_fp, "-A OUTPUT -m state --state RELATED,ESTABLISHED -j ACCEPT\n");
    fprintf(filter_fp, "-A OUTPUT -o %s -j self2lan\n", lan_ifname);
