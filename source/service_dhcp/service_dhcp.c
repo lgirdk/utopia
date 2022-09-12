@@ -54,18 +54,11 @@
 
 #define ERROR	-1
 #define SUCCESS	0		
-#define IOT_SERVICE_PATH        "/etc/utopia/service.d"
-#define SERVICE_MULTINET_PATH   "/etc/utopia/service.d/service_multinet"
-
-#if defined (_XB6_PRODUCT_REQ_) || defined(_CBR_PRODUCT_REQ_) || defined (_XB7_PRODUCT_REQ_)
-#define CONSOLE_LOG_FILE "/rdklogs/logs/Consolelog.txt.0"
-#else
-#define CONSOLE_LOG_FILE "/rdklogs/logs/ArmConsolelog.txt.0"
-#endif
+#define ARM_CONSOLE_LOG_FILE	"/rdklogs/logs/ArmConsolelog.txt.0"
 
 const char* const g_cComponent_id = "ccsp.servicedhcp";
 void* g_vBus_handle = NULL;
-FILE* g_fArmConsoleLog = NULL; //Global file pointer
+FILE* g_fArmConsoleLog = NULL;
 
 int g_iSyseventfd;
 token_t g_tSysevent_token;
@@ -101,7 +94,7 @@ static int dbusInit( void )
         if (ret == -1)
         {
             // Dbus connection error
-            fprintf(g_fArmConsoleLog, "DBUS connection error\n");
+            fprintf(stderr, "DBUS connection error\n");
         }
     }
     return ret;
@@ -129,7 +122,7 @@ void print_with_uptime(const char* input)
                            l_sTimeInfo->tm_hour, l_sTimeInfo->tm_min, l_sTimeInfo->tm_sec, 
                            l_iDays, l_iHours, l_iMins, l_iSec);
 
-    fprintf(g_fArmConsoleLog, "%s%s\n", input,l_cLocalTime);
+    fprintf(stderr, "%s%s\n", input,l_cLocalTime);
 }
 
 void get_device_props()
@@ -178,16 +171,14 @@ void get_device_props()
     }   
 }
 
-int executeCmd(char *cmd)
+void executeCmd(char *cmd)
 {
 	int l_iSystem_Res;
 	l_iSystem_Res = system(cmd);
     if (0 != l_iSystem_Res && ECHILD != errno)
     {
-        fprintf(g_fArmConsoleLog, "%s command didnt execute successfully\n", cmd);
-        return l_iSystem_Res;
+        fprintf(stderr, "%s command didnt execute successfully\n", cmd);
     }
-    return 0;
 }
 
 void copy_file(char *input_file, char *target_file)
@@ -206,7 +197,7 @@ void copy_file(char *input_file, char *target_file)
     }
 	else
 	{
-		fprintf(g_fArmConsoleLog, "copy of files failed due to error in opening one of the files \n");
+		fprintf(stderr, "copy of files failed due to error in opening one of the files \n");
 	}
 
     if(l_fInputFile) {
@@ -224,7 +215,7 @@ void remove_file(char *tb_removed_file)
     l_iRemove_Res = remove(tb_removed_file);
     if (0 != l_iRemove_Res)
     {
-        fprintf(g_fArmConsoleLog, "remove of %s file is not successful error is:%d\n", 
+        fprintf(stderr, "remove of %s file is not successful error is:%d\n", 
 				tb_removed_file, errno);
     }
 }
@@ -239,7 +230,7 @@ void print_file(char *to_print_file)
     {   
         while(fgets(l_cLine, sizeof(l_cLine), l_fP) != NULL)
         {   
-            fprintf(g_fArmConsoleLog, "%s", l_cLine);
+            fprintf(stderr, "%s", l_cLine);
         }   
         fclose(l_fP);
     }
@@ -273,7 +264,7 @@ BOOL compare_files(char *input_file1, char *input_file2)
     l_fP1 = fopen(input_file1, "r");/* opens First file which is read */
     if (l_fP1 == NULL)
     {
-        fprintf(g_fArmConsoleLog, "Can't open %s for reading\n", input_file1);
+        fprintf(stderr, "Can't open %s for reading\n", input_file1);
         return FALSE;
     }
 
@@ -281,7 +272,7 @@ BOOL compare_files(char *input_file1, char *input_file2)
     if (l_fP2 == NULL)
     {
 	fclose(l_fP1);
-        fprintf(g_fArmConsoleLog, "Can't open %s for reading\n", input_file2);
+        fprintf(stderr, "Can't open %s for reading\n", input_file2);
         return FALSE;
     }
 
@@ -362,7 +353,7 @@ unsigned int countSetBits(int byte)
     }
     else
     {
-        fprintf(g_fArmConsoleLog, "Invalid subnet byte:%d\n", byte);
+        fprintf(stderr, "Invalid subnet byte:%d\n", byte);
         return 0;
     }
 }
@@ -386,22 +377,26 @@ int sysevent_syscfg_init()
 {
 	g_iSyseventfd = sysevent_open("127.0.0.1", SE_SERVER_WELL_KNOWN_PORT, SE_VERSION,
                                                "service_dhcp", &g_tSysevent_token);
-	g_fArmConsoleLog = fopen(CONSOLE_LOG_FILE, "a+");
 
+	g_fArmConsoleLog = freopen(ARM_CONSOLE_LOG_FILE, "a+", stderr);
 	if (NULL == g_fArmConsoleLog) //In error case not returning as it is ok to continue
 	{
-		g_fArmConsoleLog = stderr; //Redirecting the messages to console terminal
-		fprintf(g_fArmConsoleLog, "Error:%d while opening Log file:%s\n", errno, CONSOLE_LOG_FILE);
+		fprintf(stderr, "Error:%d while opening Log file:%s\n", errno, ARM_CONSOLE_LOG_FILE);
 	}
 	else
 	{
-		fprintf(g_fArmConsoleLog, "Successful in opening while opening Log file:%s\n", CONSOLE_LOG_FILE);
+		fprintf(stderr, "Successful in opening while opening Log file:%s\n", ARM_CONSOLE_LOG_FILE);
 	}	
 
     if (g_iSyseventfd < 0)       
     {    
-        fprintf(g_fArmConsoleLog, "service_dhcp::sysevent_open failed\n");
+        fprintf(stderr, "service_dhcp::sysevent_open failed\n");
 		return ERROR;
+    }        
+
+    if (syscfg_init() != 0) {
+        fprintf(stderr, "%s: fail to init syscfg\n", __FUNCTION__);
+        return ERROR; 
     }        
 
     /* dbus init based on bus handle value */
@@ -410,7 +405,7 @@ int sysevent_syscfg_init()
 
     if(g_vBus_handle == NULL)
     {
-        fprintf(g_fArmConsoleLog, "service_dhcp_init, DBUS init error\n");
+        fprintf(stderr, "service_dhcp_init, DBUS init error\n");
         return ERROR;
     }
 	return SUCCESS;
@@ -418,18 +413,19 @@ int sysevent_syscfg_init()
 
 int main(int argc, char *argv[])
 {
-	char l_cL3Inst[8] = {0}, l_cSysevent_Cmd[255] = {0};
+	char l_cL3Inst[8] = {0};
 	int l_iL3Inst;
+
 	if (argc < 2)	
 	{
-		fprintf(g_fArmConsoleLog, "Insufficient number of args return\n");
+		fprintf(stderr, "Insufficient number of args return\n");
 		return 0;
 	}
 
 	if (0 == g_iSyseventfd)
 		sysevent_syscfg_init();
 	
-	fprintf(g_fArmConsoleLog, "%s case\n", argv[1]);
+	fprintf(stderr, "%s case\n", argv[1]);
 	if ((!strncmp(argv[1], "dhcp_server-start", 17)) ||
 		(!strncmp(argv[1], "dhcp_server-restart", 19)))
 	{
@@ -459,99 +455,27 @@ int main(int argc, char *argv[])
 			lan_status_change(NULL);
 		}
 	}
-	else if (!strncmp(argv[1], "bring-lan", 9) || !strncmp(argv[1], "pnm-status", 10))
+	else if (!strncmp(argv[1], "bring-lan", 9))
 	{
 		bring_lan_up();
 	}
-	#ifdef RDKB_EXTENDER_ENABLED
-    	else if(!strncmp(argv[1], "dhcp_conf_change", 16))
-    	{
-      		UpdateDhcpConfChangeBasedOnEvent();
-		dhcp_server_start(NULL);
-    	}
-      	#endif
 	else if (!strncmp(argv[1], "lan-restart", 11))
 	{
 		lan_restart();
 	}
-        else if ((!strncmp(argv[1], "ipv4_4-status", 13)) ||
-             (!strncmp(argv[1], "ipv4_5-status", 13)))
+	else if ((!strncmp(argv[1], "ipv4_4-status", 17)) ||
+             (!strncmp(argv[1], "ipv4_5-status", 17)))
+	{
+		if (argc > 2) 
+        {			
+            sscanf(argv[1], "ipv4_%d-status", &l_iL3Inst);
+        	ipv4_status(l_iL3Inst, argv[2]);			
+        }
+        else
         {
-                if (argc > 2)
-                {
-                        char buf[32] = {0};
-                        char l_cL2Inst[8] = {0};
-                        int l_iL2Inst;
-
-                        sscanf(argv[1], "ipv4_%d-status", &l_iL3Inst);
-                        if (4 == l_iL3Inst)
-                        {
-                                sysevent_get(g_iSyseventfd, g_tSysevent_token, "lan_handler_async",
-                                             l_cL3Inst, sizeof(l_cL3Inst));
-                                if (l_cL3Inst[0] != '\0')
-                                {
-                                        ipv4_status(l_iL3Inst, argv[2]);
-                                }
-                        }
-
-                        snprintf(buf, sizeof(buf), "ipv4_%d-lower", l_iL3Inst);
-                        sysevent_get(g_iSyseventfd, g_tSysevent_token, buf,
-                                     l_cL2Inst, sizeof(l_cL2Inst));
-                        l_iL2Inst = atoi(l_cL2Inst);
-                        snprintf(buf, sizeof(buf), "dhcp_server_%d-ipv4async", l_iL2Inst);
-                        sysevent_get(g_iSyseventfd, g_tSysevent_token,
-                                     buf, l_cL2Inst, sizeof(l_cL2Inst));
-                        if (l_cL2Inst[0] != '\0')
-                        {
-                                lan_status_change("lan_not_restart");
-                        }
-                }
-                else
-                {
-                        fprintf(g_fArmConsoleLog, "Insufficient number of arguments for %s\n", argv[1]);
-                }
+            fprintf(stderr, "Insufficient number of arguments for %s\n", argv[1]);
+        }
 	}
-    else if (!strncmp(argv[1], "ipv4-resync", 11))
-    {
-        resync_instance(atoi(argv[2]));
-    }
-    else if (!strncmp(argv[1], "erouter_mode-updated", 20))
-    {
-        erouter_mode_updated();
-    }
-    else if (!strncmp(argv[1], "multinet-resync", 15))
-    {
-        snprintf(l_cSysevent_Cmd, sizeof(l_cSysevent_Cmd),"dmcli eRT setv Device.WiFi.Radio.1.X_CISCO_COM_ApplySetting bool 'true' 'true'");
-        executeCmd(l_cSysevent_Cmd);
-    }
-    else if (!strncmp(argv[1], "iot_status", 10))
-    {
-        fprintf(g_fArmConsoleLog, "IOT_LOG : lan_handler received %s status\n", argv[2]);
-        if (!strncmp(argv[2],"up",2))
-        {
-            snprintf(l_cSysevent_Cmd, sizeof(l_cSysevent_Cmd),"%s/handle_sw.sh %s", SERVICE_MULTINET_PATH, "addIotVlan 0 106 -t");
-            executeCmd(l_cSysevent_Cmd);
-
-            fprintf(g_fArmConsoleLog, "IOT_LOG : lan_handler done with handle_sw call\n");
-
-            snprintf(l_cSysevent_Cmd, sizeof(l_cSysevent_Cmd),"%s/iot_service.sh up", IOT_SERVICE_PATH);
-            executeCmd(l_cSysevent_Cmd);
-        }
-        else if (!strncmp(argv[2],"down",4))
-        {
-            snprintf(l_cSysevent_Cmd, sizeof(l_cSysevent_Cmd),"%s/iot_service.sh down", IOT_SERVICE_PATH);
-            executeCmd(l_cSysevent_Cmd);
-        }
-        else if (!strncmp(argv[2],"bootup",6))
-        {
-            snprintf(l_cSysevent_Cmd, sizeof(l_cSysevent_Cmd),"%s/iot_service.sh bootup", IOT_SERVICE_PATH);
-            executeCmd(l_cSysevent_Cmd);
-        }
-    }
-    else if (!strncmp(argv[1], "lan-stop", 8))
-    {
-        lan_stop();
-    }
 	else if (!strncmp(argv[1], "lan-start", 9))
 	{
 		sysevent_get(g_iSyseventfd, g_tSysevent_token, 
@@ -559,7 +483,7 @@ int main(int argc, char *argv[])
 					 sizeof(l_cL3Inst));	
 
 		l_iL3Inst = atoi(l_cL3Inst);
-		fprintf(g_fArmConsoleLog, "Calling ipv4_up with L3 Instance:%d\n", l_iL3Inst);
+		fprintf(stderr, "Calling ipv4_up with L3 Instance:%d\n", l_iL3Inst);
 		sysevent_set(g_iSyseventfd, g_tSysevent_token, "ipv4-up", l_cL3Inst, 0);
 	}
 	//service_ipv4.sh related
@@ -585,75 +509,19 @@ int main(int argc, char *argv[])
             printf("Insufficient number of arguments for %s\n", argv[1]);
         }
     }    
-    else if(!strncmp(argv[1], "syslog-status", 13))
-    {
-        char syslog_status_buf[10]={0};
-        sysevent_get(g_iSyseventfd, g_tSysevent_token,
-                     "syslog-status", syslog_status_buf,
-                     sizeof(syslog_status_buf));
-        if(!strncmp(syslog_status_buf, "started", 7))
-        {
-            syslog_restart_request();
-        }
-    }
-    else if(!strncmp(argv[1], "ipv4-set_dyn_config", 19))
-    {
-        if (argc > 2)
-        {
-            apply_config(atoi(argv[2]),0,0);
-        }
-        else
-        {
-            printf("Insufficient number of arguments for %s\n", argv[1]);
-        }
-    }
-    else if(!strncmp(argv[1], "ipv4-sync_tsip_all", 18))
-    {
-        sync_tsip();
-        sync_tsip_asn();
-        sysevent_set(g_iSyseventfd, g_tSysevent_token, "wan_staticip-status", "started", 0);
-    }
-    else if(!strncmp(argv[1], "ipv4-stop_tsip_all", 18))
-    {
-        remove_tsip_config();
-        remove_tsip_asn_config();
-    }
-    else if(!strncmp(argv[1], "ipv4-resync_tsip", 16))
-    {
-        resync_tsip();
-    }
-    else if(!strncmp(argv[1], "ipv4-resync_tsip_asn", 20))
-    {
-        resync_tsip_asn();
-    }
-    else if(!strncmp(argv[1], "ipv4-resyncAll", 14))
-    {
-        resync_all_instance();
-    }
-    else if(!strncmp(argv[1], "dhcp_server-resync", 18))
-    {
-        resync_to_nonvol(NULL);
-    }
     else if((!strncmp(argv[1], "multinet_1-status", 17)) ||  
             (!strncmp(argv[1], "multinet_2-status", 17)) ||  
             (!strncmp(argv[1], "multinet_3-status", 17)) ||
             (!strncmp(argv[1], "multinet_4-status", 17)))
     {   
         int l_iL2Inst, l_iL3Inst;
-        char l_cBridgeMode[2]={0};
         if (argc > 3)
         {   
             sscanf(argv[1], "multinet_%d-status", &l_iL2Inst);
             //handle_l2_status $3 $INST $2
             //$1 - multinet_*-status $2 - status $3 - L3 Instance number
             l_iL3Inst = atoi(argv[3]);
-            sysevent_get(g_iSyseventfd, g_tSysevent_token,
-                         "bridge_mode", l_cBridgeMode, sizeof(l_cBridgeMode));
-
-            if (!((l_cBridgeMode[0] > '0') && (l_iL2Inst == 1)))
-            {
-                handle_l2_status(l_iL3Inst, l_iL2Inst, argv[2], 0);
-            }
+            handle_l2_status(l_iL3Inst, l_iL2Inst, argv[2], 0); 
         }
         else
         {
