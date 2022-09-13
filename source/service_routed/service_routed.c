@@ -84,6 +84,7 @@ static const char* const service_routed_component_id = "ccsp.routed";
 #else
 #define RIPD_CONF_FILE  "/etc/ripd.conf"
 #endif
+#define RIPD_CUR_CONF_FILE  "/var/ripd.conf"
 
 #define RA_INTERVAL 60
 #if defined (_HUB4_PRODUCT_REQ_) || defined (RDKB_EXTENDER_ENABLED)
@@ -1719,12 +1720,45 @@ static int radv_stop(struct serv_routed *sr)
     return 0;
 }
 
+static void rip_force_restart(struct serv_routed *sr)
+{
+    char enable[16]={"0"};
+
+    syscfg_get(NULL, "rip_enabled", enable, sizeof(enable));
+    if (strcmp(enable, "1") != 0) {
+        fprintf(fp_routd_dbg, "%s: RIP not enabled\n", __FUNCTION__);
+        return;
+    }
+
+    if (!sr->lan_ready || !sr->wan_ready) {
+        fprintf(fp_routd_dbg, "%s: LAN or WAN is not ready !\n", __FUNCTION__);
+        return;
+    }
+
+    if (daemon_stop(RIPD_PID_FILE, "ripd") != 0) {
+        fprintf(fp_routd_dbg, "%s: ripd_stop error\n", __FUNCTION__);
+    }
+
+    if (v_secure_system("ripd -d -f %s -A 127.0.0.1 -u root -g root -i %s &", RIPD_CUR_CONF_FILE, RIPD_PID_FILE) != 0) {
+        sysevent_set(sr->sefd, sr->setok, "rip-status", "error", 0);
+        return;
+    }
+    sysevent_set(sr->sefd, sr->setok, "rip-status", "started", 0);
+}
+
 static int radv_restart(struct serv_routed *sr)
 {
+    int rc = 0;
     if (radv_stop(sr) != 0)
         fprintf(fp_routd_dbg, "%s: radv_stop error\n", __FUNCTION__);
 
-    return radv_start(sr);
+    rc = radv_start(sr);
+
+    // to keep connection between zebra and ripd active, 
+    // we need to restart ripd whenever zebra restarted
+    rip_force_restart(sr);
+
+    return rc;
 }
 
 static int rip_start(struct serv_routed *sr)
