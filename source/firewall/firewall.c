@@ -17611,20 +17611,11 @@ static int service_start (char* strBlockTimeCmd)
    char *filename2 = "/tmp/.ipt_v6";
    char type[BUFF_STR_LEN] = {0};
    char buf[64] = {0};
-   BOOL needs_flush = FALSE;
-   char temp[20];
 #ifdef XT_TIME_MODULE_SUPPORT
    int bshift;
    unsigned long ulMaskOfOneDay[25];
 #endif
    //int res_rfcfile = -1, res_rfclock = -1;
-
-   /* If firewall is starting for the first time, we need to flush connection tracking */
-   temp[0] = '\0';
-   sysevent_get(sysevent_fd, sysevent_token, "firewall-status", temp, sizeof(temp));
-   if ('\0' == temp[0] || 0 == strcmp(temp, "stopped")) {
-      needs_flush = TRUE;
-   }
 
    //clear content in firewall cron file.
    char *cron_file = crontab_dir"/"crontab_filename;
@@ -17836,10 +17827,7 @@ static int service_start (char* strBlockTimeCmd)
        sysevent_set(sysevent_fd, sysevent_token, "pp_flush", "0", 0);
    }
 
-   /* If firewall is starting for the first time, we need to flush connection tracking */
-   if (needs_flush) {
-      v_secure_system("conntrack -F");
-   }
+   v_secure_system("conntrack -F");
 
    sysevent_set(sysevent_fd, sysevent_token, "firewall-status", "started", 0);
    ulogf(ULOG_FIREWALL, UL_INFO, "started %s service", service_name);
