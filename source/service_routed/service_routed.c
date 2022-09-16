@@ -1070,7 +1070,7 @@ static int gen_zebra_conf(int sefd, token_t setok)
             }
             ra_lifetime = atoi(buf);
             if (ra_lifetime <= 0)
-                ra_lifetime = 180;
+                ra_lifetime = 1800;
 
             if(i == 0)
                strcpy(syscfgName, "ra_interval");
