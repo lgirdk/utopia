@@ -255,6 +255,10 @@ case "$1" in
       ;;
    "${SERVICE_NAME}-restart")
 #      service_stop
+       reboot=`sysevent get reboot-triggered`
+       if [ "$reboot" = "1" ]; then
+          exit 0
+       fi
       sysevent set ${SERVICE_NAME}-status restarting
       service_start
       ;;
