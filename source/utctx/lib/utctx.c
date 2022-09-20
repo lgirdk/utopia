@@ -896,6 +896,8 @@ static struct
     { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "ins_num",                   UtopiaValue_DNS_Whitelist },  /* UtopiaValue_DNS_Whitelist_InsNum */
     { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "url",                      UtopiaValue_DNS_Whitelist },  /* UtopiaValue_DNS_Whitelist_Url */
     { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,              Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "description",                      UtopiaValue_DNS_Whitelist },  /* UtopiaValue_DNS_Whitelist_Description */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,   Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "alias",                        UtopiaValue_SinglePortForward },    /* UtopiaValue_SPF_Alias */
+    { Utopia_Type_IndexedConfig, Utopia_Event__NONE__,   Utopia_Static__NONE__, Utopia_Index_For_NS,  1, "alias",                        UtopiaValue_PortRangeForward },     /* UtopiaValue_PFR_Alias */
     { Utopia_Type__UNKNOWN__, Utopia_Event__NONE__, Utopia_Static__NONE__, Utopia_For__NONE__, 0, 0, UtopiaValue__UNKNOWN__ }, /* UtopiaValue__LAST__ */
 };
 
