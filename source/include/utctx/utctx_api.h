@@ -735,6 +735,9 @@ typedef enum _UtopiaValue
     UtopiaValue_DNS_Whitelist_InsNum,
     UtopiaValue_DNS_Whitelist_Url,
     UtopiaValue_DNS_Whitelist_Description,
+    // Port Mapping
+    UtopiaValue_SPF_Alias,
+    UtopiaValue_PFR_Alias,
     UtopiaValue__LAST__
 } UtopiaValue;
 

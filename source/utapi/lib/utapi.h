@@ -376,6 +376,7 @@ typedef struct portFwdSingle {
     char       dest_ipv6[64];              
     char       rule_source[32];
     char       interface[512];
+    char       alias[512];
 } portFwdSingle_t;
 
 typedef struct portMapDyn {
@@ -406,6 +407,7 @@ typedef struct portFwdRange {
     char       rule_source[32];
 	char       public_ip[IPADDR_SZ];              
     char       interface[512];
+    char       alias[512];
 } portFwdRange_t;
 
 typedef struct portRangeTrig {
