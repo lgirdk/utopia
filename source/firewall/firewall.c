@@ -1760,7 +1760,7 @@ static int privateIpCheck(char *ip_to_check)
  * Note          : None.
 */
 #ifdef XT_TIME_MODULE_SUPPORT
-static void GetTimeOfDayMasks(unsigned long *pMaskDayOfWeek, char *pMask, int *Days)
+static void GetTimeOfDayMasks(unsigned long *pMaskDayOfWeek, char *pMask, int Days)
 #else
 static void GetTimeOfDayMasks(unsigned long *pMaskDayOfWeek, char *pMask)
 #endif
@@ -17655,9 +17655,9 @@ static int service_start (char* strBlockTimeCmd)
    memset(macBitMaskOfOneDay, '\0', sizeof(macBitMaskOfOneDay));
 #endif
    // Retrieve the IPv4, IPv6 and MAC Filter Block Time Bit Mask.
-   GetBlockTimeBitMaskForWeek("lgfwv4dayofweek", "v4_dayofweek_block_time_bitmask", &v4DayOfWeekBlockTimeBitMask);
-   GetBlockTimeBitMaskForWeek("lgfwv6dayofweek", "v6_dayofweek_block_time_bitmask", &v6DayOfWeekBlockTimeBitMask);
-   GetBlockTimeBitMaskForWeek("lgfwmacdayofweek", "mac_dayofweek_block_time_bitmask", &macDayOfWeekBlockTimeBitMask);
+   GetBlockTimeBitMaskForWeek("lgfwv4dayofweek", "v4_dayofweek_block_time_bitmask", v4DayOfWeekBlockTimeBitMask);
+   GetBlockTimeBitMaskForWeek("lgfwv6dayofweek", "v6_dayofweek_block_time_bitmask", v6DayOfWeekBlockTimeBitMask);
+   GetBlockTimeBitMaskForWeek("lgfwmacdayofweek", "mac_dayofweek_block_time_bitmask", macDayOfWeekBlockTimeBitMask);
 
 #ifdef XT_TIME_MODULE_SUPPORT
    shift_localtime_to_utc(&shift_h, &shift_m, &shift_s);
