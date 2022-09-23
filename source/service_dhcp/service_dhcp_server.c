@@ -693,6 +693,7 @@ int dhcp_server_start (char *input)
     char l_cBridge_Mode[8] = {0};
     char l_cDhcp_Server_Prog[16] = {0};
     int dhcp_server_progress_count = 0;
+    int dnsmasq_current_pid = 0;
 
 	BOOL l_bRestart = FALSE, l_bFiles_Diff = FALSE, l_bPid_Present = FALSE;
 	FILE *l_fFp = NULL;
@@ -803,6 +804,7 @@ int dhcp_server_start (char *input)
 			l_cCurrent_PID[l_cCurrent_PID_len - 1] = '\0';
 		}
 		fclose(l_fFp); /*RDKB-12965 & CID:-34555*/
+		dnsmasq_current_pid = atoi(l_cCurrent_PID);
 	}	
 	if (0 == l_cCurrent_PID[0])
 	{
@@ -832,7 +834,7 @@ int dhcp_server_start (char *input)
             l_cToken = strtok(l_cBuf, " ");
             while (l_cToken != NULL)
             {
-                if (strcmp(l_cToken, l_cCurrent_PID) == 0)
+                if (dnsmasq_current_pid == atoi(l_cToken))
                 {
                     l_bPid_Present = TRUE;
                     break;
@@ -841,12 +843,12 @@ int dhcp_server_start (char *input)
             }
             if (FALSE == l_bPid_Present)
             {
-                fprintf(stderr, "PID:%d is not part of PIDS of dnsmasq\n", atoi(l_cCurrent_PID));
+                fprintf(stderr, "PID:%d is not part of PIDS of dnsmasq\n", dnsmasq_current_pid);
                 l_bRestart = TRUE;
             }
             else
             {
-                fprintf(stderr, "PID:%d is part of PIDS of dnsmasq\n", atoi(l_cCurrent_PID));
+                fprintf(stderr, "PID:%d is part of PIDS of dnsmasq\n", dnsmasq_current_pid);
             }
 		}
 	}
@@ -854,14 +856,24 @@ int dhcp_server_start (char *input)
     {
         remove_file(l_cDhcp_Tmp_Conf);
     }
-   	v_secure_system("killall -HUP `basename dnsmasq`");
 	if (FALSE == l_bRestart)
 	{
-		sysevent_set(g_iSyseventfd, g_tSysevent_token, "dhcp_server-status", "started", 0);
-        sysevent_set(g_iSyseventfd, g_tSysevent_token, "dhcp_server-progress", "completed", 0);
-		remove_file("/var/tmp/lan_not_restart");
-		message_bus_close(bus_handle);
-		return 0;
+		sysevent_get(g_iSyseventfd, g_tSysevent_token,"bridge_mode", l_cBridge_Mode,sizeof(l_cBridge_Mode));
+		if ((strncmp(l_cBridge_Mode, "0", 1)) && (FALSE == IsDhcpConfHasInterface()))
+		{
+			sysevent_set(g_iSyseventfd, g_tSysevent_token, "dhcp_server-status", "stopped", 0);
+			sysevent_set(g_iSyseventfd, g_tSysevent_token, "dhcp_server-progress", "completed", 0);
+			system("killall `basename dnsmasq`");
+			remove_file(PID_FILE);
+			remove_file("/var/tmp/lan_not_restart");
+			message_bus_close(bus_handle);
+			return 0;
+		}
+		else if (dnsmasq_current_pid > 0)
+		{
+			v_secure_system("kill -HUP %d", dnsmasq_current_pid);
+			goto GW_LAN_REFRESH;
+		}
 	}
 
 	sysevent_set(g_iSyseventfd, g_tSysevent_token, "dns-status", "stopped", 0);
@@ -956,6 +968,8 @@ int dhcp_server_start (char *input)
         echo "   sysevent set dhcp_server-restart lan_not_restart" >> $TIME_FILE
         chmod 700 $TIME_FILE
    	fi*/
+
+GW_LAN_REFRESH:
 
 	sysevent_get(g_iSyseventfd, g_tSysevent_token, "system_psm_mode", l_cPsm_Mode, sizeof(l_cPsm_Mode));
 	sysevent_get(g_iSyseventfd, g_tSysevent_token, "start-misc", l_cStart_Misc, sizeof(l_cStart_Misc));
