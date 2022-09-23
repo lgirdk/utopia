@@ -884,7 +884,7 @@ int prepare_dhcp_conf (char *input, void *bus_handle)
 	errno_t safec_rc = -1;
 	char *l_psm_get = NULL;
 	char l_deviceManufacturerOUI[7];
-    char l_deviceSerialNumber[20];
+    char l_deviceSerialNumber[64];
     char l_deviceProductClass[64];
 
 	if ((NULL != input) && (!strncmp(input, "dns_only", 8)))
@@ -1226,6 +1226,11 @@ int prepare_dhcp_conf (char *input, void *bus_handle)
 		// Device.DeviceInfo.SerialNumber reports the mac address
 #if defined (_PUMA6_ARM_)
 		platform_hal_GetCmMacAddress(l_deviceSerialNumber,sizeof(l_deviceSerialNumber));
+#elif defined (_LG_MV3_)
+		if (platform_hal_GetSerialNumber(l_deviceSerialNumber) != 0)
+		{
+			getErotuerMacAddress(l_deviceSerialNumber);
+		}
 #else
 		getErotuerMacAddress(l_deviceSerialNumber);
 #endif
