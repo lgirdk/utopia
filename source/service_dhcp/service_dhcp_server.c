@@ -474,7 +474,7 @@ int dhcp_server_start (char *input)
 	if (FALSE == l_bRestart)
 	{
 		sysevent_get(g_iSyseventfd, g_tSysevent_token,"bridge_mode", l_cBridge_Mode,sizeof(l_cBridge_Mode));
-		if ((strncmp(l_cBridge_Mode, "0", 1)) && (FALSE == IsDhcpConfHasInterface()))
+		if ((strncmp(l_cBridge_Mode, "0", 1)) || (FALSE == IsDhcpConfHasInterface()))
 		{
 			sysevent_set(g_iSyseventfd, g_tSysevent_token, "dhcp_server-status", "stopped", 0);
 			sysevent_set(g_iSyseventfd, g_tSysevent_token, "dhcp_server-progress", "completed", 0);
@@ -514,7 +514,7 @@ int dhcp_server_start (char *input)
                          sizeof(l_cBridge_Mode));
 
     // TCCBR:4710- In Bridge mode, Dont run dnsmasq when there is no interface in dnsmasq.conf
-    if ((strncmp(l_cBridge_Mode, "0", 1)) && (FALSE == IsDhcpConfHasInterface()))
+    if ((strncmp(l_cBridge_Mode, "0", 1)) || (FALSE == IsDhcpConfHasInterface()))
     {
         fprintf(stderr, "no interface present in dnsmasq.conf %s process not started\n", SERVER);
         safec_rc = sprintf_s(l_cSystemCmd, sizeof(l_cSystemCmd),"%s unsetproc dhcp_server", PMON);
