@@ -461,7 +461,7 @@ void ipv4_status(int l3_inst, char *status)
                      l_cIpv6_Prefix, sizeof(l_cIpv6_Prefix));
 		
 		fprintf(stderr, "LAN HANDLER : DHCP configuration status got is:%s\n", l_cDhcp_Server_Prog);
-		if (!strncmp(l_cLast_Erouter_Mode, "2", 1) && (strncmp(l_cDsLite_Enabled, "1", 1)))
+		if (!strncmp(l_cLast_Erouter_Mode, "2", 1) && (strcmp(l_cDsLite_Enabled, "0") == 0))
 		{
 			sysevent_set(g_iSyseventfd, g_tSysevent_token, "dhcp_server-stop", "", 0);
 		}
