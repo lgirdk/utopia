@@ -127,6 +127,7 @@ typedef struct udhcpc_script_t
 #define DHCP_REBINDING_TIME "rebindingtime"
 #define DHCP_SERVER_ID "serverid"
 #define DHCP_NTP_SERVER "ntpsrv"
+#define DHCP_DOMAIN_NAME "domain"
 
 /**
  * @brief Retrieve DHCPv4 data from environment variables and fill
@@ -898,6 +899,7 @@ int handle_wan(udhcpc_script_t *pinfo)
     OnboardLog("[%s][%d] DHCP Server ID  = %s \n", __FUNCTION__, __LINE__, data.dhcpServerId);
     OnboardLog("[%s][%d] DHCP State      = %s \n", __FUNCTION__, __LINE__, data.dhcpState);
     OnboardLog("[%s][%d] NTP Server      = %s \n", __FUNCTION__, __LINE__, data.ntpServer);
+    OnboardLog("[%s][%d] Domain Name     = %s \n", __FUNCTION__, __LINE__, data.domainName);
 
     ret = send_dhcp_data_to_wanmanager(&data);
     if (ret != 0)
@@ -1494,6 +1496,11 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
         if(getenv(DHCP_NTP_SERVER) != NULL)
         {
             strncpy(dhcpv4_data->ntpServer, getenv(DHCP_NTP_SERVER), sizeof(dhcpv4_data->ntpServer));
+        }
+
+        if (getenv(DHCP_DOMAIN_NAME) != NULL)
+        {
+            strncpy(dhcpv4_data->domainName, getenv(DHCP_DOMAIN_NAME), sizeof(dhcpv4_data->domainName));
         }
     }
     else if ((strcmp(pinfo->input_option, "leasefail") == 0))
