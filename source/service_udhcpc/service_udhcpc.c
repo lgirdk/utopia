@@ -405,6 +405,8 @@ int update_ipv4dns(udhcpc_script_t *pinfo)
         return -1;
 
     printf ("\n update resolv confg dns :%s \n", dns);
+
+    dns = strdup(dns);
     tok = strtok(dns, " ");
     while (NULL != tok)
     {
@@ -413,8 +415,11 @@ int update_ipv4dns(udhcpc_script_t *pinfo)
         tok = strtok(NULL, " ");
     }
     fclose(fp);
+    free(dns);
+
     return 0;
 }
+
 int update_dns_tofile(udhcpc_script_t *pinfo)
 {
     char dns[256];
