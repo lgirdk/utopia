@@ -928,6 +928,7 @@ int handle_wan(udhcpc_script_t *pinfo)
     OnboardLog("[%s][%d] DHCP Server ID  = %s \n", __FUNCTION__, __LINE__, data.dhcpServerId);
     OnboardLog("[%s][%d] DHCP State      = %s \n", __FUNCTION__, __LINE__, data.dhcpState);
     OnboardLog("[%s][%d] NTP Server      = %s \n", __FUNCTION__, __LINE__, data.ntpServer);
+    OnboardLog("[%s][%d] Domain Name     = %s \n", __FUNCTION__, __LINE__, data.domainName);
 
     ret = send_dhcp_data_to_wanmanager(&data);
     if (ret != 0)
@@ -1555,6 +1556,11 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
         if ((env = getenv("ntpsrv")) != NULL)
         {
             strncpy(dhcpv4_data->ntpServer, env, sizeof(dhcpv4_data->ntpServer));
+        }
+
+        if ((env = getenv("domain")) != NULL)
+        {
+            strncpy(dhcpv4_data->domainName, env, sizeof(dhcpv4_data->domainName));
         }
     }
     else if ((strcmp(pinfo->input_option, "leasefail") == 0))
