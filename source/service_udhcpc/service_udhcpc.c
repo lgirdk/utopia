@@ -280,11 +280,16 @@ int handle_defconfig(udhcpc_script_t *pinfo)
     }    
 #else
     char buf[128];
+    char *interface;
+
     if (!pinfo)
         return -1;
+
+    interface = getenv("interface");
+
     if (pinfo->resconf_exist)
     {
-        snprintf(buf,sizeof(buf),"/sbin/resolvconf -d %s.udhcpc",getenv("interface"));
+        snprintf(buf,sizeof(buf),"/sbin/resolvconf -d %s.udhcpc",interface);
         system(buf);
     }
 
@@ -292,14 +297,14 @@ int handle_defconfig(udhcpc_script_t *pinfo)
     {
         if (pinfo->ip_util_exist)
         {
-            snprintf(buf,sizeof(buf),"ip -4 addr flush dev %s",getenv("interface"));
+            snprintf(buf,sizeof(buf),"ip -4 addr flush dev %s",interface);
             system(buf);
-            snprintf(buf,sizeof(buf),"ip link set dev %s up",getenv("interface"));
+            snprintf(buf,sizeof(buf),"ip link set dev %s up",interface);
             system(buf);
         }
         else
         {
-            snprintf(buf,sizeof(buf),"/sbin/ifconfig %s 0.0.0.0",getenv("interface"));
+            snprintf(buf,sizeof(buf),"/sbin/ifconfig %s 0.0.0.0",interface);
             system(buf);
         }    
     }
@@ -312,30 +317,34 @@ int save_dhcp_offer(udhcpc_script_t *pinfo)
     char eventname[256];
     char buf[128];
     int result = -1;
+    char *interface;
     if (!pinfo)
         return -1;
 // Enable for Debugging
 #if 0
     dump_dhcp_offer();
 #endif
+
+    interface = getenv("interface");
+
     compare_and_delete_old_dns(pinfo); //compare and remove old dns configuration from resolv.conf
-    snprintf(eventname,sizeof(eventname),"ipv4_%s_ipaddr",getenv("interface"));
+    snprintf(eventname,sizeof(eventname),"ipv4_%s_ipaddr",interface);
     sysevent_set(sysevent_fd, sysevent_token, eventname, getenv("ip"), 0);
 
-    snprintf(eventname,sizeof(eventname),"ipv4_%s_subnet",getenv("interface"));
+    snprintf(eventname,sizeof(eventname),"ipv4_%s_subnet",interface);
     sysevent_set(sysevent_fd, sysevent_token, eventname, getenv("mask"), 0);
 
-    snprintf(eventname,sizeof(eventname),"ipv4_%s_lease_time",getenv("interface"));
+    snprintf(eventname,sizeof(eventname),"ipv4_%s_lease_time",interface);
     sysevent_set(sysevent_fd, sysevent_token, eventname, getenv("lease"), 0);
 
-    snprintf(eventname,sizeof(eventname),"ipv4_%s_dhcp_server",getenv("interface"));
+    snprintf(eventname,sizeof(eventname),"ipv4_%s_dhcp_server",interface);
     sysevent_set(sysevent_fd, sysevent_token, eventname, getenv("serverid"), 0);
 
-    snprintf(eventname,sizeof(eventname),"ipv4_%s_dhcp_state",getenv("interface"));
+    snprintf(eventname,sizeof(eventname),"ipv4_%s_dhcp_state",interface);
     if (pinfo->input_option)
         sysevent_set(sysevent_fd, sysevent_token, eventname, pinfo->input_option, 0);
 
-    snprintf(eventname,sizeof(eventname),"ipv4_%s_start_time",getenv("interface"));
+    snprintf(eventname,sizeof(eventname),"ipv4_%s_start_time",interface);
     memset(buf,0,sizeof(buf));
     result = read_cmd_output("cut -d. -f1 /proc/uptime",buf,sizeof(buf));
     if (result == 0)
@@ -355,16 +364,20 @@ int set_dns_sysevents(udhcpc_script_t *pinfo)
     int dns_n = 0;    
     char eventname[256];
     char val[32];
+    char *interface;
 
     if (!pinfo)
         return -1;
     if (!pinfo->dns)
         return -1;
+
+    interface = getenv("interface");
+
     snprintf(dns,sizeof(dns),"%s",pinfo->dns);
     tok = strtok(dns, " ");
     if (tok)
     {        
-        snprintf(eventname,sizeof(eventname),"ipv4_%s_dns_%d",getenv("interface"),dns_n);
+        snprintf(eventname,sizeof(eventname),"ipv4_%s_dns_%d",interface,dns_n);
         sysevent_set(sysevent_fd, sysevent_token, eventname, tok, 0);
         ++dns_n;
     }
@@ -373,12 +386,12 @@ int set_dns_sysevents(udhcpc_script_t *pinfo)
         tok = strtok(NULL, " ");
         if (tok)
         {
-            snprintf(eventname,sizeof(eventname),"ipv4_%s_dns_%d",getenv("interface"),dns_n);
+            snprintf(eventname,sizeof(eventname),"ipv4_%s_dns_%d",interface,dns_n);
             sysevent_set(sysevent_fd, sysevent_token, eventname, tok, 0);       
             ++dns_n;
         }
     }
-    snprintf(eventname,sizeof(eventname),"ipv4_%s_dns_number",getenv("interface"));
+    snprintf(eventname,sizeof(eventname),"ipv4_%s_dns_number",interface);
     snprintf(val,sizeof(val),"%d",dns_n);
     sysevent_set(sysevent_fd, sysevent_token, eventname,val, 0);
     return 0;
@@ -484,11 +497,15 @@ int add_route(udhcpc_script_t *pinfo)
     char *tok = NULL;
     char buf[128];
     int metric = 0;
+    char *interface;
 
     if (!pinfo)
         return -1;
     if (!pinfo->router)
         return -1;
+
+    interface = getenv("interface");
+
     snprintf(router,sizeof(router),"%s",pinfo->router);
     tok = strtok(router, " ");
     if (tok)
@@ -499,7 +516,7 @@ int add_route(udhcpc_script_t *pinfo)
         }
         else
         {
-            snprintf(buf,sizeof(buf),"route add default gw %s dev %s metric %d 2>/dev/null",tok,getenv("interface"),metric);
+            snprintf(buf,sizeof(buf),"route add default gw %s dev %s metric %d 2>/dev/null",tok,interface,metric);
         }
         printf("\n %s router:%s buf: %s\n",__FUNCTION__,router,buf);
         system(buf);
@@ -516,7 +533,7 @@ int add_route(udhcpc_script_t *pinfo)
             }
             else
             {
-                snprintf(buf,sizeof(buf),"route add default gw %s dev %s metric %d 2>/dev/null",tok,getenv("interface"),metric);
+                snprintf(buf,sizeof(buf),"route add default gw %s dev %s metric %d 2>/dev/null",tok,interface,metric);
             }
             printf("\n %s router:%s buf: %s\n",__FUNCTION__,router,buf);
             system(buf);
@@ -609,17 +626,21 @@ int set_router_sysevents(udhcpc_script_t *pinfo)
     int gw_n = 0;    
     char eventname[256];
     char val[32];
+    char *interface;
 
     if (!pinfo)
         return -1;
 
     if (!pinfo->router)
         return -1;
+
+    interface = getenv("interface");
+
     snprintf(router,sizeof(router),"%s",pinfo->router);
     tok = strtok(router, " ");
     if (tok)
     {        
-        snprintf(eventname,sizeof(eventname),"ipv4_%s_gw_%d",getenv("interface"),gw_n);
+        snprintf(eventname,sizeof(eventname),"ipv4_%s_gw_%d",interface,gw_n);
         sysevent_set(sysevent_fd, sysevent_token, "default_router", tok, 0);
         sysevent_set(sysevent_fd, sysevent_token, eventname, tok, 0);
         ++gw_n;
@@ -629,13 +650,13 @@ int set_router_sysevents(udhcpc_script_t *pinfo)
         tok = strtok(NULL, " ");
         if (tok)
         {
-            snprintf(eventname,sizeof(eventname),"ipv4_%s_gw_%d",getenv("interface"),gw_n);
+            snprintf(eventname,sizeof(eventname),"ipv4_%s_gw_%d",interface,gw_n);
             sysevent_set(sysevent_fd, sysevent_token, "default_router", tok, 0);
             sysevent_set(sysevent_fd, sysevent_token, eventname, tok, 0);       
             ++gw_n;
         }
     }
-    snprintf(eventname,sizeof(eventname),"ipv4_%s_gw_number",getenv("interface"));
+    snprintf(eventname,sizeof(eventname),"ipv4_%s_gw_number",interface);
     snprintf(val,sizeof(val),"%d",gw_n);
     sysevent_set(sysevent_fd, sysevent_token, eventname,val, 0);
     return 0;
@@ -914,27 +935,33 @@ int handle_wan(udhcpc_script_t *pinfo)
     return ret;
 #else
     char buf[300];
-    char *mask = getenv("mask");
-    char *ip = getenv("ip");
-    char router[256] = {'\0'}; //CID 162896: Uninitialized scalar variable
+    char router[256];
+    char *mask;
+    char *ip;
+    char *broadcast_ip;
+    char *subnet;
+    char *interface;
 
     if (!pinfo)
         return -1;
 
-    if (pinfo->router)
-        snprintf(router,sizeof(router),"%s",pinfo->router);
+    snprintf(router, sizeof(router), "%s", (pinfo->router) ? pinfo->router : "");
 
     save_dhcp_offer(pinfo);
-    char *broadcast_ip = NULL;
+
+    mask = getenv("mask");
+    ip = getenv("ip");
     broadcast_ip = getenv("broadcast");
+    subnet = getenv("subnet");
+    interface = getenv("interface");
+
     if (pinfo->ip_util_exist)
     {
-        memset(buf,0,sizeof(buf));
-	if(broadcast_ip){
-        	snprintf(buf,sizeof(buf),"ip addr add dev %s %s/%s broadcast %s",getenv("interface"),getenv("ip"),getenv("mask"),broadcast_ip);
-	}else{
-		snprintf(buf,sizeof(buf),"ip addr add dev %s %s/%s",getenv("interface"),getenv("ip"),getenv("mask"));
-	}
+        if(broadcast_ip){
+                snprintf(buf,sizeof(buf),"ip addr add dev %s %s/%s broadcast %s", interface, ip, mask, broadcast_ip);
+        }else{
+                snprintf(buf,sizeof(buf),"ip addr add dev %s %s/%s", interface, ip, mask);
+        }
         system(buf);        
         if (mask && ip)
         {
@@ -945,22 +972,20 @@ int handle_wan(udhcpc_script_t *pinfo)
         sysevent_set(sysevent_fd, sysevent_token, "current_ipv4_link_state", "up", 0);
         // sysevent_set(sysevent_fd, sysevent_token, "wan_service-status", "started", 0);
         //sysevent_set(sysevent_fd, sysevent_token, "wan-status", "started", 0);
-	if (pinfo->wan_type && !strcmp(pinfo->wan_type,"EPON"))
-	{
-	     print_uptime("Waninit_complete", NULL, NULL);
-             system("touch /tmp/wan_ready");
-             print_uptime("boot_to_wan_uptime",NULL, NULL);
+        if (pinfo->wan_type && !strcmp(pinfo->wan_type,"EPON"))
+        {
+            print_uptime("Waninit_complete", NULL, NULL);
+            system("touch /tmp/wan_ready");
+            print_uptime("boot_to_wan_uptime",NULL, NULL);
     	}
 
     }else{
         if (ip)
         {
             if(broadcast_ip){
-            	snprintf(buf,sizeof(buf),"/sbin/ifconfig %s %s broadcast %s netmask %s",
-                    	getenv("interface"),ip,broadcast_ip,getenv("subnet"));
-	    }else{
-                snprintf(buf,sizeof(buf),"/sbin/ifconfig %s %s netmask %s",
-                        getenv("interface"),ip,getenv("subnet"));
+                snprintf(buf,sizeof(buf),"/sbin/ifconfig %s %s broadcast %s netmask %s", interface, ip, broadcast_ip, subnet);
+            }else{
+                snprintf(buf,sizeof(buf),"/sbin/ifconfig %s %s netmask %s", interface, ip, subnet);
             }
             system(buf);
             printf("\n %s router:%s buf: %s\n",__FUNCTION__,router,buf);
@@ -995,35 +1020,26 @@ int handle_wan(udhcpc_script_t *pinfo)
         printf("\n %s removing ip rule based on prev_ip:%s and adding ip: %s\n",__FUNCTION__,prev_ip,ip);
         if(strcmp(prev_ip,"") && strcmp(prev_ip,"0.0.0.0"))
         {
-                memset(buf,0,sizeof(buf));
                 snprintf(buf,sizeof(buf),"ip -4 rule del from %s lookup erouter",prev_ip);
                 system(buf);
-                memset(buf,0,sizeof(buf));
                 snprintf(buf,sizeof(buf),"ip -4 rule del from %s lookup all_lans",prev_ip);
                 system(buf);
-
         }
 
-                memset(buf,0,sizeof(buf));
-                snprintf(buf,sizeof(buf),"ip -4 rule add from %s lookup erouter",ip);
-                system(buf);
-                memset(buf,0,sizeof(buf));
-                snprintf(buf,sizeof(buf),"ip -4 rule add from %s lookup all_lans",ip);
-                system(buf);
-
-
-
-
+        snprintf(buf,sizeof(buf),"ip -4 rule add from %s lookup erouter",ip);
+        system(buf);
+        snprintf(buf,sizeof(buf),"ip -4 rule add from %s lookup all_lans",ip);
+        system(buf);
     }
 
     // Set default route
     if (pinfo->ip_util_exist)
     {
-	snprintf(buf,sizeof(buf),"ip route add default via %s dev %s table erouter",router, getenv("interface"));
+        snprintf(buf,sizeof(buf),"ip route add default via %s dev %s table erouter",router, interface);
     }
     else
     {
-	snprintf(buf,sizeof(buf),"route add default via %s dev %s table erouter",router, getenv("interface"));
+        snprintf(buf,sizeof(buf),"route add default via %s dev %s table erouter",router, interface);
     }
     printf("\nSet default route command %s\n",buf);
     system(buf);
@@ -1034,7 +1050,7 @@ int handle_wan(udhcpc_script_t *pinfo)
 
     if (pinfo->resconf_exist)
     {
-        snprintf(buf,sizeof(buf),"/sbin/resolvconf -a %s.udhcpc",getenv("interface"));
+        snprintf(buf,sizeof(buf),"/sbin/resolvconf -a %s.udhcpc",interface);
         system(buf);
     }
     else   
@@ -1173,21 +1189,23 @@ static uint32_t hex2dec(char *hex)
 
 static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_t* pinfo)
 {
+    char *env;
+
     if (dhcpv4_data == NULL || pinfo == NULL)
     {
         printf("[%s-%d] Invalid argument \n", __FUNCTION__,__LINE__);
         return -1;
     }
 
-    if (getenv(DHCP_INTERFACE_NAME) != NULL)
+    if ((env = getenv(DHCP_INTERFACE_NAME)) != NULL)
     {
-        strncpy(dhcpv4_data->dhcpcInterface, getenv(DHCP_INTERFACE_NAME), sizeof(dhcpv4_data->dhcpcInterface));
+        strncpy(dhcpv4_data->dhcpcInterface, env, sizeof(dhcpv4_data->dhcpcInterface));
     }
 
     /** DHCP server id */
-    if (getenv(DHCP_SERVER_ID) != NULL)
+    if ((env = getenv(DHCP_SERVER_ID)) != NULL)
     {
-        strncpy(dhcpv4_data->dhcpServerId, getenv(DHCP_SERVER_ID), sizeof(dhcpv4_data->dhcpServerId));
+        strncpy(dhcpv4_data->dhcpServerId, env, sizeof(dhcpv4_data->dhcpServerId));
     }
     else
     {
@@ -1209,9 +1227,9 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
         dhcpv4_data->addressAssigned = 1;
         dhcpv4_data->isExpired = 0;
         /** IP */
-        if (getenv (DHCP_IP_ADDRESS) != NULL)
+        if ((env = getenv(DHCP_IP_ADDRESS)) != NULL)
         {
-            strncpy(dhcpv4_data->ip, getenv(DHCP_IP_ADDRESS), sizeof(dhcpv4_data->ip));
+            strncpy(dhcpv4_data->ip, env, sizeof(dhcpv4_data->ip));
         }
         else
         {
@@ -1219,9 +1237,9 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
         }
 
         /** Subnet mask. */
-        if (getenv(DHCP_SUBNET) != NULL)
+        if ((env = getenv(DHCP_SUBNET)) != NULL)
         {
-            strncpy(dhcpv4_data->mask, getenv(DHCP_SUBNET), sizeof(dhcpv4_data->mask));
+            strncpy(dhcpv4_data->mask, env, sizeof(dhcpv4_data->mask));
         }
         else
         {
@@ -1242,7 +1260,7 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
         /** DNS server. */
         if (pinfo->dns != NULL)
         {
-            char dns[256] = {'\0'};
+            char dns[256];
             char *tok = NULL;
             snprintf(dns, sizeof(dns), "%s", pinfo->dns);
             fprintf(stderr, "[%s][%s] \n", dns, getenv(DHCP_DNS_SERVER)); 
@@ -1266,9 +1284,9 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
         }
 
         /** Lease time. */
-        if (getenv(DHCP_LEASETIME) != NULL)
+        if ((env = getenv(DHCP_LEASETIME)) != NULL)
         {
-            dhcpv4_data->leaseTime = (uint32_t) atoi(getenv(DHCP_LEASETIME));
+            dhcpv4_data->leaseTime = (uint32_t) atoi(env);
         }
         else
         {
@@ -1276,9 +1294,9 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
         }
 
         /** Renewel time. */
-        if (getenv(DHCP_RENEWL_TIME) != NULL)
+        if ((env = getenv(DHCP_RENEWL_TIME)) != NULL)
         {
-            dhcpv4_data->renewalTime = (uint32_t) atoi(getenv(DHCP_RENEWL_TIME));
+            dhcpv4_data->renewalTime = (uint32_t) atoi(env);
         }
         else if (getenv(DHCP_ACK_OPT58) != NULL)
         {
@@ -1290,9 +1308,9 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
         }
 
         /** Rebinding time. */
-        if (getenv(DHCP_REBINDING_TIME) != NULL)
+        if ((env = getenv(DHCP_REBINDING_TIME)) != NULL)
         {
-            dhcpv4_data->rebindingTime = (uint32_t) atoi(getenv(DHCP_REBINDING_TIME));
+            dhcpv4_data->rebindingTime = (uint32_t) atoi(env);
         }
         else if (getenv(DHCP_ACK_OPT59) != NULL)
         {
@@ -1304,9 +1322,9 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
         }
 
         /** TimeZone. */
-        if (getenv(DHCP_TIMEZONE) != NULL)
+        if ((env = getenv(DHCP_TIMEZONE)) != NULL)
         {
-            strncpy(dhcpv4_data->timeZone, getenv(DHCP_TIMEZONE), sizeof(dhcpv4_data->timeZone));
+            strncpy(dhcpv4_data->timeZone, env, sizeof(dhcpv4_data->timeZone));
         }
         else
         {
@@ -1314,9 +1332,9 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
         }
 
         /** Timeoffset. */
-        if (getenv(DHCP_TIMEOFFSET) != NULL)
+        if ((env = getenv(DHCP_TIMEOFFSET)) != NULL)
         {
-            dhcpv4_data->timeOffset = (int32_t)  atoi(getenv(DHCP_TIMEOFFSET));
+            dhcpv4_data->timeOffset = (int32_t)  atoi(env);
             dhcpv4_data->isTimeOffsetAssigned = 1;
         }
         else
@@ -1325,9 +1343,9 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
         }
 
         /** UpstreamCurrRate. **/
-        if (getenv(DHCP_UPSTREAMRATE) != NULL)
+        if ((env = getenv(DHCP_UPSTREAMRATE)) != NULL)
         {
-            dhcpv4_data->upstreamCurrRate = (uint32_t)atoi(getenv(DHCP_UPSTREAMRATE));
+            dhcpv4_data->upstreamCurrRate = (uint32_t) atoi(env);
         }
         else
         {
@@ -1335,9 +1353,9 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
         }
 
         /** DownsteamCurRrate */
-        if (getenv(DHCP_DOWNSTREAMRATE) != NULL)
+        if ((env = getenv(DHCP_DOWNSTREAMRATE)) != NULL)
         {
-            dhcpv4_data->downstreamCurrRate  = (uint32_t)atoi(getenv(DHCP_DOWNSTREAMRATE));
+            dhcpv4_data->downstreamCurrRate  = (uint32_t) atoi(env);
         }
         else
         {
