@@ -501,19 +501,24 @@ static int route_set(struct serv_routed *sr)
     /* Test to see if the default route for erouter0 is not empty and the default
        route for router table is missing before trying to add a new default route
        for erouter table via erouter0 to prevent system() returning error */
+
+    // if default route existing in main table why do we need to add in erouter table ??
+#if 0
     if (system("gw=$(ip -6 route show default dev erouter0 | awk '/via/ {print $3}');"
             "dr=$(ip -6 route show default dev erouter0 table erouter);"
             "if [ \"$gw\" != \"\" -a \"$dr\" = \"\" ]; then"
              "  ip -6 route add default via $gw dev erouter0 table erouter;"
              "fi") != 0)
          return -1;
+#endif
     return 0;
 #else
 
     /* Warning: this is a duplicate of the _HUB4_PRODUCT_REQ_ code above */
     /*Clean 'iif brlan0 table erouter' if exist already*/
     system("ip -6 rule del iif brlan0 table erouter");
-
+    system("ip -6 rule add iif brlan0 table erouter");
+#if 0
     if (system("ip -6 rule add iif brlan0 table erouter;"
             "gw=$(ip -6 route show default dev erouter0 | awk '/via/ {print $3}');"
             "if [ \"$gw\" != \"\" ]; then"
@@ -530,6 +535,7 @@ static int route_set(struct serv_routed *sr)
            the simple workaround is OK.
         */
     }
+#endif
 
     /* Clean 'iif brlan0 table all_lans' if exists */
     system("ip -6 rule del iif brlan0 table all_lans prio 10");
