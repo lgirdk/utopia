@@ -73,7 +73,7 @@
 #ifdef USE_SYSCFG
 #include <syscfg/syscfg.h>
 #endif
-#include "ulog/ulog.h"
+#include <ulog/ulog.h>
 
 // data manager inited 
 static int DATA_MGR_inited = 0;
