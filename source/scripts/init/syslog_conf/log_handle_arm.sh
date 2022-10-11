@@ -206,7 +206,7 @@ TEMP=`sysevent get "$1"`
 if [ "$TEMP" == "" ]
 then
     TEMP=$(grep -e "$2" /etc/syslog.conf | awk '{print $2}')
-    if [ "$TEMP" != "" ]
+    if [ -n "$TEMP" ]
     then
         #syscfg set $1 $TEMP
         #syscfg commit
