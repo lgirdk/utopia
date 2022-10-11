@@ -471,7 +471,7 @@ static int route_set(struct serv_routed *sr)
            This may run multipe times, so remove existing rules before
            adding them again.
         */
-#if defined (_LG_MV2_PLUS_)
+#if defined (_LG_MV2_PLUS_) || defined(_LG_MV3_)
         /*
            Fixme: On Mv1 newly added rules have lower piority than existing
            ones and on Mv2+ they have a higher priority. It's not clear why
