@@ -5813,6 +5813,10 @@ static int do_raw_table_staticip(FILE *raw_fp)
  */
 static int do_wan_nat_lan_clients(FILE *fp)
 {
+#ifdef VMB_MODE
+   char tunneled_static_ip_enable[20];
+#endif /* VMB_MODE */
+
    if (!isNatReady) {
       return(0);
    }
@@ -5890,7 +5894,40 @@ static int do_wan_nat_lan_clients(FILE *fp)
   }
 
   // fprintf(fp, "%s\n", str);
-  
+
+#ifdef VMB_MODE
+   syscfg_get(NULL, "tunneled_static_ip_enable", tunneled_static_ip_enable, sizeof(tunneled_static_ip_enable));
+   if(!strcmp(tunneled_static_ip_enable, "1"))
+   {
+      /* TODO: sysevents instead of parsing the logs? */
+      FILE *logfp;
+      char *ip, *p, linebuf[256];
+
+      logfp = fopen("/tmp/vmb-radius-client/vmbauth.log", "r");
+      if (logfp)
+      {
+         while (fgets(linebuf, sizeof(linebuf), logfp))
+         {
+            if (strncmp(linebuf, "Framed-Route=", 13))
+               continue;
+            ip = linebuf + 13;
+            p = strchr(ip, ' ');
+            if (p)
+               *p = '\0';
+            p = strchr(ip, '/');
+            if (!p)
+               break;
+            *p++ = '\0';
+            if (strcmp(p, "32"))
+               break;
+            fprintf(fp, "-A postrouting_tovmb -j SNAT --to-source %s\n", ip);
+            break;
+         }
+         fclose(logfp);
+      }
+   }
+#endif /* VMB_MODE */
+
    if (isCacheActive) {
       fprintf(fp, "-A PREROUTING -i %s -p tcp --dport 80 -j DNAT --to %s:%s\n", lan_ifname, lan_ipaddr, "3128");
    }
@@ -12709,6 +12746,9 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
 #endif
 
    fprintf(nat_fp, ":%s - [0:0]\n", "postrouting_towan");
+#ifdef VMB_MODE
+   fprintf(nat_fp, ":%s - [0:0]\n", "postrouting_tovmb");
+#endif /* VMB_MODE */
    fprintf(nat_fp, ":%s - [0:0]\n", "postrouting_tolan");
    fprintf(nat_fp, ":%s - [0:0]\n", "postrouting_plugins");
    fprintf(nat_fp, ":%s - [0:0]\n", "postrouting_ephemeral");
@@ -12844,6 +12884,9 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(nat_fp, "-A POSTROUTING -j postrouting_ephemeral\n");
 // This breaks emta DNS routing on XF3. We may need some special rule here.
    fprintf(nat_fp, "-A POSTROUTING -o %s -j postrouting_towan\n", current_wan_ifname);
+#ifdef VMB_MODE
+   fprintf(nat_fp, "-A POSTROUTING -o vmb0 -j postrouting_tovmb\n");
+#endif /* VMB_MODE */
 #endif //_HUB4_PRODUCT_REQ_ ENDS
 
    fprintf(nat_fp, "-A POSTROUTING -o %s -j postrouting_tolan\n", lan_ifname);
@@ -14511,6 +14554,9 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    fprintf(nat_fp, "%s\n", ":POSTROUTING ACCEPT [0:0]");
    fprintf(nat_fp, "%s\n", ":OUTPUT ACCEPT [0:0]");
    fprintf(nat_fp, ":%s - [0:0]\n", "postrouting_towan");
+#ifdef VMB_MODE
+   fprintf(nat_fp, ":%s - [0:0]\n", "postrouting_tovmb");
+#endif /* VMB_MODE */
 
    if (!isBridgeMode)
    {
@@ -14523,6 +14569,9 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    {
 #endif
    fprintf(nat_fp, "-A POSTROUTING -o %s -j postrouting_towan\n", current_wan_ifname);
+#ifdef VMB_MODE
+   fprintf(nat_fp, "-A POSTROUTING -o vmb0 -j postrouting_tovmb\n");
+#endif /* VMB_MODE */
 #if defined (FEATURE_SUPPORT_MAPT_NAT46)
    }
 #endif
