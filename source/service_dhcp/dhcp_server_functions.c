@@ -520,6 +520,11 @@ void prepare_dhcp_options_wan_dns()
             char dns_override_mode[8];
             char erouter_mode[8];
             sysevent_get(g_iSyseventfd, g_tSysevent_token, "wan_dhcp_dns", l_cWan_Dhcp_Dns, sizeof(l_cWan_Dhcp_Dns));
+            if (l_cWan_Dhcp_Dns[0] == 0)
+            {
+                //In ipv6/ipv6 ds-lite mode, the device is unable to fetch the defalut ipv4 DNS, so we fetch default ipv6 DNS address.
+                sysevent_get(g_iSyseventfd, g_tSysevent_token, "ipv6_nameserver", l_cWan_Dhcp_Dns, sizeof(l_cWan_Dhcp_Dns));
+            }
             if (0 != l_cWan_Dhcp_Dns[0])
             {
                 l_cToken = strtok(l_cWan_Dhcp_Dns, " ");
