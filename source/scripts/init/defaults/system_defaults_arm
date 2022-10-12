@@ -1612,6 +1612,11 @@ $multicast_ssm_fwd_enable=1
 $multicast_max_ssm_sessions=64
 $multicast_m2u_max_sessions=64
 
+$tunneled_static_ip_enable=0
+$tunneled_static_ip_auth_port=1812
+$tunneled_static_ip_acct_port=1813
+$tunneled_static_ip_interface=1
+
 $dslite_dhcpv6_opt64_enable_dslite=0
 $troubleshoot_wizard_enable=0
 $router_mobile_app_enable=0
