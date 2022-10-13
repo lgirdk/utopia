@@ -900,7 +900,9 @@ static int handle_wan (udhcpc_script_t *pinfo)
     OnboardLog("[%s][%d] mask            = %s \n", __FUNCTION__, __LINE__,data.mask);
     OnboardLog("[%s][%d] gateway         = %s \n",__FUNCTION__, __LINE__,data.gateway);
     OnboardLog("[%s][%d] dnsserver1      = %s \n",__FUNCTION__, __LINE__, data.dnsServer);
+#if !defined(_LG_OFW_)
     OnboardLog("[%s][%d] dnsserver2      = %s \n", __FUNCTION__, __LINE__,data.dnsServer1);
+#endif
     OnboardLog("[%s][%d] Interface       = %s \n",  __FUNCTION__, __LINE__,data.dhcpcInterface);
     OnboardLog("[%s][%d] Lease time      = %d \n",__FUNCTION__, __LINE__, data.leaseTime);
     OnboardLog("[%s][%d] Renewal Time    = %d \n", __FUNCTION__, __LINE__, data.renewalTime);
@@ -1422,6 +1424,9 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
         /** DNS server. */
         if (pinfo->dns != NULL)
         {
+#if defined(_LG_OFW_)
+            snprintf(dhcpv4_data->dnsServer, sizeof(dhcpv4_data->dnsServer), "%s", pinfo->dns);
+#else
             char dns[256];
             char *tok = NULL;
             snprintf(dns, sizeof(dns), "%s", pinfo->dns);
@@ -1439,6 +1444,7 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
             {
                 strncpy(dhcpv4_data->dnsServer1, tok, sizeof(dhcpv4_data->dnsServer1));
             }
+#endif
         }
         else
         {
