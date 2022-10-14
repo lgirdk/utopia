@@ -38,12 +38,11 @@
 #ifdef RDKB_EXTENDER_ENABLED
 #include <string.h>
 #include <stdlib.h>
-#include "secure_wrapper.h"
 #endif
 #define SERV_WAN_HANDLER    "/etc/utopia/service.d/service_wan.sh"
 
-#define SERVICE_NAME "wan"
-#define SERVICE_DEFAULT_HANDLER SERV_WAN_HANDLER
+const char* SERVICE_NAME            = "wan";
+const char* SERVICE_DEFAULT_HANDLER = SERV_WAN_HANDLER;
 
 /*
  * override wan-restart collapse the waiting activation queue if more than 1 event is pending 
@@ -68,12 +67,15 @@ void srv_register(void) {
 #ifdef RDKB_EXTENDER_ENABLED
 void stop_service()
 {
-    v_secure_system(SERVICE_DEFAULT_HANDLER " " SERVICE_NAME "-stop");
+    char buf[512];
+    memset(buf,0,sizeof(buf));
+    snprintf(buf,sizeof(buf),"sh %s %s-stop",SERVICE_DEFAULT_HANDLER,SERVICE_NAME);
+    system(buf);
 }
 #endif
 void srv_unregister(void) {
    #ifdef RDKB_EXTENDER_ENABLED
-   stop_service(); 
+   stop_service();
    #endif
    sm_unregister(SERVICE_NAME);
 }

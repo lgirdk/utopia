@@ -43,7 +43,6 @@
 #include <string.h>
 #include<time.h>
 #include <stdarg.h>
-#include "secure_wrapper.h"
 #ifdef MULTILAN_FEATURE
 #include <unistd.h>
 #endif
@@ -164,12 +163,13 @@ void multinet_log( char* fmt, ...)
 //If PP is not on Atom, call the legacy multinet handler instead of this one
 	char cmd[MAX_CMD];
 	if (access(P7_PP_ON_ATOM, F_OK)) {
+		snprintf(cmd, MAX_CMD, "%s", P7_LEGACY_MULTINET_HANDLER);
 		for (i=1;i<argc;i++) {
-			strncat(cmd, argv[i], sizeof(cmd) - strnlen(cmd, MAX_CMD-1) - 1);
 			strncat(cmd, " ", sizeof(cmd) - strnlen(cmd, MAX_CMD-1) - 1);
+			strncat(cmd, argv[i], sizeof(cmd) - strnlen(cmd, MAX_CMD-1) - 1);
 		}
-		MNET_DEBUG("Forwarding command to legacy handler: %s\n" COMMA P7_LEGACY_MULTINET_HANDLER);
-		return v_secure_system(P7_LEGACY_MULTINET_HANDLER " %s",cmd);
+		MNET_DEBUG("Forwarding command to legacy handler: %s\n" COMMA cmd);
+		return system(cmd);
  	}
 
     #if defined(ENABLE_ETH_WAN) || defined(AUTOWAN_ENABLE)
@@ -238,7 +238,7 @@ void multinet_log( char* fmt, ...)
      // Assign IP to LnF bridge
      multinet_assignBridgeCIDR(atoi(argv[2]), LNF_IPV4_CIDR, 4);
      // Restart firewall
-     v_secure_system("sysevent set firewall-restart");
+     system("sysevent set firewall-restart");
      return 0;
  }
 
@@ -248,7 +248,7 @@ void multinet_log( char* fmt, ...)
      multinet_bridgeUpInst(atoi(argv[2]), 0);
      // Assign IP to mesh backhaul bridge
      multinet_assignBridgeCIDR(atoi(argv[2]), MESHBHAUL_IPV4_CIDR, 4);
-     v_secure_system("sysevent set firewall-restart");
+     system("sysevent set firewall-restart");
      return 0;
  }
 #endif

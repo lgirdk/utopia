@@ -70,7 +70,6 @@
 #include <regex.h>
 #include <telemetry_busmessage_sender.h>
 #include <stdint.h>
-#include "secure_wrapper.h"
 
 #ifdef FEATURE_SUPPORT_ONBOARD_LOGGING
 #include <rdk_debug.h>
@@ -280,31 +279,28 @@ int handle_defconfig(udhcpc_script_t *pinfo)
          return -1;
     }    
 #else
-    
+    char buf[128];
     if (!pinfo)
         return -1;
-  
-    char *interface = getenv("interface");
-    if (!interface) {
-        fprintf(stderr, "getenv interface returned NULL\n");
-        return -1;
-    }
     if (pinfo->resconf_exist)
     {
-        v_secure_system("/sbin/resolvconf -d %s.udhcpc",interface);
+        snprintf(buf,sizeof(buf),"/sbin/resolvconf -d %s.udhcpc",getenv("interface"));
+        system(buf);
     }
 
     if (!pinfo->broot_is_nfs)
     {
         if (pinfo->ip_util_exist)
         {
-            v_secure_system("ip -4 addr flush dev %s",interface);
-            v_secure_system("ip link set dev %s up",interface);
-        
+            snprintf(buf,sizeof(buf),"ip -4 addr flush dev %s",getenv("interface"));
+            system(buf);
+            snprintf(buf,sizeof(buf),"ip link set dev %s up",getenv("interface"));
+            system(buf);
         }
         else
         {
-            v_secure_system("/sbin/ifconfig %s 0.0.0.0",interface);
+            snprintf(buf,sizeof(buf),"/sbin/ifconfig %s 0.0.0.0",getenv("interface"));
+            system(buf);
         }    
     }
 #endif
@@ -427,7 +423,7 @@ int update_dns_tofile(udhcpc_script_t *pinfo)
     char buf[256];
     char val[64];
     int result = -1;
-  
+
     if (!pinfo)
         return -1;
 
@@ -443,26 +439,30 @@ int update_dns_tofile(udhcpc_script_t *pinfo)
             snprintf(buf,sizeof(buf),"grep %s /tmp/.ipv4dnsserver",tok);
             memset(val,0,sizeof(val));
             result = read_cmd_output(buf,val,sizeof(val));
-	    printf ("\n result %d grep:%s \n",result,val);
+            printf ("\n result %d grep:%s \n",result,val);
             if (0 == result)
             {
                 if (strlen(val) <= 0)
                 {
                     char utc_time[64];
                     char uptime[64];                
-		    result = read_cmd_output("date -u",utc_time,sizeof(utc_time));
+
+                    result = read_cmd_output("date -u",utc_time,sizeof(utc_time));
                     if (result < 0)
                     {
                         printf ("\n [date -u] cmd failed\n");            
                     }
+
                     result = read_cmd_output("cut -d. -f1 /proc/uptime", uptime, sizeof(uptime));
-	            if (0 == result)
+                    if (0 == result)
                     {
                         printf ("\nuptime  %s tok : %s\n",uptime,tok);
+                        snprintf(buf,sizeof(buf),"echo %s DNS_server_IP_changed:%s >> %s",utc_time,uptime,CONSOLE_LOG_FILE);
 			OnboardLog("DNS_server_IP_changed:%s\n",uptime);
                         t2_event_s("bootuptime_dnsIpChanged_split", uptime);
-                        v_secure_system("echo %s DNS_server_IP_changed:%s >> "CONSOLE_LOG_FILE,utc_time,uptime);
-                        v_secure_system("echo %s >> /tmp/.ipv4dnsserver",tok);
+                        system(buf);
+                        snprintf(buf,sizeof(buf),"echo %s >> /tmp/.ipv4dnsserver",tok);
+                        system(buf);
                     }
 
                 }
@@ -482,6 +482,7 @@ int add_route(udhcpc_script_t *pinfo)
 {
     char router[256];
     char *tok = NULL;
+    char buf[128];
     int metric = 0;
 
     if (!pinfo)
@@ -494,14 +495,14 @@ int add_route(udhcpc_script_t *pinfo)
     {      
         if (pinfo->ip_util_exist)
         {
-            v_secure_system("ip route add default via %s metric %d",tok,metric);
-	    printf("\n %s router:%s buf: ip route add default via %s metric %d",__FUNCTION__,router,tok,metric);
+            snprintf(buf,sizeof(buf),"ip route add default via %s metric %d",tok,metric);
         }
         else
         {
-            v_secure_system("route add default gw %s dev %s metric %d 2>/dev/null",tok,getenv("interface"),metric);
-	    printf("\n %s router:%s buf: route add default gw %s dev %s metric %d 2>/dev/null",__FUNCTION__,router,tok,getenv("interface"),metric);
+            snprintf(buf,sizeof(buf),"route add default gw %s dev %s metric %d 2>/dev/null",tok,getenv("interface"),metric);
         }
+        printf("\n %s router:%s buf: %s\n",__FUNCTION__,router,buf);
+        system(buf);
         ++metric;
     }
     while (NULL != tok)
@@ -511,14 +512,14 @@ int add_route(udhcpc_script_t *pinfo)
         {
             if (pinfo->ip_util_exist)
             {
-                v_secure_system("ip route add default via %s metric %d",tok,metric);
-		printf("\n %s router:%s buf:ip route add default via %s metric %d",__FUNCTION__,router,tok,metric);
+                snprintf(buf,sizeof(buf),"ip route add default via %s metric %d",tok,metric);
             }
             else
             {
-                v_secure_system("route add default gw %s dev %s metric %d 2>/dev/null",tok,getenv("interface"),metric);
-		printf("\n %s router:%s buf:route add default gw %s dev %s metric %d 2>/dev/null",__FUNCTION__,router,tok,getenv("interface"),metric);
+                snprintf(buf,sizeof(buf),"route add default gw %s dev %s metric %d 2>/dev/null",tok,getenv("interface"),metric);
             }
+            printf("\n %s router:%s buf: %s\n",__FUNCTION__,router,buf);
+            system(buf);
             ++metric;
         }
     }
@@ -533,6 +534,7 @@ int set_wan_sysevents()
     char *opt59 = getenv("opt59");
     char *subnet = getenv("subnet");
     int result = -1;
+
     if (serverid && strlen(serverid) > 0)
     {
         sysevent_set(sysevent_fd, sysevent_token, "wan_dhcp_svr", serverid, 0);
@@ -542,12 +544,12 @@ int set_wan_sysevents()
     {
         char lease_date[64];
         char lease_exp[128];
-	char buf[128];
+        char buf[128];
         sysevent_set(sysevent_fd, sysevent_token, "wan_lease_time", lease, 0);        
-	result = read_cmd_output("date +\"\%Y.\%m.\%d-\%T\"",lease_date,sizeof(lease_date));
+        result = read_cmd_output("date +\"\%Y.\%m.\%d-\%T\"",lease_date,sizeof(lease_date));
         if (0 == result)
         {
-	    snprintf(buf,sizeof(buf),"date -d\"%s:%s\" +\"%%Y.%%m.%%d-%%T %%Z\"",lease_date,lease);
+            snprintf(buf,sizeof(buf),"date -d\"%s:%s\" +\"%%Y.%%m.%%d-%%T %%Z\"",lease_date,lease);
             result = read_cmd_output(buf,lease_exp,sizeof(lease_exp));
             if (0 == result)
             {                
@@ -560,14 +562,14 @@ int set_wan_sysevents()
     {
         char lease_date[64];
         char lease_renew[128];
-	char buf[128];
+        char buf[128];
         sysevent_set(sysevent_fd, sysevent_token, "wan_renew_time", opt58, 0);        
         result = read_cmd_output("date +\"\%Y.\%m.\%d-\%T\"",lease_date,sizeof(lease_date));
-	if (0 == result)
+        if (0 == result)
         {
             snprintf(buf,sizeof(buf),"date -d\"%s:0x%s\" +\"%%Y.%%m.%%d-%%T %%Z\"",lease_date,opt58);
             result = read_cmd_output(buf,lease_renew,sizeof(lease_renew));
-	    if (0 == result)
+            if (0 == result)
             {                
                 sysevent_set(sysevent_fd, sysevent_token, "wan_lease_renew", lease_renew, 0);
             }            
@@ -578,14 +580,14 @@ int set_wan_sysevents()
     {
         char lease_date[64];
         char lease_bind[128];
-	char buf[128];
+        char buf[128];
         sysevent_set(sysevent_fd, sysevent_token, "wan_rebind_time", opt59, 0);        
         result = read_cmd_output("date +\"\%Y.\%m.\%d-\%T\"",lease_date,sizeof(lease_date));
-	if (0 == result)
+        if (0 == result)
         {
             snprintf(buf,sizeof(buf),"date -d\"%s:0x%s\" +\"%%Y.%%m.%%d-%%T %%Z\"",lease_date,opt59);
             result = read_cmd_output(buf,lease_bind,sizeof(lease_bind));
-	    if (0 == result)
+            if (0 == result)
             {                
                 sysevent_set(sysevent_fd, sysevent_token, "wan_lease_rebind", lease_bind, 0);
             }            
@@ -911,6 +913,7 @@ int handle_wan(udhcpc_script_t *pinfo)
     }
     return ret;
 #else
+    char buf[300];
     char *mask = getenv("mask");
     char *ip = getenv("ip");
     char router[256] = {'\0'}; //CID 162896: Uninitialized scalar variable
@@ -926,11 +929,13 @@ int handle_wan(udhcpc_script_t *pinfo)
     broadcast_ip = getenv("broadcast");
     if (pinfo->ip_util_exist)
     {
+        memset(buf,0,sizeof(buf));
 	if(broadcast_ip){
-        	v_secure_system("ip addr add dev %s %s/%s broadcast %s",getenv("interface"),getenv("ip"),getenv("mask"),broadcast_ip);
+        	snprintf(buf,sizeof(buf),"ip addr add dev %s %s/%s broadcast %s",getenv("interface"),getenv("ip"),getenv("mask"),broadcast_ip);
 	}else{
-		v_secure_system("ip addr add dev %s %s/%s",getenv("interface"),getenv("ip"),getenv("mask"));
-        }
+		snprintf(buf,sizeof(buf),"ip addr add dev %s %s/%s",getenv("interface"),getenv("ip"),getenv("mask"));
+	}
+        system(buf);        
         if (mask && ip)
         {
             printf ("\n IP is %s and mask is %s \n",ip, mask);
@@ -943,7 +948,7 @@ int handle_wan(udhcpc_script_t *pinfo)
 	if (pinfo->wan_type && !strcmp(pinfo->wan_type,"EPON"))
 	{
 	     print_uptime("Waninit_complete", NULL, NULL);
-             creat("/tmp/wan_ready",S_IRUSR |S_IWUSR |S_IRGRP |S_IROTH);
+             system("touch /tmp/wan_ready");
              print_uptime("boot_to_wan_uptime",NULL, NULL);
     	}
 
@@ -951,14 +956,14 @@ int handle_wan(udhcpc_script_t *pinfo)
         if (ip)
         {
             if(broadcast_ip){
-            	v_secure_system("/sbin/ifconfig %s %s broadcast %s netmask %s",
+            	snprintf(buf,sizeof(buf),"/sbin/ifconfig %s %s broadcast %s netmask %s",
                     	getenv("interface"),ip,broadcast_ip,getenv("subnet"));
-		printf("\n %s router:%s buf: /sbin/ifconfig %s %s broadcast %s netmask %s",__FUNCTION__,router,getenv("interface"),ip,broadcast_ip,getenv("subnet"));
 	    }else{
-                v_secure_system("/sbin/ifconfig %s %s netmask %s",
+                snprintf(buf,sizeof(buf),"/sbin/ifconfig %s %s netmask %s",
                         getenv("interface"),ip,getenv("subnet"));
-		printf("\n %s router:%s buf:/sbin/ifconfig %s %s netmask %s",__FUNCTION__,router,getenv("interface"),ip,getenv("subnet"));
             }
+            system(buf);
+            printf("\n %s router:%s buf: %s\n",__FUNCTION__,router,buf);
         }
     }
 
@@ -970,12 +975,12 @@ int handle_wan(udhcpc_script_t *pinfo)
             {
                 if (pinfo->ip_util_exist)
                 {
-                    v_secure_system("/etc/utopia_ip_route.sh");
+                    system("while ip route del default 2>/dev/null ; do :; done");
                     printf("\nExit ip while\n");
                 }
                 else
                 {
-                    v_secure_system("/etc/utopia_ip_interface.sh %s",getenv("interface"));
+                    system("while route del default gw 0.0.0.0 dev $interface 2>/dev/null ; do :; done");
                 }
             }        
         }
@@ -990,13 +995,21 @@ int handle_wan(udhcpc_script_t *pinfo)
         printf("\n %s removing ip rule based on prev_ip:%s and adding ip: %s\n",__FUNCTION__,prev_ip,ip);
         if(strcmp(prev_ip,"") && strcmp(prev_ip,"0.0.0.0"))
         {
-                v_secure_system("ip -4 rule del from %s lookup erouter",prev_ip);
-                v_secure_system("ip -4 rule del from %s lookup all_lans",prev_ip);
+                memset(buf,0,sizeof(buf));
+                snprintf(buf,sizeof(buf),"ip -4 rule del from %s lookup erouter",prev_ip);
+                system(buf);
+                memset(buf,0,sizeof(buf));
+                snprintf(buf,sizeof(buf),"ip -4 rule del from %s lookup all_lans",prev_ip);
+                system(buf);
 
         }
 
-                v_secure_system("ip -4 rule add from %s lookup erouter",ip);
-                v_secure_system("ip -4 rule add from %s lookup all_lans",ip);
+                memset(buf,0,sizeof(buf));
+                snprintf(buf,sizeof(buf),"ip -4 rule add from %s lookup erouter",ip);
+                system(buf);
+                memset(buf,0,sizeof(buf));
+                snprintf(buf,sizeof(buf),"ip -4 rule add from %s lookup all_lans",ip);
+                system(buf);
 
 
 
@@ -1006,14 +1019,14 @@ int handle_wan(udhcpc_script_t *pinfo)
     // Set default route
     if (pinfo->ip_util_exist)
     {
-	v_secure_system("ip route add default via %s dev %s table erouter",router, getenv("interface"));
-	printf("\nSet default route command: ip route add default via %s dev %s table erouter",router, getenv("interface"));
+	snprintf(buf,sizeof(buf),"ip route add default via %s dev %s table erouter",router, getenv("interface"));
     }
     else
     {
-	v_secure_system("route add default via %s dev %s table erouter",router, getenv("interface"));
-	printf("\nSet default route command: route add default via %s dev %s table erouter",router, getenv("interface"));
+	snprintf(buf,sizeof(buf),"route add default via %s dev %s table erouter",router, getenv("interface"));
     }
+    printf("\nSet default route command %s\n",buf);
+    system(buf);
 
     set_wan_sysevents();
     //update .ipv4dnsserver file
@@ -1021,7 +1034,8 @@ int handle_wan(udhcpc_script_t *pinfo)
 
     if (pinfo->resconf_exist)
     {
-        v_secure_system("/sbin/resolvconf -a %s.udhcpc",getenv("interface"));
+        snprintf(buf,sizeof(buf),"/sbin/resolvconf -a %s.udhcpc",getenv("interface"));
+        system(buf);
     }
     else   
     {
@@ -1042,7 +1056,7 @@ int handle_wan(udhcpc_script_t *pinfo)
 
 
 
-                creat("/tmp/ipv4_renew_dnsserver_restart",S_IRUSR |S_IWUSR |S_IRGRP |S_IWGRP |S_IROTH |S_IWOTH);
+                system("touch /tmp/ipv4_renew_dnsserver_restart");
         }
         else
         {
@@ -1056,7 +1070,7 @@ int handle_wan(udhcpc_script_t *pinfo)
 }
 
 int read_cmd_output(char *cmd, char *output_buf, int size_buf)
-{   
+{
     FILE *f = NULL;
     char *pos = NULL;
 
@@ -1067,12 +1081,11 @@ int read_cmd_output(char *cmd, char *output_buf, int size_buf)
     if(f==NULL){
         return -1;
     }
-
     fgets(output_buf,size_buf,f);
     /* remove trailing newline */
     if((pos = strrchr(output_buf, '\n')) != NULL)
         *pos = '\0';
-     pclose(f);
+    pclose(f);
     return 0;
 }
 

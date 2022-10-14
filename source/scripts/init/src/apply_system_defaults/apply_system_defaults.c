@@ -50,8 +50,6 @@
 #include <syscfg/syscfg.h>
 #include "sysevent/sysevent.h"
 #include "time.h"
-#include "secure_wrapper.h"
-#include <sys/stat.h>
 #if defined (_XB6_PRODUCT_REQ_) || defined(_HUB4_PRODUCT_REQ_) || defined(_SR300_PRODUCT_REQ_)
 #include "platform_hal.h"
 #endif
@@ -869,7 +867,7 @@ static int get_PartnerID (char *PartnerID)
 			APPLY_PRINT("%s - PartnerID from File: %s\n",__FUNCTION__,PartnerID );
 			validatePartnerId ( PartnerID );
 		}
-		unlink("/nvram/.partner_ID");
+		system("rm -rf /nvram/.partner_ID");
 	}
 	set_syscfg_partner_values(PartnerID,"PartnerID");
 
@@ -1276,7 +1274,7 @@ static void addInSysCfgdDB (char *key, char *value)
       APPLY_PRINT("%s - PSM Migration needed for %s param so touching %s file\n", __FUNCTION__, key, PARTNER_DEFAULT_MIGRATE_FOR_NEW_PSM_MEMBER );
 
       //Need to touch /tmp/.apply_partner_defaults_new_psm_member for PSM migration handling
-      creat(PARTNER_DEFAULT_MIGRATE_FOR_NEW_PSM_MEMBER,S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+      system("touch "PARTNER_DEFAULT_MIGRATE_FOR_NEW_PSM_MEMBER);
    }
 }
 
@@ -1393,7 +1391,7 @@ static void updateSysCfgdDB (char *key, char *value)
       APPLY_PRINT("%s - PSM Migration needed for %s param so touching %s file\n", __FUNCTION__, key, PARTNER_DEFAULT_MIGRATE_FOR_NEW_PSM_MEMBER );
 
       //Need to touch /tmp/.apply_partner_defaults_new_psm_member for PSM migration handling
-      creat(PARTNER_DEFAULT_MIGRATE_FOR_NEW_PSM_MEMBER,S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+      system("touch "PARTNER_DEFAULT_MIGRATE_FOR_NEW_PSM_MEMBER);
    }
 }
 
@@ -1514,8 +1512,10 @@ static int compare_partner_json_param (char *partner_nvram_bs_obj, char *partner
    if (!root_nvram_bs_json || !partnerobj_nvram_bs)
    {
       APPLY_PRINT("json parse error for bootstrap.json\n");
-      APPLY_PRINT("rm %s", BOOTSTRAP_INFO_FILE);
-      unlink(BOOTSTRAP_INFO_FILE);
+      char  cmd[256] = {0};
+      snprintf(cmd, sizeof(cmd), "rm %s", BOOTSTRAP_INFO_FILE);
+      APPLY_PRINT("%s\n",cmd);
+      system(cmd);
       char *ptr_nvram_json = json_file_parse( PARTNERS_INFO_FILE );
       init_bootstrap_json( ptr_nvram_json, partner_etc_obj, PartnerID );
       free(ptr_nvram_json);
@@ -2434,6 +2434,7 @@ static void getPartnerIdWithRetry(char* buf, char* PartnerID)
 int main( int argc, char **argv )
 {
    char *ptr_etc_json = NULL, *ptr_nvram_json = NULL, *ptr_nvram_bs_json = NULL, *db_val = NULL;
+   char  cmd[512] = {0};
    char  PartnerID[ PARTNER_ID_LEN+255 ]  = { 0 };
    int   isNeedToApplyPartnersDefault = 1;
    int   isMigrationReq = 0;
@@ -2491,7 +2492,7 @@ int main( int argc, char **argv )
    sysevent_close(global_fd, global_id);
 
 #if defined(_SYNDICATION_BUILDS_)
-   v_secure_system( "/lib/rdk/apply_partner_customization.sh" );
+   system( "sh /lib/rdk/apply_partner_customization.sh" );
 #endif
 
   if ( access( PARTNER_DEFAULT_APPLY_FILE , F_OK ) != 0 )  
@@ -2523,7 +2524,7 @@ int main( int argc, char **argv )
 #if defined(INTEL_PUMA7) && !defined(_XB7_PRODUCT_REQ_)
 	//Below validation is needed to make sure the factory_partnerid and syscfg_partnerid are in sync.
 	//This is mainly to address those units where customer_index/factory_partnerid was modified in the field through ARRISXB6-8400.
-	v_secure_system( "/lib/rdk/validate_syscfg_partnerid.sh" );
+	system( "sh /lib/rdk/validate_syscfg_partnerid.sh" );
 #endif
 	
 	//Get the partner ID
@@ -2573,11 +2574,12 @@ int main( int argc, char **argv )
          init_bootstrap_json( ptr_nvram_json, ptr_etc_json, PartnerID );
          if ( ptr_nvram_json == NULL )
          {
-            APPLY_PRINT("cp %s %s", PARTNERS_INFO_FILE_ETC, PARTNERS_INFO_FILE);
-            v_secure_system("cp "PARTNERS_INFO_FILE_ETC " " PARTNERS_INFO_FILE);
+            snprintf(cmd, sizeof(cmd), "cp %s %s", PARTNERS_INFO_FILE_ETC, PARTNERS_INFO_FILE);
+            APPLY_PRINT("%s\n",cmd);
+            system(cmd);
 
             //Need to touch /tmp/.apply_partner_defaults_psm for PSM migration handling
-            creat(PARTNER_DEFAULT_MIGRATE_PSM,S_IRUSR |S_IWUSR |S_IRGRP |S_IROTH); // FIX: RDKB-20566 to handle migration
+            system("touch "PARTNER_DEFAULT_MIGRATE_PSM); // FIX: RDKB-20566 to handle migration
          }
          else
             free( ptr_nvram_json );
