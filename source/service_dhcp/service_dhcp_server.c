@@ -55,7 +55,7 @@
 
 static char dnsOption[8] = "";
 
-extern void copy_command_output(FILE *, char *, int);
+extern void copy_command_output(char *, char *, int);
 extern void print_with_uptime(const char*);
 extern BOOL compare_files(char *, char *);
 extern void wait_till_end_state (char *);
@@ -233,7 +233,7 @@ int dhcp_server_start (char *input)
 	char l_cSystemCmd[255] = {0}, l_cPsm_Mode[8] = {0}, l_cStart_Misc[8] = {0};
 	char l_cPmonCmd[255] = {0}, l_cDhcp_Tmp_Conf[32] = {0};
 	char l_cCurrent_PID[8] = {0}, l_cRpc_Cmd[64] = {0};
-	char l_cBuf[128] = {0};
+	char l_cCommand[128] = {0}, l_cBuf[128] = {0};
     char l_cBridge_Mode[8] = {0};
     char l_cDhcp_Server_Prog[16] = {0};
     int dhcp_server_progress_count = 0;
@@ -343,17 +343,10 @@ int dhcp_server_start (char *input)
 	}	
 	else
 	{
-		fptr = v_secure_popen("r","pidof dnsmasq");
-		if(!fptr)
-	        {
-			fprintf(stderr, "%s Error in opening pipe\n",__FUNCTION__);
-		}
-		else
-		{
-                     copy_command_output(fptr, l_cBuf, sizeof(l_cBuf));
-		     v_secure_pclose(fptr);
-		}
-	        l_cBuf[strlen(l_cBuf)] = '\0';
+	    safec_rc = strcpy_s(l_cCommand, sizeof(l_cCommand),"pidof dnsmasq");
+		ERR_CHK(safec_rc);
+    	copy_command_output(l_cCommand, l_cBuf, sizeof(l_cBuf));
+	    l_cBuf[strlen(l_cBuf)] = '\0';
 
 		if ('\0' == l_cBuf[0] || 0 == l_cBuf[0])
 		{
@@ -398,17 +391,10 @@ int dhcp_server_start (char *input)
 	remove_file(PID_FILE);
 
         /* Kill dnsmasq if its not stopped properly */
-	fptr = v_secure_popen("r","pidof dnsmasq");
+	safec_rc = strcpy_s(l_cCommand, sizeof(l_cCommand),"pidof dnsmasq");
+	ERR_CHK(safec_rc);
         memset (l_cBuf, '\0',  sizeof(l_cBuf));
-	if(!fptr)
-	{
-		fprintf(stderr, "%s Error in opening pipe\n",__FUNCTION__);
-	}
-	else
-	{
-            copy_command_output(fptr, l_cBuf, sizeof(l_cBuf));
-	    v_secure_pclose(fptr);
-	}
+    	copy_command_output(l_cCommand, l_cBuf, sizeof(l_cBuf));
 	l_cBuf[strlen(l_cBuf)] = '\0';
 
 	if ('\0' != l_cBuf[0] && 0 != l_cBuf[0])
