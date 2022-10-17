@@ -364,8 +364,15 @@ int FW_block_func(char *line, char *desp, char *key){
             }else{
                 return -1;
             }
+        }else if( NULL != (despos = strstr(fwpos+sizeof("FW.")-1, "IPv4"))){
+            if(NULL != (despos = strchr(despos+sizeof("IPv4")-1, '\"'))){
+                end = despos;
+            }else{
+                return -1;
+            }
         }else if( NULL != (despos = strstr(fwpos+sizeof("FW.")-1, "DROP"))){
-            end = despos + sizeof("DROP") - 1;
+             end = despos + sizeof("DROP") - 1;
+  
         }else if( NULL != (despos = strstr(fwpos+sizeof("FW.")-1, "ACCEPT"))){
             end = despos + sizeof("ACCEPT") - 1;
         }else if( NULL != (despos = strstr(fwpos+sizeof("FW.")-1, "REJECT"))){

@@ -3026,8 +3026,12 @@ static int prepare_globals_from_configuration(void)
          fprintf(fp, "-A xlogreject -j LOG --log-prefix \"UTOPIA: FW.REJECT \" --log-level %d --log-tcp-sequence --log-tcp-options --log-ip-options -m limit --limit 1/minute --limit-burst 1\n", syslog_level);
       }
 
+
       if (isLogSecurityEnabled) {
+
          fprintf(fp, "-A xlog_drop_wanattack -m state --state NEW -j LOG --log-prefix \"UTOPIA: FW.WANATTACK DROP \" --log-level %d --log-tcp-sequence --log-tcp-options --log-ip-options -m limit --limit 1/minute --limit-burst 1\n", syslog_level);
+         
+	 fprintf(fp, "-A xlog_drop_lan2wan_misc -m limit --limit 1/minute -j LOG --log-level %d --log-prefix \"UTOPIA: FW.IPv4 ln2wnmis drop\"\n",syslog_level);
 
          fprintf(fp, "-A xlog_drop_lanattack -m state --state NEW -j LOG --log-prefix \"UTOPIA: FW.LANATTACK DROP \" --log-level %d --log-tcp-sequence --log-tcp-options --log-ip-options -m limit --limit 1/minute --limit-burst 1\n", syslog_level);
 
@@ -3058,6 +3062,8 @@ static int prepare_globals_from_configuration(void)
 
    fprintf(fp, "-A xlog_drop_wanattack -j DROP\n");
 
+   fprintf(fp, "-A xlog_drop_lan2wan_misc -j DROP\n");
+   
    fprintf(fp, "-A xlog_drop_lanattack -j DROP\n");
 
    fprintf(fp, "-A xlog_drop_lan2self -j DROP\n");
@@ -5951,7 +5957,6 @@ int do_wan2self_attack(FILE *fp,char* wan_ip)
       // Anyone who tried to portscan us is locked out for an entire day.
       fprintf(fp, "-A wanattack -m recent --name portscan --rcheck --seconds 86400 -j xlog_drop_wanattack\n");
 
-
       // Once the day has passed, remove them from the portscan list
       fprintf(fp, "-A wanattack   -m recent --name portscan --remove\n");
 
@@ -5960,7 +5965,6 @@ int do_wan2self_attack(FILE *fp,char* wan_ip)
       fprintf(fp, "-A wanattack  -i %s -p tcp -m tcp --dport 139  -m recent --name portscan --set -j LOG --log-prefix \"Portscan:\" -m limit --limit 1/minute --limit-burst 1\n", current_wan_ifname);
 
       fprintf(fp, "-A wanattack  -i %s -p tcp -m tcp --dport 139 -m recent --name portscan --set -j xlog_drop_wanattack\n", current_wan_ifname);
-
    }
         // FIREWALL_DEBUG("Exiting do_wan2self_attack\n");     
    return(0);
@@ -9741,7 +9745,7 @@ static int do_lan2wan_misc(FILE *filter_fp)
       fprintf(filter_fp, "-A lan2wan_misc -p tcp --dport 3689 -j RETURN\n"); // ITUNES
       fprintf(filter_fp, "-A lan2wan_misc -m state --state RELATED,ESTABLISHED -j RETURN\n");
 #if !defined(_PLATFORM_IPQ_)
-      fprintf(filter_fp, "-A lan2wan_misc -j DROP\n");
+      fprintf(filter_fp, "-A lan2wan_misc -j xlog_drop_lan2wan_misc\n");
 #endif
    }
    FIREWALL_DEBUG("Exiting do_lan2wan_misc\n");
@@ -11632,6 +11636,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(nat_fp, "%s\n", ":PREROUTING ACCEPT [0:0]");
    fprintf(nat_fp, "%s\n", ":POSTROUTING ACCEPT [0:0]");
    fprintf(nat_fp, "%s\n", ":OUTPUT ACCEPT [0:0]");
+
 #if defined(FEATURE_SUPPORT_RADIUSGREYLIST) && (defined(_COSA_INTEL_XB3_ARM_) || defined(_XB6_PRODUCT_REQ_) && !defined(_XB7_PRODUCT_REQ_))
     /*
      *RDKB-33651 :
@@ -11969,6 +11974,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(filter_fp, "%s\n", ":xlog_drop_lanattack - [0:0]");
    fprintf(filter_fp, "%s\n", ":xlogdrop - [0:0]");
    fprintf(filter_fp, "%s\n", ":xlogreject - [0:0]");
+   fprintf(filter_fp, "%s\n", ":xlog_drop_lan2wan_misc - [0:0]");
 #ifdef _HUB4_PRODUCT_REQ_
 #ifdef HUB4_BFD_FEATURE_ENABLED
    fprintf(filter_fp, ":%s - [0:0]\n", IPOE_HEALTHCHECK);
@@ -12345,6 +12351,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
       //zqiu: R5337
       //do_lan2wan_IoT_Allow(filter_fp);
       do_wan2lan_IoT_Allow(filter_fp);
+
 #if defined (INTEL_PUMA7) || ((defined (_COSA_BCM_ARM_) || defined(_PLATFORM_TURRIS_)) && !defined(_CBR_PRODUCT_REQ_)) // ARRIS XB6 ATOM, TCXB6
       // Block forwarding between bridges.
       #define XHS_IF_NAME     "brlan1"
