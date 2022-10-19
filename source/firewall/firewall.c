@@ -12673,7 +12673,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(mangle_fp, "-A PREROUTING -i %s -p udp -m conntrack --ctstate NEW -m limit --limit 200/sec --limit-burst 100 -j ACCEPT\n",ecm_wan_ifname);
    fprintf(mangle_fp, "-A PREROUTING -i %s -p udp -m conntrack --ctstate NEW -m limit --limit 200/sec --limit-burst 100 -j ACCEPT\n",emta_wan_ifname);
 #endif
-#ifdef _PUMA6_ARM_
+#ifdef _LG_OFW_
    fprintf(mangle_fp, "-A OUTPUT -p udp --dport 69  -m conntrack --ctstate NEW -j CONNMARK --set-mark 0x1000/0x1000\n");
 #endif
    /*
@@ -14538,7 +14538,7 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    fprintf(mangle_fp, "-A PREROUTING -i %s -p udp -m conntrack --ctstate NEW -m limit --limit 200/sec --limit-burst 100 -j ACCEPT\n",ecm_wan_ifname);
    fprintf(mangle_fp, "-A PREROUTING -i %s -p udp -m conntrack --ctstate NEW -m limit --limit 200/sec --limit-burst 100 -j ACCEPT\n",emta_wan_ifname);
 #endif
-#ifdef _PUMA6_ARM_
+#ifdef _LG_OFW_
    fprintf(mangle_fp, "-A OUTPUT -p udp --dport 69  -m conntrack --ctstate NEW -j CONNMARK --set-mark 0x1000/0x1000\n");
 #endif
 
