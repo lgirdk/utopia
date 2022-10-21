@@ -597,7 +597,6 @@ typedef enum _UtopiaValue
     UtopiaValue_DynamicDnsClient_Username,
     UtopiaValue_DynamicDnsClient_Password,
     UtopiaValue_DynamicDnsClient_Server,
-
     #endif
 
     /*Added for USGv2 Project*/
