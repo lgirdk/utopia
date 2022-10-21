@@ -143,7 +143,7 @@ lgi_prepare_resolv_conf () {
 
     WAN_STATIC_DOMAIN=`syscfg get wan_domain`
     WAN_ADDRESS_MODE=`syscfg get wan_proto`
-    if [ "" != "$WAN_STATIC_DOMAIN " ] && [ "static" == "$WAN_ADDRESS_MODE" ]; then
+    if [ -n "$WAN_STATIC_DOMAIN " ] && [ "$WAN_ADDRESS_MODE" = "static" ]; then
         echo "search $WAN_STATIC_DOMAIN" >> $RESOLV_CONF
     fi
 
