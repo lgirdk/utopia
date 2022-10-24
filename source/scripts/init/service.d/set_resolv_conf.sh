@@ -86,6 +86,11 @@ prepare_resolv_conf () {
     if [ -z "$STATIC_DNS_IPv6" ] ; then
         if [ -z "$WAN_DNS_IPv6" ] && [ -f /tmp/.ipv6dnsserver ]; then
             WAN_DNS_IPv6=`head -n 1 /tmp/.ipv6dnsserver`
+
+            LAST_EROUTER_MODE=`syscfg get last_erouter_mode`
+            if [ -z "$WAN_DNS_IPv6" ] && [ "$LAST_EROUTER_MODE" != "1" ]; then
+                touch /tmp/resolv_conf_update_needed
+            fi
         fi
 
         for ip in $WAN_DNS_IPv6;
