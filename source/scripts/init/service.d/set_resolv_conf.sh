@@ -36,6 +36,7 @@
 
 RESOLV_CONF=/etc/resolv.conf
 RESOLV_CONF_TMP="/tmp/resolv_tmp.conf"
+LAST_EROUTER_MODE=`syscfg get last_erouter_mode`
 
 #-----------------------------------------------------------------
 # set the resolv.conf file
@@ -137,6 +138,9 @@ lgi_prepare_resolv_conf () {
     if [ -z "$STATIC_DNS_IPv6" ] ; then
         if [ -z "$WAN_DNS_IPv6" ] && [ -f /tmp/.ipv6dnsserver ]; then
             WAN_DNS_IPv6=`head -n 1 /tmp/.ipv6dnsserver`
+            if [ -z "$WAN_DNS_IPv6" ] && [ "$LAST_EROUTER_MODE" != "1" ]; then
+                touch /tmp/resolv_conf_update_needed
+            fi
         fi
 
         for ip in $WAN_DNS_IPv6;
