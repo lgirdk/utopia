@@ -1512,7 +1512,7 @@ $GatewayRestoreAttemptCount=0
 $RemDeviceDetectionTimeout=60
 
 #LED Brightness
-$led_brightness=10
+$led_brightness=50
 
 #Allowed Subnet Table
 $lglanAllowedSubnetCount=1
