@@ -1255,20 +1255,15 @@ static int get_and_pass_acs_info (void)
         int fd;
 
         /* Write ACS URL into PIPE to notify CcspTr069 Agent */
-        fd = open("/tmp/dhcp_acs_url", O_WRONLY | O_APPEND);
+        fd = open("/tmp/dhcp_acs_url", O_CREAT| O_WRONLY | O_NONBLOCK, 0644);
         if (fd >= 0)
         {
             char buf[sizeof(url) + 20];
             len = snprintf(buf, sizeof(buf), "DHCPv4_ACS_URL %s", url);
             write(fd, buf, len);
             close(fd);
-
-            sysevent_set(sysevent_fd, sysevent_token, "DHCPv4_ACS_URL", url, 0);
         }
-        else
-        {
-            return -1;
-        }
+        sysevent_set(sysevent_fd, sysevent_token, "DHCPv4_ACS_URL", url, 0);
 
         if (provisioning_code[0] != 0)
         {
