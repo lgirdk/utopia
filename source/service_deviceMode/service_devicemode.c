@@ -166,39 +166,6 @@ int service_close ()
    }
    return 0;
 }
-char* GetDeviceProperties(char *param)
-{
-    FILE *fp1=NULL;
-    char *valPtr = NULL;
-    char out_val[100]={0};
-    if (!param)
-        return NULL;
-    fp1 = fopen("/etc/device.properties", "r");
-    if (fp1 == NULL)
-    {
-        printf("Error opening properties file! \n");
-        return NULL;
-    }
-
-    while (fgets(out_val,100, fp1) != NULL)
-    {
-        if (strstr(out_val, param) != NULL)
-        {
-            out_val[strcspn(out_val, "\r\n")] = 0; // Strip off any carriage returns
-
-            valPtr = strstr(out_val, "=");
-            valPtr++;
-            break;
-        }
-    }
-    fclose(fp1);
-    if (valPtr)
-    {
-       return strdup(valPtr);
-    }
-    return valPtr;
-}
-
 
 int read_cmd_output(char *cmd, char *output_buf, int size_buf)
 {
