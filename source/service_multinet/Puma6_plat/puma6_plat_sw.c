@@ -199,6 +199,8 @@ int configVlan_ISW(PSWFabHALArg args, int numArgs, BOOL up)
 		{
 			if (args[i].vidParams.tagging)
 			{
+				errno_t rc;
+
 				rc = strcat_s(ifname, sizeof(ifname),"-t");
 				ERR_CHK(rc);   
 			}
