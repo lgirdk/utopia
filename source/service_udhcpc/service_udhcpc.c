@@ -273,7 +273,7 @@ static int handle_defconfig (udhcpc_script_t *pinfo)
     return ret;
 }
 
-int save_dhcp_offer (udhcpc_script_t *pinfo)
+static int save_dhcp_offer (udhcpc_script_t *pinfo)
 {
     char eventname[256];
     char buf[128];
@@ -387,7 +387,6 @@ static int set_dns_sysevents (udhcpc_script_t *pinfo)
     return 0;
 }
 
-
 static int update_ipv4dns (udhcpc_script_t *pinfo)
 {
     FILE *fp = NULL;
@@ -420,7 +419,7 @@ static int update_ipv4dns (udhcpc_script_t *pinfo)
     return 0;
 }
 
-int update_dns_tofile (udhcpc_script_t *pinfo)
+static int update_dns_tofile (udhcpc_script_t *pinfo)
 {
     char dns[256];
     char *tok = NULL;
@@ -477,7 +476,7 @@ int update_dns_tofile (udhcpc_script_t *pinfo)
     return 0;
 }
 
-int add_route (udhcpc_script_t *pinfo)
+static int add_route (udhcpc_script_t *pinfo)
 {
     char router[256];
     char *tok = NULL;
@@ -528,7 +527,7 @@ int add_route (udhcpc_script_t *pinfo)
     return 0;
 }
 
-int set_wan_sysevents (void)
+static int set_wan_sysevents (void)
 {
     char *serverid = getenv("serverid");
     char *lease = getenv("lease");
@@ -795,7 +794,7 @@ static void compare_and_delete_old_dns (udhcpc_script_t *pinfo)
    }
 }
 
-int update_resolveconf (udhcpc_script_t *pinfo)
+static int update_resolveconf (udhcpc_script_t *pinfo)
 {
     FILE *fp = NULL;
     char *tok = NULL;
@@ -1068,8 +1067,8 @@ static int handle_wan (udhcpc_script_t *pinfo)
     return 0;
 }
 
-static int read_cmd_output(char *cmd, char *output_buf, int size_buf)
-{
+static int read_cmd_output (char *cmd, char *output_buf, int size_buf)
+{   
     FILE *f = NULL;
     char *pos = NULL;
 
