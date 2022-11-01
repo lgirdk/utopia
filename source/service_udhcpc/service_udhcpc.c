@@ -100,7 +100,9 @@
 
 static int sysevent_fd = -1;
 static token_t sysevent_token;
+#ifndef FEATURE_RDKB_WAN_MANAGER
 static bool dns_changed = false;
+#endif
 
 typedef struct udhcpc_script_t
 {
@@ -149,10 +151,12 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
 static int send_dhcp_data_to_wanmanager (ipc_dhcpv4_data_t *dhcpv4_data);
 #endif
 
-static void compare_and_delete_old_dns (udhcpc_script_t *pinfo);
 static int read_cmd_output (char *cmd, char *output_buf, int size_buf);
+#ifndef FEATURE_RDKB_WAN_MANAGER
+static void compare_and_delete_old_dns (udhcpc_script_t *pinfo);
 static int set_dns_sysevents (udhcpc_script_t *pinfo);
 static int set_router_sysevents (udhcpc_script_t *pinfo);
+#endif
 
 struct dns_server{
  char data[BUFSIZE+30];
@@ -273,7 +277,8 @@ static int handle_defconfig (udhcpc_script_t *pinfo)
     return ret;
 }
 
-int save_dhcp_offer (udhcpc_script_t *pinfo)
+#ifndef FEATURE_RDKB_WAN_MANAGER
+static int save_dhcp_offer (udhcpc_script_t *pinfo)
 {
     char eventname[256];
     char buf[128];
@@ -420,7 +425,7 @@ static int update_ipv4dns (udhcpc_script_t *pinfo)
     return 0;
 }
 
-int update_dns_tofile (udhcpc_script_t *pinfo)
+static int update_dns_tofile (udhcpc_script_t *pinfo)
 {
     char dns[256];
     char *tok = NULL;
@@ -477,7 +482,7 @@ int update_dns_tofile (udhcpc_script_t *pinfo)
     return 0;
 }
 
-int add_route (udhcpc_script_t *pinfo)
+static int add_route (udhcpc_script_t *pinfo)
 {
     char router[256];
     char *tok = NULL;
@@ -528,7 +533,7 @@ int add_route (udhcpc_script_t *pinfo)
     return 0;
 }
 
-int set_wan_sysevents (void)
+static int set_wan_sysevents (void)
 {
     char *serverid = getenv("serverid");
     char *lease = getenv("lease");
@@ -795,7 +800,7 @@ static void compare_and_delete_old_dns (udhcpc_script_t *pinfo)
    }
 }
 
-int update_resolveconf (udhcpc_script_t *pinfo)
+static int update_resolveconf (udhcpc_script_t *pinfo)
 {
     FILE *fp = NULL;
     char *tok = NULL;
@@ -826,6 +831,7 @@ int update_resolveconf (udhcpc_script_t *pinfo)
     fclose(fp);
     return 0;
 }
+#endif
 
 #ifdef FEATURE_RDKB_WAN_MANAGER
 static int handle_leasefail (udhcpc_script_t *pinfo)
