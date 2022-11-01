@@ -1550,7 +1550,7 @@ $ssam_provisioningmodel=1
 $ssam_signingkeyid=0
 $ssam_updaterenable=0
 
-$Available_Languages=en,tr,fr,de,nl,ro,it,pl,cz,hu,es,sk
+$$Available_Languages=en,nl,fr,de,it,pl,sk
 $Current_Language=en
 $default_erouter_mode=3
 $dhcp_offline_lease_time=120
