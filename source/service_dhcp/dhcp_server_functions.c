@@ -728,7 +728,7 @@ void do_extra_pools (FILE *local_dhcpconf_file, char *prefix, unsigned char bDhc
 	sysevent_get(g_iSyseventfd, g_tSysevent_token, 
 				 "dhcp_server_current_pools", l_cPools, sizeof(l_cPools));
 
-	l_cToken = strtok(l_cPools, "\n");
+	l_cToken = strtok(l_cPools, " ");
 	while(l_cToken != NULL)	
 	{
 		if (0 != l_cToken[0])
@@ -843,7 +843,7 @@ void do_extra_pools (FILE *local_dhcpconf_file, char *prefix, unsigned char bDhc
 		{
 			fprintf(stderr, "pool is empty continue to next pool\n");
 		}	
-		l_cToken = strtok(NULL, "\n");
+		l_cToken = strtok(NULL, " ");
 	}
 }
 
@@ -851,6 +851,7 @@ void do_extra_pools (FILE *local_dhcpconf_file, char *prefix, unsigned char bDhc
 //1st Input Lan IP Address and 2nd Input LAN Subnet Mask
 int prepare_dhcp_conf (char *input, void *bus_handle)
 {
+    fprintf(stderr, "DHCP SERVER : Prepare DHCP configuration\n");
     char l_cNetwork_Res[8] = {0}, l_cLocalDhcpConf[32] = {0};
     char l_cLanIPAddress[16] = {0}, l_cLanNetMask[16] = {0}, l_cLan_if_name[16] = {0};
     char l_cCaptivePortalEn[8] = {0}, l_cRedirect_Flag[8] = {0}, l_cMigCase[8] = {0};
@@ -1311,7 +1312,7 @@ int prepare_dhcp_conf (char *input, void *bus_handle)
 		fprintf(l_fLocal_Dhcp_ConfFile, "%sdhcp-optsfile=%s\n", l_cDns_Only_Prefix, DHCP_OPTIONS_FILE);
 	}
 //Ethernet Backhaul changes for plume pods   
-#if defined (_COSA_INTEL_XB3_ARM_)
+#if defined (_XB6_PRODUCT_REQ_) || defined (_HUB4_PRODUCT_REQ_)
         fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-option=vendor:Plume,43,tag=123\n");
         fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-option=vendor:PP203X,43,tag=123\n");
         fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-option=vendor:HIXE12AWR,43,tag=123\n");
@@ -1325,6 +1326,59 @@ int prepare_dhcp_conf (char *input, void *bus_handle)
 		prepare_dhcp_conf_static_hosts();
 		prepare_dhcp_options_wan_dns();
 	}
+  
+#if defined (_XB6_PRODUCT_REQ_) || defined (_CBR_PRODUCT_REQ_)
+    {
+        struct in_addr ipv4Addr;
+        int    ret = -1;
+        int    resComp = -1;
+        char   nmSrv[32]    = {0};
+        char   dnsIP[64]    = {0};
+        char   leftOut[128] = {0};
+        char   ns_ip[256]   = {0};
+        FILE*  fp1 = NULL;
+        FILE*  fp2 = NULL;
+ 
+        if ((fp1 = fopen(RESOLV_CONF, "r")))
+        {
+            while ( memset(nmSrv,   0, sizeof(nmSrv)),
+                    memset(dnsIP,   0, sizeof(dnsIP)),
+                    memset(leftOut, 0, sizeof(leftOut)),
+                    fscanf(fp1, "%s %s%[^\n]s\n", nmSrv, dnsIP, leftOut) != EOF)
+            {
+                ret = strcmp_s(nmSrv, sizeof(nmSrv), "nameserver", &resComp);
+                ERR_CHK(ret);
+
+                if (!ret && !resComp)
+                {
+                    if (inet_pton(AF_INET, dnsIP, &ipv4Addr) > 0)
+                    {
+                        ret = strcat_s(ns_ip, sizeof(ns_ip), ",");
+                        ERR_CHK(ret);
+
+                        ret = strcat_s(ns_ip, sizeof(ns_ip), dnsIP);
+                        ERR_CHK(ret);
+                    }
+                }
+            }
+            fclose(fp1);
+
+            if (*ns_ip && (fp2 = fopen(DHCP_OPTIONS_FILE, "w")))
+            {
+                fprintf(fp2, "option:dns-server%s\n", ns_ip);
+                fclose(fp2);
+            }
+            else
+            {
+                fprintf(stderr, "DHCP_SERVER : Error in opening %s\n",DHCP_OPTIONS_FILE );
+            }
+        }
+        else
+        {
+            fprintf(stderr, "DHCP_SERVER : Error in opening %s\n",RESOLV_CONF );
+        }
+    }
+#endif
   
    	sysevent_get(g_iSyseventfd, g_tSysevent_token, "lan-status", l_cLan_Status, sizeof(l_cLan_Status));
 	if (!strncmp(l_cLan_Status, "started", 7)) 
@@ -1539,7 +1593,7 @@ int prepare_dhcp_conf (char *input, void *bus_handle)
 			fprintf(stderr, "DHCP_SERVER : [ath13] dhcp-option=ath13,6,%s\n", l_cWan_Dhcp_Dns);
 		}
      
-       fprintf(l_fLocal_Dhcp_ConfFile, "interface=br403\n");
+        fprintf(l_fLocal_Dhcp_ConfFile, "interface=br403\n");
         fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-range=192.168.245.2,192.168.245.253,255.255.255.0,infinite\n");
 
         // Add br403 custom dns server configuration
@@ -1547,6 +1601,16 @@ int prepare_dhcp_conf (char *input, void *bus_handle)
         {
                 fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-option=br403,6,%s\n", l_cWan_Dhcp_Dns);
                 fprintf(stderr, "DHCP_SERVER : [br403] dhcp-option=br403,6,%s\n", l_cWan_Dhcp_Dns);
+        }
+
+        fprintf(l_fLocal_Dhcp_ConfFile, "interface=brebhaul\n");
+        fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-range=169.254.85.5,169.254.85.253,255.255.255.0,infinite\n");
+
+        // Add brehaul custom dns server configuration
+        if( l_bDhcpNs_Enabled && l_bIsValidWanDHCPNs )
+        {
+                fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-option=brebhaul,6,%s\n", l_cWan_Dhcp_Dns);
+                fprintf(stderr, "DHCP_SERVER : [brebhaul] dhcp-option=brebhaul,6,%s\n", l_cWan_Dhcp_Dns);
         }
 #endif
 
@@ -1604,17 +1668,8 @@ int prepare_dhcp_conf (char *input, void *bus_handle)
                         fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-option=brlan113,6,%s\n", l_cWan_Dhcp_Dns);
                         fprintf(stderr, "DHCP_SERVER : [brlan113] dhcp-option=brlan113,6,%s\n", l_cWan_Dhcp_Dns);
                 }
-
-       fprintf(l_fLocal_Dhcp_ConfFile, "interface=br403\n");
-        fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-range=192.168.245.2,192.168.245.253,255.255.255.0,infinite\n");
-
-        // Add br403 custom dns server configuration
-        if( l_bDhcpNs_Enabled && l_bIsValidWanDHCPNs )
-        {
-                fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-option=br403,6,%s\n", l_cWan_Dhcp_Dns);
-                fprintf(stderr, "DHCP_SERVER : [br403] dhcp-option=br403,6,%s\n", l_cWan_Dhcp_Dns);
-        }
 #endif
+
 #if defined (_PLATFORM_TURRIS_)
         //Wifi Backhaul link local connections
         fprintf(l_fLocal_Dhcp_ConfFile, "interface=wifi2\n");
