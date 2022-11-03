@@ -524,9 +524,9 @@ static int dslite_start (struct serv_dslite *sd)
     {
         /* Restart the LAN side DHCPv4 server, DNS proxy and IGMP proxy if in dual stack mode */
 #if defined(_LG_OFW_)
-        v_secure_system ("/etc/utopia/service.d/service_dhcp_server.sh dhcp_server-stop" "; "
-                "/etc/utopia/service.d/service_dhcp_server.sh dhcp_server-start" "; "
-                "/etc/utopia/service.d/service_mcastproxy.sh mcastproxy-restart");
+        v_secure_system ("/usr/bin/service_dhcp dhcp_server-stop" "; "
+                         "/usr/bin/service_dhcp dhcp_server-start" "; "
+                         "/etc/utopia/service.d/service_mcastproxy.sh mcastproxy-restart");
 #else
         v_secure_system ("systemctl stop dnsmasq.service" "; "
                 "systemctl start dnsmasq.service" "; "
@@ -672,9 +672,9 @@ static int dslite_stop (struct serv_dslite *sd)
     {
         /* Restart the LAN side DHCPv4 server, DNS proxy and IGMP proxy if in dual stack mode */
 #if defined(_LG_OFW_)
-        v_secure_system ("/etc/utopia/service.d/service_dhcp_server.sh dhcp_server-stop" "; "
-                "/etc/utopia/service.d/service_dhcp_server.sh dhcp_server-start" "; "
-                "/etc/utopia/service.d/service_mcastproxy.sh mcastproxy-restart");
+        v_secure_system ("/usr/bin/service_dhcp dhcp_server-stop" "; "
+                         "/usr/bin/service_dhcp dhcp_server-start" "; "
+                         "/etc/utopia/service.d/service_mcastproxy.sh mcastproxy-restart");
 #else
         v_secure_system ("systemctl stop dnsmasq.service" "; "
                 "systemctl start dnsmasq.service" "; "
