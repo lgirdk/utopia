@@ -43,22 +43,10 @@
 
 #define SERVICE_NAME "dhcp_server"
 #define SERVICE_DEFAULT_HANDLER "/etc/utopia/service.d/service_dhcp_server.sh"
-#if defined(_COSA_INTEL_USG_ARM_) && !defined(INTEL_PUMA7) && !defined(_PLATFORM_IPQ_) && !defined(_PLATFORM_TURRIS_)
-const char* SERVICE_CUSTOM_EVENTS[] = { 
-                                        "syslog-status|/etc/utopia/service.d/service_dhcp_server.sh",
-                                        "lan-status|/usr/bin/service_dhcp",
-										"dhcp_server-restart|/usr/bin/service_dhcp",
-                                        "dhcp_server-start|/usr/bin/service_dhcp",
-                                        "dhcp_server-stop|/usr/bin/service_dhcp",
-                                        "dhcp_server-resync|/etc/utopia/service.d/service_dhcp_server.sh|NULL|"TUPLE_FLAG_EVENT,
-					#ifdef RDKB_EXTENDER_ENABLED
-                                        "dhcp_conf_change|/usr/bin/service_dhcp",
-                                        #endif
-                                        NULL 
-                                      };
-#elif defined(CORE_NET_LIB) && \
+#if defined(CORE_NET_LIB) && \
         ((defined(_XB6_PRODUCT_REQ_) && !defined (_XB8_PRODUCT_REQ_)) || (defined(_WNXL11BWL_PRODUCT_REQ_)) || \
-         (defined(_CBR_PRODUCT_REQ_) && !defined(_CBR2_PRODUCT_REQ_)))
+         (defined(_CBR_PRODUCT_REQ_) && !defined(_CBR2_PRODUCT_REQ_)) || \
+         (defined(_LG_OFW_)))
 const char* SERVICE_CUSTOM_EVENTS[] = {
                                         "syslog-status|/usr/bin/service_dhcp",
                                         "lan-status|/usr/bin/service_dhcp",
