@@ -852,9 +852,28 @@ int dhcp_server_start (char *input)
 	sysevent_get(g_iSyseventfd, g_tSysevent_token, "start-misc", l_cStart_Misc, sizeof(l_cStart_Misc));
 	if (strcmp(l_cPsm_Mode, "1")) //PSM Mode is Not 1
 	{
+        if (access("/var/tmp/.refreshlan", F_OK) == 0 )
+        {
 
-		if ((access("/var/tmp/lan_not_restart", F_OK) == -1 && errno == ENOENT) && 
-                        ((NULL == input) || (NULL != input && strncmp(input, "lan_not_restart", 15))))
+        #ifdef RDKB_EXTENDER_ENABLED
+                if (Get_Device_Mode() == ROUTER)
+                {
+                    fprintf(stderr, "refreshlan : Call gw_lan_refresh_from_dhcpscript:!\n");
+                    print_with_uptime("RDKB_SYSTEM_BOOT_UP_LOG : Call gw_lan_refresh_from_dhcpscript:");
+                    v_secure_system("gw_lan_refresh &");
+                    remove_file("/var/tmp/.refreshlan");
+                }
+        #else
+            {
+                fprintf(stderr, "refreshlan : Call gw_lan_refresh_from_dhcpscript:!\n");
+                print_with_uptime("RDKB_SYSTEM_BOOT_UP_LOG : Call gw_lan_refresh_from_dhcpscript:");
+                v_secure_system("gw_lan_refresh &");
+                remove_file("/var/tmp/.refreshlan");
+            }
+        #endif    
+        }
+		else if ((access("/var/tmp/lan_not_restart", F_OK) == -1 && errno == ENOENT) && 
+			((NULL == input) || (NULL != input && strncmp(input, "lan_not_restart", 15))))
 		{
         	if (!strncmp(l_cStart_Misc, "ready", 5))
 			{
@@ -893,7 +912,12 @@ int dhcp_server_start (char *input)
             }
             print_uptime("boot_to_ETH_uptime",NULL, NULL);
             print_with_uptime("LAN initization is complete notify SSID broadcast");
-            snprintf(l_cRpc_Cmd, sizeof(l_cRpc_Cmd), "rpcclient %s \"/bin/touch /tmp/.advertise_ssids\"", g_cAtom_Arping_IP);
+            #if (defined _COSA_INTEL_XB3_ARM_)
+                snprintf(l_cRpc_Cmd, sizeof(l_cRpc_Cmd), "rpcclient %s \"/bin/touch /tmp/.advertise_ssids\"", g_cAtom_Arping_IP);
+            #else
+                snprintf(l_cRpc_Cmd, sizeof(l_cRpc_Cmd), "touch /tmp/.advertise_ssids");
+            #endif
+
             executeCmd(l_cRpc_Cmd);
         }
         else

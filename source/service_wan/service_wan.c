@@ -1522,7 +1522,12 @@ static int wan_addr_set(struct serv_wan *sw)
 
     /* Should not be executed before wan_service-status is set to started for _PLATFORM_IPQ_ */
 #if !defined(_PLATFORM_IPQ_) && !defined(_PLATFORM_RASPBERRYPI_) && !defined(_PLATFORM_TURRIS_)
-        vsystem("firewall && gw_lan_refresh"); 
+        #if defined (_XB6_PRODUCT_REQ_) && defined (_COSA_BCM_ARM_)
+            vsystem("firewall"); 
+        #else
+            // TODO : gw_lan_refresh to be removed from here once udhcpc is made generic to all platforms
+            vsystem("firewall && gw_lan_refresh"); 
+        #endif
 #endif
     } else {
 
@@ -1533,7 +1538,12 @@ static int wan_addr_set(struct serv_wan *sw)
     		//only for first time
     #if !defined(_PLATFORM_RASPBERRYPI_) && !defined(_PLATFORM_TURRIS_)
     		fprintf(stderr, "[%s] ready is set from misc handler. Doing gw_lan_refresh\n", PROG_NAME);
-    		v_secure_system("firewall && gw_lan_refresh");
+            #if defined (_XB6_PRODUCT_REQ_) && defined (_COSA_BCM_ARM_)
+                v_secure_system("firewall");
+            #else
+                // TODO : gw_lan_refresh to be removed from here once udhcpc is made generic to all platforms
+                v_secure_system("firewall && gw_lan_refresh");
+            #endif
     #endif
     		sysevent_set(sw->sefd, sw->setok, "misc-ready-from-mischandler", "false", 0);
     	}
