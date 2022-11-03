@@ -65,21 +65,10 @@ const char* SERVICE_DEFAULT_HANDLER = "/etc/utopia/service.d/service_ipv4.sh";
  * keep the define outside of the string quotation symbols
  * eg. "event3|/etc/code|"ACTION_FLAG_NOT_THREADSAFE"|"TUPLE_FLAG_SERIAL
  */
-#if defined(_COSA_INTEL_USG_ARM_) && !defined(INTEL_PUMA7) && !defined(_PLATFORM_IPQ_)
-const char* SERVICE_CUSTOM_EVENTS[] = { 
-    "ipv4-resyncAll|/etc/utopia/service.d/service_ipv4.sh|NULL|"TUPLE_FLAG_EVENT,
-    "ipv4-resync|/etc/utopia/service.d/service_ipv4.sh|NULL|"TUPLE_FLAG_EVENT,
-    "ipv4-down|/usr/bin/service_dhcp|NULL|"TUPLE_FLAG_EVENT,
-    "ipv4-up|/usr/bin/service_dhcp|NULL|"TUPLE_FLAG_EVENT,
-    "ipv4-set_dyn_config|/etc/utopia/service.d/service_ipv4.sh|NULL|"TUPLE_FLAG_EVENT,
-    "ipv4-sync_tsip_all|/etc/utopia/service.d/service_ipv4.sh|NULL|"TUPLE_FLAG_EVENT,
-    "ipv4-stop_tsip_all|/etc/utopia/service.d/service_ipv4.sh|NULL|"TUPLE_FLAG_EVENT,
-    "ipv4-resync_tsip|/etc/utopia/service.d/service_ipv4.sh|NULL|"TUPLE_FLAG_EVENT,
-    "ipv4-resync_tsip_asn|/etc/utopia/service.d/service_ipv4.sh|NULL|"TUPLE_FLAG_EVENT,
-    NULL };
-#elif defined(CORE_NET_LIB) && \
+#if defined(CORE_NET_LIB) && \
         ((defined(_XB6_PRODUCT_REQ_) && !defined (_XB8_PRODUCT_REQ_)) || \
-         (defined(_CBR_PRODUCT_REQ_) && !defined(_CBR2_PRODUCT_REQ_)))
+         (defined(_CBR_PRODUCT_REQ_) && !defined(_CBR2_PRODUCT_REQ_)) || \
+         (defined(_LG_OFW_)))
 const char* SERVICE_CUSTOM_EVENTS[] = {
     "ipv4-resyncAll|/usr/bin/service_dhcp|NULL|"TUPLE_FLAG_EVENT,
     "ipv4-resync|/usr/bin/service_dhcp|NULL|"TUPLE_FLAG_EVENT,
