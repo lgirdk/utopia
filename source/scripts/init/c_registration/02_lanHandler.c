@@ -43,19 +43,10 @@
 #define SERVICE_NAME "lan"
 #define SERVICE_DEFAULT_HANDLER "/etc/utopia/service.d/lan_handler.sh"
 
-#if defined(_COSA_INTEL_USG_ARM_) && !defined(INTEL_PUMA7) && !defined(_PLATFORM_IPQ_)
-const char* SERVICE_CUSTOM_EVENTS[] = { 
-    "pnm-status|/usr/bin/service_dhcp",
-    "bring-lan|/usr/bin/service_dhcp",
-    "lan-start|/usr/bin/service_dhcp",
-    "lan-restart|/usr/bin/service_dhcp",
-    "iot_status|/etc/utopia/service.d/lan_handler.sh",
-    "ipv4-resync|/etc/utopia/service.d/lan_handler.sh|NULL|"TUPLE_FLAG_EVENT,
-    "erouter_mode-updated|/etc/utopia/service.d/lan_handler.sh|NULL|"TUPLE_FLAG_EVENT,
-    NULL };
-#elif defined(CORE_NET_LIB) && \
+#if defined(CORE_NET_LIB) && \
         ((defined(_XB6_PRODUCT_REQ_) && !defined (_XB8_PRODUCT_REQ_)) || \
-         (defined(_CBR_PRODUCT_REQ_) && !defined(_CBR2_PRODUCT_REQ_)))
+         (defined(_CBR_PRODUCT_REQ_) && !defined(_CBR2_PRODUCT_REQ_)) || \
+         (defined(_LG_OFW_)))
 const char* SERVICE_CUSTOM_EVENTS[] = {
     "pnm-status|/usr/bin/service_dhcp",
     "bring-lan|/usr/bin/service_dhcp",
