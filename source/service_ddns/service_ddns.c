@@ -349,15 +349,6 @@ static int serv_ddns_init(struct serv_ddns *sdd)
 
     strcpy(sdd->wan_conf.wan_ipaddr, "0.0.0.0");
     sysevent_get(sdd->sefd, sdd->setok, "current_wan_ipaddr", sdd->wan_conf.wan_ipaddr, sizeof(sdd->wan_conf.wan_ipaddr));
-    if (strcmp(sdd->wan_conf.wan_ipaddr, "0.0.0.0") == 0)
-    {
-        fprintf(stderr, "%s: FAILED because wan_ipaddr is %s\n", __FUNCTION__, sdd->wan_conf.wan_ipaddr);
-        sdd->client.status = CLIENT_DISABLED;
-        sdd->client.lasterror = MISCONFIGURATION_ERROR;
-        ret = -1;
-        goto OUT;
-    }
-
     syscfg_get(NULL, "dslite_enable", command, sizeof(command));
     sdd->wan_conf.dslite_enable = atoi(command);
     syscfg_get(NULL, "dynamic_dns_enable", command, sizeof(command));
@@ -477,6 +468,15 @@ static int ddns_update_server(struct serv_ddns *sdd)
     int fd;
     char client_password[64 * 3]; /* raw value from syscfg may expand upto 3x if URL encoded */
     FILE *output_file;
+
+    if (strcmp(sdd->wan_conf.wan_ipaddr, "0.0.0.0") == 0)
+    {
+        fprintf(stderr, "%s: FAILED because wan_ipaddr is %s\n", __FUNCTION__, sdd->wan_conf.wan_ipaddr);
+        sdd->client.status = CLIENT_DISABLED;
+        sdd->client.lasterror = MISCONFIGURATION_ERROR;
+        ret = -1;
+        goto EXIT;
+    }
 
     fd = open("/var/run/updating_ddns_server.txt", O_CREAT, 0644);
 
