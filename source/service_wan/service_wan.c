@@ -1602,6 +1602,12 @@ static int wan_addr_set(struct serv_wan *sw)
     fprintf(fp_wan_dbg, "[%s] start waiting for protocol ...\n", PROG_NAME);
     for (timo = sw->timo; timo > 0; timo--) {
         sysevent_get(sw->sefd, sw->setok, "current_ipv4_link_state", state, sizeof(state));
+        syscfg_get(NULL, "last_erouter_mode", val, sizeof(val));
+        // return error if erouter mode is updated to DSLite/Ipv6 in between.
+        if (atoi(val) == WAN_RTMOD_IPV6)
+        {
+            return -1;
+        }
         if (strcmp(state, "up") == 0)
             break;
         sleep(1);
