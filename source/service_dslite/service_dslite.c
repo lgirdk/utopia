@@ -546,6 +546,9 @@ static int dslite_start (struct serv_dslite *sd)
     if (sd->rtmod == WAN_RTMOD_IPV6)
     {
         sysctl_iface_set ("/proc/sys/net/ipv4/ip_forward", NULL, "1");
+#if defined(_LG_OFW_)
+        system ("/usr/bin/service_dhcp dhcp_server-restart");
+#endif
     }
     else
     {
