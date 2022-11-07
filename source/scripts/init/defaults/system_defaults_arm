@@ -929,6 +929,7 @@ $Adv_PCRFCEnable=1
 $Adv_DFICMPv6RFCEnable=1
 $Adv_WSDisAnaRFCEnable=1
 $Adv_AdvSecOTMRFCEnable=1
+$Adv_AdvSecUserSpaceRFCEnable=0
 $Adv_RaptrRFCEnable=1
 
 #Firewall log settings
