@@ -729,6 +729,13 @@ static int initialize_system(void)
                        trigger_communication_fd_writer_end, trigger_communication_fd_listener_end);
     )
 
+   if (-1 == fcntl(trigger_communication_fd_writer_end, F_SETFL, O_NONBLOCK))
+   {
+      SE_INC_LOG(ERROR,
+         printf("Unable to set trigger_communication_fd_writer_end to NONBLOCK mode (%d) %s\n", errno, strerror(errno));
+      )
+   }
+
    if (-1 == pipe(pfd)) {
       SE_INC_LOG(ERROR,
          printf("Problem making msg queue 2. Reason (%d) %s\n", errno, strerror(errno));
