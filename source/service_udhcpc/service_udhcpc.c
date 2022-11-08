@@ -98,12 +98,9 @@
 #define RESOLV_CONF_TMP "/tmp/resolv_temp.conf"
 #define  BUFSIZE 4196
 
-static int            sysevent_fd = -1;
-static char          *sysevent_name = "udhcpc";
-static token_t        sysevent_token;
-static unsigned short sysevent_port;
-static char           sysevent_ip[19];
-bool dns_changed = false;
+static int sysevent_fd = -1;
+static token_t sysevent_token;
+static bool dns_changed = false;
 
 typedef struct udhcpc_script_t
 {
@@ -164,9 +161,7 @@ struct dns_server{
 
 static int sysevent_init (void)
 {
-    snprintf(sysevent_ip, sizeof(sysevent_ip),"%s","127.0.0.1");
-    sysevent_port = SE_SERVER_WELL_KNOWN_PORT;
-    sysevent_fd =  sysevent_open(sysevent_ip, sysevent_port, SE_VERSION, sysevent_name, &sysevent_token);
+    sysevent_fd =  sysevent_open("127.0.0.1", SE_SERVER_WELL_KNOWN_PORT, SE_VERSION, "udhcpc", &sysevent_token);
     if (sysevent_fd < 0)
         return -1;
     return 0;
