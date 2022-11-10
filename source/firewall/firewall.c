@@ -353,6 +353,8 @@ NOT_DEF:
 #include <sys/mman.h>
 #include "secure_wrapper.h"
 
+
+
 #if defined  (WAN_FAILOVER_SUPPORTED) || defined(RDKB_EXTENDER_ENABLED)
 
 #include <sys/types.h>
@@ -362,6 +364,12 @@ NOT_DEF:
 #include <net/if.h>
 
 #endif
+
+#ifdef FEATURE_464XLAT
+#define XLAT_IF "xlat"
+#define XLAT_IP "192.0.0.1"
+#endif
+
 
 #if defined(RDKB_EXTENDER_ENABLED)
 char cellular_ifname[32];
@@ -1060,6 +1068,22 @@ static int IsValidIPv6Addr(char* ip_addr_string)
     }
 	return 1;
 }
+
+
+#ifdef FEATURE_464XLAT
+void do_xlat_rule(FILE *nat_fp)
+{
+       char status[16] = {0};
+
+       syscfg_get(NULL, "xlat_status", status, sizeof(status));
+       
+       if(strcmp(status,"up") == 0)
+       {
+	       fprintf(nat_fp, "-I POSTROUTING -o %s -j SNAT --to-source  %s\n",XLAT_IF,XLAT_IP);
+       }
+}
+#endif
+
 
 #ifdef DSLITE_FEATURE_SUPPORT
 static void add_dslite_mss_clamping(FILE *fp);
@@ -13136,6 +13160,9 @@ static int prepare_enabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *na
    do_lan2wan(mangle_fp, filter_fp, nat_fp); 
    do_wan2lan(filter_fp);
    do_filter_table_general_rules(filter_fp);
+#ifdef FEATURE_464XLAT
+   do_xlat_rule(nat_fp);
+#endif
 
 #if defined(_BWG_PRODUCT_REQ_)
    do_raw_table_staticip(raw_fp);
@@ -14644,8 +14671,11 @@ static void do_ipv6_filter_table(FILE *fp){
    fprintf(fp, "-A LOG_INPUT_DROP -m limit --limit 1/minute -j LOG --log-level %d --log-prefix \"UTOPIA: FW.IPv6 INPUT drop\"\n",syslog_level);
    fprintf(fp, "-A LOG_FORWARD_DROP -m limit --limit 1/minute -j LOG --log-level %d --log-prefix \"UTOPIA: FW.IPv6 FORWARD drop\"\n",syslog_level);
    fprintf(fp, "-A LOG_INPUT_DROP -j DROP\n"); 
-   fprintf(fp, "-A LOG_FORWARD_DROP -j DROP\n"); 
-
+#ifdef FEATURE_464XLAT
+    //464xlat remove the rule
+#else
+    fprintf(fp, "-A LOG_FORWARD_DROP -j DROP\n");
+#endif
    fprintf(fp, "%s\n", ":PING_FLOOD - [0:0]");
    fprintf(fp, "-A PING_FLOOD -m limit --limit 10/sec -j ACCEPT\n");
    fprintf(fp, "-A PING_FLOOD -j DROP\n");
