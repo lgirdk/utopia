@@ -22,9 +22,9 @@
 #include "rpc_client.h"
 #include "rpc_specification.h"
 #include "pthread.h"
-//char rpcServerIp[16] = "192.168.254.254";
-#define DEVICE_PROPS_FILE   "/etc/device.properties"
 
+#define ARM_ARPING_IP "192.168.254.253"
+#define ATOM_ARPING_IP "192.168.254.254"
 
 int ExecuteCommand(char *cmnd)
 {
@@ -85,43 +85,14 @@ int ExeSysCmd(char *cmnd)
 int
 main (int argc, char *argv[],char **args)
 {
-    char *host;
     int iRet;
-   
-    FILE *l_fFp = fopen(DEVICE_PROPS_FILE, "r");
-    /*CID 68716 : Dereference after null check*/
-    if (NULL == l_fFp)
-    {
-        printf("Failed to open device.properties file:%s\n", DEVICE_PROPS_FILE);
-        exit(0);
-    }
-
-    char l_cArpingIP[64] = {""};
-    char props[255] = {""};
-    while(fscanf(l_fFp,"%s", props) != EOF)
-    {
-         char *property = NULL;
 #ifdef _COSA_INTEL_USG_ATOM_
-         if((property = strstr(props, "ARM_ARPING_IP=")))
-         {
-             property = property + strlen("ARM_ARPING_IP=");
-             strncpy(l_cArpingIP, property, (strlen(props) - strlen("ARM_ARPING_IP=")));
-         }
+    char *l_cArpingIP = ARM_ARPING_IP;
 #elif _COSA_INTEL_USG_ARM_
-         if((property = strstr(props, "ATOM_ARPING_IP=")))
-         {
-             property = property + strlen("ATOM_ARPING_IP=");
-             strncpy(l_cArpingIP, property, (strlen(props) - strlen("ATOM_ARPING_IP=")));
-         }
+    char *l_cArpingIP = ATOM_ARPING_IP;
+#else
+#error "Unexpected platform"
 #endif            
-    }
-    fclose(l_fFp);
-
-    if (0 == l_cArpingIP[0])
-    {
-        printf("ARM / ATOM Interface IP is not present\n");
-        exit(0);
-    }
 
     if (argc < 2) {
         printf("usage example: %s ls\n",argv[0]);
