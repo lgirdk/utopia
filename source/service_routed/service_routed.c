@@ -1056,7 +1056,8 @@ static int gen_zebra_conf(int sefd, token_t setok)
                         else
                             fprintf(fp, "   ipv6 nd prefix %s %s %s no-autoconfig\n", prefix, valid_lft, preferred_lft);
 
-                        fprintf(fp, "   ipv6 nd router-information %s\n", router_prefix);
+                        if (strlen(router_prefix))
+                            fprintf(fp, "   ipv6 nd router-information %s\n", router_prefix);
                     }
                 }
             }
