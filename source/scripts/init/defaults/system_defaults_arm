@@ -1638,3 +1638,6 @@ $internet_service_enable=1
 
 #STP Enable defaults
 $stp_enable=false
+
+#ReverseSSH Parameters
+$rssh_idle_timeout=900
