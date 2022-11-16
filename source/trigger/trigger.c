@@ -535,7 +535,7 @@ static int update_trigger_entry(int id, struct in_addr host)
          return(-7);
       } else {
          int r = 0;
-         if (2 != (r = sscanf(portrange, "%10s %10s", sdport, edport))) {
+         if (2 != (r = sscanf(portrange, "%9s %9s", sdport, edport))) {
             if (1 == r) {
                snprintf(edport, sizeof(edport), "%s", sdport);
             } else {
