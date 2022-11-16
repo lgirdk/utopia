@@ -53,7 +53,7 @@ source /etc/utopia/service.d/log_capture_path.sh
 #------------------------------------------------------------------
 SERVICE_NAME="dhcpv6_client"
 
-DIBBLER_ENABLED=`syscfg get dibbler_client_enable`
+DIBBLER_ENABLED=`syscfg get dibbler_client_enable_v2`
 
 if ([ "$BOX_TYPE" = "XB3" ] || [ "$BOX_TYPE" = "XB6" -a "$MANUFACTURE" = "Arris" ] || [ "$MODEL_NUM" = "INTEL_PUMA" ]) && [[ "$DIBBLER_ENABLED" != "true" ]] ;then
 	DHCPV6_BINARY=/sbin/ti_dhcp6c

@@ -214,7 +214,7 @@ static int Getdhcpcpidfile(char *pidfile,int size )
 
         
         char udhcpflag[10]="";
-        syscfg_get( NULL, "UDHCPEnable", udhcpflag, sizeof(udhcpflag));
+        syscfg_get( NULL, "UDHCPEnable_v2", udhcpflag, sizeof(udhcpflag));
         if( 0 == strcmp(udhcpflag,"true")){
                 strncpy(pidfile,"/tmp/udhcpc.erouter0.pid",size);
         }
@@ -249,7 +249,7 @@ static int dhcp_stop(const char *ifname)
 #elif (defined _COSA_INTEL_XB3_ARM_) || (defined INTEL_PUMA7)
         {
         char udhcpflag[10]="";
-        syscfg_get( NULL, "UDHCPEnable", udhcpflag, sizeof(udhcpflag));
+        syscfg_get( NULL, "UDHCPEnable_v2", udhcpflag, sizeof(udhcpflag));
         if( 0 == strcmp(udhcpflag,"true")){
                 pid = pid_of("udhcpc", ifname);
         }
@@ -417,89 +417,90 @@ static int dhcp_start(struct serv_wan *sw)
     Getdhcpcpidfile(DHCPC_PID_FILE,sizeof(DHCPC_PID_FILE));
     if (0 == l_cWan_if_name[0])
     {   
-       strncpy(l_cWan_if_name, "erouter0", 8); 
-       l_cWan_if_name[8] = '\0';
+        strncpy(l_cWan_if_name, "erouter0", 8); 
+        l_cWan_if_name[8] = '\0';
     }
-   if (sw->rtmod == WAN_RTMOD_IPV4 || sw->rtmod == WAN_RTMOD_DS)  
-   {
+    if (sw->rtmod == WAN_RTMOD_IPV4 || sw->rtmod == WAN_RTMOD_DS)  
+    {
      
   /*TCHXB6 is configured to use udhcpc */
 #if defined(_PLATFORM_IPQ_)
-    err = v_secure_system("/sbin/udhcpc -t 5 -n -i %s -p %s -s /etc/udhcpc.script",sw->ifname, DHCPC_PID_FILE);
+        err = v_secure_system("/sbin/udhcpc -t 5 -n -i %s -p %s -s /etc/udhcpc.script",sw->ifname, DHCPC_PID_FILE);
 
-    /* DHCP client didn't able to get Ipv4 configurations */
-    if ( -1 == access(DHCPC_PID_FILE, F_OK) )
-    {
-      printf("%s: WAN service not able to get IPv4 configuration"
-           " in 5 lease try\n", __func__);
-    }
+        /* DHCP client didn't able to get Ipv4 configurations */
+        if ( -1 == access(DHCPC_PID_FILE, F_OK) )
+        {
+            printf("%s: WAN service not able to get IPv4 configuration"
+                   " in 5 lease try\n", __func__);
+        }
 #elif (defined _COSA_INTEL_XB3_ARM_) || (defined INTEL_PUMA7)
-      {
+        {
 
-    char udhcpflag[10]="";
-    syscfg_get( NULL, "UDHCPEnable", udhcpflag, sizeof(udhcpflag));
+            char udhcpflag[10]="";
+            syscfg_get( NULL, "UDHCPEnable_v2", udhcpflag, sizeof(udhcpflag));
 
-    if( 0 == strcmp(udhcpflag,"true")){
-    char options[VENDOR_OPTIONS_LENGTH];
+            if( 0 == strcmp(udhcpflag,"true"))
+            {
+                char options[VENDOR_OPTIONS_LENGTH];
 
-    if ((err = dhcp_parse_vendor_info(options, VENDOR_OPTIONS_LENGTH,cEthWanMode)) == 0) {
-        err = vsystem("/sbin/udhcpc -i %s -p %s -V eRouter1.0 -O ntpsrv -O timezone -O 125 -O 2 -x %s -s /usr/bin/service_udhcpc", sw->ifname, DHCPC_PID_FILE, options);
-    }
-    }
-   else
-   {
+                if ((err = dhcp_parse_vendor_info(options, VENDOR_OPTIONS_LENGTH,cEthWanMode)) == 0)
+                {
+                    err = vsystem("/sbin/udhcpc -b -i %s -p %s -V eRouter1.0 -O ntpsrv -O timezone -O 125 -O 2 -x %s -s /etc/udhcpc.script", sw->ifname, DHCPC_PID_FILE, options);
+                }
+            }
+            else
+            {
 //#if defined (INTEL_PUMA7)
     //Intel Proposed RDKB Generic Bug Fix from XB6 SDK
-    err = v_secure_system("ti_udhcpc -plugin /lib/libert_dhcpv4_plugin.so -i %s "
-                 "-H DocsisGateway -p %s -B -b 4",
-                 sw->ifname, DHCPC_PID_FILE);
+                err = v_secure_system("ti_udhcpc -plugin /lib/libert_dhcpv4_plugin.so -i %s "
+                             "-H DocsisGateway -p %s -B -b 4",
+                             sw->ifname, DHCPC_PID_FILE);
 
 //#else
     /*err = vsystem("ti_udhcpc -plugin /lib/libert_dhcpv4_plugin.so -i %s "
                  "-H DocsisGateway -p %s -B -b 1",
                  sw->ifname, DHCPC_PID_FILE);*/
 //#endif
-   }
-   }
+           }
+       }
 #else
 
-    char options[VENDOR_OPTIONS_LENGTH];
+        char options[VENDOR_OPTIONS_LENGTH];
 
-    if ((err = dhcp_parse_vendor_info(options, VENDOR_OPTIONS_LENGTH,cEthWanMode)) == 0) {
-
+        if ((err = dhcp_parse_vendor_info(options, VENDOR_OPTIONS_LENGTH,cEthWanMode)) == 0)
+        {
 #if defined (_XB6_PRODUCT_REQ_) && defined (_COSA_BCM_ARM_) // TCXB6 and TCXB7 only
         // tcxb6-6655, add "-b" option, so that, udhcpc forks to
         // background if lease cannot be immediately negotiated.
 
   // In ethwan mode send dhcp options part of dhcp-client to get the eMTA dhcp options
     
-    #if defined (EROUTER_DHCP_OPTION_MTA)
-	if (strcmp(cEthWanMode, "true") == 0 ) 
-      	  err = vsystem("/sbin/udhcpc -b -i %s -p %s -V eRouter1.0 -O ntpsrv -O timezone -O 122 -O 125 -O 2 -x %s -x 125:0000118b0701027B7C7c0107 -s /etc/udhcpc.script", sw->ifname, DHCPC_PID_FILE, options);
-	else
-         err = vsystem("/sbin/udhcpc -b -i %s -p %s -V eRouter1.0 -O ntpsrv -O timezone -O 125 -O 2 -x %s -s /etc/udhcpc.script", sw->ifname, DHCPC_PID_FILE, options);
-    #else
-     {
-        err = vsystem("/sbin/udhcpc -b -i %s -p %s -V eRouter1.0 -O ntpsrv -O timezone -O 125 -O 2 -x %s -s /etc/udhcpc.script", sw->ifname, DHCPC_PID_FILE, options);
-     }
-    #endif
+#if defined (EROUTER_DHCP_OPTION_MTA)
+            if (strcmp(cEthWanMode, "true") == 0 ) 
+                err = vsystem("/sbin/udhcpc -b -i %s -p %s -V eRouter1.0 -O ntpsrv -O timezone -O 122 -O 125 -O 2 -x %s -x 125:0000118b0701027B7C7c0107 -s /etc/udhcpc.script", sw->ifname, DHCPC_PID_FILE, options);
+            else
+                err = vsystem("/sbin/udhcpc -b -i %s -p %s -V eRouter1.0 -O ntpsrv -O timezone -O 125 -O 2 -x %s -s /etc/udhcpc.script", sw->ifname, DHCPC_PID_FILE, options);
 #else
-    #if !defined (_HUB4_PRODUCT_REQ_)
-        err = vsystem("/sbin/udhcpc -i %s -p %s -V eRouter1.0 -O ntpsrv -O timezone -O 125 -O 2 -x %s -s /etc/udhcpc.script", sw->ifname, DHCPC_PID_FILE, options);
-    #endif
-#endif
-
-    }
-#endif
+            {
+                err = vsystem("/sbin/udhcpc -b -i %s -p %s -V eRouter1.0 -O ntpsrv -O timezone -O 125 -O 2 -x %s -s /etc/udhcpc.script", sw->ifname, DHCPC_PID_FILE, options);
+            }
+#endif /* EROUTER_DHCP_OPTION_MTA */
+#else
+#if !defined (_HUB4_PRODUCT_REQ_)
+            err = vsystem("/sbin/udhcpc -i %s -p %s -V eRouter1.0 -O ntpsrv -O timezone -O 125 -O 2 -x %s -s /etc/udhcpc.script", sw->ifname, DHCPC_PID_FILE, options);
+#endif /* ! _HUB4_PRODUCT_REQ_ */
+#endif /* _XB6_PRODUCT_REQ_ && _COSA_BCM_ARM_ */
+        }
+#endif /* _PLATFORM_IPQ_ */
 
 /*
 	err = vsystem("strace -o /tmp/stracelog -f ti_udhcpc -plugin /lib/libert_dhcpv4_plugin.so -i %s "
               "-H DocsisGateway -p %s -B -b 1",
               ifname, DHCPC_PID_FILE);
 */
-	if (err != 0)
-                   fprintf(stderr, "%s: fail to launch erouter plugin\n", __FUNCTION__);
-   }
+        if (err != 0)
+            fprintf(stderr, "%s: fail to launch erouter plugin\n", __FUNCTION__);
+    }
     return err == 0 ? 0 : -1;
 }
 #endif   /* FEATURE_RDKB_DHCP_MANAGER */
@@ -1670,7 +1671,7 @@ static int wan_dhcp_start(struct serv_wan *sw)
 #elif (defined _COSA_INTEL_XB3_ARM_) || (defined INTEL_PUMA7)
        {
         char udhcpflag[10]="";
-        syscfg_get( NULL, "UDHCPEnable", udhcpflag, sizeof(udhcpflag));
+        syscfg_get( NULL, "UDHCPEnable_v2", udhcpflag, sizeof(udhcpflag));
         if( 0 == strcmp(udhcpflag,"true")){
                 pid = pid_of("udhcpc", sw->ifname);
         }
