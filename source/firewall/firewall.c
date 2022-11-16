@@ -720,6 +720,9 @@ static char           sysevent_ip[19];
 static char default_wan_ifname[50]; // name of the regular wan interface
 char current_wan_ifname[50]; // name of the ppp interface or the regular wan interface if no ppp
 static char current_dslite_ifname[50];
+#ifdef VMB_MODE
+static char current_vmb_gw_ip[20];
+#endif /* VMB_MODE */
 static char ecm_wan_ifname[20];
 static char emta_wan_ifname[20];
 static char eth_wan_enabled[20];
@@ -2733,6 +2736,9 @@ static int prepare_globals_from_configuration(void)
    current_dslite_ifname[0] = 0;
    syscfg_get(NULL, "dslite_tunnel_interface_1", current_dslite_ifname, sizeof(current_dslite_ifname));
 
+#ifdef VMB_MODE
+   sysevent_get(sysevent_fd, sysevent_token, "vmb_gw_ip", current_vmb_gw_ip, sizeof(current_vmb_gw_ip));
+#endif /* VMB_MODE */
    sysevent_get(sysevent_fd, sysevent_token, "transparent_cache_state", transparent_cache_state, sizeof(transparent_cache_state));
    sysevent_get(sysevent_fd, sysevent_token, "byoi_bridge_mode", byoi_bridge_mode, sizeof(byoi_bridge_mode));
    sysevent_get(sysevent_fd, sysevent_token, "wan_service-status", wan_service_status, sizeof(wan_service_status));
@@ -5870,11 +5876,12 @@ static int do_wan_nat_lan_clients(FILE *fp)
 
 #ifdef VMB_MODE
    syscfg_get(NULL, "tunneled_static_ip_enable", tunneled_static_ip_enable, sizeof(tunneled_static_ip_enable));
-   if(!strcmp(tunneled_static_ip_enable, "1"))
+   if(!strcmp(tunneled_static_ip_enable, "1") && current_vmb_gw_ip[0])
    {
       /* TODO: sysevents instead of parsing the logs? */
       FILE *logfp;
       char *ip, *p, linebuf[256];
+      struct in_addr in_ip;
 
       logfp = fopen("/tmp/vmb-radius-client/vmbauth.log", "r");
       if (logfp)
@@ -5891,9 +5898,20 @@ static int do_wan_nat_lan_clients(FILE *fp)
             if (!p)
                break;
             *p++ = '\0';
-            if (strcmp(p, "32"))
+
+            if (!inet_pton(AF_INET, ip, &in_ip))
                break;
-            fprintf(fp, "-A postrouting_tovmb -j SNAT --to-source %s\n", ip);
+
+            if (!strcmp(p, "32"))
+            {
+               fprintf(fp, "-A postrouting_tovmb -m mark --mark 0x0/0x2000 -j SNAT --to-source %s\n", inet_ntoa(in_ip));
+            }
+            else
+            {
+               in_ip.s_addr = htonl(ntohl(in_ip.s_addr) + 1);
+            }
+            fprintf(fp, "-A postrouting_tovmb -m mark --mark 0x2000/0x2000 -d %s -j RETURN\n", current_vmb_gw_ip);
+            fprintf(fp, "-A postrouting_tovmb -m mark --mark 0x2000/0x2000 -j SNAT --to-source %s\n", inet_ntoa(in_ip));
             break;
          }
          fclose(logfp);
@@ -12652,6 +12670,9 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
 #ifdef _LG_OFW_
    fprintf(mangle_fp, "-A OUTPUT -p udp --dport 69  -m conntrack --ctstate NEW -j CONNMARK --set-mark 0x1000/0x1000\n");
 #endif
+#ifdef VMB_MODE
+   fprintf(mangle_fp, "-A OUTPUT -j MARK --set-mark 0x2000/0x2000\n");
+#endif /* VMB_MODE */
    /*
     * nat
     */
@@ -13184,6 +13205,10 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(filter_fp, "-A INPUT -i erouter0 -p icmp -j DOS_ICMP\n");
    fprintf(filter_fp, "-A INPUT -i wan0 -p icmp -j DOS_ICMP\n");
    fprintf(filter_fp, "-A INPUT -i mta0 -p icmp -j DOS_ICMP\n");
+#ifdef VMB_MODE
+   fprintf(filter_fp, "-A INPUT -i vmb0 -p icmp -j DOS_ICMP\n");
+   fprintf(filter_fp, "-A INPUT -i vmb0 -j wan2self\n");
+#endif /* VMB_MODE */
    fprintf(filter_fp, "-A INPUT -i %s -j wan2self\n", current_wan_ifname);
    if ('\0' != default_wan_ifname[0] && 0 != strlen(default_wan_ifname) && 0 != strcmp(default_wan_ifname, current_wan_ifname)) {
       // even if current_wan_ifname is ppp we still want to consider default wan ifname as an interface
@@ -13349,6 +13374,10 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(filter_fp, "-A FORWARD -j general_forward\n");
    fprintf(filter_fp, "-A FORWARD -i %s -o %s -j wan2lan\n", current_wan_ifname, lan_ifname);
    fprintf(filter_fp, "-A FORWARD -i %s -o %s -j lan2wan\n", lan_ifname, current_wan_ifname);
+#ifdef VMB_MODE
+   fprintf(filter_fp, "-A FORWARD -o vmb0 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss 1418\n");
+   fprintf(filter_fp, "-A FORWARD -i vmb0 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss 1418\n");
+#endif /* VMB_MODE */
    fprintf(filter_fp, "-A general_forward -p icmp -m icmp --icmp-type 3 -j NFQUEUE --queue-num 15\n");
    // need br0 to br0 for virtual services)
    fprintf(filter_fp, "-A FORWARD -i %s -o %s -j ACCEPT\n", lan_ifname, lan_ifname);
@@ -14489,7 +14518,9 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
 #ifdef _LG_OFW_
    fprintf(mangle_fp, "-A OUTPUT -p udp --dport 69  -m conntrack --ctstate NEW -j CONNMARK --set-mark 0x1000/0x1000\n");
 #endif
-
+#ifdef VMB_MODE
+   fprintf(mangle_fp, "-A OUTPUT -j MARK --set-mark 0x2000/0x2000\n");
+#endif /* VMB_MODE */
    /*
     * nat
     */
@@ -17302,6 +17333,11 @@ static void do_icmpflooddetectv4(FILE *fp)
     fprintf(fp, "-A DOS_ICMP -i mta0 -m limit --limit 15/second --limit-burst 15 -j RETURN\n");
     fprintf(fp, "-A DOS_ICMP -i mta0 -m limit --limit 5/min --limit-burst 5 -j LOG --log-prefix \"ICMP Flood: \" --log-level 5\n");
     fprintf(fp, "-A DOS_ICMP -i mta0 -j DROP\n");
+#ifdef VMB_MODE
+    fprintf(fp, "-A DOS_ICMP -i vmb0 -m limit --limit 15/second --limit-burst 15 -j RETURN\n");
+    fprintf(fp, "-A DOS_ICMP -i vmb0 -m limit --limit 5/min --limit-burst 5 -j LOG --log-prefix \"ICMP Flood: \" --log-level 5\n");
+    fprintf(fp, "-A DOS_ICMP -i vmb0 -j DROP\n");
+#endif /* VMB_MODE */
 
     enable = 0;
 
