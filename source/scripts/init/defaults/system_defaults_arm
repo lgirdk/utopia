@@ -972,23 +972,6 @@ $rlog_enable=0
 $rlog_host=10.0.0.120
 $rlog_port=514
 
-# Device Fingerprint Enable
-$$Advsecurity_DeviceFingerPrint=1
-$$Advsecurity_LogLevel=3
-
-$Advsecurity_SafeBrowsing=0
-$Advsecurity_Softflowd=0
-$Adv_PCActivate=0
-$Adv_PPActivate=0
-$Advsecurity_LoggingPeriod=1440
-$Advsecurity_LookupTimeout=350
-$Adv_PrivProtRFCEnable=1
-$Adv_PCRFCEnable=1
-$Adv_DFICMPv6RFCEnable=1
-$Adv_WSDisAnaRFCEnable=1
-$Adv_AdvSecOTMRFCEnable=1
-$Adv_RaptrRFCEnable=1
-
 #Firewall log settings
 $FW_LOG_FILE_PATH=/nvram/log/firewall
 @FW_LOG_FILE_PATH_V2=/nvram/log/firewall
@@ -1295,18 +1278,6 @@ $low_queue_reboot_threshold=0
 
 #Enable DNS strict order
 $DNSStrictOrder=true
-
-# Rabid Enable
-$$Advsecurity_RabidEnable=1
-
-# Rabid memory limit
-$Advsecurity_RabidMemoryLimit=20
-
-# Rabid maccache size
-$Advsecurity_RabidMacCacheSize=10000
-
-# Rabid dnscache size
-$Advsecurity_RabidDNSCacheSize=10000
 
 #Ethernet bhaul bridge migration for LnF
 $iot_brname=br106
