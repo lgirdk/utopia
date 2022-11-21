@@ -41,7 +41,7 @@
 ################################################################################
 
 # Version of the database.
-$$Version=17
+$$Version=18
 
 #-------------------------------------------------------------------
 #     sysevent namespace
@@ -1510,7 +1510,7 @@ $NoSpeedBoost_Port_EndV4=65000
 $NoSpeedBoost_Port_StartV6=50000
 $NoSpeedBoost_Port_EndV6=65000
 
-$led_brightness=50
+$$led_brightness=50
 
 #Allowed Subnet Table
 $lglanAllowedSubnetCount=1
