@@ -41,7 +41,7 @@
 ################################################################################
 
 # Version of the database.
-$$Version=17
+$$Version=18
 
 #-------------------------------------------------------------------
 #     sysevent namespace
@@ -1475,7 +1475,7 @@ $StationModeTimeOut=30
 $HealthCheckTimeout=60
 
 #LED Brightness
-$led_brightness=50
+$$led_brightness=50
 
 #Allowed Subnet Table
 $lglanAllowedSubnetCount=1
