@@ -299,8 +299,26 @@ static void nethelper_bridgeCreate (char *brname)
     system(cmdBuff);
 
     if (!strcmp(brname, "brlan0")) {
-        system("ebtables -t filter -I OUTPUT -o l2sd0.200 -p IPv4 --ip-dst 232.0.0.0/8 --ip-protocol udp -j DROP");
-        system("ebtables -t filter -I OUTPUT -o l2sd0.200 -p IPv6 --ip6-dst FF38::8000:0000/97 --ip6-protocol udp -j DROP");
+        char _bridge_mode[8];
+        int bridge_mode = 0;
+
+        if (!syscfg_get(NULL, "bridge_mode", _bridge_mode, sizeof(_bridge_mode)))
+            bridge_mode = atoi(_bridge_mode);
+
+        if (bridge_mode) {
+            /* Disable packet forwarding to ATOM side */
+            system("ebtables -t filter -I FORWARD -o l2sd0.100 -j DROP");
+            system("ebtables -t filter -I OUTPUT -o l2sd0.100 -j DROP");
+
+            /* Mark multicast packets in mABR SSM address range to be accelerated */
+            system("echo 1000 > /sys/module/bridge/parameters/br_flood_pp_mark");
+            system("ebtables -t nat -A PREROUTING -p IPv4 --ip-dst 232.0.0.0/8 --ip-protocol udp -j mark --mark-set 1000 --mark-target CONTINUE");
+            system("ebtables -t nat -A PREROUTING -p IPv6 --ip6-dst FF38::8000:0000/97 --ip6-protocol udp -j mark --mark-set 1000 --mark-target CONTINUE");
+        } else {
+            /* Disable sending of multicast packets in mABR SSM address range to ethernet clients. ATOM side will do it after m2u conversion */
+            system("ebtables -t filter -I OUTPUT -o l2sd0.200 -p IPv4 --ip-dst 232.0.0.0/8 --ip-protocol udp -j DROP");
+            system("ebtables -t filter -I OUTPUT -o l2sd0.200 -p IPv6 --ip6-dst FF38::8000:0000/97 --ip6-protocol udp -j DROP");
+        }
         system("brctl addif brlan0 l2sd0.200");
     }
 }
