@@ -1939,13 +1939,45 @@ void get_dhcp_option_for_brlan0( char *pDhcpNs_OptionString )
 	}
 
         char l_cSecWebUI_Enabled[8] = {0};
+	FILE *l_fResolv_Conf = NULL;
+	char l_cLine[255] = {0};
         syscfg_get(NULL, "SecureWebUI_Enable", l_cSecWebUI_Enabled, sizeof(l_cSecWebUI_Enabled));
         if (!strncmp(l_cSecWebUI_Enabled, "true", 4))
         {
                 check_and_get_wan_dhcp_dns( l_cWan_Dhcp_Dns );
-                memset(l_cDhcpNs_OptionString_new, 0 ,sizeof(l_cDhcpNs_OptionString_new));
-                if ( '\0' != l_cWan_Dhcp_Dns[ 0 ] ){
-                    safec_rc = sprintf_s( l_cDhcpNs_OptionString_new, sizeof(l_cDhcpNs_OptionString_new),"%s,%s,%s", l_cDhcpNs_OptionString, l_cLocalNs, l_cWan_Dhcp_Dns );
+		//Read the nameserver addresses from reslov.conf
+		if ( !(l_cWan_Dhcp_Dns[0]) ) {
+			l_fResolv_Conf = fopen(RESOLV_CONF, "r");
+			if (NULL != l_fResolv_Conf)
+			{
+				while(fgets(l_cLine, 80, l_fResolv_Conf) != NULL )
+				{
+					char *property = NULL;
+					if (NULL != (property = strstr(l_cLine, "nameserver ")))
+					{
+						property = property + strlen("nameserver ");
+						if (strstr(property, "."))
+						{
+							strncat(l_cWan_Dhcp_Dns, property, (strlen(property) - 1));
+							//Add , to separate dns addresses
+							l_cWan_Dhcp_Dns[strlen(l_cWan_Dhcp_Dns)]=',';
+						}
+					}
+				}
+				// Adding NULL at the end of dhcp options addresses
+				if(strlen(l_cWan_Dhcp_Dns) != 0)
+					l_cWan_Dhcp_Dns[strlen(l_cWan_Dhcp_Dns)-1]='\0';
+				fclose(l_fResolv_Conf);
+			}
+			else
+			{
+				fprintf( g_fArmConsoleLog, "DHCP SERVER : get_dhcp_option_for_brlan0 :opening file %s failed\n", RESOLV_CONF );
+			}
+		}
+		fprintf( g_fArmConsoleLog, "DHCP SERVER : get_dhcp_option_for_brlan0:%s\n", l_cWan_Dhcp_Dns );
+		memset(l_cDhcpNs_OptionString_new, 0 ,sizeof(l_cDhcpNs_OptionString_new));
+		if ( '\0' != l_cWan_Dhcp_Dns[ 0 ] ){
+                    safec_rc = sprintf_s( l_cDhcpNs_OptionString_new, sizeof(l_cDhcpNs_OptionString_new),"%s,%s,%s", l_cDhcpNs_OptionString, l_cWan_Dhcp_Dns, l_cLocalNs );
                     if(safec_rc < EOK){
                       ERR_CHK(safec_rc);
                     }
