@@ -286,16 +286,19 @@ service_start ()
            valid_server_count=$((valid_server_count + 1))
        fi
 
+       minpoll=$(syscfg get ntp_minpoll)
+       maxpoll=$(syscfg get ntp_maxpoll)
+
        # Set NTP server(s) acquired from DHCP
        dhcpv6_ntp_server=`sysevent get dhcpv6_ntp_server | awk -F' ' '{print $1}'`
        if [ -n "$dhcpv6_ntp_server" ]; then
-           echo "server $dhcpv6_ntp_server" >> $NTP_CONF_TMP
+           echo "server $dhcpv6_ntp_server minpoll $minpoll maxpoll $maxpoll" >> $NTP_CONF_TMP
            VALID_SERVER="true"
            valid_server_count=$((valid_server_count + 1))
        fi
        dhcpv4_ntp_server=`sysevent get dhcpv4_ntp_server | awk -F' ' '{print $1}'`
        if [ -n "$dhcpv4_ntp_server" ]; then
-           echo "server $dhcpv4_ntp_server" >> $NTP_CONF_TMP
+           echo "server $dhcpv4_ntp_server minpoll $minpoll maxpoll $maxpoll" >> $NTP_CONF_TMP
            VALID_SERVER="true"
            valid_server_count=$((valid_server_count + 1))
 
@@ -305,13 +308,13 @@ service_start ()
            if [ $valid_server_count -lt 3 ]; then
                dhcpv4_ntp_server2=`sysevent get dhcpv4_ntp_server | awk -F' ' '{print $2}'`
                if [ -n "$dhcpv4_ntp_server2" ]; then
-                   echo "server $dhcpv4_ntp_server2" >> $NTP_CONF_TMP
+                   echo "server $dhcpv4_ntp_server2 minpoll $minpoll maxpoll $maxpoll" >> $NTP_CONF_TMP
                    VALID_SERVER="true"
                    valid_server_count=$((valid_server_count + 1))
                    if [ $valid_server_count -lt 3 ]; then
                        dhcpv4_ntp_server3=`sysevent get dhcpv4_ntp_server | awk -F' ' '{print $3}'`
                        if [ -n "$dhcpv4_ntp_server3" ]; then
-                           echo "server $dhcpv4_ntp_server3" >> $NTP_CONF_TMP
+                           echo "server $dhcpv4_ntp_server3 minpoll $minpoll maxpoll $maxpoll" >> $NTP_CONF_TMP
                            VALID_SERVER="true"
                            valid_server_count=$((valid_server_count + 1))
                        fi
