@@ -1611,3 +1611,7 @@ $stp_enable=false
 
 #ReverseSSH Parameters
 $rssh_idle_timeout=900
+
+#NTP default timers
+$ntp_minpoll=10
+$ntp_maxpoll=16
