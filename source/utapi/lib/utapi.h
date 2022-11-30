@@ -1155,6 +1155,10 @@ int Utopia_Set_DeviceTime_DaylightEnable(UtopiaContext *ctx, unsigned char enabl
 unsigned char Utopia_Get_DeviceTime_DaylightEnable(UtopiaContext *ctx);
 int Utopia_Get_DeviceTime_DaylightOffset(UtopiaContext *ctx, int *count);
 int Utopia_Set_DeviceTime_DaylightOffset(UtopiaContext *ctx, int count);
+int Utopia_Get_DeviceTime_MinPollInterval(UtopiaContext *ctx, unsigned long int *MinPollInterval);
+int Utopia_Get_DeviceTime_MaxPollInterval(UtopiaContext *ctx, unsigned long int *MaxPollInterval);
+int Utopia_Set_DeviceTime_MinPollInterval(UtopiaContext *ctx, unsigned long int MinPollInterval);
+int Utopia_Set_DeviceTime_MaxPollInterval(UtopiaContext *ctx, unsigned long int MaxPollInterval);
 
 int Utopia_Get_Mac_MgWan(UtopiaContext *ctx,  char *val);
 
