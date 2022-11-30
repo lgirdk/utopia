@@ -6989,6 +6989,32 @@ int Utopia_Get_DeviceTime_DaylightOffset(UtopiaContext *ctx, int *offset)
     return SUCCESS;
 }
 
+int Utopia_Get_DeviceTime_MinPollInterval(UtopiaContext *ctx, unsigned long int *MinPollInterval)
+{
+    *MinPollInterval = 0;
+    Utopia_GetInt(ctx, UtopiaValue_NTP_MinPollInterval, MinPollInterval);
+    return SUCCESS;
+}
+
+int Utopia_Get_DeviceTime_MaxPollInterval(UtopiaContext *ctx, unsigned long int *MaxPollInterval)
+{
+    *MaxPollInterval = 0;
+    Utopia_GetInt(ctx, UtopiaValue_NTP_MaxPollInterval, MaxPollInterval);
+    return SUCCESS;
+}
+
+int Utopia_Set_DeviceTime_MinPollInterval(UtopiaContext *ctx, unsigned long int MinPollInterval)
+{
+   UTOPIA_SETINT(ctx, UtopiaValue_NTP_MinPollInterval, MinPollInterval);
+   return SUCCESS;
+}
+
+int Utopia_Set_DeviceTime_MaxPollInterval(UtopiaContext *ctx, unsigned long int MaxPollInterval)
+{
+   UTOPIA_SETINT(ctx, UtopiaValue_NTP_MaxPollInterval, MaxPollInterval);
+   return SUCCESS;
+}
+
 int Utopia_Get_DeviceTime_Status(UtopiaContext *ctx)
 {
 
