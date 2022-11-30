@@ -166,6 +166,8 @@ typedef enum _UtopiaValue
     UtopiaValue_NTP_Server5,
     UtopiaValue_NTP_DaylightEnable,
     UtopiaValue_NTP_DaylightOffset,
+    UtopiaValue_NTP_MinPollInterval,
+    UtopiaValue_NTP_MaxPollInterval,
     UtopiaValue_RIP_Enabled,
     UtopiaValue_RIP_NoSplitHorizon,
     UtopiaValue_RIP_InterfaceLAN,
