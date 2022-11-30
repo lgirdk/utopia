@@ -290,6 +290,8 @@ static struct
     { Utopia_Type_Config, Utopia_Event_NTPClient_Restart,  Utopia_Static__NONE__, Utopia_For__NONE__, 1, "ntp_server5",                    UtopiaValue__UNKNOWN__ }, /* UtopiaValue_NTP_Server5 */
     { Utopia_Type_Config, Utopia_Event_NTPClient_Restart,  Utopia_Static__NONE__, Utopia_For__NONE__, 1, "ntp_daylightenable",             UtopiaValue__UNKNOWN__ }, /* UtopiaValue_NTP_Daylight */
     { Utopia_Type_Config, Utopia_Event_NTPClient_Restart,  Utopia_Static__NONE__, Utopia_For__NONE__, 1, "ntp_daylightoffset",             UtopiaValue__UNKNOWN__ }, /* UtopiaValue_NTP_DayOffset */
+    { Utopia_Type_Config, Utopia_Event_NTPClient_Restart,  Utopia_Static__NONE__, Utopia_For__NONE__, 1, "ntp_minpoll",                    UtopiaValue__UNKNOWN__ }, /* UtopiaValue_NTP_MinPollInterval */
+    { Utopia_Type_Config, Utopia_Event_NTPClient_Restart,  Utopia_Static__NONE__, Utopia_For__NONE__, 1, "ntp_maxpoll",                    UtopiaValue__UNKNOWN__ }, /* UtopiaValue_NTP_MaxPollInterval */
     { Utopia_Type_Config, Utopia_Event_Firewall_Restart |
                           Utopia_Event_RIP_Restart,        Utopia_Static__NONE__, Utopia_For__NONE__, 1, "rip_enabled",                    UtopiaValue__UNKNOWN__ }, /* UtopiaValue_RIP_Enabled */
     { Utopia_Type_Config, Utopia_Event_Firewall_Restart |
