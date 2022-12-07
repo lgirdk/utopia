@@ -1875,6 +1875,7 @@ static int wan_addr_set(struct serv_wan *sw)
             {
                 iface_get_hwaddr(sw->ifname, val, sizeof(val));
                 vsystem("((nfq_handler 4 %s &)&)", val);
+                vsystem("((nfq_handler 6 %s &)&)", val);
                 sysevent_set(sw->sefd, sw->setok, "parcon_nfq_status", "started", 0);
             }
     	    /* Should not be executed before wan_service-status is set to started for _PLATFORM_IPQ_ */
