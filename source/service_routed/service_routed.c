@@ -173,6 +173,7 @@ static int fw_restart(struct serv_routed *sr)
 
         iface_get_hwaddr(wan_if, val, sizeof(val));
         vsystem("((nfq_handler 4 %s &)&)", val);
+        vsystem("((nfq_handler 6 %s &)&)", val);
         sysevent_set(sr->sefd, sr->setok, "parcon_nfq_status", "started", 0);
     }
     printf("%s Triggering RDKB_FIREWALL_RESTART\n",__FUNCTION__);
@@ -1076,9 +1077,13 @@ static int gen_zebra_conf(int sefd, token_t setok)
                sprintf(syscfgName, "ra_lifetime_%d", i+1);
                syscfg_get(NULL, syscfgName, buf, sizeof(buf));
             }
-            ra_lifetime = atoi(buf);
-            if (ra_lifetime <= 0)
-                ra_lifetime = 1800;
+            if (buf[0] == 0)
+                ra_lifetime = 1800;     // ra_lifetime unconfigured default to 1800
+            else {
+                ra_lifetime = atoi(buf);
+                if (ra_lifetime < 0)    // zero is a valid value to be send across to LAN side
+                    ra_lifetime = 1800;
+            }
 
             if(i == 0)
                strcpy(syscfgName, "ra_interval");
@@ -1098,7 +1103,8 @@ static int gen_zebra_conf(int sefd, token_t setok)
             ra_interval = atoi(buf);
             if (ra_interval <= 0)
                 ra_interval = 180;
-            ra_interval = (ra_interval > ra_lifetime) ? ra_lifetime : ra_interval;
+            //routers can announce with ra_lifetime 0, zebra fails if ra_interval set to 0
+            //ra_interval = (ra_interval > ra_lifetime) ? ra_lifetime : ra_interval;
             fprintf(fp, "   ipv6 nd ra-interval %d\n", ra_interval);
 #else
             ra_interval = 180;
