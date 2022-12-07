@@ -49,6 +49,7 @@
 #include <netinet/ether.h> 
 #include <netinet/ip.h>
 #include <netinet/ip6.h>
+#include <netinet/icmp6.h>
 #include <linux/udp.h>
 #include <linux/tcp.h>
 #include <linux/icmp.h>
@@ -56,6 +57,7 @@
 #include <linux/netfilter.h>
 #include <sys/ioctl.h>
 #include <net/if.h>
+#include "sysevent/sysevent.h"
 #include "secure_wrapper.h"
 #include "safec_lib_common.h"
 
@@ -538,6 +540,41 @@ static int icmp_error_callback(struct nfq_q_handle *queueHandle,
     return nfq_set_verdict(queueHandle,id,NF_ACCEPT,0,NULL);
 }
 
+static int ra_lifetime_callback(struct nfq_q_handle *queueHandle, 
+			struct nfgenmsg *nfmsg, struct nfq_data *pkt, void *data)
+{
+    int id = 0x00;
+    struct nfqnl_msg_packet_hdr *ph = nfq_get_msg_packet_hdr(pkt);
+    char *payload = NULL;
+    char cfgbuf[8]={0};
+
+    if (ph) {
+        id = ntohl(ph->packet_id);
+    }
+    
+    int len = nfq_get_payload(pkt,&payload);
+    if (len > 0) {
+        struct ip6_hdr *ip6h = ((struct ip6_hdr*)payload);
+        if (ip6h->ip6_nxt == IPPROTO_ICMPV6) {
+            // we get here only for RA packets (type==134)
+            struct nd_router_advert *ra = (struct nd_router_advert *)((char *)payload + sizeof(struct ip6_hdr));
+
+            if (syscfg_get(NULL, "ra_lifetime", cfgbuf, sizeof(cfgbuf)) >= 0) {
+                int cfg_lifetime = atoi(cfgbuf);
+                int adv_lifetime = ntohs(ra->nd_ra_router_lifetime);
+                if (adv_lifetime != cfg_lifetime) { //restart zebra
+                    fprintf(stderr,"RA lifetime differs new_value: %d old_value: %d, restart zebra\n",
+                        adv_lifetime, cfg_lifetime);
+                    v_secure_system("syscfg set ra_lifetime %d",adv_lifetime);
+                    v_secure_system("service_routed radv-restart");
+                }
+            }
+        }
+    }
+
+    return nfq_set_verdict(queueHandle,id,NF_ACCEPT,0,NULL);
+}
+
 static void getIFMac(char *interface, char *mac){
     int s;
     struct ifreq buffer;
@@ -593,6 +630,7 @@ int main(int argc, char *argv[])
     };
 
    const nfq_cfg nfqCfgV6[] = {
+        {"ra_lifetime",16, 16, ra_lifetime_callback},
    };
 #endif
 
