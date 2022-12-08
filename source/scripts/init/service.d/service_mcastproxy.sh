@@ -163,7 +163,7 @@ service_start ()
 {
    ulog ${SERVICE_NAME} status "starting ${SERVICE_NAME} service" 
 
-   if [ -n "$WAN_IFNAME" ] && [ "1" = "$SYSCFG_igmpproxy_enabled" ] ; then
+   if [ -n "$WAN_IFNAME" ] && [ "1" = "$SYSCFG_igmpproxy_enabled" ] && [ "2" != "$SYSCFG_last_erouter_mode" ] ; then
       do_start_igmpproxy
       sysevent set ${SERVICE_NAME}-errinfo
       sysevent set ${SERVICE_NAME}-status "started"
