@@ -81,7 +81,7 @@ extern sem_t worker_sem;
 // Since syseventd is integral to the infrastructure, protecting it from the kernel
 // is prudent.
 //#define NUM_WORKER_THREAD 7
-#define NUM_WORKER_THREAD 10
+#define NUM_WORKER_THREAD 12
 
 // the number of client only threads (out of the NUM_WORKER_THREAD pool)
 // This number must be at least 1 to ensure that client can never starve for get/set
