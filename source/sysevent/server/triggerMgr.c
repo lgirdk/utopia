@@ -636,16 +636,7 @@ static int execute_trigger_actions(const trigger_t *tr, const char* const name, 
          sysevent_free((void **)&list, __FILE__, __LINE__);
          return(-1);
       }
-      SE_INC_LOG(MUTEX,
-         int id = thread_get_id(worker_data_key);
-         printf("Thread %d Attempting to get mutex: trigger_communication\n", id);
-      )
-      pthread_mutex_lock(&trigger_communication_mutex);
-      SE_INC_LOG(MUTEX,
-         int id = thread_get_id(worker_data_key);
-         printf("Thread %d Got mutex: trigger_communication\n", id);
-      )
-      int rc = SE_msg_send(trigger_communication_fd_writer_end, send_msg_buffer);
+      int rc = SE_msg_send_safe(trigger_communication_fd_writer_end, send_msg_buffer, &trigger_communication_mutex);
       if (0 != rc) {
          SE_INC_LOG(ERROR,
             int id = thread_get_id(worker_data_key);
@@ -663,11 +654,6 @@ static int execute_trigger_actions(const trigger_t *tr, const char* const name, 
          )
       }
 
-      SE_INC_LOG(MUTEX,
-         int id = thread_get_id(worker_data_key);
-         printf("Thread %d Releasing mutex: trigger_communication\n", id);
-      )
-      pthread_mutex_unlock(&trigger_communication_mutex);
    } else {
       unsigned int i;
       for (i=0; i<tr->max_actions; i++) {
@@ -678,16 +664,7 @@ static int execute_trigger_actions(const trigger_t *tr, const char* const name, 
                if (0 != trigger_communication_fd_writer_end) {
                   se_buffer send_msg_buffer;
                   if (0 == prepare_action_type_function_msg(send_msg_buffer, tr->trigger_id, action, name, value)) {
-                     SE_INC_LOG(MUTEX,
-                        int id = thread_get_id(worker_data_key);
-                        printf("Thread %d Attempting to get mutex: trigger_communication\n", id);
-                     )
-                     pthread_mutex_lock(&trigger_communication_mutex);
-                     SE_INC_LOG(MUTEX,
-                        int id = thread_get_id(worker_data_key);
-                        printf("Thread %d Got mutex: trigger_communication\n", id);
-                     )
-                     int rc = SE_msg_send(trigger_communication_fd_writer_end, send_msg_buffer);
+                     int rc = SE_msg_send_safe(trigger_communication_fd_writer_end, send_msg_buffer, &trigger_communication_mutex);
                      if (0 != rc) {
                         SE_INC_LOG(ERROR,
                            int id = thread_get_id(worker_data_key);
@@ -704,11 +681,6 @@ static int execute_trigger_actions(const trigger_t *tr, const char* const name, 
                            SE_print_message_hdr(send_msg_buffer);
                        )
                      }
-                     SE_INC_LOG(MUTEX,
-                        int id = thread_get_id(worker_data_key);
-                        printf("Thread %d Releasing mutex: trigger_communication\n", id);
-                     )
-                     pthread_mutex_unlock(&trigger_communication_mutex);
                   }
                }
             } else if (ACTION_TYPE_MESSAGE == action->action_type) {
@@ -716,17 +688,7 @@ static int execute_trigger_actions(const trigger_t *tr, const char* const name, 
                   se_buffer send_msg_buffer;
 
                   if (0 == prepare_action_type_message_msg(send_msg_buffer, tr->trigger_id, action, name, value, source, tid)) {
-                     SE_INC_LOG(MUTEX,
-                        int id = thread_get_id(worker_data_key);
-                        printf("Thread %d Attempting to get mutex: trigger_communication\n", id);
-                     )
-                     pthread_mutex_lock(&trigger_communication_mutex);
-                     SE_INC_LOG(MUTEX,
-                        int id = thread_get_id(worker_data_key);
-                        printf("Thread %d Got mutex: trigger_communication\n", id);
-                     )
-
-                     int rc = SE_msg_send(trigger_communication_fd_writer_end, send_msg_buffer);
+                     int rc = SE_msg_send_safe(trigger_communication_fd_writer_end, send_msg_buffer, &trigger_communication_mutex);
                      if (0 != rc) {
                         SE_INC_LOG(ERROR,
                            int id = thread_get_id(worker_data_key);
@@ -743,12 +705,6 @@ static int execute_trigger_actions(const trigger_t *tr, const char* const name, 
                            SE_print_message_hdr(send_msg_buffer);
                        )
                      }
-
-                     SE_INC_LOG(MUTEX,
-                        int id = thread_get_id(worker_data_key);
-                        printf("Thread %d Releasing mutex: trigger_communication\n", id);
-                     )
-                     pthread_mutex_unlock(&trigger_communication_mutex);
                   }
                } else {
                   SE_INC_LOG(ERROR,
