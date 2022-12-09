@@ -1777,6 +1777,56 @@ int SE_msg_send (int fd, char *sendmsg)
    }
 }
 
+int SE_msg_send_safe(int fd, char *sendmsg, pthread_mutex_t *lock)
+{
+   se_msg_hdr *msg_hdr = (se_msg_hdr *)sendmsg;
+   SE_msg_hdr_mbytes_fixup(msg_hdr);
+
+   // keep track of the number of bytes in the msg (including the header)
+   int bytes_to_write = ntohl(msg_hdr->mbytes);
+   se_buffer send_msg_buffer;
+   if (bytes_to_write + sizeof(se_msg_footer) > sizeof(send_msg_buffer)) {
+      return(-2);
+   } else {
+      memcpy(send_msg_buffer, sendmsg, bytes_to_write);
+
+      // add a transport message footer to help ensure message integrity during transport
+      se_msg_footer footer;
+      footer.poison = htonl(MSG_DELIMITER);
+      memcpy(((char *)send_msg_buffer)+bytes_to_write, &footer, sizeof(footer));
+      bytes_to_write += sizeof(footer);
+   }
+
+   // try to write a maximum of num_retries
+   int bytes_sent = 0;
+   int num_retries = 3;
+   int rc;
+   while (0 < bytes_to_write && 0 < num_retries) {
+      pthread_mutex_lock(lock);
+      rc = write(fd, send_msg_buffer+bytes_sent, bytes_to_write);
+      pthread_mutex_unlock(lock);
+      if (0 < rc) {
+         num_retries = 3;
+         bytes_to_write -= rc;
+         bytes_sent+=rc;
+      } else if (0 == rc) {
+         num_retries--;
+      } else {
+         struct timespec sleep_time;
+         sleep_time.tv_sec = 0;
+         sleep_time.tv_nsec  = 100000000;  // .1 secs
+         nanosleep(&sleep_time, NULL);
+         num_retries--;
+      }
+   }
+
+   if (0 == bytes_to_write) {
+      return(0);
+   } else {
+      return(-1);
+   }
+}
+
 int SE_msg_send_data (int fd, char *sendmsg,int msgsize)
 {
    se_msg_hdr *msg_hdr = (se_msg_hdr *)sendmsg;
