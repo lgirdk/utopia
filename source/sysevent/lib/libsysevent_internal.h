@@ -36,6 +36,8 @@
 #ifndef __LIB_SYSEVENT_INTERNAL
 #define __LIB_SYSEVENT_INTERNAL
 
+#include <pthread.h>
+
 #include "sysevent.h"
 /*
  * Given a *se_msg_hdr calculate the address of the body 
@@ -151,6 +153,19 @@ int SE_minimal_blocking_msg_receive (int fd, char *replymsg, unsigned int *reply
  *    >0            : The type of message returned
  */
 int SE_msg_send (int fd, char *sendmsg);
+
+/*
+ * Procedure     : SE_msg_send_safe
+ * Purpose       : Send a Data Model message
+ * Parameters    :
+ *    fd            : The file descriptor to send to
+ *    sendmsg       : The message to send
+ *    lock       : mutex to acquire before write
+ * Return Code   :
+ *    SE_MSG_NONE   : error
+ *    >0            : The type of message returned
+ */
+int SE_msg_send_safe(int fd, char *sendmsg, pthread_mutex_t *lock);
 
 /* 
  * Procedure     : SE_msg_send_receive
