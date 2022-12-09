@@ -735,6 +735,14 @@ static int initialize_system(void)
       )
    }
 
+   //setting pipe size to 256k; default size 64k
+   if (-1 == fcntl(trigger_communication_fd_writer_end, F_SETPIPE_SZ, 256 * 1024))
+   {
+       SE_INC_LOG(ERROR,
+         printf("Unable to set trigger_communication_fd_writer_end size (%d) %s\n", errno, strerror(errno));
+       )
+   }
+
    if (-1 == pipe(pfd)) {
       SE_INC_LOG(ERROR,
          printf("Problem making msg queue 2. Reason (%d) %s\n", errno, strerror(errno));
