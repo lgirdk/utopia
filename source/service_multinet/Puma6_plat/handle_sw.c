@@ -44,7 +44,6 @@ void check_for_dependent_ports(char *port, int *tag, int *atom_port, int *ext_po
 	if(!strncmp(port, "ath", 3) || !strncmp(port, "cei0", 4) || !strncmp(port, "wdev0ap", 7) || (!strncmp(port, "sw_6", 4)))
 	{
 		*atom_port = 1;
-		*ext_port = 0;
 		*tag = TAGGING_MODE;
 	}
 	else if ((!strncmp(port, "sw_1", 4)) || (!strncmp(port, "sw_2", 4)) || 
@@ -491,7 +490,7 @@ void addVlan(int net_id, int vlan_id, char *ports_add)
 		    sysevent_set(hdl_sw_sysevent_fd, hdl_sw_sysevent_token, 
 						 "sw_port_E2I_venable", "1", 0); 
 		}
-		if (!ext_vidPorts[0])
+		if (!ext_vidPorts[0] && vlan_id == 200)
 		{
 			MNET_DEBUG("--SW handler, swctl %s -v %d -m %d -q 1\n" 
 						COMMA PORTMAP_I2E COMMA vlan_id COMMA TAGGING_MODE)
@@ -647,7 +646,7 @@ void delVlan(int net_id, int vlan_id, char *ports_add)
     sysevent_set(hdl_sw_sysevent_fd, hdl_sw_sysevent_token, l_cCmd_Buff, l_cVid_Ports, 0);
         
     // Add to switch connection ports if on external switch
-    if (0 == l_cExt_Vid_Ports[0])
+    if (0 == l_cExt_Vid_Ports[0] && vlan_id == 200)
 	{
     	MNET_DEBUG("--SW handler, swctl %s -v %d" COMMA PORTMAP_REM_I2E COMMA vlan_id)
 		swctl(17, 2, vlan_id, -1, -1, -1, NULL, NULL);
