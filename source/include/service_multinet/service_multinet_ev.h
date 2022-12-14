@@ -40,7 +40,7 @@
 #define MNET_STATUS_FORMAT(x) "multinet_%d-status", x
 #define MNET_IFSTATUS_FORMAT(x) "if_%s-status", x
 #define MNET_IFSTATUS_ASYNCID_FORMAT(x) "ifstatus_%s_async", x
-#define MNET_IFSTATUS_ASYNCVAL_FORMAT(x) "%d %d", (x).action_id, (x).trigger_id
+#define MNET_IFSTATUS_ASYNCVAL_FORMAT(x) "%d %d", (x).trigger_id, (x).action_id
 #define MNET_NAME_FORMAT(x) "multinet_%d-name", x
 
 
