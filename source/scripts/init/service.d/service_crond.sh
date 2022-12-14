@@ -105,6 +105,10 @@ service_start ()
       #zqiu: monitor lan client traffic
       echo "* * * * *   /usr/ccsp/tad/rxtx_lan.sh" >> $CRONTAB_FILE
 
+      if [ "$BOX_TYPE" == "SR300" ] || [ "$BOX_TYPE" == "SR213" ]; then
+        echo "* * * * *   /etc/sky/set_dscp_lan.sh" >> $CRONTAB_FILE
+      fi
+
       echo "1 */6 * * *   /usr/ccsp/tad/log_sixhourly.sh" >> $CRONTAB_FILE
 #RDKB-9367, file handle monitor, needs to be run every 12 hours
       echo "1 */12 * * *   /usr/ccsp/tad/FileHandle_Monitor.sh" >> $CRONTAB_FILE
