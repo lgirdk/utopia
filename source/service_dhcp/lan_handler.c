@@ -268,6 +268,11 @@ void bring_lan_up()
 	char l_cAsyncId[16] = {0}, l_cPsm_Parameter[255] = {0};
 	char l_cPrimaryLan_L3Net[8] = {0}, l_cL2Inst[8] = {0}, l_cLan_Brport[8] = {0};
 	char l_cHomeSecurity_L3net[8] = {0}, l_cEvent_Name[32] = {0};
+
+    #if defined (FEATURE_RDKB_DHCP_MANAGER)
+    char l_cSysevent_Cmd[255] = {0};
+    #endif
+
 	char *l_cpPsm_Get = NULL;
 	int l_iRet_Val;
 	async_id_t l_sAsyncID;
@@ -390,6 +395,22 @@ void bring_lan_up()
 			sysevent_set(g_iSyseventfd, g_tSysevent_token, "primary_lan_l2net", l_cL2Inst, 0);
 			sysevent_set(g_iSyseventfd, g_tSysevent_token, "primary_lan_brport", l_cLan_Brport, 0);
 			sysevent_set(g_iSyseventfd, g_tSysevent_token, "homesecurity_lan_l3net", l_cHomeSecurity_L3net, 0);
+
+            #if defined (FEATURE_RDKB_DHCP_MANAGER)
+                #if 1
+                snprintf(l_cSysevent_Cmd, sizeof(l_cSysevent_Cmd),"dmcli eRT setv Device.DHCPv4.Server.Enable bool true");
+                executeCmd(l_cSysevent_Cmd);
+
+                snprintf(l_cSysevent_Cmd, sizeof(l_cSysevent_Cmd),"dmcli eRT setv Device.DHCPv6.Server.Enable bool true");
+                executeCmd(l_cSysevent_Cmd);
+                #else
+                snprintf(l_cSysevent_Cmd, sizeof(l_cSysevent_Cmd),"rbuscli setvalues Device.DHCPv4.Server.Enable bool true");
+                executeCmd(l_cSysevent_Cmd);
+
+                snprintf(l_cSysevent_Cmd, sizeof(l_cSysevent_Cmd),"rbuscli setvalues Device.DHCPv6.Server.Enable bool true");
+                executeCmd(l_cSysevent_Cmd);
+                #endif
+            #endif //FEATURE_RDKB_DHCP_MANAGER
 		}
 	}
 	else
