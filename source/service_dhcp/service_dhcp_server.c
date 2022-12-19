@@ -481,6 +481,12 @@ int syslog_restart_request()
         else
         {
             fgets(l_cCurrent_PID, sizeof(l_cCurrent_PID), fp);
+            int l_cCurrent_PID_len = strlen(l_cCurrent_PID);
+            if (l_cCurrent_PID[l_cCurrent_PID_len - 1] == '\n')
+            {
+                l_cCurrent_PID[l_cCurrent_PID_len - 1] = '\0';
+            }
+            fclose(fp);
             //fclose(l_fFp); /*RDKB-12965 & CID:-34555*/
         }
         if (0 == l_cCurrent_PID[0])
@@ -695,6 +701,11 @@ int dhcp_server_start (char *input)
 	else	
 	{
 		fgets(l_cCurrent_PID, sizeof(l_cCurrent_PID), l_fFp);
+		int l_cCurrent_PID_len = strlen(l_cCurrent_PID);
+		if (l_cCurrent_PID[l_cCurrent_PID_len - 1] == '\n')
+		{
+			l_cCurrent_PID[l_cCurrent_PID_len - 1] = '\0';
+		}
 		fclose(l_fFp); /*RDKB-12965 & CID:-34555*/
 	}	
 	if (0 == l_cCurrent_PID[0])
