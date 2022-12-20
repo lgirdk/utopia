@@ -84,6 +84,9 @@
 #include "igd_platform_dependent_inf.h"
 #include "autoconf.h"
 
+#if defined (FEATURE_SUPPORT_RDKLOG)
+#include "rdk_debug.h"
+#endif //FEATURE_SUPPORT_RDKLOG
 
 /***********************************************************************
 * (1) Product-related macro

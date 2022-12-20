@@ -76,8 +76,8 @@
 #include "pal_upnp_device.h"
 #include "pal_upnp.h"
 #include "pal_def.h"
-#include "pal_log.h"
 #include "igd_utility.h"
+#include "igd_platform_independent_inf.h"
 
 #define WANETHERNETLINKCONFIG_SERVICE_ID "urn:upnp-org:serviceId:WANEthLinkC1"
 #define WANETHERNETLINKCONFIG_SERVICE_TYPE "urn:schemas-upnp-org:service:WANEthernetLinkConfig:1"
@@ -146,7 +146,7 @@ LOCAL INT32 _igd_service_WANEthernetLinkConfig_destroy(IN struct upnp_service *p
 	   const before call free() function */
 	CHAR * serviceID = (CHAR *)NULL;
 
-	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"Destroy WANConnectionDevice WANEthernetLinkConfig\n");
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","Destroy WANConnectionDevice WANEthernetLinkConfig\n");
 	if(pservice==NULL)
 		return -1;
 	serviceID = (CHAR *)pservice->serviceID; /*RDKB-7138, CID-33146, use after null check */
@@ -177,17 +177,17 @@ struct upnp_service* IGD_service_WANEthernetLinkConfigInit(IN VOID* input_index_
 	INT32 i;
 	struct upnp_service *WANEthernetLinkConfig_service=NULL;
 	
-	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"Initilize WANEthernetLinkConfig of WANDevice:WANConnectionDevice %d:%d\n",((struct device_and_service_index*)input_index_struct)->wan_device_index,((struct device_and_service_index*)input_index_struct)->wan_connection_device_index);
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","Initilize WANEthernetLinkConfig of WANDevice:WANConnectionDevice %d:%d\n",((struct device_and_service_index*)input_index_struct)->wan_device_index,((struct device_and_service_index*)input_index_struct)->wan_connection_device_index);
 	WANEthernetLinkConfig_service=(struct upnp_service *)calloc(1,sizeof(struct upnp_service));
 	if(WANEthernetLinkConfig_service==NULL)
 	{
-		PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"out of memory,upnp_service!\n");
+		RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","out of memory,upnp_service!\n");
 		return NULL;
 	}
 
 	if(pthread_mutex_init(&WANEthernetLinkConfig_service->service_mutex, NULL ))
 	{
-        PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE, "Init mutex fail!\n");
+        RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "Init mutex fail!\n");
         _igd_service_WANEthernetLinkConfig_destroy(WANEthernetLinkConfig_service);
         return NULL;
 	}
@@ -197,7 +197,7 @@ struct upnp_service* IGD_service_WANEthernetLinkConfigInit(IN VOID* input_index_
 	WANEthernetLinkConfig_service->type=(CHAR *)calloc(1,strlen(WANETHERNETLINKCONFIG_SERVICE_TYPE)+1);
 	if(WANEthernetLinkConfig_service->type==NULL)
 	{
-		PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"out of memory,type!\n");
+		RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","out of memory,type!\n");
 		_igd_service_WANEthernetLinkConfig_destroy(WANEthernetLinkConfig_service);
 		return NULL;
 	}
@@ -208,7 +208,7 @@ struct upnp_service* IGD_service_WANEthernetLinkConfigInit(IN VOID* input_index_
 	WANEthernetLinkConfig_service->serviceID=(CHAR *)calloc(1,strlen(WANETHERNETLINKCONFIG_SERVICE_ID)+1);
 	if(WANEthernetLinkConfig_service->serviceID==NULL)
 	{
-		PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"out of memory,serviceID!\n");
+		RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","out of memory,serviceID!\n");
 		_igd_service_WANEthernetLinkConfig_destroy(WANEthernetLinkConfig_service);
 		return NULL;
 	}
@@ -219,7 +219,7 @@ struct upnp_service* IGD_service_WANEthernetLinkConfigInit(IN VOID* input_index_
     WANEthernetLinkConfig_service->state_variables = (struct upnp_variable *)calloc(sizeof(WANEthernetLinkConfig_variables_name)/sizeof(CHAR *),sizeof(struct upnp_variable));
     if (!WANEthernetLinkConfig_service->state_variables)
     {
-        PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE, "out of memory,state_variables!\n");
+        RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "out of memory,state_variables!\n");
         _igd_service_WANEthernetLinkConfig_destroy(WANEthernetLinkConfig_service);
         return NULL;
     }
@@ -229,7 +229,7 @@ struct upnp_service* IGD_service_WANEthernetLinkConfigInit(IN VOID* input_index_
     WANEthernetLinkConfig_service->event_variables = (struct upnp_variable *)calloc(sizeof(WANEthernetLinkConfig_variables_name)/sizeof(CHAR *), sizeof(struct upnp_variable));
     if (!WANEthernetLinkConfig_service->event_variables)
     {
-        PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE, "out of memory,event_variables!\n");
+        RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "out of memory,event_variables!\n");
         _igd_service_WANEthernetLinkConfig_destroy(WANEthernetLinkConfig_service);
         return NULL;
     }
@@ -239,7 +239,7 @@ struct upnp_service* IGD_service_WANEthernetLinkConfigInit(IN VOID* input_index_
 	WANEthernetLinkConfig_service->private=(struct device_and_service_index *)calloc(1,sizeof(struct device_and_service_index));
 	if(WANEthernetLinkConfig_service->private==NULL)
 	{
-		PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"out of memory!\n");
+		RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","out of memory!\n");
 		_igd_service_WANEthernetLinkConfig_destroy(WANEthernetLinkConfig_service);
 		return NULL;
 	}
@@ -247,7 +247,7 @@ struct upnp_service* IGD_service_WANEthernetLinkConfigInit(IN VOID* input_index_
 
 	if(_igd_service_WANEthernetLinkConfig_desc_file(fp))
 	{
-		PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"create WANEthernetLinkConfig description file fail!\n");
+		RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","create WANEthernetLinkConfig description file fail!\n");
 		_igd_service_WANEthernetLinkConfig_destroy(WANEthernetLinkConfig_service);
 		return NULL;
 	}
@@ -277,25 +277,25 @@ VOID IGD_service_WANEthernetLinkConfigEventHandler(IN struct upnp_device  *pdevi
     	CHAR *var_value[WANETHLINKCFG_MAX_EVENT_NUM] = {0};
 	
 		if (NULL == pdevice) {
-			PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE, "pdevice is NULL");
+			RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "pdevice is NULL");
 			return;
 		}
 		if (NULL == pservice) {
-			PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE, "pservice is NULL");
+			RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "pservice is NULL");
 			return;
 		}
 		pthread_mutex_lock(&pservice->service_mutex);
 	
 		pIndex = (struct device_and_service_index *)(pservice->private);
 		if (NULL == pIndex) {
-			PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE, "No interface infomation");
+			RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "No interface infomation");
 			pthread_mutex_unlock(&pservice->service_mutex);
 			return;
 		}
 	
 		if(IGD_pii_get_ethernet_link_status(pIndex->wan_device_index,pIndex->wan_connection_device_index,status))
 		{
-			PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"EthernetLinkStatus get fail\n");
+			RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","EthernetLinkStatus get fail\n");
 			pthread_mutex_unlock(&pservice->service_mutex);
 			return;
 		}
@@ -305,7 +305,7 @@ VOID IGD_service_WANEthernetLinkConfigEventHandler(IN struct upnp_device  *pdevi
 			strncpy(pservice->event_variables[0].value,status, strlen(status)+1);
 			var_name[0] = (CHAR *)pservice->event_variables[0].name;
             var_value[0] = pservice->event_variables[0].value;
-			PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO, "Eventing:%s=%s",var_name[0],var_value[0]);
+			RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD", "Eventing:%s=%s",var_name[0],var_value[0]);
 			if(PAL_upnp_notify (PAL_upnp_device_getHandle(),
                         		(const CHAR *)pdevice->udn,
                         		pservice->serviceID,
@@ -313,7 +313,7 @@ VOID IGD_service_WANEthernetLinkConfigEventHandler(IN struct upnp_device  *pdevi
                         		(const CHAR **)var_value,
                         		1))
 			{
-				PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_WARNING, "PAL_upnp_notify() fail");
+				RDK_LOG(RDK_LOG_NOTICE, "LOG.RDK.IGD", "PAL_upnp_notify() fail");
 			}
 		}
 	
@@ -342,11 +342,11 @@ LOCAL INT32 _igd_get_EthernetLinkStatus (INOUT struct action_event *event)
 	CHAR status[ETHERNETLINKSTATUS_STRING_LEN];
 
 	local_index = *((struct device_and_service_index*)event->service->private);
-	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"GetEthernetLinkStatus of WAN%d\n",local_index.wan_device_index);
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","GetEthernetLinkStatus of WAN%d\n",local_index.wan_device_index);
 
 	if(IGD_pii_get_ethernet_link_status(local_index.wan_device_index,local_index.wan_connection_device_index,status))
 	{
-		PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"Layer3Forwarding action:Action fail\n");
+		RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","Layer3Forwarding action:Action fail\n");
 		strncpy(event->request->error_str, "Action Fail,get status fail",PAL_UPNP_LINE_SIZE);
 		event->request->error_code = 501;
 		PAL_upnp_make_action(&event->request->action_result,"GetEthernetLinkStatus",WANETHERNETLINKCONFIG_SERVICE_TYPE,0,NULL,PAL_UPNP_ACTION_RESPONSE);

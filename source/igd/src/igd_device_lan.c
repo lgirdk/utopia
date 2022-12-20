@@ -67,7 +67,6 @@
 
 #include "pal_upnp_device.h"
 #include "pal_def.h"
-#include "pal_log.h"
 #include "pal_kernel.h"
 #include "igd_platform_independent_inf.h"
 #include "igd_utility.h"
@@ -125,7 +124,7 @@ LOCAL INT32 _igd_lan_device_destroy (IN struct upnp_device *pdevice)
 
 	if(NULL == pdevice)
 		return -1;
-	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"Destroy LANDevice\n");
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","Destroy LANDevice\n");
 	if(pdevice->services)
 	{
 		while(pdevice->services[i])
@@ -159,12 +158,12 @@ struct upnp_device * IGD_device_LANDeviceInit(IN VOID * input_index_struct, IN c
 	struct upnp_device *landevice=NULL;
 	struct upnp_service *LANHostConfigManagement_service=NULL;
 	
-	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"Initilize LANDevice %d\n",((struct device_and_service_index*)input_index_struct)->lan_device_index);
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","Initilize LANDevice %d\n",((struct device_and_service_index*)input_index_struct)->lan_device_index);
 
 	landevice=(struct upnp_device *)calloc(1,sizeof(struct upnp_device));
 	if(landevice==NULL)
 	{
-		PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"out of memory,landevice!\n");
+		RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","out of memory,landevice!\n");
 		return NULL;
 	}
 	
@@ -173,7 +172,7 @@ struct upnp_device * IGD_device_LANDeviceInit(IN VOID * input_index_struct, IN c
 
 	if(_igd_lan_device_desc_file(fp,udn))
 	{
-		PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"create LANDevice description file fail!\n");
+		RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","create LANDevice description file fail!\n");
 		SAFE_FREE(landevice);
 		return NULL;
 	}
@@ -181,14 +180,14 @@ struct upnp_device * IGD_device_LANDeviceInit(IN VOID * input_index_struct, IN c
 	landevice->services = (struct upnp_service **)calloc(2,sizeof(struct upnp_service *));
 	if(landevice->services==NULL)
 	{
-		PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"out of memory!\n");
+		RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","out of memory!\n");
 		SAFE_FREE(landevice);
 		return NULL;
 	}
 		
 	if((LANHostConfigManagement_service=IGD_service_LANHostConfigManagementInit(input_index_struct,fp))==NULL)
     {
-        PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"LANHostConfigManagement init fail, %s");
+        RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","LANHostConfigManagement init fail! \n");
 		SAFE_FREE(landevice->services);
 		SAFE_FREE(landevice);
         return NULL;

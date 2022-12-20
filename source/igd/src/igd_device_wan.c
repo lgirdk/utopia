@@ -66,7 +66,6 @@
 
 #include "pal_upnp_device.h"
 #include "pal_def.h"
-#include "pal_log.h"
 #include "pal_kernel.h"
 #include "igd_platform_independent_inf.h"
 #include "igd_utility.h"
@@ -126,7 +125,7 @@ LOCAL INT32 _igd_wan_device_destroy (IN struct upnp_device *pdevice)
 
 	if(NULL == pdevice)
 		return -1;
-	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"Destroy WANDevice\n");
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","Destroy WANDevice\n");
 	if(pdevice->services)
 	{
 		while(pdevice->services[i])
@@ -166,11 +165,11 @@ struct upnp_device * IGD_device_WANDeviceInit(IN VOID * input_index_struct, IN c
 	INT32 wan_connection_device_number = 0;
 	CHAR device_udn[UPNP_UUID_LEN_BY_VENDER];
 	
-	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"Initilize WANDevice %d\n",((struct device_and_service_index*)input_index_struct)->wan_device_index);
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","Initilize WANDevice %d\n",((struct device_and_service_index*)input_index_struct)->wan_device_index);
 	wandevice=(struct upnp_device *)calloc(1,sizeof(struct upnp_device));
 	if(wandevice==NULL)
 	{
-		PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"out of memory,wandevice!\n");
+		RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","out of memory,wandevice!\n");
 		return NULL;
 	}
 	
@@ -179,7 +178,7 @@ struct upnp_device * IGD_device_WANDeviceInit(IN VOID * input_index_struct, IN c
 
 	if(_igd_wan_device_desc_file(fp,udn))
 	{
-		PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"create WANDevice description file fail!\n");
+		RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","create WANDevice description file fail!\n");
 		SAFE_FREE(wandevice);
 		return NULL;
 	}
@@ -187,14 +186,14 @@ struct upnp_device * IGD_device_WANDeviceInit(IN VOID * input_index_struct, IN c
 	wandevice->services = (struct upnp_service **)calloc(2,sizeof(struct upnp_service *));
 	if(wandevice->services==NULL)
 	{
-		PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"out of memory!\n");
+		RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","out of memory!\n");
 		SAFE_FREE(wandevice);
 		return NULL;
 	}
 		
 	if((WANCommonInterfaceConfig_service=IGD_service_WANCommonInterfaceConfigInit(input_index_struct,fp))==NULL)
     {
-        PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"WANCommonInterfaceConfig init fail, %s");
+        RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","WANCommonInterfaceConfig init fail!\n");
 		SAFE_FREE(wandevice->services);
 		SAFE_FREE(wandevice);
         return NULL;
@@ -213,7 +212,7 @@ struct upnp_device * IGD_device_WANDeviceInit(IN VOID * input_index_struct, IN c
 	wan_connection_device_number = IGD_pii_get_wan_connection_device_number(((struct device_and_service_index*)input_index_struct)->wan_device_index);
 	if(wan_connection_device_number <= 0)
 	{
-		PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"wan_connection_device_number error:%d\n",wan_connection_device_number);
+		RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","wan_connection_device_number error:%d\n",wan_connection_device_number);
 		SAFE_FREE(wandevice->services);
 		SAFE_FREE(wandevice);
         return NULL;
@@ -227,13 +226,13 @@ struct upnp_device * IGD_device_WANDeviceInit(IN VOID * input_index_struct, IN c
 
 		if(IGD_pii_get_uuid(device_udn))
 		{
-			PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"Get UUID fail\n");
+			RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","Get UUID fail\n");
 			goto Destroy_device_recursively;
 		}
 		wan_connection_device = IGD_wan_connection_device_init((VOID*)(&wan_index),device_udn,fp);
 		if(NULL == wan_connection_device)
 		{
-			PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"IGD WAN connection device:%d init failed\n", wan_connection_index);
+			RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","IGD WAN connection device:%d init failed\n", wan_connection_index);
 			/*because return NULL so upnp_device_destroy() will not destroy the initialized WANConnectionDevice*/
 	Destroy_device_recursively:
 			while(wandevice!=NULL)

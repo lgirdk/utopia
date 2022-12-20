@@ -65,6 +65,7 @@
 #include "igd_utility.h"
 #include "igd_service_wan_connect.h"
 #include "igd_action_port_mapping.h"
+#include "igd_platform_independent_inf.h"
 
 #define ARRAY_INDEX_INVALID                     713
 #define NO_SUCH_ENTRY_IN_ARRAY              714
@@ -144,11 +145,11 @@ INT32 IGD_get_NATRSIP_status(INOUT struct action_event *event)
         {"NewNATEnabled", 0}
     };
 
-    PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_DEBUG, "ENTER %s...", __func__);
+    RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "ENTER %s...", __func__);
 
     if (!event || !(event->request)) 
     {
-        PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_WARNING, "Input parameter error");
+        RDK_LOG(RDK_LOG_NOTICE, "LOG.RDK.IGD", "Input parameter error");
 
         ret = IGD_GENERAL_ERROR;
         return ret;
@@ -156,7 +157,7 @@ INT32 IGD_get_NATRSIP_status(INOUT struct action_event *event)
 
     pIndex = (struct device_and_service_index *)(event->service->private);
     if (NULL == pIndex) {
-        PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_FAILURE, "pIndex is NULL");
+        RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "pIndex is NULL");
 
         ret = PAL_UPNP_SOAP_E_ACTION_FAILED;
         event->request->error_code = ret;
@@ -175,7 +176,7 @@ INT32 IGD_get_NATRSIP_status(INOUT struct action_event *event)
 
     if(ret != PAL_UPNP_E_SUCCESS)
     {
-        PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_FAILURE, "get_nat_rsip_status error");
+        RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "get_nat_rsip_status error");
 
         event->request->error_code = ret;
         event->request->action_result = NULL;
@@ -199,14 +200,14 @@ INT32 IGD_get_NATRSIP_status(INOUT struct action_event *event)
                                                             event->service->type, 2, response, PAL_UPNP_ACTION_RESPONSE);
         if(ret != PAL_UPNP_E_SUCCESS)
         {
-            PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_FAILURE, "PAL_upnp_make_action error: %d", ret);
+            RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "PAL_upnp_make_action error: %d", ret);
 
             event->request->error_code = ret;
             event->request->action_result = NULL;
         }
     }
 
-    PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_DEBUG, "EXIT %s...", __func__);
+    RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "EXIT %s...", __func__);
 
     return ret;
 }
@@ -247,11 +248,11 @@ INT32 IGD_get_GenericPortMapping_entry(INOUT struct action_event *event)
         { PM_SET[LEASE_DURATION] ,                  NULL }
     };
 
-    PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_DEBUG, "ENTER %s...", __func__);
+    RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "ENTER %s...", __func__);
 
     if (!event || !(event->request)) 
     {
-        PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_WARNING, "Input parameter error");
+        RDK_LOG(RDK_LOG_NOTICE, "LOG.RDK.IGD", "Input parameter error");
 
         ret = IGD_GENERAL_ERROR;
         return ret;
@@ -259,7 +260,7 @@ INT32 IGD_get_GenericPortMapping_entry(INOUT struct action_event *event)
     
     pIndex = (struct device_and_service_index *)(event->service->private);
     if (NULL == pIndex) {
-        PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_FAILURE, "pIndex is NULL");
+        RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "pIndex is NULL");
 
         ret = PAL_UPNP_SOAP_E_ACTION_FAILED;
         event->request->error_code = ret;
@@ -273,7 +274,7 @@ INT32 IGD_get_GenericPortMapping_entry(INOUT struct action_event *event)
     bzero(&portmapIndex, sizeof(portmapIndex));
     ret = PAL_xml2s_process(event->request->action_request, tableGenPorMap, &portmapIndex);
     if (ret < 0){
-        PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_FAILURE, "PAL_xml2s_process error");
+        RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "PAL_xml2s_process error");
 
         ret = PAL_UPNP_SOAP_E_INVALID_ARGS;
         event->request->error_code = ret;
@@ -290,7 +291,7 @@ INT32 IGD_get_GenericPortMapping_entry(INOUT struct action_event *event)
         {
             if(portmapIndex.portMapIndex >= entryNum)
             {
-                PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_WARNING, "portmap index error");
+                RDK_LOG(RDK_LOG_NOTICE, "LOG.RDK.IGD", "portmap index error");
                 
                 ret = ARRAY_INDEX_INVALID;
                 event->request->error_code = ret;
@@ -335,7 +336,7 @@ INT32 IGD_get_GenericPortMapping_entry(INOUT struct action_event *event)
                                     event->service->type, PORTMAP_ENTRY_FIELD_NUM, response, PAL_UPNP_ACTION_RESPONSE);
                     if(ret != PAL_UPNP_E_SUCCESS)
                     {
-                        PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_FAILURE, "PAL_upnp_make_action error");
+                        RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "PAL_upnp_make_action error");
 
                         event->request->error_code = ret;
                         event->request->action_result = NULL;
@@ -358,7 +359,7 @@ INT32 IGD_get_GenericPortMapping_entry(INOUT struct action_event *event)
                         free(response[PORTMAPPING_DESCRIPTION].value);
                     }
                 }else {  //IGD_pii_get_portmapping_entry_generic error
-                    PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_FAILURE, "IGD_pii_get_portmapping_entry_num error");
+                    RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "IGD_pii_get_portmapping_entry_num error");
 
                     ret = PAL_UPNP_SOAP_E_ACTION_FAILED;
                     event->request->error_code = ret;
@@ -366,7 +367,7 @@ INT32 IGD_get_GenericPortMapping_entry(INOUT struct action_event *event)
                 }
             }   // end if (portmapIndex.portMapIndex >= entryNum)
         } else {   //IGD_pii_get_portmapping_entry_num error
-            PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_FAILURE, "IGD_pii_get_portmapping_entry_num error");
+            RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "IGD_pii_get_portmapping_entry_num error");
 
             ret = PAL_UPNP_SOAP_E_ACTION_FAILED;
             event->request->error_code = ret;
@@ -376,7 +377,7 @@ INT32 IGD_get_GenericPortMapping_entry(INOUT struct action_event *event)
         PAL_xml2s_free(&portmapIndex, tableGenPorMap);
     }
 
-    PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_DEBUG, "EXIT %s...", __func__);
+    RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "EXIT %s...", __func__);
 
     return ret;
 }
@@ -416,11 +417,11 @@ INT32 IGD_get_SpecificPortMapping_entry(INOUT struct action_event *event)
         { PM_SET[LEASE_DURATION] ,                  NULL }
     };
     
-    PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_DEBUG, "ENTER %s...", __func__);
+    RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "ENTER %s...", __func__);
 
     if (!event || !(event->request)) 
     {
-        PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_WARNING, "Input parameter error");
+        RDK_LOG(RDK_LOG_NOTICE, "LOG.RDK.IGD", "Input parameter error");
 
         ret = IGD_GENERAL_ERROR;
         return ret;
@@ -428,7 +429,7 @@ INT32 IGD_get_SpecificPortMapping_entry(INOUT struct action_event *event)
 
     pIndex = (struct device_and_service_index *)(event->service->private);
     if (NULL == pIndex) {
-        PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_FAILURE, "pIndex is NULL");
+        RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "pIndex is NULL");
 
         ret = PAL_UPNP_SOAP_E_ACTION_FAILED;
         event->request->error_code = ret;
@@ -443,7 +444,7 @@ INT32 IGD_get_SpecificPortMapping_entry(INOUT struct action_event *event)
     ret = PAL_xml2s_process(event->request->action_request, tableSpecPorMap, &portmapIndex);
 
     if (ret < 0){
-        PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_FAILURE, "PAL_xml2s_process error");
+        RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "PAL_xml2s_process error");
 
         ret = PAL_UPNP_SOAP_E_INVALID_ARGS;
         event->request->error_code = ret;
@@ -452,7 +453,7 @@ INT32 IGD_get_SpecificPortMapping_entry(INOUT struct action_event *event)
 	event->request->error_str[sizeof(event->request->error_str)-1] = '\0';
     } else if ((portmapIndex.remoteHost != NULL)
                 &&(0 == inet_pton(AF_INET, portmapIndex.remoteHost, &addr))){ 
-        PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_DEBUG, "remoteHost format error: x.x.x.x");
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "remoteHost format error: x.x.x.x");
 
         ret = PAL_UPNP_SOAP_E_INVALID_ARGS;
         event->request->error_code = ret;
@@ -506,7 +507,7 @@ INT32 IGD_get_SpecificPortMapping_entry(INOUT struct action_event *event)
                                             PORTMAP_ENTRY_FIELD_NUM - PORTMAP_INDEX_FIELD_NUM, response, PAL_UPNP_ACTION_RESPONSE);
             if(ret != PAL_UPNP_E_SUCCESS)
             {
-                PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_FAILURE, "PAL_upnp_make_action error");
+                RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "PAL_upnp_make_action error");
 
                 event->request->error_code = ret;
                 event->request->action_result = NULL;
@@ -522,7 +523,7 @@ INT32 IGD_get_SpecificPortMapping_entry(INOUT struct action_event *event)
             }
             
         } else {
-            PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_FAILURE, "IGD_pii_get_portmapping_entry_specific error");
+            RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "IGD_pii_get_portmapping_entry_specific error");
 
             ret = NO_SUCH_ENTRY_IN_ARRAY;
             event->request->error_code = ret;
@@ -532,7 +533,7 @@ INT32 IGD_get_SpecificPortMapping_entry(INOUT struct action_event *event)
         PAL_xml2s_free(&portmapIndex, tableSpecPorMap);
     }
 
-    PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_DEBUG, "EXIT %s...", __func__);
+    RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "EXIT %s...", __func__);
 
     return ret;
 }
@@ -569,11 +570,11 @@ INT32 IGD_add_PortMapping(INOUT struct action_event *event)
         XML2S_TABLE_END
     };
 
-    PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_DEBUG, "ENTER %s...", __func__);
+    RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "ENTER %s...", __func__);
 
     if (!event || !(event->request)) 
     {
-        PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_WARNING, "Input parameter error");
+        RDK_LOG(RDK_LOG_NOTICE, "LOG.RDK.IGD", "Input parameter error");
 
         ret = IGD_GENERAL_ERROR;
         return ret;
@@ -581,7 +582,7 @@ INT32 IGD_add_PortMapping(INOUT struct action_event *event)
     
     pIndex = (struct device_and_service_index *)(event->service->private);
     if (NULL == pIndex) {
-        PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_FAILURE, "pIndex is NULL");
+        RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "pIndex is NULL");
 
         ret = PAL_UPNP_SOAP_E_ACTION_FAILED;
         event->request->error_code = ret;
@@ -596,7 +597,7 @@ INT32 IGD_add_PortMapping(INOUT struct action_event *event)
     ret = PAL_xml2s_process(event->request->action_request, tableAddPorMap, &portmapEntry);
 
     if (ret < 0){
-        PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_FAILURE, "PAL_xml2s_process error: %d", ret);
+        RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "PAL_xml2s_process error: %d", ret);
 
         ret = PAL_UPNP_SOAP_E_INVALID_ARGS;
         event->request->error_code = ret;
@@ -608,7 +609,7 @@ INT32 IGD_add_PortMapping(INOUT struct action_event *event)
                 ||(portmapEntry.internalClient == NULL) /* WANIpConnection v1: internalClient can not be wildcard (i.e. empty string) */
                 ||(0 == inet_pton(AF_INET, portmapEntry.internalClient, &addr)) 
                 ||(!chkPortMappingClient(portmapEntry.internalClient))){ 
-        PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_DEBUG, "remoteHost or internalClient format error: x.x.x.x");
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "remoteHost or internalClient format error: x.x.x.x");
 
         ret = PAL_UPNP_SOAP_E_INVALID_ARGS;
         event->request->error_code = ret;
@@ -654,13 +655,13 @@ INT32 IGD_add_PortMapping(INOUT struct action_event *event)
                             event->service->type, 0, NULL, PAL_UPNP_ACTION_RESPONSE);
             if(ret != PAL_UPNP_E_SUCCESS)
             {
-                PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_FAILURE, "PAL_upnp_make_action error");
+                RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "PAL_upnp_make_action error");
 
                 event->request->error_code = ret;
                 event->request->action_result = NULL;
             }
         } else {
-            PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_FAILURE, "IGD_pii_add_portmapping_entry error");
+            RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "IGD_pii_add_portmapping_entry error");
             switch(ret) 
             { 
                 case ERROR_WILDCARD_NOTPERMIT_FOR_SRC_IP: 
@@ -709,7 +710,7 @@ INT32 IGD_add_PortMapping(INOUT struct action_event *event)
         PAL_xml2s_free(&portmapEntry, tableAddPorMap);
     }
 
-    PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_DEBUG, "EXIT %s...", __func__);
+    RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "EXIT %s...", __func__);
 
     return ret;
 }
@@ -740,11 +741,11 @@ INT32 IGD_delete_PortMapping(INOUT struct action_event *event)
         XML2S_TABLE_END
     };
 
-    PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_DEBUG, "ENTER %s...", __func__);
+    RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "ENTER %s...", __func__);
 
     if (!event || !(event->request)) 
     {
-        PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_WARNING, "Input parameter error");
+        RDK_LOG(RDK_LOG_NOTICE, "LOG.RDK.IGD", "Input parameter error");
 
         ret = IGD_GENERAL_ERROR;
         return ret;
@@ -752,7 +753,7 @@ INT32 IGD_delete_PortMapping(INOUT struct action_event *event)
     
     pIndex = (struct device_and_service_index *)(event->service->private);
     if (NULL == pIndex) {
-        PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_FAILURE, "pIndex is NULL");
+        RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "pIndex is NULL");
 
         ret = PAL_UPNP_SOAP_E_ACTION_FAILED;
         event->request->error_code = ret;
@@ -766,7 +767,7 @@ INT32 IGD_delete_PortMapping(INOUT struct action_event *event)
     bzero(&portmapIndex, sizeof(portmapIndex));
     ret = PAL_xml2s_process(event->request->action_request, tableDelPorMap, &portmapIndex);
     if (ret < 0){
-        PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_FAILURE, "PAL_xml2s_process error");
+        RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "PAL_xml2s_process error");
 
         ret = PAL_UPNP_SOAP_E_INVALID_ARGS;
         event->request->error_code = ret;
@@ -775,7 +776,7 @@ INT32 IGD_delete_PortMapping(INOUT struct action_event *event)
 	event->request->error_str[sizeof(event->request->error_str)-1] = '\0';
     } else if ((portmapIndex.remoteHost != NULL)
                 &&(0 == inet_pton(AF_INET, portmapIndex.remoteHost, &addr))){ 
-        PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_DEBUG, "remoteHost format error: x.x.x.x");
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "remoteHost format error: x.x.x.x");
 
         ret = PAL_UPNP_SOAP_E_INVALID_ARGS;
         event->request->error_code = ret;
@@ -800,13 +801,13 @@ INT32 IGD_delete_PortMapping(INOUT struct action_event *event)
                             event->service->type, 0, NULL, PAL_UPNP_ACTION_RESPONSE);
             if(ret != PAL_UPNP_E_SUCCESS)
             {
-                PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_FAILURE, "PAL_upnp_make_action error");
+                RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "PAL_upnp_make_action error");
 
                 event->request->error_code = ret;
                 event->request->action_result = NULL;
             }
         } else {
-            PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_FAILURE, "IGD_pii_del_portmapping_entry error");
+            RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "IGD_pii_del_portmapping_entry error");
 
             ret = NO_SUCH_ENTRY_IN_ARRAY;
             event->request->error_code = ret;
@@ -816,7 +817,7 @@ INT32 IGD_delete_PortMapping(INOUT struct action_event *event)
         PAL_xml2s_free(&portmapIndex, tableDelPorMap);
     }
 
-    PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_DEBUG, "EXIT %s...", __func__);
+    RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "EXIT %s...", __func__);
 
     return ret;
 }

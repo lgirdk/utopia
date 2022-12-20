@@ -76,7 +76,6 @@
 #include <utapi/utapi.h>
 
 #include "pal_upnp_device.h"
-#include "pal_log.h"
 #include "pal_kernel.h"
 #include "igd_platform_independent_inf.h"
 #include "igd_utility.h"
@@ -89,6 +88,12 @@
 
 #ifdef INCLUDE_BREAKPAD
 #include "breakpad_wrapper.h"
+#endif
+
+/* Logger support. */
+#ifdef FEATURE_SUPPORT_RDKLOG
+#define DEBUG_INI_NAME "/etc/debug.ini"
+#define RDK_LOG_COMP_NAME "LOG.RDK.IGD"
 #endif
 
 extern INT32 IGD_pii_get_lan_device_number(VOID);
@@ -184,42 +189,42 @@ LOCAL INT32 _igd_root_device_init(VOID)
     //Utopia_RawGet(&utctx,NULL,"lan_ipaddr",ip_address,sizeof(ip_address));
     //Utopia_Free(&utctx,FALSE);
 
-	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"Initilize IGD root device\n");
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","Initilize IGD root device\n");
 	if(IGD_pii_get_uuid(IGD_device.udn))
 	{
-		PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"Get UUID for the root device fail\n");
+		RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","Get UUID for the root device fail\n");
 		return -1;
 	}
-	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"\nRoot Device UUID:%s\n",IGD_device.udn);
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","\nRoot Device UUID:%s\n",IGD_device.udn);
 
         /* CID 64826: Unchecked return value from library */
 	ret = mkdir("/var/IGD",0755);
         if(ret !=0 && errno != EEXIST) {
-	   PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"Failed to Create IGD directory.\n");
+	   RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","Failed to Create IGD directory.\n");
 	   return -1;
 	}
 
 	unlink(DESC_DOC_PATH);
 	fp=fopen(DESC_DOC_PATH, "w");
 	if(fp==NULL)
-    {
-        PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"Create %s fail, %s",DESC_DOC_PATH,strerror(errno));
-        return -1;
-    }
-	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"\n\nCreate description file\n");
+	{
+		RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","Create %s fail, %s",DESC_DOC_PATH,strerror(errno));
+		return -1;
+	}
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","\n\nCreate description file\n");
 	if(_igd_root_device_desc_file(fp,IGD_device.udn))
 	{
-		PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"create IGD description file fail!\n");
+		RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","create IGD description file fail!\n");
 		fclose(fp);
 		return -1;
 	}
 		
 	if(IGD_service_Layer3ForwardingInit(NULL,fp))
-    {
-        PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"layer3forwarding init fail, %s");
+	{
+		RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","layer3forwarding init fail!\n");
 		fclose(fp);
-        return -1;
-    }
+		return -1;
+	}
 	
 	fprintf(fp, "</serviceList>\n");
 	fprintf(fp, "<deviceList>\n");
@@ -227,7 +232,7 @@ LOCAL INT32 _igd_root_device_init(VOID)
 	wan_device_number = IGD_pii_get_wan_device_number();
 	if(wan_device_number <= 0)
 	{
-		PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"WANDevice error:%d\n",wan_device_number);
+		RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","WANDevice error:%d\n",wan_device_number);
 		fclose(fp);
 		return -1;
 	}
@@ -238,14 +243,14 @@ LOCAL INT32 _igd_root_device_init(VOID)
 
 		if(IGD_pii_get_uuid(device_udn))
 		{
-			PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"Get UUID for WANDevice fail\n");
+			RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","Get UUID for WANDevice fail\n");
 			fclose(fp);
 			return -1;
 		}
 		wan_device = IGD_device_WANDeviceInit((VOID*)(&igd_index),device_udn,fp);
 		if(NULL == wan_device)
 		{
-			PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"IGD WAN device:%d init failed\n",wan_index);
+			RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","IGD WAN device:%d init failed\n",wan_index);
 			/*upnp_device_destroy() will destroy the initialized device*/
 			fclose(fp);
 			return -1;
@@ -283,7 +288,7 @@ LOCAL INT32 _igd_root_device_init(VOID)
 LOCAL INT32 _igd_root_device_destroy(IN struct upnp_device *pdevice)
 {
 	(void) pdevice;
-	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"Destroy IGD root device\n");
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","Destroy IGD root device\n");
 	if(Layer3Forwarding_service.destroy_function)
 		Layer3Forwarding_service.destroy_function(&Layer3Forwarding_service);
 	return 0;
@@ -310,6 +315,10 @@ main( IN INT32 argc,
 #ifdef INCLUDE_BREAKPAD
     breakpad_ExceptionHandler();
 #endif
+
+#ifdef FEATURE_SUPPORT_RDKLOG
+        rdk_logger_init(DEBUG_INI_NAME);
+#endif
         snprintf(DESC_DOC_NAME, sizeof(DESC_DOC_NAME), "IGDdevicedesc_%s.xml", argv[1]);
         snprintf(DESC_DOC_PATH, sizeof(DESC_DOC_PATH), DEFAULT_WEB_DIR"/%s", DESC_DOC_NAME);
         
@@ -321,7 +330,7 @@ main( IN INT32 argc,
 #endif
 	/*CID 67479: Unchecked return value */
         if (!Utopia_Init(&utctx)) {
-            PAL_LOG(LOG_IGD_NAME,PAL_LOG_LEVEL_FAILURE, "%s: Error, in getting utctx object", __FUNCTION__);
+            RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "%s: Error, in getting utctx object", __FUNCTION__);
             return -1;
 	}
 
@@ -330,13 +339,12 @@ main( IN INT32 argc,
         Utopia_Free(&utctx, FALSE);
         
 
-		PAL_LOG_REGISTER(LOG_IGD_NAME, NULL);
 		if (PAL_get_if_IpAddress(igd_upnp_interface,ip_address) == -1) 
 		{
-			PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"Invalid internal interface name '%s'\n",igd_upnp_interface);
+			RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","Invalid internal interface name '%s'\n",igd_upnp_interface);
 			exit(0);
 		}
-		PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"IP address:%s\n",ip_address);
+		RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","IP address:%s\n",ip_address);
 
 #ifdef CISCO_CONFIG_TRUE_STATIC_IP
         /*
@@ -372,14 +380,14 @@ main( IN INT32 argc,
         ret=PAL_upnp_device_init(&IGD_device,igd_upnp_interface,0,igdAdvrExpire,DESC_DOC_NAME,DEFAULT_WEB_DIR);
 		if(ret)
 		{
-			PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"initialize device fail '%d'\n", ret);
+			RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","initialize device fail '%d'\n", ret);
 			PAL_upnp_device_destroy(&IGD_device);
 			exit(0);
 		}
 
 		do {
 			  receivedsignal = _igd_root_device_registerAndgetsignal( );
-			  PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"Received signal is %d\n", receivedsignal);
+			  RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","Received signal is %d\n", receivedsignal);
 
 			  /*
 			     * SIGTERM - 15
@@ -388,7 +396,7 @@ main( IN INT32 argc,
 			     
 		} while ( ( 15 != receivedsignal )  && ( 2 != receivedsignal ) );
 
-    	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"Shutting down on signal %d...\n", receivedsignal );
+    	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","Shutting down on signal %d...\n", receivedsignal );
     	PAL_upnp_device_destroy(&IGD_device);
     	exit( 0 );
 }

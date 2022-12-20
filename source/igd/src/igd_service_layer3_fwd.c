@@ -65,7 +65,6 @@
  **/
 #include <stdio.h>
 #include "pal_upnp_device.h"
-#include "pal_log.h"
 #include "igd_platform_independent_inf.h"
 #include "igd_utility.h"
 
@@ -138,7 +137,7 @@ LOCAL INT32 _igd_service_Layer3Forwarding_desc_file(INOUT FILE *fp)
 ************************************************************/
 LOCAL INT32 _igd_service_Layer3Forwarding_destroy(IN struct upnp_service *pservice)
 {
-	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"Destroy IGD Layer3Forwarding\n");
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","Destroy IGD Layer3Forwarding\n");
 	if(pservice==NULL)
 		return -1;
 	pthread_mutex_destroy(&pservice->service_mutex);
@@ -160,15 +159,15 @@ LOCAL INT32 _igd_service_Layer3Forwarding_destroy(IN struct upnp_service *pservi
 INT32 IGD_service_Layer3ForwardingInit(IN VOID* input_index_struct, INOUT FILE *fp)
 {	
 	(void) input_index_struct;
-	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"Initilize IGD Layer3Forwarding\n");
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","Initilize IGD Layer3Forwarding\n");
 	if(pthread_mutex_init(&Layer3Forwarding_service.service_mutex, NULL ))
 	{
-        PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE, "Layer3Forwarding Init mutex fail!\n");
+        RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "Layer3Forwarding Init mutex fail!\n");
         return -1;
 	}
 	if(_igd_service_Layer3Forwarding_desc_file(fp))
 	{
-		PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"create Layer3Forwarding description file fail!\n");
+		RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","create Layer3Forwarding description file fail!\n");
 		_igd_service_Layer3Forwarding_destroy(&Layer3Forwarding_service);
 		return -1;
 	}
@@ -208,13 +207,13 @@ LOCAL INT32 _igd_check_DefaultConnectionService (IN const CHAR *connecion_servic
 	if(strlen(connecion_service_string) >= PAL_UPNP_NAME_SIZE) /* Fix for RDKB-15855 */
 		return INVALID_DEVICE_UUID;	
 	
-	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"check the string:%s\n",connecion_service_string);
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","check the string:%s\n",connecion_service_string);
 	
 	strncpy(check_string,connecion_service_string,PAL_UPNP_NAME_SIZE);
 	strncpy(udn,connecion_service_string,UPNP_UUID_LEN_BY_VENDER);
 	udn[UPNP_UUID_LEN_BY_VENDER-1]='\0';
 	check_string[PAL_UPNP_NAME_SIZE-1]='\0';	
-	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"UUID:%s\n",udn);
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","UUID:%s\n",udn);
 	/*check the uuid */
 	while(dev)
 	{	
@@ -227,7 +226,7 @@ LOCAL INT32 _igd_check_DefaultConnectionService (IN const CHAR *connecion_servic
 	}
 	if(NULL == connection_device)
 	{
-		PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"Can't find %s\n",udn);
+		RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","Can't find %s\n",udn);
 		return INVALID_DEVICE_UUID;
 	}
 	/*get the ServiceID*/
@@ -235,7 +234,7 @@ LOCAL INT32 _igd_check_DefaultConnectionService (IN const CHAR *connecion_servic
 	if(NULL==service_ID) 
 		return INVALID_SERVICE_ID;
 	service_ID = (CHAR *) &connecion_service_string[ strlen(service_ID)+1 ];
-	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"service ID:%s\n",service_ID);
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","service ID:%s\n",service_ID);
 	/*check the ServiceID */
 	dev = &IGD_device;
 	while(dev)
@@ -286,12 +285,12 @@ LOCAL INT32 _igd_set_DefaultConnectionService (INOUT struct action_event *event)
 	CHAR *var_name[LAYER3FWD_MAX_EVENT_NUM] = {0};
     CHAR *var_value[LAYER3FWD_MAX_EVENT_NUM] = {0};
 	
-	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"Layer3Forwarding action:SetDefaultConnectionService\n");
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","Layer3Forwarding action:SetDefaultConnectionService\n");
 	
 	value = PAL_xml_node_get_value(PAL_xml_node_GetFirstbyName(event->request->action_request,"NewDefaultConnectionService",NULL));
 	if(value == NULL)
 	{
-		PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"Layer3Forwarding action:No NewDefaultConnectionService\n");
+		RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","Layer3Forwarding action:No NewDefaultConnectionService\n");
 		event->request->error_code = INVALID_ARGS;
 		goto erro_response;
 	}
@@ -299,7 +298,7 @@ LOCAL INT32 _igd_set_DefaultConnectionService (INOUT struct action_event *event)
 	ret = _igd_check_DefaultConnectionService(value);
 	if(ret == 0)
 	{
-		PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"NewDefaultConnectionService:%s\n",value);
+		RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","NewDefaultConnectionService:%s\n",value);
 		strncpy(event->service->state_variables[0].value,value,strlen(value)+1);
 		strncpy(event->service->event_variables[0].value,value, strlen(value)+1);
 		var_name[0] = (CHAR *)event->service->event_variables[0].name;
@@ -307,31 +306,31 @@ LOCAL INT32 _igd_set_DefaultConnectionService (INOUT struct action_event *event)
 		ret = PAL_upnp_notify(PAL_upnp_device_getHandle(),IGD_device.udn,event->service->serviceID,(const CHAR **)var_name,(const CHAR **)var_value,1);
 		if(ret)
 		{
-			PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_WARNING, "PAL_upnp_notify() fail, error code=%d", ret);
+			RDK_LOG(RDK_LOG_NOTICE, "LOG.RDK.IGD", "PAL_upnp_notify() fail, error code=%d", ret);
 		}		
 		event->request->error_code = PAL_UPNP_E_SUCCESS;
 	}
 	else if(INVALID_DEVICE_UUID == ret)
 	{
-		PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"Layer3Forwarding action:InvalidDeviceUUID\n");
+		RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","Layer3Forwarding action:InvalidDeviceUUID\n");
 		strncpy(event->request->error_str, "InvalidDeviceUUID",PAL_UPNP_LINE_SIZE);
 		event->request->error_code = INVALID_DEVICE_UUID;
 	}
 	else if(INVALID_SERVICE_ID == ret)
 	{
-		PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"Layer3Forwarding action:InvalidServiceID\n");
+		RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","Layer3Forwarding action:InvalidServiceID\n");
 		strncpy(event->request->error_str, "InvalidServiceID",PAL_UPNP_LINE_SIZE);
 		event->request->error_code = INVALID_SERVICE_ID;
 	}
 	else if(INVALID_CONN_SERVICE_SELECTION == ret)
 	{
-		PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"Layer3Forwarding action:The selected connection service instance cannot be set as a default connection\n");
+		RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","Layer3Forwarding action:The selected connection service instance cannot be set as a default connection\n");
 		strncpy(event->request->error_str, "InvalidConnServiceSelection",PAL_UPNP_LINE_SIZE);
 		event->request->error_code = INVALID_CONN_SERVICE_SELECTION;
 	}
 	else
 	{
-		PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"Layer3Forwarding action:Action fail\n");
+		RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","Layer3Forwarding action:Action fail\n");
 		event->request->error_code = ACTION_FAIL;
 	}
 	
@@ -356,7 +355,7 @@ LOCAL INT32 _igd_get_DefaultConnectionService (IN struct action_event *event)
 {
 	pal_string_pair params[DEFAULT_CONNECTION_SERVICE_PARA_NUM];
 
-	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"Layer3Forwarding action:GetDefaultConnectionService\n");
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","Layer3Forwarding action:GetDefaultConnectionService\n");
 	event->request->error_code = PAL_UPNP_E_SUCCESS;
 
 	params[0].name="NewDefaultConnectionService";
@@ -373,7 +372,7 @@ LOCAL VOID l3fwding_conn_service_init(IN struct upnp_service  *ps)
     CHAR baseUuid[UPNP_UUID_LEN_BY_VENDER] = {0};
 
     if (NULL == ps){
-        PAL_LOG("layer3forwarding", 1, "layer3forwarding service is NULL");
+        RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","layer3forwarding service is NULL\n");    
         return;
     }
 

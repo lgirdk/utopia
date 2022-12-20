@@ -175,6 +175,9 @@ service_start ()
           #To monitor all wifi interface packets in every 15minutes
           echo "*/15 * * * * /etc/sky/monitor_wifi_packets.sh" >> $CRONTAB_FILE
 
+	  #To monitor /tmp directory every 10 minutes
+	  echo "*/10 * * * * /etc/sky/monitor_tmp.sh" >> $CRONTAB_FILE
+
           #To monitor all wifi interface dhd dump in every 1hour
           addCron "48 * * * *  sh /etc/sky/monitor_dhd_dump.sh &"
       fi

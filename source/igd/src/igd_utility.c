@@ -71,6 +71,7 @@
 #include "pal_upnp.h"
 #include "pal_def.h"
 #include "igd_utility.h"
+#include "igd_platform_independent_inf.h"
 
 
 //for timer
@@ -212,7 +213,7 @@ LOCAL VOID *_timer_loop_cycle(VOID *arg)
                 }
                 else
                 {
-                    ;//PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_FAILURE, "malloc temp_node_copy fails");
+                    ;//RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "malloc temp_node_copy fails");
                 }
                 temp_node = temp_node->next;
             }
@@ -266,19 +267,19 @@ VOID IGD_timer_start(VOID)
 
     if ( pthread_mutex_init(&timer_thread_mutex_run_once, NULL))
     {
-        //PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_WARNING, "init timer_thread_mutex_run_once fail");
+        //RDK_LOG(RDK_LOG_NOTICE, "LOG.RDK.IGD", "init timer_thread_mutex_run_once fail");
         return;
     }
     if ( pthread_mutex_init(&timer_thread_mutex_cycle, NULL))
     {
-        //PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_WARNING, "init timer_thread_mutex_cycle fail");
+        //RDK_LOG(RDK_LOG_NOTICE, "LOG.RDK.IGD", "init timer_thread_mutex_cycle fail");
         pthread_mutex_destroy(&timer_thread_mutex_run_once);
         return;
     }
 
     if (pthread_create(&timer_thread_id_run_once, NULL, _timer_loop_run_once, NULL)) 
     {
-        //PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_WARNING, "init timer_thread_id_run_once fail");
+        //RDK_LOG(RDK_LOG_NOTICE, "LOG.RDK.IGD", "init timer_thread_id_run_once fail");
         pthread_mutex_destroy(&timer_thread_mutex_run_once);
         pthread_mutex_destroy(&timer_thread_mutex_cycle);
         return;
@@ -286,7 +287,7 @@ VOID IGD_timer_start(VOID)
     pthread_detach(timer_thread_id_run_once);
     if (pthread_create(&timer_thread_id_cycle, NULL, _timer_loop_cycle, NULL)) 
     {
-        //PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_WARNING, "init timer_thread_id_cycle fail");
+        //RDK_LOG(RDK_LOG_NOTICE, "LOG.RDK.IGD", "init timer_thread_id_cycle fail");
         pthread_mutex_destroy(&timer_thread_mutex_run_once);
         pthread_mutex_destroy(&timer_thread_mutex_cycle);
         
@@ -363,7 +364,7 @@ VOID IGD_timer_register(IN struct upnp_device * input_upnp_device,
          ||( (input_mode != timer_function_mode_run_once) && (input_mode != timer_function_mode_cycle) )
          )
     {
-        //PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_WARNING, "input parameter error");
+        //RDK_LOG(RDK_LOG_NOTICE, "LOG.RDK.IGD", "input parameter error");
         return;
     }
 
@@ -383,7 +384,7 @@ VOID IGD_timer_register(IN struct upnp_device * input_upnp_device,
         }
         else
         {
-            //PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_FAILURE, "malloc temp_node fails");
+            //RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "malloc temp_node fails");
         }
         pthread_mutex_unlock(&timer_thread_mutex_run_once);
     }
@@ -403,7 +404,7 @@ VOID IGD_timer_register(IN struct upnp_device * input_upnp_device,
         }
         else
         {
-            //PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_FAILURE, "malloc temp_node fails");
+            //RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "malloc temp_node fails");
         }
         pthread_mutex_unlock(&timer_thread_mutex_cycle);
     }

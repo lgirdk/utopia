@@ -73,7 +73,6 @@
 #include "pal_upnp_device.h"
 #include "pal_upnp.h"
 #include "pal_def.h"
-#include "pal_log.h"
 #include "igd_utility.h"
 #include "igd_platform_independent_inf.h"
 
@@ -174,7 +173,7 @@ LOCAL INT32 _igd_service_WANCommonInterfaceConfig_destroy(IN struct upnp_service
 	   const before call free() function */
 	CHAR * serviceID = (CHAR *)NULL;
 
-	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"Destroy WANDevice WANCommonInterfaceConfig\n");
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","Destroy WANDevice WANCommonInterfaceConfig\n");
 	if(pservice==NULL)
 		return -1;
 
@@ -206,17 +205,17 @@ struct upnp_service* IGD_service_WANCommonInterfaceConfigInit(IN VOID* input_ind
 	INT32 i;
 	struct upnp_service *WANCommonInterfaceConfig_service=NULL;
 	
-	PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"Initilize WANCommonInterfaceConfig of WANDevice %d\n",((struct device_and_service_index*)input_index_struct)->wan_device_index);
+	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","Initilize WANCommonInterfaceConfig of WANDevice %d\n",((struct device_and_service_index*)input_index_struct)->wan_device_index);
 	WANCommonInterfaceConfig_service=(struct upnp_service *)calloc(1,sizeof(struct upnp_service));
 	if(WANCommonInterfaceConfig_service==NULL)
 	{
-		PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"out of memory,upnp_service!\n");
+		RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","out of memory,upnp_service!\n");
 		return NULL;
 	}
 
 	if(pthread_mutex_init(&WANCommonInterfaceConfig_service->service_mutex, NULL ))
 	{
-        PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE, "Init mutex fail!\n");
+        RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "Init mutex fail!\n");
         _igd_service_WANCommonInterfaceConfig_destroy(WANCommonInterfaceConfig_service);
         return NULL;
 	}
@@ -226,7 +225,7 @@ struct upnp_service* IGD_service_WANCommonInterfaceConfigInit(IN VOID* input_ind
 	WANCommonInterfaceConfig_service->type=(CHAR *)calloc(1,strlen(WANCOMMONINTERFACECONFIG_SERVICE_TYPE)+1);
 	if(WANCommonInterfaceConfig_service->type==NULL)
 	{
-		PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"out of memory,type!\n");
+		RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","out of memory,type!\n");
 		_igd_service_WANCommonInterfaceConfig_destroy(WANCommonInterfaceConfig_service);
 		return NULL;
 	}
@@ -237,7 +236,7 @@ struct upnp_service* IGD_service_WANCommonInterfaceConfigInit(IN VOID* input_ind
 	WANCommonInterfaceConfig_service->serviceID=(CHAR *)calloc(1,strlen(WANCOMMONINTERFACECONFIG_SERVICE_ID)+1);
 	if(WANCommonInterfaceConfig_service->serviceID==NULL)
 	{
-		PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"out of memory,serviceID!\n");
+		RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","out of memory,serviceID!\n");
 		_igd_service_WANCommonInterfaceConfig_destroy(WANCommonInterfaceConfig_service);
 		return NULL;
 	}
@@ -248,7 +247,7 @@ struct upnp_service* IGD_service_WANCommonInterfaceConfigInit(IN VOID* input_ind
     WANCommonInterfaceConfig_service->state_variables = (struct upnp_variable *)calloc(sizeof(WANCommonInterfaceConfig_status_variables_name)/sizeof(CHAR *),sizeof(struct upnp_variable));
     if (!WANCommonInterfaceConfig_service->state_variables)
     {
-        PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE, "out of memory,state_variables!\n");
+        RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "out of memory,state_variables!\n");
         _igd_service_WANCommonInterfaceConfig_destroy(WANCommonInterfaceConfig_service);
         return NULL;
     }
@@ -260,7 +259,7 @@ struct upnp_service* IGD_service_WANCommonInterfaceConfigInit(IN VOID* input_ind
     WANCommonInterfaceConfig_service->event_variables = (struct upnp_variable *)calloc(sizeof(WANCommonInterfaceConfig_event_variables_name)/sizeof(CHAR *), sizeof(struct upnp_variable));
     if (!WANCommonInterfaceConfig_service->event_variables)
     {
-        PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE, "out of memory,event_variables!\n");
+        RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "out of memory,event_variables!\n");
         _igd_service_WANCommonInterfaceConfig_destroy(WANCommonInterfaceConfig_service);
         return NULL;
     }
@@ -271,7 +270,7 @@ struct upnp_service* IGD_service_WANCommonInterfaceConfigInit(IN VOID* input_ind
 	WANCommonInterfaceConfig_service->private=(struct device_and_service_index *)calloc(1,sizeof(struct device_and_service_index));
 	if(WANCommonInterfaceConfig_service->private==NULL)
 	{
-		PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"out of memory!\n");
+		RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","out of memory!\n");
 		_igd_service_WANCommonInterfaceConfig_destroy(WANCommonInterfaceConfig_service);
 		return NULL;
 	}
@@ -279,7 +278,7 @@ struct upnp_service* IGD_service_WANCommonInterfaceConfigInit(IN VOID* input_ind
 
 	if(_igd_service_WANCommonInterfaceConfig_desc_file(fp))
 	{
-		PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE,"create WANCommonInterfaceConfig description file fail!\n");
+		RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","create WANCommonInterfaceConfig description file fail!\n");
 		_igd_service_WANCommonInterfaceConfig_destroy(WANCommonInterfaceConfig_service);
 		return NULL;
 	}
@@ -312,11 +311,11 @@ VOID IGD_service_WANCommonInterfaceConfigEventHandler(IN struct upnp_device  *pd
 		CHAR status[PROPERTIES_STRING_LEN];
 
 		if (NULL == pdevice) {
-			PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE, "pdevice is NULL");
+			RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "pdevice is NULL");
 			return;
 		}
 		if (NULL == pservice) {
-			PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE, "pservice is NULL");
+			RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "pservice is NULL");
 			return;
 		}
 	
@@ -324,14 +323,14 @@ VOID IGD_service_WANCommonInterfaceConfigEventHandler(IN struct upnp_device  *pd
 
 		pIndex = (struct device_and_service_index *)(pservice->private);
 		if (NULL == pIndex) {
-			PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_FAILURE, "No interface infomation");
+			RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "No interface infomation");
 			pthread_mutex_unlock(&pservice->service_mutex);
 			return;
 		}
 
 		if(IGD_pii_get_common_link_properties(pIndex->wan_device_index,type,up,down,status))
 		{
-			PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"CommonLinkProperties get fail\n");
+			RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","CommonLinkProperties get fail\n");
 			pthread_mutex_unlock(&pservice->service_mutex);
 			return;
 		}
@@ -342,7 +341,7 @@ VOID IGD_service_WANCommonInterfaceConfigEventHandler(IN struct upnp_device  *pd
 			strncpy(pservice->event_variables[0].value,status, strlen(status)+1);
 			var_name[0] = (CHAR *)pservice->event_variables[0].name;
             var_value[0] = pservice->event_variables[0].value;
-			PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO, "Eventing:%s=%s",var_name[0],var_value[0]);
+			RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD", "Eventing:%s=%s",var_name[0],var_value[0]);
 			if(PAL_upnp_notify (PAL_upnp_device_getHandle(),
                         		(const CHAR *)pdevice->udn,
                         		pservice->serviceID,
@@ -350,7 +349,7 @@ VOID IGD_service_WANCommonInterfaceConfigEventHandler(IN struct upnp_device  *pd
                         		(const CHAR **)var_value,
                         		1))
 			{
-				PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_WARNING, "PAL_upnp_notify() fail");
+				RDK_LOG(RDK_LOG_NOTICE, "LOG.RDK.IGD", "PAL_upnp_notify() fail");
 			}
 		}
 		pthread_mutex_unlock(&pservice->service_mutex);
@@ -383,11 +382,11 @@ LOCAL INT32 _igd_get_CommonLinkProperties (INOUT struct action_event *event)
 	   event->request->error_code = PAL_UPNP_E_SUCCESS;
 	   
 	   local_index = *((struct device_and_service_index*)event->service->private);
-	   PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"GetCommonLinkProperties of WAN%d\n",local_index.wan_device_index);
+	   RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","GetCommonLinkProperties of WAN%d\n",local_index.wan_device_index);
 	   
 	   if(IGD_pii_get_common_link_properties(local_index.wan_device_index,type,up,down,status))
 	   {
-		   PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"Layer3Forwarding action:Action fail\n");
+		   RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","Layer3Forwarding action:Action fail\n");
 		   event->request->error_code = 501;
 		   PAL_upnp_make_action(&event->request->action_result,"GetEthernetLinkStatus",WANCOMMONINTERFACECONFIG_SERVICE_TYPE,0,NULL,PAL_UPNP_ACTION_RESPONSE);
 		   return(event->request->error_code);
@@ -431,14 +430,14 @@ LOCAL INT32 _igd_get_TotalBytesSent (INOUT struct action_event *event)
 	   event->request->error_code = PAL_UPNP_E_SUCCESS;
 	   
 	   local_index = *((struct device_and_service_index*)event->service->private);
-	   PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"GetTotalBytesSent of WAN%d\n",local_index.wan_device_index);
+	   RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","GetTotalBytesSent of WAN%d\n",local_index.wan_device_index);
 	   
 	   /*
 	    * IGD_pii_get_traffic_stats(local_index.wan_device_index,bufsz,bytes_sent,bytes_rcvd,pkts_sent,pkts_rcvd)
 	    */
 	   if(IGD_pii_get_traffic_stats(local_index.wan_device_index, PROPERTIES_STRING_LEN, bytes_sent, NULL, NULL, NULL))
 	   {
-		   PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"GetTotalBytesSent action:Action fail\n");
+		   RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","GetTotalBytesSent action:Action fail\n");
 		   event->request->error_code = 501;
 		   PAL_upnp_make_action(&event->request->action_result,"GetTotalBytesSent",WANCOMMONINTERFACECONFIG_SERVICE_TYPE,0,NULL,PAL_UPNP_ACTION_RESPONSE);
 		   return(event->request->error_code);
@@ -473,14 +472,14 @@ LOCAL INT32 _igd_get_TotalBytesReceived (INOUT struct action_event *event)
 	   event->request->error_code = PAL_UPNP_E_SUCCESS;
 	   
 	   local_index = *((struct device_and_service_index*)event->service->private);
-	   PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"GetTotalBytesReceived of WAN%d\n",local_index.wan_device_index);
+	   RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","GetTotalBytesReceived of WAN%d\n",local_index.wan_device_index);
 	   
 	   /*
 	    * IGD_pii_get_traffic_stats(local_index.wan_device_index,bufsz,bytes_sent,bytes_rcvd,pkts_sent,pkts_rcvd)
 	    */
 	   if(IGD_pii_get_traffic_stats(local_index.wan_device_index, PROPERTIES_STRING_LEN, NULL, bytes_rcvd, NULL, NULL))
 	   {
-		   PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"GetTotalBytesReceived action:Action fail\n");
+		   RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","GetTotalBytesReceived action:Action fail\n");
 		   event->request->error_code = 501;
 		   PAL_upnp_make_action(&event->request->action_result,"GetTotalBytesReceived",WANCOMMONINTERFACECONFIG_SERVICE_TYPE,0,NULL,PAL_UPNP_ACTION_RESPONSE);
 		   return(event->request->error_code);
@@ -515,14 +514,14 @@ LOCAL INT32 _igd_get_TotalPacketsSent (INOUT struct action_event *event)
 	   event->request->error_code = PAL_UPNP_E_SUCCESS;
 	   
 	   local_index = *((struct device_and_service_index*)event->service->private);
-	   PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"GetTotalPacketsSent of WAN%d\n",local_index.wan_device_index);
+	   RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","GetTotalPacketsSent of WAN%d\n",local_index.wan_device_index);
 	   
 	   /*
 	    * IGD_pii_get_traffic_stats(local_index.wan_device_index,bufsz,bytes_sent,bytes_rcvd,pkts_sent,pkts_rcvd)
 	    */
 	   if(IGD_pii_get_traffic_stats(local_index.wan_device_index, PROPERTIES_STRING_LEN, NULL, NULL, pkts_sent, NULL))
 	   {
-		   PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"GetTotalPacketsSent action:Action fail\n");
+		   RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","GetTotalPacketsSent action:Action fail\n");
 		   event->request->error_code = 501;
 		   PAL_upnp_make_action(&event->request->action_result,"GetTotalPacketsSent",WANCOMMONINTERFACECONFIG_SERVICE_TYPE,0,NULL,PAL_UPNP_ACTION_RESPONSE);
 		   return(event->request->error_code);
@@ -557,14 +556,14 @@ LOCAL INT32 _igd_get_TotalPacketsReceived (INOUT struct action_event *event)
 	   event->request->error_code = PAL_UPNP_E_SUCCESS;
 	   
 	   local_index = *((struct device_and_service_index*)event->service->private);
-	   PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"GetTotalPacketsReceived of WAN%d\n",local_index.wan_device_index);
+	   RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","GetTotalPacketsReceived of WAN%d\n",local_index.wan_device_index);
 	   
 	   /*
 	    * IGD_pii_get_traffic_stats(local_index.wan_device_index,bufsz,bytes_sent,bytes_rcvd,pkts_sent,pkts_rcvd)
 	    */
 	   if(IGD_pii_get_traffic_stats(local_index.wan_device_index, PROPERTIES_STRING_LEN, NULL, NULL, NULL, pkts_rcvd))
 	   {
-		   PAL_LOG(LOG_IGD_NAME, PAL_LOG_LEVEL_INFO,"GetTotalPacketsReceived action:Action fail\n");
+		   RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","GetTotalPacketsReceived action:Action fail\n");
 		   event->request->error_code = 501;
 		   PAL_upnp_make_action(&event->request->action_result,"GetTotalPacketsReceived",WANCOMMONINTERFACECONFIG_SERVICE_TYPE,0,NULL,PAL_UPNP_ACTION_RESPONSE);
 		   return(event->request->error_code);
@@ -585,14 +584,14 @@ VOID IGD_WANCommonInterfaceConfig_eventvariables_init(struct upnp_service *ps)
     CHAR status[PROPERTIES_STRING_LEN];
 
     if (NULL == ps){
-        PAL_LOG("WANCOMMIFCFG", 1, "service is NULL");
+        RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","service is NULL\n");
         return;
     }
 
     pthread_mutex_lock(&ps->service_mutex);
 
     if (IGD_pii_get_common_link_properties(0, type, up, down, status)){
-        PAL_LOG("WANCOMMIFCFG", 1, "CommonLinkProperties get fail");
+        RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","CommonLinkProperties get fail\n");
         pthread_mutex_unlock(&ps->service_mutex);
         return;
     }

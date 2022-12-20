@@ -62,7 +62,6 @@
 
 /***************************including***************************/
 #include "igd_platform_independent_inf.h"
-#include "pal_log.h"
 #include "pal_upnp_device.h"
 #include "pal_xml2s.h"
 #include "pal_def.h"

@@ -66,18 +66,17 @@
 #include <stdlib.h>
 
 #include "igd_utility.h"
-#include "pal_log.h"
 
 #include "igd_platform_independent_inf.h"
 
 #include "igd_service_wan_connect.h"
 
 #ifndef LOG_ENTER_FUNCTION
-#define LOG_ENTER_FUNCTION  PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_DEBUG, "entering %s", __func__)
+#define LOG_ENTER_FUNCTION  RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "entering %s", __func__)
 #endif
 
 #ifndef LOG_LEAVE_FUNCTION
-#define LOG_LEAVE_FUNCTION  PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_DEBUG, "leaving %s", __func__)
+#define LOG_LEAVE_FUNCTION  RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "leaving %s", __func__)
 #endif
 
 #define WANCONNECTIONSERVICEUPDATE_SECOND 2 
@@ -115,9 +114,6 @@ struct upnp_device *IGD_wan_connection_device_init (IN VOID* input_index_struct,
     INT32 wan_ip_service_number = 0;
     INT32 i=0;
 
-    /*register module name and callback to log*/
-    PAL_LOG_REGISTER(WAN_CONNECTION_DEVICE_LOG_NAME, NULL);
-
     LOG_ENTER_FUNCTION;
     IGD_timer_start();
 
@@ -130,7 +126,7 @@ struct upnp_device *IGD_wan_connection_device_init (IN VOID* input_index_struct,
          || (!wan_desc_file)
          )
     {
-        PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_WARNING, "input parameter error");
+        RDK_LOG(RDK_LOG_NOTICE, "LOG.RDK.IGD", "input parameter error");
         return NULL;
     }
 
@@ -138,7 +134,7 @@ struct upnp_device *IGD_wan_connection_device_init (IN VOID* input_index_struct,
     new_wan_connection_device = (struct upnp_device *)calloc(1, sizeof(struct upnp_device));
     if (!new_wan_connection_device)
     {
-        PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_FAILURE, "out of memory : new_wan_connection_device malloc error");
+        RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "out of memory : new_wan_connection_device malloc error");
         return NULL;
     }
 
@@ -152,7 +148,7 @@ struct upnp_device *IGD_wan_connection_device_init (IN VOID* input_index_struct,
     rv = snprintf(new_wan_connection_device->udn,strlen(udn)+1, "%s", udn);
     if ( rv < 0 )
     {
-        PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_FAILURE, "print content to udn error");
+        RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "print content to udn error");
         _wan_connection_device_destroy(new_wan_connection_device);
         return NULL;
     }
@@ -162,14 +158,14 @@ struct upnp_device *IGD_wan_connection_device_init (IN VOID* input_index_struct,
     wan_ip_service_number = IGD_pii_get_wan_ip_service_number(temp_index->wan_device_index, temp_index->wan_connection_device_index);
     if ( (wan_ppp_service_number<0) || (wan_ip_service_number<0))
     {
-        PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_WARNING, "wan_ppp_service_number or wan_ip_service_number error");
+        RDK_LOG(RDK_LOG_NOTICE, "LOG.RDK.IGD", "wan_ppp_service_number or wan_ip_service_number error");
         _wan_connection_device_destroy(new_wan_connection_device);
         return NULL;    
     }
     new_wan_connection_device->services = (struct upnp_service **)calloc(wan_ppp_service_number+wan_ip_service_number+1, sizeof(struct upnp_service*));
     if (!new_wan_connection_device->services)
     {
-        PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_FAILURE, "out of memory, malloc services error!");
+        RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "out of memory, malloc services error!");
         _wan_connection_device_destroy(new_wan_connection_device);
         return NULL;            
     }
@@ -220,7 +216,7 @@ struct upnp_device *IGD_wan_connection_device_init (IN VOID* input_index_struct,
 
         if (!new_wan_connection_device->services[i])
         {
-            PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_WARNING, "init services error!");
+            RDK_LOG(RDK_LOG_NOTICE, "LOG.RDK.IGD", "init services error!");
             _wan_connection_device_destroy(new_wan_connection_device);
             return NULL;            
         }
@@ -260,7 +256,7 @@ LOCAL INT32 _wan_connection_device_destroy(struct upnp_device *device)
     /*check input parameters*/
     if (!device)
     {
-        PAL_LOG(WAN_CONNECTION_DEVICE_LOG_NAME, PAL_LOG_LEVEL_WARNING, "input parameter error");
+        RDK_LOG(RDK_LOG_NOTICE, "LOG.RDK.IGD", "input parameter error");
         return 0;
     }
 

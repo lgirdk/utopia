@@ -101,7 +101,6 @@
 #include <ccsp_syslog.h>
 #include "syscfg/syscfg.h"
 
-#include "pal_log.h"
 #include "igd_platform_independent_inf.h"
 #include "safec_lib_common.h"
 
@@ -404,18 +403,18 @@ INT32 IGD_pii_get_connection_status(IN INT32 WanDeviceIndex,
 
     wanConnectionStatus_t wan;
 
-    // PAL_LOG("igd_platform", "debug", "%s: Enter ", __FUNCTION__);
+    // RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Enter ", __FUNCTION__);
 
     bzero(&wan, sizeof(wanConnectionStatus_t));
 
     UtopiaContext ctx;
     errno_t safec_rc = -1;
     if (!Utopia_Init(&ctx)) {
-        PAL_LOG("igd_platform", "debug", "%s: Error, in getting utctx object", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Error, in getting utctx object", __FUNCTION__);
         return 1;
     }
     if (SUCCESS != Utopia_GetWANConnectionStatus(&ctx, &wan)) {
-        PAL_LOG("igd_platform", "debug", "%s: Error, in getting wan connection info", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Error, in getting wan connection info", __FUNCTION__);
         Utopia_Free(&ctx, 0);
         return 1;
     }
@@ -576,19 +575,19 @@ INT32 IGD_pii_force_termination(IN INT32 WanDeviceIndex,
     int terminate_allowed = 0;
 
     if (Utopia_Init(&ctx)) {
-        PAL_LOG("igd_platform", "debug", "%s: Lock acquired ", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Lock acquired ", __FUNCTION__);
         terminate_allowed = Utopia_IGDInternetDisbleAllowed(&ctx);
         Utopia_Free(&ctx, 0);
-        PAL_LOG("igd_platform", "debug", "%s: Lock released ", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Lock released ", __FUNCTION__);
     }
 
     if (!terminate_allowed) {
-        PAL_LOG("igd_platform", "debug", "%s: IGD force-termination is not allowed, return action error", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: IGD force-termination is not allowed, return action error", __FUNCTION__);
         return 1;
     }
 
     if (SUCCESS != Utopia_WANConnectionTerminate()) {
-        PAL_LOG("igd_platform", "debug", "%s: Error terminating wan connection ", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Error terminating wan connection ", __FUNCTION__);
         return 1;
     }
 
@@ -626,17 +625,17 @@ INT32 IGD_pii_get_external_ip(IN INT32 WanDeviceIndex,
 
     wanConnectionStatus_t wan;
 
-    // PAL_LOG("igd_platform", "debug", "%s: Enter ", __FUNCTION__);
+    // RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Enter ", __FUNCTION__);
 
     bzero(&wan, sizeof(wanConnectionStatus_t));
     UtopiaContext ctx;
 
     if (!Utopia_Init(&ctx)) {
-        PAL_LOG("igd_platform", "debug", "%s: Error, in getting utctx object", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Error, in getting utctx object", __FUNCTION__);
         return 1;
     }
     if (SUCCESS != Utopia_GetWANConnectionStatus(&ctx, &wan)) {
-        PAL_LOG("igd_platform", "debug", "%s: Error, in getting wan connection info", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Error, in getting wan connection info", __FUNCTION__);
         Utopia_Free(&ctx, 0);
         return 1;
     }
@@ -716,17 +715,17 @@ INT32 IGD_pii_get_up_time(IN INT32 WanDeviceIndex,
 
     wanConnectionStatus_t wan;
 
-    // PAL_LOG("igd_platform", "debug", "%s: Enter ", __FUNCTION__);
+    // RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Enter ", __FUNCTION__);
 
     bzero(&wan, sizeof(wanConnectionStatus_t));
     UtopiaContext ctx;
     errno_t safec_rc = -1;
     if (!Utopia_Init(&ctx)) {
-        PAL_LOG("igd_platform", "debug", "%s: Error, in getting utctx object", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Error, in getting utctx object", __FUNCTION__);
         return 1;
     }
     if (SUCCESS != Utopia_GetWANConnectionStatus(&ctx, &wan)) {
-        PAL_LOG("igd_platform", "debug", "%s: Error, in getting wan connection info", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Error, in getting wan connection info", __FUNCTION__);
         Utopia_Free(&ctx, 0);
         return 1;
     }
@@ -772,7 +771,7 @@ IGD_pii_get_NAT_RSIP_status( IN INT32 WanDeviceIndex,
     boolean_t natEnable = BOOL_TRUE; /*RDKB-7142, CID-32964; init before use */
 
     
-    // PAL_LOG("igd_platform", "debug", "%s: Enter ", __FUNCTION__);
+    // RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Enter ", __FUNCTION__);
 
     UtopiaContext ctx;
 
@@ -819,7 +818,7 @@ INT32 IGD_pii_add_portmapping_entry( IN INT32 WanDeviceIndex,
                      portmapEntry->remoteHost, portmapEntry->externalPort,
                      portmapEntry->internalClient, portmapEntry->internalPort);
 
-    PAL_LOG("igd_platform", "debug", "%s: desc %s, ext_port %d, int_port %d ", __FUNCTION__, portmapEntry->description, portmapEntry->externalPort, portmapEntry->internalPort);
+    RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: desc %s, ext_port %d, int_port %d ", __FUNCTION__, portmapEntry->description, portmapEntry->externalPort, portmapEntry->internalPort);
 
     UtopiaContext ctx;
     int rc = 0;
@@ -837,12 +836,12 @@ INT32 IGD_pii_add_portmapping_entry( IN INT32 WanDeviceIndex,
         portMapDyn_t pmap;
         protocol_t proto = (0 == strcasecmp(portmapEntry->protocol, "TCP")) ? TCP : UDP;
 
-        PAL_LOG("igd_platform", "debug", "%s: Lock acquired ", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Lock acquired ", __FUNCTION__);
 
         if (!Utopia_IGDConfigAllowed(&ctx)) {
-            PAL_LOG("igd_platform", "debug", "%s: IGD config disabled in administration, return action error", __FUNCTION__);
+            RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: IGD config disabled in administration, return action error", __FUNCTION__);
             Utopia_Free(&ctx, 0);
-            PAL_LOG("igd_platform", "debug", "%s: Lock released ", __FUNCTION__);
+            RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Lock released ", __FUNCTION__);
             return 1;
         }
 
@@ -884,7 +883,7 @@ INT32 IGD_pii_add_portmapping_entry( IN INT32 WanDeviceIndex,
                 /*
                  * if for different internal client, return error
                  */
-                PAL_LOG("igd_platform", "debug", "%s: entry exists for different internal client (error)", __FUNCTION__);
+                RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: entry exists for different internal client (error)", __FUNCTION__);
                 //rc = 1;
                 rc = ERROR_CONFLICT_FOR_MAPPING_ENTRY;
             }
@@ -910,15 +909,15 @@ INT32 IGD_pii_add_portmapping_entry( IN INT32 WanDeviceIndex,
     
             int st = Utopia_AddDynPortMapping(&pmap);
             if (UT_SUCCESS == st) {
-                PAL_LOG("igd_platform", "debug", "%s: successfully added port map entry", __FUNCTION__);
+                RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: successfully added port map entry", __FUNCTION__);
                 rc = 0;
             } else {
-                PAL_LOG("igd_platform", "debug", "%s: Error, adding port map entry", __FUNCTION__);
+                RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Error, adding port map entry", __FUNCTION__);
                 rc = 1; 
             }
         }
         Utopia_Free(&ctx, 0);
-        PAL_LOG("igd_platform", "debug", "%s: Lock released ", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Lock released ", __FUNCTION__);
     }
 
     return rc;
@@ -954,7 +953,7 @@ INT32 IGD_pii_del_portmapping_entry( IN INT32 WanDeviceIndex,
 {
     syslog_systemlog("IGD", LOG_NOTICE, "Delete Port mapping %s:%d", RemoteHost, ExternalPort);
 
-    PAL_LOG("igd_platform", "debug", "%s: remote-host %s, ext_port %d, protocol %s ", __FUNCTION__, RemoteHost, ExternalPort, Protocol);
+    RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: remote-host %s, ext_port %d, protocol %s ", __FUNCTION__, RemoteHost, ExternalPort, Protocol);
 
     UtopiaContext ctx;
     int st, rc = 1;
@@ -964,7 +963,7 @@ INT32 IGD_pii_del_portmapping_entry( IN INT32 WanDeviceIndex,
 
         bzero(&portmap, sizeof(portmap));
 
-        PAL_LOG("igd_platform", "debug", "%s: Lock acquired ", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Lock acquired ", __FUNCTION__);
 
         portmap.external_port = ExternalPort;
         portmap.protocol = (0 == strcasecmp(Protocol, "TCP")) ? TCP : UDP;
@@ -974,15 +973,15 @@ INT32 IGD_pii_del_portmapping_entry( IN INT32 WanDeviceIndex,
 
         st = Utopia_DeleteDynPortMapping(&portmap);
         if (UT_SUCCESS == st) {
-            PAL_LOG("igd_platform", "debug", "%s: successfully deleted port map entry", __FUNCTION__);
+            RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: successfully deleted port map entry", __FUNCTION__);
             rc = 0;
         } else {
-            PAL_LOG("igd_platform", "debug", "%s: failed to delete port map entry", __FUNCTION__);
+            RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: failed to delete port map entry", __FUNCTION__);
             rc = 1;
         }
 
         Utopia_Free(&ctx, 0);
-        PAL_LOG("igd_platform", "debug", "%s: Lock released ", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Lock released ", __FUNCTION__);
     }
 
     return rc;
@@ -1016,12 +1015,12 @@ INT32 IGD_pii_get_portmapping_entry_num(IN INT32 WanDeviceIndex,
     (void) WanConnectionServiceIndex;
     (void) ServiceType;
 
-    // PAL_LOG("igd_platform", "debug", "%s: Enter ", __FUNCTION__);
+    // RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Enter ", __FUNCTION__);
 
     int totalEntryNum = 0;
 
     Utopia_GetDynPortMappingCount(&totalEntryNum);
-    // PAL_LOG("igd_platform", "debug", "%s: count = %d", __FUNCTION__, totalEntryNum);
+    // RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: count = %d", __FUNCTION__, totalEntryNum);
 
     if(PortmappingEntryNum != NULL)
         (*PortmappingEntryNum) = totalEntryNum;
@@ -1064,7 +1063,7 @@ INT32 IGD_pii_get_portmapping_entry_generic( IN INT32 WanDeviceIndex,
     printf("        interface:  %d-%d-%d-%d\n", WanDeviceIndex, WanConnectionDeviceIndex, WanConnectionServiceIndex, ServiceType);
     printf("        PortmappingIndex:  %d\n", PortmappingIndex);
 
-    PAL_LOG("igd_platform", "debug", "%s: for index %d", __FUNCTION__, PortmappingIndex);
+    RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: for index %d", __FUNCTION__, PortmappingIndex);
 
     /*
      * IGD array runs from 0 to PortMappingNumberOfEntries - 1
@@ -1079,21 +1078,21 @@ INT32 IGD_pii_get_portmapping_entry_generic( IN INT32 WanDeviceIndex,
         portMapDyn_t portmap;
         int count = 0, st;
 
-        PAL_LOG("igd_platform", "debug", "%s: Lock acquired ", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Lock acquired ", __FUNCTION__);
         if (UT_SUCCESS != Utopia_GetDynPortMappingCount(&count)) {
-            PAL_LOG("igd_platform", "debug", "%s: Lock released 1", __FUNCTION__);
+            RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Lock released 1", __FUNCTION__);
             Utopia_Free(&ctx, 0);
             return 1;
         }
         if (PortmappingIndex < 0 || PortmappingIndex >= count) {
-            PAL_LOG("igd_platform", "debug", "%s: Lock released 2", __FUNCTION__);
+            RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Lock released 2", __FUNCTION__);
             Utopia_Free(&ctx, 0);
             return 1;
         }
         bzero(&portmap, sizeof(portMapDyn_t));
         if (UT_SUCCESS != (st = Utopia_GetDynPortMapping(PortmappingIndex+1, &portmap))) {
-            PAL_LOG("igd_platform", "debug", "%s: Utopia_GetDynPortMapping failed (rc=%d)", __FUNCTION__, st);
-            PAL_LOG("igd_platform", "debug", "%s: Lock released 3", __FUNCTION__);
+            RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Utopia_GetDynPortMapping failed (rc=%d)", __FUNCTION__, st);
+            RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Lock released 3", __FUNCTION__);
             Utopia_Free(&ctx, 0);
             return 1;
         }
@@ -1115,7 +1114,7 @@ INT32 IGD_pii_get_portmapping_entry_generic( IN INT32 WanDeviceIndex,
         safec_rc = strcpy_s(PortmappingEntry->internalClient, sizeof(PortmappingEntry->internalClient),portmap.internal_host);
         ERR_CHK(safec_rc);		
 
-        PAL_LOG("igd_platform", "debug", "%s: Lock released ", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Lock released ", __FUNCTION__);
         Utopia_Free(&ctx, 0);
     }
 
@@ -1153,7 +1152,7 @@ INT32 IGD_pii_get_portmapping_entry_specific( IN INT32 WanDeviceIndex,
     printf("        External Port: %d\n", PortmappingEntry->externalPort);
     printf("        PortMapping Protocol: %s\n", PortmappingEntry->protocol);
 
-    PAL_LOG("igd_platform", "debug", "%s: Remote Host: %s, External Port: %d, PortMapping Protocol: %s\n", __FUNCTION__, PortmappingEntry->remoteHost, PortmappingEntry->externalPort, PortmappingEntry->protocol);
+    RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Remote Host: %s, External Port: %d, PortMapping Protocol: %s\n", __FUNCTION__, PortmappingEntry->remoteHost, PortmappingEntry->externalPort, PortmappingEntry->protocol);
 
     /*
      * IGD array runs from 0 to PortMappingNumberOfEntries - 1
@@ -1168,7 +1167,7 @@ INT32 IGD_pii_get_portmapping_entry_specific( IN INT32 WanDeviceIndex,
         int index;
         portMapDyn_t pmap;
 
-        PAL_LOG("igd_platform", "debug", "%s: Lock acquired ", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Lock acquired ", __FUNCTION__);
 
         bzero(&pmap, sizeof(pmap));
 
@@ -1189,11 +1188,11 @@ INT32 IGD_pii_get_portmapping_entry_specific( IN INT32 WanDeviceIndex,
 
             rc = 0;
         } else {
-            PAL_LOG("igd_platform", "debug", "%s: couldn't find entry", __FUNCTION__);
+            RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: couldn't find entry", __FUNCTION__);
             rc = 1;
         }
         Utopia_Free(&ctx, 0);
-        PAL_LOG("igd_platform", "debug", "%s: Lock released ", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Lock released ", __FUNCTION__);
     }
 
     return rc;
@@ -1222,7 +1221,7 @@ INT32 IGD_pii_get_ethernet_link_status(IN INT32 WanDeviceIndex,
     (void) WanDeviceIndex;
     (void) WanConnectionDeviceIndex;
 
-    // PAL_LOG("igd_platform", "debug", "%s: Enter ", __FUNCTION__);
+    // RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Enter ", __FUNCTION__);
 
     wanConnectionStatus_t wan;
 
@@ -1230,11 +1229,11 @@ INT32 IGD_pii_get_ethernet_link_status(IN INT32 WanDeviceIndex,
     UtopiaContext ctx;
 
     if (!Utopia_Init(&ctx)) {
-        PAL_LOG("igd_platform", "debug", "%s: Error, in getting utctx object", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Error, in getting utctx object", __FUNCTION__);
         return 1;
     }
     if (SUCCESS != Utopia_GetWANConnectionStatus(&ctx, &wan)) {
-        PAL_LOG("igd_platform", "debug", "%s: Error, in getting wan connection info", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Error, in getting wan connection info", __FUNCTION__);
         Utopia_Free(&ctx, 0);
         return 1;
     }
@@ -1273,7 +1272,7 @@ INT32 IGD_pii_get_common_link_properties(IN INT32 WanDeviceIndex,
 {
     (void) WanDeviceIndex;
 
-    // PAL_LOG("igd_platform", "debug", "%s: Enter ", __FUNCTION__);
+    // RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Enter ", __FUNCTION__);
 
     wanConnectionStatus_t wan;
 
@@ -1281,11 +1280,11 @@ INT32 IGD_pii_get_common_link_properties(IN INT32 WanDeviceIndex,
     UtopiaContext ctx;
 
     if (!Utopia_Init(&ctx)) {
-        PAL_LOG("igd_platform", "debug", "%s: Error, in getting utctx object", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Error, in getting utctx object", __FUNCTION__);
         return 1;
     }
     if (SUCCESS != Utopia_GetWANConnectionStatus(&ctx, &wan)) {
-        PAL_LOG("igd_platform", "debug", "%s: Error, in getting wan connection info", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Error, in getting wan connection info", __FUNCTION__);
         Utopia_Free(&ctx, 0);
         return 1;
     }
@@ -1331,14 +1330,14 @@ INT32 IGD_pii_get_traffic_stats(IN INT32 WanDeviceIndex,
 {
     (void) WanDeviceIndex;
 
-    PAL_LOG("igd_platform", "debug", "%s: Enter ", __FUNCTION__);
+    RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Enter ", __FUNCTION__);
 
     wanTrafficInfo_t wan;
 
     bzero(&wan, sizeof(wanTrafficInfo_t));
 
     if (UT_SUCCESS != Utopia_GetWANTrafficInfo(&wan)) {
-        PAL_LOG("igd_platform", "debug", "%s: Error, in getting wan traffic statistics", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Error, in getting wan traffic statistics", __FUNCTION__);
         return 1;
     }
 
@@ -1376,7 +1375,7 @@ INT32 IGD_pii_get_lan_dhcpserver_configurable(IN INT32 LanDeviceIndex, OUT CHAR 
 {
     (void) LanDeviceIndex;
     errno_t safec_rc = -1;
-    PAL_LOG("igd_platform", "debug", "%s: Enter ", __FUNCTION__);
+    RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Enter ", __FUNCTION__);
     // Here status is pointer, It's pointing to the array size is 16 bytes
     safec_rc = strcpy_s(status, 16,"0");
     ERR_CHK(safec_rc);
@@ -1401,7 +1400,7 @@ INT32 IGD_pii_get_lan_dhcp_relay_status(IN INT32 LanDeviceIndex, OUT CHAR *statu
 {
     (void) LanDeviceIndex;
     errno_t safec_rc = -1;
-    PAL_LOG("igd_platform", "debug", "%s: Enter ", __FUNCTION__);
+    RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Enter ", __FUNCTION__);
     // Here status is pointer, It's pointing to the array size is 16 bytes
     safec_rc = strcpy_s(status, 16,"0");
     ERR_CHK(safec_rc);
@@ -1427,18 +1426,18 @@ INT32 IGD_pii_get_lan_info(IN INT32 LanDeviceIndex, IN INT32 bufsz, OUT CHAR *ip
 {
     (void) LanDeviceIndex;
 
-    PAL_LOG("igd_platform", "debug", "%s: Enter ", __FUNCTION__);
+    RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Enter ", __FUNCTION__);
 
     lanSetting_t lan;
     bzero(&lan, sizeof(lanSetting_t));
 
     UtopiaContext ctx;
     if (!Utopia_Init(&ctx)) {
-        PAL_LOG("igd_platform", "debug", "%s: Error, in getting utctx object", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Error, in getting utctx object", __FUNCTION__);
         return 1;
     }
     if (SUCCESS != Utopia_GetLanSettings(&ctx, &lan)) {
-        PAL_LOG("igd_platform", "debug", "%s: Error, in getting lan settings info", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Error, in getting lan settings info", __FUNCTION__);
         Utopia_Free(&ctx, 0);
         return 1;
     }
@@ -1475,18 +1474,18 @@ INT32 IGD_pii_get_lan_dns_servers(IN INT32 LanDeviceIndex, OUT CHAR *dns_servers
 {
     (void) LanDeviceIndex;
 
-    PAL_LOG("igd_platform", "debug", "%s: Enter ", __FUNCTION__);
+    RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Enter ", __FUNCTION__);
 
     lanSetting_t lan;
     bzero(&lan, sizeof(lanSetting_t));
 
     UtopiaContext ctx;
     if (!Utopia_Init(&ctx)) {
-        PAL_LOG("igd_platform", "debug", "%s: Error, in getting utctx object", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Error, in getting utctx object", __FUNCTION__);
         return 1;
     }
     if (SUCCESS != Utopia_GetLanSettings(&ctx, &lan)) {
-        PAL_LOG("igd_platform", "debug", "%s: Error, in getting lan settings info", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Error, in getting lan settings info", __FUNCTION__);
         Utopia_Free(&ctx, 0);
         return 1;
     }
@@ -1517,7 +1516,7 @@ INT32 IGD_pii_get_lan_addr_range(IN INT32 LanDeviceIndex, IN INT32 buf_sz, OUT C
 {
     (void) LanDeviceIndex;
 
-    PAL_LOG("igd_platform", "debug", "%s: Enter ", __FUNCTION__);
+    RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Enter ", __FUNCTION__);
 
     dhcpServerInfo_t dhcps;
     lanSetting_t lan;
@@ -1527,27 +1526,27 @@ INT32 IGD_pii_get_lan_addr_range(IN INT32 LanDeviceIndex, IN INT32 buf_sz, OUT C
 
     UtopiaContext ctx;
     if (!Utopia_Init(&ctx)) {
-        PAL_LOG("igd_platform", "debug", "%s: Error, in getting utctx object", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Error, in getting utctx object", __FUNCTION__);
         return 1;
     }
     if (SUCCESS != Utopia_GetDHCPServerSettings(&ctx, &dhcps)) {
-        PAL_LOG("igd_platform", "debug", "%s: Error, in getting lan settings info", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Error, in getting lan settings info", __FUNCTION__);
         Utopia_Free(&ctx, 0);
         return 1;
     }
     if (SUCCESS != Utopia_GetLanSettings(&ctx, &lan)) {
-        PAL_LOG("igd_platform", "debug", "%s: Error, in getting lan settings info", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Error, in getting lan settings info", __FUNCTION__);
         Utopia_Free(&ctx, 0);
         return 1;
     }
     Utopia_Free(&ctx, 0);
 
 
-    PAL_LOG("igd_platform", "debug", "%s: lan.ipaddr %s", __FUNCTION__, lan.ipaddr);
+    RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: lan.ipaddr %s", __FUNCTION__, lan.ipaddr);
 
     int octet1, octet2, octet3, last_octet;
     int ct = sscanf(lan.ipaddr, "%d.%d.%d.%d", &octet1, &octet2, &octet3, &last_octet);
-    PAL_LOG("igd_platform", "debug", "%s: p [%s], sscanf ct %d", __FUNCTION__, lan.ipaddr, ct);
+    RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: p [%s], sscanf ct %d", __FUNCTION__, lan.ipaddr, ct);
     if (4 == ct) {
         snprintf(min_address, buf_sz, "%d.%d.%d.%s", octet1, octet2, octet3, dhcps.DHCPIPAddressStart);
         int end_ip_octet = atoi(dhcps.DHCPIPAddressStart) + dhcps.DHCPMaxUsers - 1;
@@ -1575,7 +1574,7 @@ INT32 IGD_pii_get_lan_reserved_addr_list(IN INT32 LanDeviceIndex, OUT CHAR *rese
 {
     (void) LanDeviceIndex;
 
-    PAL_LOG("igd_platform", "debug", "%s: Enter ", __FUNCTION__);
+    RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Enter ", __FUNCTION__);
 
     DHCPMap_t *dhcp_static_hosts = NULL;
     int        dhcp_static_hosts_count = 0;
@@ -1585,22 +1584,22 @@ INT32 IGD_pii_get_lan_reserved_addr_list(IN INT32 LanDeviceIndex, OUT CHAR *rese
 
     UtopiaContext ctx;
     if (!Utopia_Init(&ctx)) {
-        PAL_LOG("igd_platform", "debug", "%s: Error, in getting utctx object", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Error, in getting utctx object", __FUNCTION__);
         return 1;
     }
     if (SUCCESS != Utopia_GetLanSettings(&ctx, &lan)) {
-        PAL_LOG("igd_platform", "debug", "%s: Error, in getting lan settings info", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Error, in getting lan settings info", __FUNCTION__);
         Utopia_Free(&ctx, 0);
         return 1;
     }
     if (SUCCESS != Utopia_GetDHCPServerStaticHosts(&ctx, &dhcp_static_hosts_count, &dhcp_static_hosts)) {
-        PAL_LOG("igd_platform", "debug", "%s: Error, in getting lan settings info", __FUNCTION__);
+        RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: Error, in getting lan settings info", __FUNCTION__);
         Utopia_Free(&ctx, 0);
         return 1;
     }
     Utopia_Free(&ctx, 0);
 
-    PAL_LOG("igd_platform", "debug", "%s: ipaddr [%s], host ct [%d]", __FUNCTION__, lan.ipaddr, dhcp_static_hosts_count);
+    RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: ipaddr [%s], host ct [%d]", __FUNCTION__, lan.ipaddr, dhcp_static_hosts_count);
 
     int octet1, octet2, octet3, last_octet;
     int i, ct;
@@ -1616,7 +1615,7 @@ INT32 IGD_pii_get_lan_reserved_addr_list(IN INT32 LanDeviceIndex, OUT CHAR *rese
             } else {
                 first = 0;
             }
-            PAL_LOG("igd_platform", "debug", "%s: index [%d], name [%s], host_ip [%d], mac [%s]", __FUNCTION__, i, dhcp_static_hosts[i].client_name, dhcp_static_hosts[i].host_ip, dhcp_static_hosts[i].macaddr);
+            //RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: index [%d], name [%s], host_ip [%d], mac [%s]", __FUNCTION__, i, dhcp_static_hosts[i].client_name, dhcp_static_hosts[i].host_ip, dhcp_static_hosts[i].macaddr);
             snprintf(ipaddr, sizeof(ipaddr), "%d.%d.%d.%ld", 
                      octet1, octet2, octet3, (long int)dhcp_static_hosts[i].host_ip);
             strncat(reserved_list, ipaddr, max_list_sz);
