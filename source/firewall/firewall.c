@@ -11647,7 +11647,7 @@ static int prepare_multinet_filter_forward_v6 (FILE *fp)
       fprintf(fp, "-A INPUT -s fe80::/64 -i %s -p icmpv6 -m icmp6 --icmpv6-type 133 -m limit --limit 100/sec -j ACCEPT\n", multinet_ifname);
 
       // Block unicast WAN to LAN traffic from going to this bridge if the destination address is not within this bridge's allocated prefix
-      fprintf(fp, "-A FORWARD -i %s -o %s -m pkttype --pkt-type unicast ! -d %s -j LOG_FORWARD_DROP\n", wan6_ifname, multinet_ifname, lan_prefix);
+      fprintf(fp, "-A FORWARD -i %s -o %s -m pkttype --pkt-type unicast ! -d %s -j LOG_FORWARD_UNICAST_DROP\n", wan6_ifname, multinet_ifname, lan_prefix);
       // Block unicast LAN to WAN traffic from being sent from this bridge if the source address is not within this bridge's allocated prefix
       fprintf(fp, "-A FORWARD -i %s -o %s -m pkttype --pkt-type unicast ! -s %s -j LOG_FORWARD_DROP\n", multinet_ifname, wan6_ifname, lan_prefix);
 
@@ -12590,6 +12590,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    if (AutoConntrackHelperDisabled()) {
        fprintf(raw_fp, "%s\n", ":lan2wan_helpers - [0:0]");
    }
+   fprintf(raw_fp, "%s\n", ":wan2lan_notrack - [0:0]");
 #endif
 
    fprintf(raw_fp, "%s\n", ":output_raw - [0:0]");
@@ -12615,6 +12616,10 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
        /* Enable LAN to WAN helpers for multinet LANs */
        prepare_multinet_prerouting_raw(raw_fp); 
        do_lan2wan_helpers(raw_fp);
+   }
+   fprintf(raw_fp, "-A prerouting_raw -i %s -j wan2lan_notrack\n", current_wan_ifname);
+   if (isMulticastSsmEnabled) {
+      fprintf(raw_fp, "-A wan2lan_notrack -d 232.0.0.0/8 -j CT --notrack\n");
    }
 #endif
    /*
@@ -14473,6 +14478,13 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    do_raw_table_staticip(raw_fp);
 #endif
 
+#if defined(CONFIG_KERNEL_NETFILTER_XT_TARGET_CT)
+   if (isMulticastSsmEnabled) {
+      /* we should have multicast packet acceleration even if firewall is disabled */
+      fprintf(raw_fp, "-A PREROUTING -i %s -d 232.0.0.0/8 -j CT --notrack\n", current_wan_ifname);
+   }
+#endif
+
    /*
     * mangle
     */
@@ -14895,7 +14907,13 @@ int prepare_ipv4_firewall(const char *fw_file, char* strBlockTimeCmd)
          fprintf(fp, "%s", string);
       }
    } else {
-      fprintf(fp, "*raw\n-F\nCOMMIT\n");
+      fprintf(fp, "*raw\n-F\n");
+#if defined(CONFIG_KERNEL_NETFILTER_XT_TARGET_CT)
+      if (isMulticastSsmEnabled) {
+         fprintf(fp, "-A PREROUTING -i erouter0 -d 232.0.0.0/8 -j CT --notrack\n");
+      }
+#endif
+      fprintf(fp, "COMMIT\n");
    }
    while (NULL != (strp = fgets(string, MAX_QUERY, mangle_fp)) ) {
       fprintf(fp, "%s", string);
@@ -15468,9 +15486,25 @@ int prepare_ipv6_firewall(const char *fw_file, char* strBlockTimeCmd)
    else
    {
    #endif
-      #ifdef INTEL_PUMA7
-         fprintf(raw_fp, "*raw\n");
+      #if defined(INTEL_PUMA7) || defined(CONFIG_KERNEL_NETFILTER_XT_TARGET_CT)
+         #if !defined(INTEL_PUMA7)
+         if (isMulticastSsmEnabled)
+         #endif
+         {
+            isRawTableUsed = 1;
+            fprintf(raw_fp, "*raw\n");
+         }
+
+         #if defined(INTEL_PUMA7)
          do_raw_table_puma7(raw_fp);
+         #endif
+
+         #if defined(CONFIG_KERNEL_NETFILTER_XT_TARGET_CT)
+         if (isMulticastSsmEnabled)
+         {
+             fprintf(raw_fp, "-A PREROUTING -i %s -d ff38::8000:0/97 -j CT --notrack\n", current_wan_ifname);
+         }
+         #endif
       #endif
          
       do_ipv6_sn_filter(mangle_fp);
@@ -15870,6 +15904,7 @@ static void do_ipv6_filter_table(FILE *fp){
 
    fprintf(fp, "%s\n", ":LOG_INPUT_DROP - [0:0]");
    fprintf(fp, "%s\n", ":LOG_FORWARD_DROP - [0:0]");
+   fprintf(fp, "%s\n", ":LOG_FORWARD_UNICAST_DROP - [0:0]");
 
    if (!isBridgeMode)
    {
@@ -16041,6 +16076,8 @@ static void do_ipv6_filter_table(FILE *fp){
    fprintf(fp, "-A LOG_FORWARD_DROP -j DROP\n"); 
 
    fprintf(fp, "%s\n", ":PING_FLOOD - [0:0]");
+
+   fprintf(fp, "-A LOG_FORWARD_UNICAST_DROP ! -d ff00::/8 -j LOG_FORWARD_DROP\n");
 
 #ifdef MULTILAN_FEATURE
    prepare_multinet_filter_forward_v6(fp);
@@ -16544,7 +16581,7 @@ v6GPFirewallRuleNext:
 
       if ( '\0' != lan_prefix[0] ) {
          // Block unicast WAN to LAN traffic from going to this bridge if the destination address is not within this bridge's allocated prefix
-         fprintf(fp, "-A FORWARD -i %s -o %s -m pkttype --pkt-type unicast ! -d %s -j LOG_FORWARD_DROP\n", wan6_ifname, lan_ifname, lan_prefix);
+         fprintf(fp, "-A FORWARD -i %s -o %s -m pkttype --pkt-type unicast ! -d %s -j LOG_FORWARD_UNICAST_DROP\n", wan6_ifname, lan_ifname, lan_prefix);
          // Block unicast LAN to WAN traffic from being sent from this bridge if the source address is not within this bridge's allocated prefix
          fprintf(fp, "-A FORWARD -i %s -o %s -m pkttype --pkt-type unicast ! -s %s -j LOG_FORWARD_DROP\n", lan_ifname, wan6_ifname, lan_prefix);
       }
