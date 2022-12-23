@@ -10878,7 +10878,9 @@ static int prepare_multinet_filter_forward (FILE *filter_fp)
         fprintf(filter_fp, "-A INPUT -i %s -d %s -j ACCEPT\n", net_resp, ip);
         fprintf(filter_fp, "-A INPUT -i %s -m pkttype ! --pkt-type unicast -j ACCEPT\n", net_resp);
 #ifdef MULTILAN_FEATURE
+	if ( 0 == strncmp( lan_ifname, net_resp, strlen(lan_ifname))){
         fprintf(filter_fp, "-A FORWARD -i %s -o %s -j lan2wan\n", net_resp, current_wan_ifname);
+	}
         fprintf(filter_fp, "-A FORWARD -i %s -o %s -j wan2lan\n", current_wan_ifname, net_resp);
 #else
         fprintf(filter_fp, "-A FORWARD -i %s -o %s -j ACCEPT\n", net_resp, current_wan_ifname);
