@@ -908,7 +908,7 @@ void lan_restart()
         addr_add(l_cSysevent_Cmd);
 	
     }
-	sysevent_set(g_iSyseventfd, g_tSysevent_token, "lan_restarted", "done", 0);
+	sysevent_set(g_iSyseventfd, g_tSysevent_token, "lan_restarted", "true", 0);
 }
 
 void lan_stop()
