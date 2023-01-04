@@ -967,6 +967,15 @@ static int divide_ipv6_prefix(struct serv_ipv6 *si6)
      *  5) if prefix is to small to divide in the manner described, divided into as many /64 sub-prefixes as possible and log a message.
      * */
     /*get boundary*/
+#ifdef _LG_OFW_
+    /*As per MVXREQ-1054 prefix delegation is supported, only if MSO prefix length is smaller than 61 (irrespective of erouter topology)*/
+    if (mso_prefix.len < 61) {
+        bit_boundary = 3;
+    }
+    else {
+        bit_boundary = 0;
+    }
+#else
     if (mso_prefix.len > 56) {
         if (si6->tpmod == FAVOR_DEPTH) {
             bit_boundary = (delta_bits < 2) ? delta_bits : 2;
@@ -981,6 +990,7 @@ static int divide_ipv6_prefix(struct serv_ipv6 *si6)
             bit_boundary = (delta_bits < 4) ? delta_bits : 4;
         }
     }
+#endif
     
     /*divide to sub-prefixes*/
     sub_prefix_num = 1 << bit_boundary;
@@ -1074,8 +1084,12 @@ static int divide_ipv6_prefix(struct serv_ipv6 *si6)
     }
     snprintf(evt_val, sizeof(evt_val), "%d", mso_prefix.len);
     sysevent_set(si6->sefd, si6->setok, "ipv6_prefix-length", evt_val, 0);
+#ifdef _LG_OFW_
+    sysevent_set(si6->sefd, si6->setok, "ipv6_pd-length", "64", 0);
+#else
     snprintf(evt_val, sizeof(evt_val), "%d", mso_prefix.len + bit_boundary);
     sysevent_set(si6->sefd, si6->setok, "ipv6_pd-length", evt_val, 0);
+#endif
 
     sysevent_set(si6->sefd, si6->setok, "ipv6_prefix-divided", "ready", 0);
 
