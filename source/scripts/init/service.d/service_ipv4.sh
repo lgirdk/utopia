@@ -296,6 +296,11 @@ apply_config () {
             fi
         fi
     fi
+    if [ -f /tmp/dhcp_bootup ]
+    then
+       #dhcp_server-stop is required to restart dnsmasq after changing brlan0 ip.
+       sysevent set dhcp_server-stop
+    fi
     return 0
 }
 
