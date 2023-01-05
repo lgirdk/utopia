@@ -1511,6 +1511,9 @@ $NoSpeedBoost_Port_StartV6=50000
 $NoSpeedBoost_Port_EndV6=65000
 
 $$led_brightness=50
+$LedUSErrorTimer=30
+$LedDSErrorTimer=120
+$LedRegistrationErrorTimer=30
 
 #Allowed Subnet Table
 $lglanAllowedSubnetCount=1
