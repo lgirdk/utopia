@@ -1486,8 +1486,11 @@ $HealthCheckTimeout=60
 $GatewayRestoreAttemptCount=0
 $RemDeviceDetectionTimeout=60
 
-#LED Brightness
+#LED Handler
 $$led_brightness=50
+$LedUSErrorTimer=30
+$LedDSErrorTimer=120
+$LedRegistrationErrorTimer=30
 
 #Allowed Subnet Table
 $lglanAllowedSubnetCount=1
