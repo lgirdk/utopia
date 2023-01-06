@@ -115,7 +115,8 @@ service_start ()
       fi
 
       echo "1 */12 * * *   /usr/ccsp/tad/log_twice_day.sh" >> $CRONTAB_FILE
-      
+#RDKB-45059 log the zebra.conf status for every 12 hours
+      echo "0 */12 * * *  /usr/ccsp/tad/Zebra_conf_status.sh" >> $CRONTAB_FILE
       num1=$RANDOM
       num2=$RANDOM
       rand1=`expr "$num1" % 60`
