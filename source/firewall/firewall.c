@@ -12648,6 +12648,14 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(mangle_fp, "-A PREROUTING -j %s\n", SELFHEAL);
 #endif
 #endif
+#ifdef VMB_MODE
+   /* CAUTION! Marking packets in OUTPUT chain breaks interface binding for non-socket connections (ie: ip link add ... dev erouter0)
+    * Adding RETURN rule here at the start of OUTPUT chain for GRE tunnels to prevent any possible future changes to be done
+    * further down here to trigger the problem again
+    * For further details: OFW-3987
+    */
+   fprintf(mangle_fp, "-A OUTPUT -p gre -j RETURN\n");
+#endif
    prepare_lnf_internet_rules(mangle_fp,4);
    prepare_xconf_rules(mangle_fp);
 
