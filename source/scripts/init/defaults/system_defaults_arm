@@ -63,6 +63,7 @@ $$Version=17
 @wan-status=stopped
 @bridge-status=stopped
 @forwarding-status=stopped
+@wan_service-status=stopped
 
 # current_wan_state is the current state of the wan (up/down)
 @current_wan_state=down
