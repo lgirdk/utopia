@@ -14565,6 +14565,15 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    fprintf(mangle_fp, "%s\n", ":postrouting_qos - [0:0]");
    fprintf(mangle_fp, "%s\n", ":postrouting_lan2lan - [0:0]");
    
+#ifdef VMB_MODE
+   /* CAUTION! Marking packets in OUTPUT chain breaks interface binding for non-socket connections (ie: ip link add ... dev erouter0)
+    * Adding RETURN rule here at the start of OUTPUT chain for GRE tunnels to prevent any possible future changes to be done
+    * further down here to trigger the problem again
+    * For further details: OFW-3987
+    */
+   fprintf(mangle_fp, "-A OUTPUT -p gre -j RETURN\n");
+#endif
+
    //zqiu: RDKB-5686: xconf rule should work for pseudo bridge mode
    prepare_xconf_rules(mangle_fp);
 
