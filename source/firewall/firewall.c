@@ -12074,6 +12074,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
        fprintf(filter_fp, "-A INPUT -p tcp -i privbr --match multiport  --dport 80,443 -j ACCEPT\n");
    #endif
    fprintf(filter_fp,"-A INPUT -p tcp --match multiport  --dport 80,443 -j DROP\n");
+   fprintf(filter_fp,"-A INPUT -p tcp -i brlan1 --dport 22 -j DROP\n");
    int ret = 0;
    char tmpQuery[MAX_QUERY];
    memset(tmpQuery, 0, sizeof(tmpQuery));
@@ -13386,6 +13387,7 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
 
    fprintf(filter_fp, "-A INPUT -i %s -p udp -m udp --dport 161 -j xlog_drop_lan2self\n", cmdiag_ifname); //SNMP filter
 
+   fprintf(filter_fp,"-A INPUT -p tcp -i brlan1 --dport 22 -j DROP\n");
    //SNMPv3 chains for logging and filtering
    fprintf(filter_fp, "%s\n", ":SNMPDROPLOG - [0:0]");
    fprintf(filter_fp, "%s\n", ":SNMP_FILTER - [0:0]");
@@ -14491,6 +14493,7 @@ static void do_ipv6_filter_table(FILE *fp){
        fprintf(fp, "-A FORWARD -i brlan1 -o erouter0 -p tcp -m multiport --dport 22,80,8080,8181,443 -j DROP\n");
    #endif
    fprintf(fp,"-A INPUT -p tcp --match multiport  --dport 80,443 -j DROP\n");
+   fprintf(fp,"-A INPUT -p tcp -i brlan1 --dport 22 -j DROP\n");
    int retval = 0;
    char tmpsysQuery[MAX_QUERY];
    memset(tmpsysQuery, 0, sizeof(tmpsysQuery));
