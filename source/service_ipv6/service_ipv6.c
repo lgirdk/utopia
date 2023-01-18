@@ -1570,9 +1570,6 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
         fprintf(fp, "   preference %d\n", 255);
 
         if (dhcpv6s_pool_cfg.iana_enable) {
-#ifdef MULTILAN_FEATURE
-            fprintf(fp, "   subnet %s\n", dhcpv6s_pool_cfg.ia_prefix);
-#endif
             fprintf(fp, "   class {\n");
 #ifdef CONFIG_CISCO_DHCP6S_REQUIREMENT_FROM_DPC3825
             if (dhcpv6s_pool_cfg.eui64_enable) fprintf(fp, "       share 1000\n");
