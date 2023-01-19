@@ -1525,6 +1525,7 @@ int prepare_dhcp_conf (char *input)
         fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-option=vendor:HIXE12AWR,43,tag=123\n");
         fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-option=vendor:WNXE12AWR,43,tag=123\n");
         fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-option=vendor:SE401,43,tag=123\n");
+        fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-option=vendor:WNXL11BWL,43,tag=123\n");
 #endif 
 	if ((NULL == input) || 
 		((NULL != input) && (strncmp(input, "dns_only", 8)))) //not dns_only case
