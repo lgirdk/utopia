@@ -8222,11 +8222,17 @@ void block_url_by_ipaddr(FILE *fp, char *url, char *dropLog, int ipver, char *in
             len = strlen(ipAddr);
             if(len > 0 && ipAddr[len-1] == '\n')
                 ipAddr[len-1] = '\0';
-
-            if(nstdPort[0] == '\0')
-            {
-                fprintf(fp, "-A lan2wan_pc_site -d %s -p tcp -m tcp --dport 80 -m comment --comment \"host match %s \" -j %s\n", ipAddr, url, dropLog);
-                fprintf(fp, "-A lan2wan_pc_site -d %s -p tcp -m tcp --dport 443 -m comment --comment \"host match %s \" -j %s\n", ipAddr, url, dropLog);
+            
+            //Check the ipaddr, url and droplog are not NULL
+            if((len > 0) && (url != NULL) && (dropLog != NULL))
+            {   
+                if(nstdPort[0] == '\0')
+                {
+                    fprintf(fp, "-A lan2wan_pc_site -d %s -p tcp -m tcp --dport 80 -m comment --comment \"host match %s \" -j %s\n", ipAddr, url, dropLog);
+                    fprintf(fp, "-A lan2wan_pc_site -d %s -p tcp -m tcp --dport 443 -m comment --comment \"host match %s \" -j %s\n", ipAddr, url, dropLog);
+                }
+                else
+                    fprintf(fp, "-A lan2wan_pc_site -d %s -p tcp -m tcp --dport %s -m comment --comment \"host match %s \" -j %s\n", ipAddr, nstdPort, url, dropLog);
             }
             else
                 fprintf(fp, "-A lan2wan_pc_site -d %s -p tcp -m tcp --dport %s -m comment --comment \"host match %s \" -j %s\n", ipAddr, nstdPort, url, dropLog);
