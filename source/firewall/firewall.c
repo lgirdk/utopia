@@ -12289,6 +12289,13 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(filter_fp, "-A FORWARD -s 172.31.255.0/24 -j DROP\n");
 #endif
 
+//SKYH4-6700 - [MAP-T] To prevent Denial of service due to sufficient TCP SYN`s causing resource exhaustion.
+#if defined (FEATURE_MAPT) && defined (NAT46_KERNEL_SUPPORT)
+   if(isMAPTReady)
+   {
+       fprintf(filter_fp, "-I FORWARD -i %s -o %s -j DROP\n", NAT46_INTERFACE, NAT46_INTERFACE);
+   }
+#endif
 
    do_forwardPorts(filter_fp);
 
