@@ -12290,10 +12290,10 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(filter_fp, "-I FORWARD 3 -i %s -o br403 -j ACCEPT\n", current_wan_ifname);
 #endif
 
-#if defined  (_COSA_INTEL_XB3_ARM_)
+#if defined (INTEL_PUMA7) || (_COSA_INTEL_XB3_ARM_)
    //ARRISXB6-8429
-   fprintf(filter_fp, "-I FORWARD -m conntrack --ctdir original -m connbytes --connbytes 0:10 --connbytes-dir original --connbytes-mode packets -j GWMETA --dis-pp\n");
-   fprintf(filter_fp, "-I FORWARD -m conntrack --ctdir reply -m connbytes --connbytes 0:10 --connbytes-dir reply --connbytes-mode packets -j GWMETA --dis-pp\n");
+   fprintf(filter_fp, "-I FORWARD -m conntrack --ctdir original -m connbytes --connbytes 0:15 --connbytes-dir original --connbytes-mode packets -j GWMETA --dis-pp\n");
+   fprintf(filter_fp, "-I FORWARD -m conntrack --ctdir reply -m connbytes --connbytes 0:15 --connbytes-dir reply --connbytes-mode packets -j GWMETA --dis-pp\n");
 #endif
 
 #if (defined(_COSA_BCM_ARM_) || defined(_PLATFORM_TURRIS_)) && !defined(_CBR_PRODUCT_REQ_)
@@ -14393,6 +14393,11 @@ static void do_ipv6_filter_table(FILE *fp){
    fprintf(fp, "%s\n", ":mtadosattack - [0:0]");
 #endif
    //<<DOS
+
+#if defined (INTEL_PUMA7)
+   fprintf(fp, "-I FORWARD -m conntrack --ctdir original -m connbytes --connbytes 0:15 --connbytes-dir original --connbytes-mode packets -j GWMETA --dis-pp\n");
+   fprintf(fp, "-I FORWARD -m conntrack --ctdir reply -m connbytes --connbytes 0:15 --connbytes-dir reply --connbytes-mode packets -j GWMETA --dis-pp\n");
+#endif
 
 #ifdef INTEL_PUMA7
    //Avoid blocking packets at the Intel NIL layer
