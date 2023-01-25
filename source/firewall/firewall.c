@@ -13183,6 +13183,8 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    //Adding 10163 port to suport SNMPv3 SHA-256
    fprintf(filter_fp, "-A INPUT -p udp -m udp --match multiport --dports 10161,10163 -j SNMP_FILTER\n");
 
+   //NTP port should be closed for LAN clients
+   fprintf(filter_fp, "-A INPUT -i brlan0 -p udp -m udp --dport 123 -j DROP\n");
    //DROP incoming New NTP packets on erouter interface
    fprintf(filter_fp, "-A INPUT -i %s -m state --state ESTABLISHED,RELATED -p udp --dport 123 -j ACCEPT \n", get_current_wan_ifname());
    fprintf(filter_fp, "-A INPUT -i %s  -m state --state NEW -p udp --dport 123 -j DROP \n",get_current_wan_ifname());
@@ -16555,7 +16557,7 @@ static void do_ipv6_filter_table(FILE *fp){
 
       // NTP request from client
       // NTP server replies from Internet servers
-      fprintf(fp, "-A INPUT -i %s -p udp -m udp --dport 123 -m limit --limit 10/sec -j ACCEPT\n", lan_ifname);
+      fprintf(fp, "-A INPUT -i %s -p udp -m udp --dport 123 -j DROP \n", lan_ifname); // NTP Port should be closed for LAN clients
       //fprintf(fp, "-A INPUT -i %s -p udp -m udp --sport 123 -m limit --limit 10/sec -j ACCEPT\n", wan6_ifname);
       fprintf(fp, "-A INPUT ! -i %s -p udp -m udp --sport 123 -m limit --limit 10/sec -j ACCEPT\n", lan_ifname);
 
