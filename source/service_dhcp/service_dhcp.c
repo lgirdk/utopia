@@ -70,7 +70,7 @@ FILE* g_fArmConsoleLog = NULL; //Global file pointer
 int g_iSyseventfd;
 token_t g_tSysevent_token;
 char g_cDhcp_Lease_Time[8] = {0}, g_cTime_File[64] = {0};
-char g_cBox_Type[8] = {0};
+char g_cBox_Type[16] = {0};
 #ifdef XDNS_ENABLE
 char g_cXdns_Enabled[8] = {0};
 #endif
@@ -140,6 +140,7 @@ void get_device_props()
     if (NULL != l_fFp)
     {   
         char props[255] = {""};
+        memset(props,0,sizeof(props));
         while(fscanf(l_fFp,"%s", props) != EOF )
         {
             char *property = NULL;
@@ -173,6 +174,9 @@ void get_device_props()
                 strncpy(g_cAtom_Arping_IP, property, sizeof(g_cAtom_Arping_IP)-1);
 		g_cAtom_Arping_IP[sizeof(g_cAtom_Arping_IP)-1] = '\0';
             }
+
+            memset(props,0,sizeof(props));
+
         }
         fclose(l_fFp);
     }   
