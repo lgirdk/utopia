@@ -500,78 +500,9 @@ char* get_mode(int mode)
 
 int handleDeviceModeUpdate (int newMode)
 {
-    char buf[128];
-    int rc = CCSP_FAILURE;
-    char *pStr = NULL;
-    int updatedDb = 0;
-    int currentMode = DEVICE_MODE_ROUTER;
-    memset(buf,0,sizeof(buf));
-    if (NULL != bus_handle)
-    {
-        rc = PSM_VALUE_GET_STRING(PSM_NAME_NETWORKING_DEVICE_MODE, pStr);
-    }
-    if(rc == CCSP_SUCCESS && pStr != NULL)
-    {
-        if (strlen(pStr) > 0)
-        {
-            currentMode = atoi(pStr);
-        }
-
-        Ansc_FreeMemory_Callback(pStr);
-    }
-    else
-    {
-        syscfg_get( NULL, "Device_Mode", buf, sizeof(buf));
-        if (strlen(buf) > 0)
-        {
-            currentMode = atoi(buf);
-        }
-    }
-
-    // Ignore if currentMode and NewMode are same.
-    if (currentMode == newMode)
-    {
-        return 0;
-    }
-    printf("\nCurDeviceMode:%s NewDeviceMode: %s \n", get_mode(currentMode),get_mode(newMode));
-    snprintf(buf,sizeof(buf),"%d",newMode);
-
-    if (NULL != bus_handle)
-    {
-        rc = PSM_VALUE_SET_STRING(PSM_NAME_NETWORKING_DEVICE_MODE, buf);
-        if (CCSP_SUCCESS == rc)
-        {
-            updatedDb = 1;
-
-            fprintf(stderr, "Successful in setting:%s\n",
-                    PSM_NAME_NETWORKING_DEVICE_MODE);
-        }
-        else
-        {
-            fprintf(stderr, "Error:%d while Setting:%s\n",
-                    rc, PSM_NAME_NETWORKING_DEVICE_MODE);
-        }
-    }
-
-    if (syscfg_set_commit(NULL, "Device_Mode", buf) != 0)
-    {
-        printf("\n Device_Mode set syscfg failed\n");       
-    }
-    else
-    {
-        updatedDb = 1;
-    }
-
-    // Switch mode only if db update is success.
-    if (updatedDb)
-    {
-        service_stop(currentMode);    
-        service_start(newMode);
-    }
-    else
-    {
-        return -1;
-    }
+    //stopping and starting the services in router and extender mode
+    service_stop(!newMode);    
+    service_start(newMode);    
     return 0;
 }
 /*  Syntax: service_devicemode arg1 arg2
