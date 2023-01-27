@@ -13658,20 +13658,8 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
       syscfg_get(NULL, "dns_forcestatic", l_cDnsForcestatic, sizeof(l_cDnsForcestatic));
       if (strcmp(l_cDnsForcestatic, "true") == 0)
       {
-          char l_cDnsIpv4Preferred[32], l_cDnsIpv4Alternate[32];
-          syscfg_get(NULL, "dns_ipv4_preferred", l_cDnsIpv4Preferred, sizeof(l_cDnsIpv4Preferred));
-          if (l_cDnsIpv4Preferred[0] != 0 && (strcmp(l_cDnsIpv4Preferred, "0.0.0.0") != 0))
-          {
-              fprintf(filter_fp, "-A lan2wan ! -d %s/32 -p udp -m udp --dport 53 -j DROP\n",l_cDnsIpv4Preferred);
-              fprintf(filter_fp, "-A wan2lan ! -s %s/32 -p udp -m udp --dport 53 -j DROP\n",l_cDnsIpv4Preferred);
-          }
-          syscfg_get(NULL, "dns_ipv4_alternate", l_cDnsIpv4Alternate, sizeof(l_cDnsIpv4Alternate));
-          if (l_cDnsIpv4Alternate[0] != 0 && (strcmp(l_cDnsIpv4Alternate, "0.0.0.0") != 0))
-          {
-              fprintf(filter_fp, "-A lan2wan ! -d %s/32 -p udp -m udp --dport 53 -j DROP\n",l_cDnsIpv4Alternate);
-              fprintf(filter_fp, "-A wan2lan ! -s %s/32 -p udp -m udp --dport 53 -j DROP\n",l_cDnsIpv4Alternate);
-          }
-
+          fprintf(filter_fp, "-I lan2wan -m set ! --match-set dns_v4_set dst -p udp -m udp --dport 53 -j DROP\n");
+          fprintf(filter_fp, "-A wan2lan -m set ! --match-set dns_v4_set src -p udp -m udp --sport 53 -j DROP\n");
       }
 
    }
@@ -16888,19 +16876,8 @@ v6GPFirewallRuleNext:
               syscfg_get(NULL, "dslite_enable", l_cDsLiteenable, sizeof(l_cDsLiteenable));
               if (l_cDsLiteenable)
               {
-                  char l_cDnsIpv6Preferred[128], l_cDnsIpv6Alternate[128];
-                  syscfg_get(NULL, "dns_ipv6_preferred", l_cDnsIpv6Preferred, sizeof(l_cDnsIpv6Preferred));
-                  if (l_cDnsIpv6Preferred[0] != 0 && (strcmp(l_cDnsIpv6Preferred, "0:0:0::0") != 0))
-                  {
-                      fprintf(fp, "-A lan2wan ! -d %s/128 -p udp -m udp --dport 53 -j DROP\n",l_cDnsIpv6Preferred);
-                      fprintf(fp, "-A wan2lan ! -s %s/128 -p udp -m udp --dport 53 -j DROP\n",l_cDnsIpv6Preferred);
-                  }
-                  syscfg_get(NULL, "dns_ipv6_alternate", l_cDnsIpv6Alternate, sizeof(l_cDnsIpv6Alternate));
-                  if (l_cDnsIpv6Alternate[0] != 0 && (strcmp(l_cDnsIpv6Alternate, "0:0:0::0") != 0))
-                  {
-                      fprintf(fp, "-A lan2wan ! -d %s/128 -p udp -m udp --dport 53 -j DROP\n",l_cDnsIpv6Alternate);
-                      fprintf(fp, "-A wan2lan ! -s %s/128 -p udp -m udp --dport 53 -j DROP\n",l_cDnsIpv6Alternate);
-                  }
+                  fprintf(fp, "-A lan2wan -m set ! --match-set dns_v6_set dst -p udp -m udp --dport 53 -j DROP\n");
+                  fprintf(fp, "-A wan2lan -m set ! --match-set dns_v6_set src -p udp -m udp --sport 53 -j DROP\n");
               }
 
            }
