@@ -14335,6 +14335,12 @@ int prepare_ipv6_firewall(const char *fw_file)
 
    #endif
 
+#ifdef FEATURE_MATTER_ENABLED
+         /* Enable mDNS requests and responses needed for Matter*/
+         fprintf(filter_fp, "-I INPUT 1 -p udp -i brlan0 --sport 5353 -j ACCEPT\n");
+         fprintf(filter_fp, "-I INPUT 1 -p udp -i brlan0 --dport 5353 -j ACCEPT\n");
+#endif
+
 	/*add rules before this*/
 #if !defined(_BWG_PRODUCT_REQ_)
 	fprintf(raw_fp, "COMMIT\n");
