@@ -200,12 +200,7 @@ create_tunnel () {
     # TODO: sequence number
     
     # TODO: use assigned lower layer instead
-    MAPT_CONFIG=`sysevent get mapt_config_flag`
-    if [ "$MAPT_CONFIG" = "set" ]; then
-      WAN_IF=map0
-    else
-      WAN_IF=`sysevent get current_wan_ifname`
-    fi
+    WAN_IF=`sysevent get current_wan_ifname`
     echo_t  "WAN_IF:$WAN_IF"
     update_bridge_frag_config $inst $1
     
@@ -219,22 +214,34 @@ create_tunnel () {
         GRETYPE=gretap
         LOCAL_IP=`ip a l $WAN_IF | awk '/inet/ {print $2}' | cut -d/ -f1 >&1 | sed '1q;d'`
         flags='nopmtudisc'
+        USEIPV6="false"
+        sysevent set gre_ipv4_fw_rule " -A INPUT -i $WAN_IF -p gre -j ACCEPT"
     elif [ "$1" != "${1#*:[0-9a-fA-F]}" ]; then
         GRETYPE=ip6gretap
         LOCAL_IP=`ip a l $WAN_IF | awk '/inet6/ {print $2}' | cut -d/ -f1 >&1 | sed '1q;d'`
+        USEIPV6="true"
+        sysevent set gre_ipv6_fw_rule " -A INPUT -i $WAN_IF -p gre -j ACCEPT"
     fi
 
     if [ -n "$isgretap0Present" ]; then
         echo "gretap0 is already present rename it before creating"
         ip link set dev $GRE_IFNAME name $GRE_IFNAME_DUMMY
     fi
-
-    if [ "$BOX_TYPE" = "XB6" -a "$MANUFACTURE" = "Arris" ] || [ "$MODEL_NUM" = "INTEL_PUMA" ] ; then
-    	#Intel Proposed RDKB Generic Bug Fix from XB6 SDK
-        ip link add $2 type $GRETYPE remote $1 local $LOCAL_IP dev $WAN_IF $extra $flags
-        ip link set $2 txqueuelen 1000 mtu 1500
+    if [ "$USEIPV6" = "true" ]; then
+        echo_t "Creating GRETAP over IPv6 with local IP: $LOCAL_IP"
+        ip link add name $2 type ip6gretap local $LOCAL_IP remote $1 encaplimit none
+            if [ "$BOX_TYPE" = "XB6" -a "$MANUFACTURE" = "Arris" ] || [ "$MODEL_NUM" = "INTEL_PUMA" ] ; then
+                ip link set $2 txqueuelen 1000 mtu 1500
+            fi
     else
-        ip link add $2 type $GRETYPE remote $1 local $LOCAL_IP dev $WAN_IF $extra
+        echo_t "Creating GRETAP over IPv4 with local IP: $LOCAL_IP"
+        if [ "$BOX_TYPE" = "XB6" -a "$MANUFACTURE" = "Arris" ] || [ "$MODEL_NUM" = "INTEL_PUMA" ] ; then
+        	#Intel Proposed RDKB Generic Bug Fix from XB6 SDK
+            ip link add $2 type $GRETYPE remote $1 local $LOCAL_IP dev $WAN_IF $extra $flags
+            ip link set $2 txqueuelen 1000 mtu 1500
+        else
+            ip link add $2 type $GRETYPE remote $1 local $LOCAL_IP dev $WAN_IF $extra
+        fi
     fi
     ifconfig $2 up
     if [ ! -f /tmp/.gre_flowmanager_enable ]
@@ -650,13 +657,6 @@ hotspot_down() {
 #args: hotspot instance
 hotspot_up() {
     inst=$1
-    isMaptEnabled=$(syscfg get MAPT_Enable)
-    MaptMode=$(sysevent get map_transport_mode)
-    if [ "true" = "$isMaptEnabled" ] && [ "MAPT" = "$MaptMode" ]; then
-        echo "Handle_gre.sh : Do not enable Hotspot in Mapt mode"
-        set_ssids_enabled $inst false
-        exit 0;
-    fi
     #eval `psmcli get -e bridgeFQDM $HS_PSM_BASE.${inst}.$GRE_PSM_BRIDGES ENABLED $HS_PSM_BASE.${inst}.$HS_PSM_ENABLE GRE_ENABLED $GRE_PSM_BASE.${inst}.$GRE_PSM_ENABLE WECB_BRIDGES dmsb.wecb.hhs_extra_bridges`
 #TCCBR doesnot support BRIDGE_INST_3 and BRIDGE_INST_4, skip this after completing RDKB-20382
 	if [ "$BOX_TYPE" = "TCCBR" ]; then
@@ -796,13 +796,6 @@ case "$1" in
     create)
         echo "GRE CREATE: $3"
 
-        isMaptEnabled=$(syscfg get MAPT_Enable)
-        MaptMode=$(sysevent get map_transport_mode)
-        if [ "true" = "$isMaptEnabled" ] && [ "MAPT" = "$MaptMode" ]; then
-            echo "Handle_gre.sh : GRE create. Do not enable Hotspot in Mapt mode"
-            set_ssids_enabled $inst false
-            exit 0;
-        fi
         read_init_params $3
         
         #Initialize

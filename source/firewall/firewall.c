@@ -10587,6 +10587,24 @@ static void prepare_ipc_filter(FILE *filter_fp) {
                 FIREWALL_DEBUG("Exiting prepare_ipc_filter\n"); 	  
 }
 
+static void prepare_hotspot_gre_ipv4_rule(FILE *filter_fp) {
+   char fw_rule[MAX_QUERY] = {0};
+
+   FIREWALL_DEBUG("Entering prepare_hotspot_gre_ipv4_rule\n");
+   sysevent_get(sysevent_fd, sysevent_token, "gre_ipv4_fw_rule", fw_rule, sizeof(fw_rule));
+   if (strlen(fw_rule))
+       fprintf(filter_fp, "%s\n", fw_rule);
+}
+
+static void prepare_hotspot_gre_ipv6_rule(FILE *filter_fp) {
+   char fw_rule[MAX_QUERY] = {0};
+
+   FIREWALL_DEBUG("Entering prepare_hotspot_gre_ipv6_rule\n");
+   sysevent_get(sysevent_fd, sysevent_token, "gre_ipv6_fw_rule", fw_rule, sizeof(fw_rule));
+   if (strlen(fw_rule))
+       fprintf(filter_fp, "%s\n", fw_rule);
+}
+
 /*
  *  Procedure     : prepare_multinet_filter_input
  *  Purpose       : prepare the iptables-restore file that establishes all
@@ -10605,7 +10623,6 @@ static int prepare_multinet_filter_input (FILE *filter_fp)
     char net_resp[MAX_QUERY];
     char inst_resp[MAX_QUERY];
     char primary_inst[MAX_QUERY];
- 
     FIREWALL_DEBUG("Entering prepare_multinet_filter_input\n"); 	  
 
     inst_resp[0] = 0;
@@ -10638,9 +10655,6 @@ static int prepare_multinet_filter_input (FILE *filter_fp)
     FIREWALL_DEBUG("Entering prepare_multinet_filter_input\n");
 #endif
 
-    //Allow GRE tunnel traffic
-    // TODO: Read sysevent enable flag
-    fprintf(filter_fp, "-I INPUT -i %s -p gre -j ACCEPT\n", current_wan_ifname);
 #if (defined(FEATURE_MAPT) && defined(NAT46_KERNEL_SUPPORT)) || defined(FEATURE_SUPPORT_MAPT_NAT46)
     if (isMAPTReady)
     {
@@ -12251,6 +12265,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
 
 #endif
    prepare_multinet_filter_input(filter_fp);
+   prepare_hotspot_gre_ipv4_rule(filter_fp);
    prepare_ipc_filter(filter_fp);
 
    //>>DOS
@@ -14245,7 +14260,7 @@ int prepare_ipv6_firewall(const char *fw_file)
 	ethwan_mso_gui_acess_rules(NULL,mangle_fp);
 #endif
 	
-	do_ipv6_filter_table(filter_fp);
+        do_ipv6_filter_table(filter_fp);
 
 #if !(defined(_COSA_INTEL_XB3_ARM_) || defined(_COSA_BCM_MIPS_))
         prepare_rabid_rules(filter_fp, mangle_fp, IP_V6);
@@ -14684,6 +14699,7 @@ static void do_ipv6_filter_table(FILE *fp){
       // Block the evil routing header type 0
       fprintf(fp, "-A INPUT -m rt --rt-type 0 -j DROP\n");
 #endif
+      prepare_hotspot_gre_ipv6_rule(fp);
       fprintf(fp, "-A INPUT -m state --state INVALID -j LOG_INPUT_DROP\n");
 
       if(isComcastImage) {
