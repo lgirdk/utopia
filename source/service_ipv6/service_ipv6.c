@@ -2242,6 +2242,7 @@ static int serv_ipv6_start(struct serv_ipv6 *si6)
     //Intel Proposed RDKB Generic Bug Fix from XB6 SDK
     /*start zebra*/
     sysevent_set(si6->sefd, si6->setok, "zebra-restart", NULL, 0);
+    sysevent_set(si6->sefd, si6->setok, "mldproxy-start", NULL, 0);
 	
     if (dhcpv6s_start(si6) != 0) {
         fprintf(fp_v6_dbg, "start dhcpv6 server error.\n");
@@ -2279,6 +2280,7 @@ static int serv_ipv6_stop(struct serv_ipv6 *si6)
     }
     del_addr6_flg = true;
 #endif
+    sysevent_set(si6->sefd, si6->setok, "mldproxy-stop", NULL, 0);
     sysevent_set(si6->sefd, si6->setok, "service_ipv6-status", "stopped", 0);
     return 0;
 }
