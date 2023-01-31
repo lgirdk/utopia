@@ -121,7 +121,7 @@ check_IGD_is_up() {
     do
 	#Waiting for IGD process to initialise
         sleep 5
-        count=`ps | grep -c IGD`
+        count=`busybox ps | grep -c IGD`
         if [ $count -lt 2 ]; then
            IGD `sysevent get ipv4_${1}-ifname ` &
            sysevent set ${SERVICE_NAME}_${1}-pid $!
@@ -140,7 +140,7 @@ handle_ipv4_status() {
             IGD `sysevent get ipv4_${1}-ifname` &
             sysevent set ${SERVICE_NAME}_${1}-pid $!
             #RDKB-44364:To avoid IGD process init failure due to UPNP_E_SOCKET_BIND [-203] error
-	    if [ "$BOX_TYPE" = "SR300" ] || [ "$BOX_TYPE" = "SR213" ]; then
+	    if [ "$BOX_TYPE" = "SR300" ] || [ "$BOX_TYPE" = "SR213" ] || [ "$FIRMWARE_TYPE" = "OFW" ]; then
                check_IGD_is_up ${1}
             fi
         fi
