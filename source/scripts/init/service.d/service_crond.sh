@@ -121,6 +121,7 @@ service_start ()
       echo "1 */12 * * *   /usr/ccsp/tad/log_twice_day.sh" >> $CRONTAB_FILE
 #RDKB-45059 log the zebra.conf status for every 12 hours
       echo "0 */12 * * *  /usr/ccsp/tad/Zebra_conf_status.sh" >> $CRONTAB_FILE
+
       num1=$RANDOM
       num2=$RANDOM
       rand1=`expr "$num1" % 60`
@@ -180,6 +181,9 @@ service_start ()
 
           #To monitor all wifi interface dhd dump in every 1hour
           addCron "48 * * * *  sh /etc/sky/monitor_dhd_dump.sh &"
+      else
+         #RDKB-43895 log the firmware bank informations in selfheal log
+         echo "5 */12  * * *  /usr/bin/FwBankInfo" >> $CRONTAB_FILE
       fi
 
       if [ "$BOX_TYPE" == "HUB4" ]; then
