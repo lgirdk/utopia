@@ -12079,6 +12079,10 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    #if defined(_COSA_BCM_ARM_) || defined(_PLATFORM_TURRIS_)
        fprintf(filter_fp, "-A INPUT -p tcp -i privbr --match multiport  --dport 80,443 -j ACCEPT\n");
    #endif
+   if(bEthWANEnable)
+   {
+       fprintf(filter_fp, "-A INPUT -p tcp -i %s --match multiport --dport 80,443 -j ACCEPT\n",current_wan_ifname);
+   }
    fprintf(filter_fp,"-A INPUT -p tcp --match multiport  --dport 80,443 -j DROP\n");
    fprintf(filter_fp,"-A INPUT -p tcp -i brlan1 --dport 22 -j DROP\n");
    fprintf(filter_fp,"-A INPUT -p tcp -i br106 --dport 22 -j DROP\n");
@@ -13498,6 +13502,10 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    #if defined(_COSA_BCM_ARM_) || defined(_PLATFORM_TURRIS_)
        fprintf(filter_fp, "-A INPUT -p tcp -i privbr --match multiport  --dport 80,443 -j ACCEPT\n");
    #endif
+   if(bEthWANEnable)
+   {
+       fprintf(filter_fp, "-A INPUT -p tcp -i %s --match multiport --dport 80,443 -j ACCEPT\n",current_wan_ifname);
+   }
    fprintf(filter_fp,"-A INPUT -p tcp --match multiport  --dport 80,443 -j DROP\n");
    int ret = 0;
    char tmpQuery[MAX_QUERY];
@@ -14505,6 +14513,10 @@ static void do_ipv6_filter_table(FILE *fp){
        fprintf(fp, "-A INPUT -p tcp -i privbr --match multiport  --dport 80,443 -j ACCEPT\n");
        fprintf(fp, "-A FORWARD -i brlan1 -o erouter0 -p tcp -m multiport --dport 22,80,8080,8181,443 -j DROP\n");
    #endif
+   if(bEthWANEnable)
+   {
+       fprintf(fp, "-A INPUT -p tcp -i %s --match multiport --dport 80,443 -j ACCEPT\n",current_wan_ifname);
+   }
    fprintf(fp,"-A INPUT -p tcp --match multiport  --dport 80,443 -j DROP\n");
    fprintf(fp,"-A INPUT -p tcp -i brlan1 --dport 22 -j DROP\n");
    fprintf(fp,"-A INPUT -p tcp -i br106 --dport 22 -j DROP\n");
