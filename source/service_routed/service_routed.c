@@ -697,6 +697,18 @@ static int gen_zebra_conf(int sefd, token_t setok)
 #ifdef WAN_FAILOVER_SUPPORTED
     char default_wan_interface[64] = {0};
     char wan_interface[64] = {0};
+#ifdef FEATURE_RDKB_CONFIGURABLE_WAN_INTERFACE
+#define PSM_MESH_WAN_IFNAME "dmsb.Mesh.WAN.Interface.Name"
+    char mesh_wan_ifname[32];
+    char *pStr = NULL;
+    int return_status = PSM_VALUE_GET_STRING(PSM_MESH_WAN_IFNAME,pStr);
+    if(return_status == CCSP_SUCCESS && pStr != NULL){
+        strncpy(mesh_wan_ifname,pStr ,sizeof(mesh_wan_ifname));
+        Ansc_FreeMemory_Callback(pStr);
+        pStr = NULL;
+    } 
+#endif
+
 
     sysevent_get(sefd, setok, "current_wan_ifname", wan_interface, sizeof(wan_interface));
     sysevent_get(sefd, setok, "wan_ifname", default_wan_interface, sizeof(default_wan_interface));
@@ -959,7 +971,11 @@ static int gen_zebra_conf(int sefd, token_t setok)
             if (strlen(prefix))
             {
 #ifdef WAN_FAILOVER_SUPPORTED
+#ifdef FEATURE_RDKB_CONFIGURABLE_WAN_INTERFACE
+                if(strcmp(current_wan_ifname, mesh_wan_ifname ) == 0)
+#else
                 if (strcmp(default_wan_interface, wan_interface) != 0)
+#endif
                 {
                     fprintf(fp, "   ipv6 nd prefix %s %s %s\n", prefix, valid_lft, preferred_lft);
                 }
@@ -1033,7 +1049,11 @@ static int gen_zebra_conf(int sefd, token_t setok)
 
 #if !defined (_HUB4_PRODUCT_REQ_) || defined (_WNXL11BWL_PRODUCT_REQ_)
 #ifdef WAN_FAILOVER_SUPPORTED
+#ifdef FEATURE_RDKB_CONFIGURABLE_WAN_INTERFACE
+                if(strcmp(current_wan_ifname, mesh_wan_ifname ) == 0)
+#else
             if (strcmp(default_wan_interface, wan_interface) != 0)
+#endif
             {
                 fprintf(fp, "   ipv6 nd ra-lifetime 180\n");
             }

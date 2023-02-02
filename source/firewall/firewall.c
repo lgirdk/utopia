@@ -1033,8 +1033,11 @@ static BOOL isServiceNeeded()
         }
         else
         {
-		
-                if(strcmp(current_wan_ifname,default_wan_ifname ) != 0)
+#ifdef FEATURE_RDKB_CONFIGURABLE_WAN_INTERFACE
+        if(strcmp(current_wan_ifname, mesh_wan_ifname ) == 0)
+#else
+        if(strcmp(current_wan_ifname,default_wan_ifname ) != 0)
+#endif
 		{
 			FIREWALL_DEBUG("current Wam interface Name is not equal to default wan ifname\n");
                         return FALSE;
@@ -13014,8 +13017,11 @@ void  redirect_dns_to_extender(FILE *nat_fp,int family)
     char net_resp[MAX_QUERY] = {0};
     char inst_resp[MAX_QUERY] = {0};
     char iot_enabled[20];
- 
+#ifdef FEATURE_RDKB_CONFIGURABLE_WAN_INTERFACE
+    if((Get_Device_Mode() != EXTENDER_MODE ) && (strcmp(current_wan_ifname, mesh_wan_ifname ) == 0))
+#else 
    if  ( (Get_Device_Mode() != EXTENDER_MODE ) && strcmp(current_wan_ifname,default_wan_ifname ) != 0 ) 
+#endif
    {
          FIREWALL_DEBUG("Device in wan failover state\n");
  
@@ -13096,7 +13102,7 @@ void  redirect_dns_to_extender(FILE *nat_fp,int family)
          fprintf(nat_fp, "-A PREROUTING -i br403 -p tcp --dport 53 -j DNAT --to-destination %s\n",token);  
       }
 
-   }
+    }
    FIREWALL_DEBUG("Exiting redirect_dns_to_extender\n");
    return ;
 }
@@ -13246,7 +13252,11 @@ static int prepare_enabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *na
 #endif
 
    #ifdef WAN_FAILOVER_SUPPORTED
+#ifdef FEATURE_RDKB_CONFIGURABLE_WAN_INTERFACE
+        if(strcmp(current_wan_ifname, mesh_wan_ifname ) == 0)
+#else
          if ( strcmp(current_wan_ifname,default_wan_ifname) != 0 )
+#endif
          {
             fprintf(filter_fp, "-I FORWARD -i %s -p tcp --tcp-flags RST RST -j DROP\n",current_wan_ifname);
             fprintf(filter_fp, "-I FORWARD -i %s -p tcp -m tcp --tcp-flags RST RST -m limit --limit 2/sec --limit-burst 2 -j ACCEPT\n",current_wan_ifname);
@@ -14374,7 +14384,11 @@ int prepare_ipv6_firewall(const char *fw_file)
    #endif
 
    #ifdef WAN_FAILOVER_SUPPORTED
+#ifdef FEATURE_RDKB_CONFIGURABLE_WAN_INTERFACE
+        if(strcmp(current_wan_ifname, mesh_wan_ifname ) == 0)
+#else
          if ( strcmp(current_wan_ifname,default_wan_ifname) != 0 )
+#endif
          {
             fprintf(filter_fp, "-I FORWARD -i %s -p tcp --tcp-flags RST RST -j DROP\n",current_wan_ifname);
             fprintf(filter_fp, "-I FORWARD -i %s -p tcp -m tcp --tcp-flags RST RST -m limit --limit 2/sec --limit-burst 2 -j ACCEPT\n",current_wan_ifname);

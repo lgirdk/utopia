@@ -156,6 +156,10 @@ static char default_wan_ifname[50];
 static char current_wan_ifname[50];
 static int            sysevent_fd = -1;
 static token_t        sysevent_token;
+#ifdef FEATURE_RDKB_CONFIGURABLE_WAN_INTERFACE
+char mesh_wan_ifname[32];
+#define MESH_WAN_IFNAME "brRWAN"
+#endif
 #endif
 
 #ifdef WAN_FAILOVER_SUPPORTED
@@ -371,7 +375,11 @@ int Utopia_SetDeviceSettings (UtopiaContext *ctx, deviceSetting_t *device)
 #ifdef WAN_FAILOVER_SUPPORTED
 static BOOL isServiceNeeded()
 {
+#ifdef FEATURE_RDKB_CONFIGURABLE_WAN_INTERFACE
+  if(strcmp(current_wan_ifname, mesh_wan_ifname ) == 0)
+#else
   if(strcmp(current_wan_ifname,default_wan_ifname ) != 0)
+#endif
   {
         ulogf(ULOG_CONFIG, UL_UTAPI, "%s:Current Wan interface not equal to default Wan Interface", __FUNCTION__);
         return FALSE;
@@ -7485,6 +7493,10 @@ int Utopia_IPRule_ephemeral_port_forwarding( portMapDyn_t *pmap, boolean_t isCal
         current_wan_ifname[0] = '\0';
         sysevent_get(sysevent_fd, sysevent_token, "wan_ifname", default_wan_ifname, sizeof(default_wan_ifname));
         sysevent_get(sysevent_fd, sysevent_token, "current_wan_ifname", current_wan_ifname, sizeof(current_wan_ifname));
+
+#ifdef FEATURE_RDKB_CONFIGURABLE_WAN_INTERFACE
+    strncpy(mesh_wan_ifname, MESH_WAN_IFNAME, sizeof(mesh_wan_ifname));
+#endif
         #endif
 	token_t	se_token;
 	errno_t  safec_rc = -1;
