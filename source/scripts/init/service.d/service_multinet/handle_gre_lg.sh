@@ -90,6 +90,7 @@ GRE_PSM_ENABLE=enable
 HS_PSM_ENABLE=Enable
 GRE_PSM_LOCALIFS=LocalInterfaces   
 GRE_PSM_TCPMSS=GreTcpMss
+GRE_PSM_DSCP=DSCPMarkPolicy
 WIFI_PSM_PREFIX=eRT.com.cisco.spvtg.ccsp.Device.WiFi.Radio.SSID
 WIFI_RADIO_INDEX=RadioIndex
 
@@ -171,7 +172,13 @@ create_tunnel () {
     fi
     
     if [ x != x$TOS ]; then
-        extra="$extra dsfield $TOS"
+        eval `psmcli get -e DSCP_VAL $HS_PSM_BASE.1.$GRE_PSM_DSCP`
+        if [ $DSCP_VAL -ge 0 ] ; then
+            extra="$extra dsfield $TOS"
+        else
+            #support for dscp copy
+            extra="$extra dsfield inherit"
+        fi
     fi
     
     WAN_IF=`sysevent get current_wan_ifname`
