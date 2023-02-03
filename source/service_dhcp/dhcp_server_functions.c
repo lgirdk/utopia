@@ -743,6 +743,10 @@ void do_extra_pools (FILE *local_dhcpconf_file, char *prefix, unsigned char bDhc
 
 			if (!strncmp(l_cDhcpEnabled, "TRUE", 4))
 			{
+                char dhccpServerStatus[32] = {0};
+                sprintf_s(dhccpServerStatus, sizeof(dhccpServerStatus),"dhcp_server_%d_status", l_iPool);
+                sysevent_set(g_iSyseventfd, g_tSysevent_token,dhccpServerStatus , "started", 0);
+
 				safec_rc = sprintf_s(l_cSysevent_Cmd, sizeof(l_cSysevent_Cmd),"dhcp_server_%d_ipv4inst", l_iPool);
 				if(safec_rc < EOK){
 					ERR_CHK(safec_rc);
