@@ -36,10 +36,10 @@ LOCKFILE=/var/tmp/vlan_util.pid
 #Get VLANID from hotspot.json file
 WEB_CONF_ENABLE="`psmcli get eRT.com.cisco.spvtg.ccsp.webpa.WebConfigRfcEnable`"
 if [ "true" = "$WEB_CONF_ENABLE" ] && [ -f /nvram/hotspot_blob ] && [ -f /nvram/hotspot.json ]; then
-     brlan2_VLANID=`cat /nvram/hotspot.json | sed 's/, "/\n\"/g' | grep wan_vlan | sed 's/\[\|\]\|,\|{\|}//g' | awk '{ print $2}'`
-     brlan3_VLANID=`cat /nvram/hotspot.json | sed 's/, "/\n\"/g' | grep wan_vlan | sed 's/\[\|\]\|,\|{\|}//g' | awk '{ print $3}'`
-     brlan4_VLANID=`cat /nvram/hotspot.json | sed 's/, "/\n\"/g' | grep wan_vlan | sed 's/\[\|\]\|,\|{\|}//g' | awk '{ print $4}'`
-     brlan5_VLANID=`cat /nvram/hotspot.json | sed 's/, "/\n\"/g' | grep wan_vlan | sed 's/\[\|\]\|,\|{\|}//g' | awk '{ print $5}'`
+     brlan2_VLANID=`cat /nvram/hotspot.json | sed 's/, "\|{/\n\"/g' | grep wan_vlan | sed 's/\[\|\]\|,\|{\|}//g' | awk '{ print $2}'`
+     brlan3_VLANID=`cat /nvram/hotspot.json | sed 's/, "\|{/\n\"/g' | grep wan_vlan | sed 's/\[\|\]\|,\|{\|}//g' | awk '{ print $3}'`
+     brlan4_VLANID=`cat /nvram/hotspot.json | sed 's/, "\|{/\n\"/g' | grep wan_vlan | sed 's/\[\|\]\|,\|{\|}//g' | awk '{ print $4}'`
+     brlan5_VLANID=`cat /nvram/hotspot.json | sed 's/, "\|{/\n\"/g' | grep wan_vlan | sed 's/\[\|\]\|,\|{\|}//g' | awk '{ print $5}'`
 else
      brlan2_VLANID=102
      brlan3_VLANID=103
