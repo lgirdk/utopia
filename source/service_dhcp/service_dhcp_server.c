@@ -210,11 +210,11 @@ static int getValueFromDevicePropsFile(char *str, char **value)
     return ret;
 }
 
-int get_Pool_cnt(char arr[15][2],FILE *pipe)
+int get_Pool_cnt(char arr[15][3],FILE *pipe)
 {
     fprintf(stderr,"\nInside %s - \n",__FUNCTION__);
     int iter=0;
-    char sg_buff[2]={0};
+    char sg_buff[3]={0};
     if (NULL == pipe)
     {
         fprintf(stderr,"\n Unable to open pipe for get_Pool_cnt pipe\n");
@@ -222,10 +222,15 @@ int get_Pool_cnt(char arr[15][2],FILE *pipe)
     }
     while(fgets(sg_buff, sizeof(sg_buff), pipe) != NULL )
     {
+        size_t len = strlen(sg_buff);
+        if(len>0 && sg_buff[len - 1] == '\n')
+        {
+            sg_buff[len -1] = '\0';
+        }
         if (atoi(sg_buff)!=0 && strncmp(sg_buff,"",1) != 0)
         {
             fprintf(stderr,"\n%s - Value=%s\n",__FUNCTION__,sg_buff);
-            strncpy(arr[iter],sg_buff,2);
+            strncpy(arr[iter],sg_buff,3);
             iter++;
         }
     }
@@ -1021,7 +1026,7 @@ void resync_to_nonvol(char *RemPools)
     char l_cSystemCmd[255]={0};
     async_id_t l_sAsyncID,l_sAsyncID_setcallback;
     //15 pools max
-    char REM_POOLS[15][2]={0},CURRENT_POOLS[15][2]={0},LOAD_POOLS[15][2]={0},NV_INST[15][2]={0},tmp_buff[15][2]={0};
+    char REM_POOLS[15][3]={0},CURRENT_POOLS[15][3]={0},LOAD_POOLS[15][3]={0},NV_INST[15][3]={0},tmp_buff[15][3]={0};
     int iter,iter1,match_found,tmp_cnt=0,ret_val,CURRENT_POOLS_cnt=0,NV_INST_cnt=0,REM_POOLS_cnt=0;
     char CUR_IPV4[16]={0},sg_buff[100]={0};
     char asyn[100]={0};
@@ -1051,8 +1056,8 @@ void resync_to_nonvol(char *RemPools)
         }
         if(CURRENT_POOLS_cnt != -1 || NV_INST_cnt != -1)
         {
-            memcpy(REM_POOLS,CURRENT_POOLS,sizeof(CURRENT_POOLS[0][0])*15*2);
-            memcpy(LOAD_POOLS,NV_INST,sizeof(NV_INST[0][0])*15*2);
+            memcpy(REM_POOLS,CURRENT_POOLS,sizeof(CURRENT_POOLS[0][0])*15*3);
+            memcpy(LOAD_POOLS,NV_INST,sizeof(NV_INST[0][0])*15*3);
         }
         else
         {
@@ -1075,19 +1080,19 @@ void resync_to_nonvol(char *RemPools)
         match_found=0;
         for(iter1=0;iter1<NV_INST_cnt;iter1++)
         {
-            if(strncmp(LOAD_POOLS[iter1],REM_POOLS[iter],2) ==0)
+            if(strncmp(LOAD_POOLS[iter1],REM_POOLS[iter],3) ==0)
             {
                 match_found++;
             }
         }
         if (match_found == 0)
         {
-            strncpy(tmp_buff[tmp_cnt++],REM_POOLS[iter],2);
+            strncpy(tmp_buff[tmp_cnt++],REM_POOLS[iter],3);
         }
     }
-    memset(REM_POOLS,0,sizeof(REM_POOLS[0][0])*15*2);
-    memcpy(REM_POOLS,tmp_buff,sizeof(REM_POOLS[0][0])*15*2);
-    memset(tmp_buff,0,sizeof(tmp_buff[0][0])*15*2);
+    memset(REM_POOLS,0,sizeof(REM_POOLS[0][0])*15*3);
+    memcpy(REM_POOLS,tmp_buff,sizeof(REM_POOLS[0][0])*15*3);
+    memset(tmp_buff,0,sizeof(tmp_buff[0][0])*15*3);
 
     REM_POOLS_cnt=tmp_cnt;
     tmp_cnt=0;
@@ -1214,19 +1219,19 @@ void resync_to_nonvol(char *RemPools)
         match_found=0;
 	    for(iter1=0;iter1<NV_INST_cnt;iter1++)
 	    {
-	            if(strncmp(LOAD_POOLS[iter1],CURRENT_POOLS[iter],2) ==0)
+	            if(strncmp(LOAD_POOLS[iter1],CURRENT_POOLS[iter],3) ==0)
 		    {
 		        match_found++;
 		    }
 	    }
 	    if (match_found == 0)
 	    {
-	        strncpy(tmp_buff[tmp_cnt++],CURRENT_POOLS[iter],2);
+	        strncpy(tmp_buff[tmp_cnt++],CURRENT_POOLS[iter],3);
 	    }
     }
-    memset(CURRENT_POOLS,0,sizeof(CURRENT_POOLS[0][0])*15*2);
-    memcpy(CURRENT_POOLS,tmp_buff,sizeof(CURRENT_POOLS[0][0])*15*2);
-    memset(tmp_buff,0,sizeof(tmp_buff[0][0])*15*2);
+    memset(CURRENT_POOLS,0,sizeof(CURRENT_POOLS[0][0])*15*3);
+    memcpy(CURRENT_POOLS,tmp_buff,sizeof(CURRENT_POOLS[0][0])*15*3);
+    memset(tmp_buff,0,sizeof(tmp_buff[0][0])*15*3);
     CURRENT_POOLS_cnt=tmp_cnt;
 
     for(iter=0;iter<CURRENT_POOLS_cnt;iter++)
@@ -1234,23 +1239,23 @@ void resync_to_nonvol(char *RemPools)
         match_found=0;
 	    for(iter1=0;iter1<REM_POOLS_cnt;iter1++)
 	    {
-	        if(strncmp(REM_POOLS[iter1],CURRENT_POOLS[iter],2) ==0)
+	        if(strncmp(REM_POOLS[iter1],CURRENT_POOLS[iter],3) ==0)
 		    {
 		        match_found++;
 		    }
 	    }
 	    if (match_found == 0)
 	    {
-	        strncpy(tmp_buff[tmp_cnt++],CURRENT_POOLS[iter],2);
+	        strncpy(tmp_buff[tmp_cnt++],CURRENT_POOLS[iter],3);
 	    }
     }
 
-    memset(CURRENT_POOLS,0,sizeof(CURRENT_POOLS[0][0])*15*2);
-    memcpy(CURRENT_POOLS,tmp_buff,sizeof(CURRENT_POOLS[0][0])*15*2);
-    memset(tmp_buff,0,sizeof(tmp_buff[0][0])*15*2);
+    memset(CURRENT_POOLS,0,sizeof(CURRENT_POOLS[0][0])*15*3);
+    memcpy(CURRENT_POOLS,tmp_buff,sizeof(CURRENT_POOLS[0][0])*15*3);
+    memset(tmp_buff,0,sizeof(tmp_buff[0][0])*15*3);
     CURRENT_POOLS_cnt=tmp_cnt;        //Remove LOAD_POOLS and REM_POOLS from CURRENT_POOLS ENDS
 
-    char psm_tmp_buff[2];
+    char psm_tmp_buff[3];
     char *l_cParam[1] = {0};
 	for(iter=0;iter<NV_INST_cnt;iter++)
 	{
