@@ -1001,9 +1001,6 @@ static inline int SET_IPT_PRI_MODULD(char *s){
  */
 #define REMOTE_ACCESS_IP_RANGE_MAX_RULE 20
 
-/* DSCP val for gre*/
-#define PSM_NAME_GRE_DSCP_VALUE "dmsb.hotspot.tunnel.1.DSCPMarkPolicy"
-int greDscp = 44; // Default initialized to 44
 
 /* Configure WiFi flag for captive Portal*/
 #define PSM_NAME_CP_NOTIFY_VALUE "eRT.com.cisco.spvtg.ccsp.Device.WiFi.NotifyWiFiChanges"
@@ -3371,15 +3368,6 @@ static int prepare_globals_from_configuration(void)
       snprintf(reserved_mgmt_port, sizeof(reserved_mgmt_port), "80");
    } 
    
-   /* Get DSCP value for gre */
-   if(bus_handle != NULL){
-       rc = PSM_VALUE_GET_STRING(PSM_NAME_GRE_DSCP_VALUE, pStr);
-       if(rc == CCSP_SUCCESS && pStr != NULL){
-          greDscp = atoi(pStr);
-          Ansc_FreeMemory_Callback(pStr);
-          pStr = NULL;
-       }   
-   }
 #ifdef RDKB_EXTENDER_ENABLED
    memset(cellular_ifname,0,sizeof(cellular_ifname));
    sysevent_get(sysevent_fd, sysevent_token, "cellular_ifname", cellular_ifname, sizeof(cellular_ifname));
