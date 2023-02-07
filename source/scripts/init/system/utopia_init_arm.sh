@@ -198,6 +198,7 @@ PSM_CUR_XML_CONFIG_FILE_NAME="$SYSCFG_TMP_LOCATION/bbhm_cur_cfg.xml"
 PSM_BAK_XML_CONFIG_FILE_NAME="$SYSCFG_MOUNT/bbhm_bak_cfg.xml"
 PSM_TMP_XML_CONFIG_FILE_NAME="$SYSCFG_MOUNT/bbhm_tmp_cfg.xml"  
 HOTSPOT_BLOB="/nvram/hotspot_blob"
+HOTSPOT_JSON="/nvram/hotspot.json"
 
 CheckAndReCreateDB()
 {
@@ -335,6 +336,10 @@ fi
       rm -f "$HOTSPOT_BLOB"
    fi
    
+    if [ -f "$HOTSPOT_JSON" ];then
+        rm -f "$HOTSPOT_JSON"
+    fi
+
    if [ -f /nvram/dnsmasq.vendorclass ]; then
       rm -f /nvram/dnsmasq.vendorclass
    fi

@@ -125,6 +125,7 @@ XDNS_DNSMASQ_SERVERS_CONFIG_FILE_NAME="$SYSCFG_MOUNT/dnsmasq_servers.conf"
 FACTORY_RESET_REASON=false
 FR_COUNT_FILE=/nvram/.factory_reset_count
 HOTSPOT_BLOB="/nvram/hotspot_blob"
+HOTSPOT_JSON="/nvram/hotspot.json"
 
 if [ -d $SYSCFG_ENCRYPTED_PATH ]; then
     if [ ! -d $SYSCFG_PERSISTENT_PATH ]; then
@@ -284,6 +285,10 @@ fi
     if [ -f "$HOTSPOT_BLOB" ];then
       rm -f "$HOTSPOT_BLOB"
    fi
+
+    if [ -f "$HOTSPOT_JSON" ];then
+        rm -f "$HOTSPOT_JSON"
+    fi
 
    if [ -f /nvram/dnsmasq.vendorclass ]; then
       rm -f /nvram/dnsmasq.vendorclass
