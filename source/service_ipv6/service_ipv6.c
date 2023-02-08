@@ -893,10 +893,15 @@ static int divide_ipv6_prefix(struct serv_ipv6 *si6)
 
         p_prefix++;
     }
-
+    
+    if(sub_prefix_num == 0)
+    {
+        fprintf(stderr, "sub prefix num is zero.\n");
+        return -1;
+    }
     /*break the first sub-prefix to interface prefix for lan interface*/
     iface_prefix_num = (1 << delta_bits) / (sub_prefix_num); /*determine the iface prefix num for each sub-prefix*/
-   
+  
     p_prefix = sub_prefixes;
     inet_pton(AF_INET6, p_prefix->value, prefix);
     memcpy((void *)&tmp_prefix, (void *)prefix, 8); //the first 64 bits of the first sub-prefix
@@ -928,7 +933,12 @@ static int divide_ipv6_prefix(struct serv_ipv6 *si6)
         tmp_prefix++;
 #endif
     }
-
+    
+    if(iface_prefix_num == 0)
+    {
+        fprintf(stderr, "iface prefix num for each sub-prefix failed.\n");
+        return -1;
+    }
     /*last set sub-prefix related sysevent*/
     used_sub_prefix_num = enabled_iface_num / iface_prefix_num;
     if ((enabled_iface_num % iface_prefix_num) != 0 )
