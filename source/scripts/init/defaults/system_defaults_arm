@@ -1397,8 +1397,8 @@ $dns_rebind_protection_enable=1
 #Is Routing enabled - Enabled by default (LGI specific)
 $tr_routing_enabled=1
 
-#Use of Public DNS servers ( Note: there should be no default value for dns_override )
 $dns_config_page_show=false
+$dns_override=false
 
 #ocsp staple support
 $EnableOCSPStapling=false
