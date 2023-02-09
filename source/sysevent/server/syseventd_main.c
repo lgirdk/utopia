@@ -1407,10 +1407,10 @@ int main (int argc, char **argv)
        * Handle them in the order of UDS first, ipv6 tcp next, ipv4 tcp next
        */
       if (FD_ISSET(global_uds_connection_fd, &rd_set)) {
-         newsockfd = accept(global_uds_connection_fd, (struct sockaddr *) &cli_addr, &clilen);
+         newsockfd = accept4(global_uds_connection_fd, (struct sockaddr *) &cli_addr, &clilen, SOCK_NONBLOCK);
       }
       else if (FD_ISSET(global_tcp_fd, &rd_set)) {
-         newsockfd = accept(global_tcp_fd, (struct sockaddr *) &cli_addr, &clilen);
+         newsockfd = accept4(global_tcp_fd, (struct sockaddr *) &cli_addr, &clilen, SOCK_NONBLOCK);
       } else {
          continue;
       }
