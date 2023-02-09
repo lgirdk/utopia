@@ -156,6 +156,19 @@ int send_msg_to_fork_helper(int fd, const void *buf, size_t count, int *error)
    return(-1);
 }
 
+static void remove_client(const int fd, const token_t id)
+{
+   if (CLI_MGR_remove_client_by_fd(fd, id, 1)){
+      SE_INC_LOG(ERROR,
+               printf("Unable to remove faulty client on fd %d\n", fd);
+            )
+      return;
+   }
+   SE_INC_LOG(INFO,
+            printf("Removed faulty client on fd %d\n", fd);
+         )
+}
+
 /*
  * Procedure     : _eval
  * Purpose       : activate a new program
@@ -1459,7 +1472,7 @@ static int handle_send_notification_msg(const int local_fd, const token_t who, s
    token_t id = ntohl(msg->token_id);
 
    int fd = CLI_MGR_id2fd(id);
-   if (0 > fd) {
+   if (0 >= fd) {
       SE_INC_LOG(INFO,
          printf("Dead Peer %x Detected while attempting notification.Cleaning up %d %d\n", (unsigned int)id, trigger_id, action_id);
       )
@@ -1524,6 +1537,7 @@ static int handle_send_notification_msg(const int local_fd, const token_t who, s
          printf("Thread %d: Failed to send %s (%d) to client on fd %d (%d) %s\n",
                 id, SE_print_mtype(SE_MSG_NOTIFICATION), SE_MSG_NOTIFICATION, fd, rc2, SE_strerror(rc2));
       )
+      remove_client(fd, who);
    } else {
       SE_INC_LOG(MESSAGES,
          int id = thread_get_id(worker_data_key);
@@ -1572,7 +1586,7 @@ static int handle_send_notification_msg_data(const int local_fd, const token_t w
    token_t id = ntohl(msg->token_id);
 
    int fd = CLI_MGR_id2fd(id);
-   if (0 > fd) {
+   if (0 >= fd) {
       SE_INC_LOG(INFO,
          printf("Dead Peer %x Detected while attempting notification.Cleaning up %d %d\n", (unsigned int)id, trigger_id, action_id);
       )
@@ -1644,6 +1658,7 @@ static int handle_send_notification_msg_data(const int local_fd, const token_t w
          printf("Thread %d: Failed to send %s (%d) to client on fd %d (%d) %s\n",
                 id, SE_print_mtype(SE_MSG_NOTIFICATION_DATA), SE_MSG_NOTIFICATION_DATA, fd, rc2, SE_strerror(rc2));
       )
+      remove_client(fd, who);
    } else {
       SE_INC_LOG(MESSAGES,
          int id = thread_get_id(worker_data_key);
@@ -3097,6 +3112,8 @@ SE_INC_LOG(SEMAPHORE,
       if (maxfd >= cur_read_fd) {
           int dataClient = 0;
           int index = 0;
+          int rc2;
+
           for (index=0; index < global_clients.max_cur_clients; ++index) {
               if ((global_clients.clients)[index].used) {
                   int cur_fd;
@@ -3125,12 +3142,16 @@ SE_INC_LOG(SEMAPHORE,
 
           if (dataClient == 1)
           {
-              handle_messagedata_from_client(cur_read_fd);
+              rc2 = handle_messagedata_from_client(cur_read_fd);
           }
           else
           {
 
-              handle_message_from_client(cur_read_fd);
+              rc2 = handle_message_from_client(cur_read_fd);
+          }
+          if (rc2 == ERR_UNABLE_TO_SEND)
+          {
+              remove_client(cur_read_fd, TOKEN_NULL);
           }
          continue;
       }
