@@ -1163,6 +1163,8 @@ static int wan_start(struct serv_wan *sw)
                sysevent_set(sw->sefd, sw->setok, "wan_service-status", "error", 0);
                return -1;
        }
+        //restart zebra service
+        sysevent_set(sw->sefd, sw->setok, "zebra-restart", NULL, 0);
 
     }
 
@@ -1476,6 +1478,8 @@ static int wan_stop(struct serv_wan *sw)
                sysevent_set(sw->sefd, sw->setok, "wan_service-status", "error", 0);
                return -1;
         }
+        //restart zebra service
+        sysevent_set(sw->sefd, sw->setok, "zebra-restart", NULL, 0);
     }
     
 
