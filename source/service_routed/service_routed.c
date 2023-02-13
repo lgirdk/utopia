@@ -1136,7 +1136,7 @@ static int gen_zebra_conf(int sefd, token_t setok)
             {
 
                 /* If WAN is stopped or not in IPv6 or dual stack mode, send RA with router lifetime of zero */
-                if ( (strcmp(wan_st, "stopped") == 0) || (atoi(rtmod) != 2 && atoi(rtmod) != 3) || !isdhcpv6ServerEnable )
+                if ( (strcmp(wan_st, "started") != 0) || (atoi(rtmod) != 2 && atoi(rtmod) != 3) || !isdhcpv6ServerEnable )
                 {
                     fprintf(fp, "   ipv6 nd ra-lifetime 0\n");
                 }
