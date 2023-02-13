@@ -115,7 +115,7 @@ void ulog_init ()
  */
 void ulog (UCOMP comp, USUBCOMP sub, const char *mesg)
 {
-    syslog(LOG_NOTICE, "%s.%s %s", getcomp(comp), getsubcomp(sub), mesg);
+    syslog(LOG_LOCAL7|LOG_NOTICE, "%s.%s %s", getcomp(comp), getsubcomp(sub), mesg);
 }
 
 void ulogf (UCOMP comp, USUBCOMP sub, const char *fmt, ...)
