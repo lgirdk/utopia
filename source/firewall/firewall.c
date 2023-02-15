@@ -13625,6 +13625,9 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    //TBD In addition to above list,ports for known services 21(ftp),22(ssh),23(Telnet),554(rtsp),69(tftp),5060(SIP),5061(SIP), are added.This has to be revisited and these  ports will have to be eventually open only when respective service is enabled
    fprintf(filter_fp, "-A lan2self -m state --state NEW -p tcp --match multiport --dports 53,80,1900,5000,8443,21,22,23,554,5060 -j ACCEPT\n");//tcp 53, 80, 1900, 5000, 8443,21(ftp),22(SSH),23(Telnet),554(rtsp)
    fprintf(filter_fp, "-A lan2self -m state --state NEW -p udp --match multiport --dports 53,67,1900,69,5061 -j ACCEPT\n");//udp 53, 67, 1900, 69(tftp)
+
+   fprintf(filter_fp, "-A lan2self -m state --state NEW -p icmp -j ACCEPT\n");
+
    fprintf(filter_fp, "-A lan2self -m state --state NEW -j DROP\n");
 
    fprintf(filter_fp, "-A lan2self -m state --state RELATED,ESTABLISHED -j ACCEPT\n");
