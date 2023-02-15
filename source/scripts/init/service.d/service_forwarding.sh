@@ -124,14 +124,6 @@ service_start ()
         fi
 		#router mode handle
 		if [ "0" = "$bridge_mode" ]; then 
-            STATUS=`sysevent get wan-status`
-            if [ "stopped" != "$STATUS" ] ; then
-                ulog forwarding status "stopping wan"
-		if [ "$RPI_SPECIFIC" != "rpi" ] ; then
-                	sysevent set wan-stop
-		fi
-                wait_till_state wan stopped
-            fi
 	    
 	    if [ "true" = "$LANRESTART_STATUS" ] ; then
 		BREAK_LOOP=0
@@ -186,10 +178,9 @@ service_start ()
 		sysevent set wan-start
 	fi
          STATUS=`sysevent get lan-status`
-         if [ "started" != "$STATUS" ] || [ "true" = "$LANRESTART_STATUS" ] ; then
-            ulog forwarding status "starting lan"
-            sysevent set lan-start
-         fi
+         ulog forwarding status "starting lan"
+         sysevent set lan-start
+
          STATUS=`sysevent get firewall-status`
          if [ "stopped" = "$STATUS" ] ; then
             ulog forwarding status "starting firewall"
