@@ -566,6 +566,11 @@ case "$1" in
          fi
       fi
       ;;
+  current_wan_ifname)
+      echo_t "SERVICE_NTPD : current_wan_ifname calling service_start" >> $NTPD_LOG_NAME
+      service_stop
+      service_start
+      ;;
   ipv6_connection_state)
       if [ "$BOX_TYPE" = "HUB4" ] || [ "$BOX_TYPE" = "SR300" ] || [ "$BOX_TYPE" = "SE501" ] || [ "$BOX_TYPE" = "WNXL11BWL" ] || [ "$BOX_TYPE" = "SR213" ]; then
           WAN_IPV6_STATUS=`sysevent get ipv6_connection_state`

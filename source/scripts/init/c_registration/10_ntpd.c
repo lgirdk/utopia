@@ -51,8 +51,13 @@ const char* SERVICE_CUSTOM_EVENTS[] = { "wan-status|/etc/utopia/service.d/servic
                                         "ipv6_connection_state|/etc/utopia/service.d/service_ntpd.sh",
                                         NULL };
 #else
+#ifdef RDKB_EXTENDER_ENABLED
+const char* SERVICE_CUSTOM_EVENTS[] = { "wan-status|/etc/utopia/service.d/service_ntpd.sh",
+                                        "current_wan_ifname|/etc/utopia/service.d/service_ntpd.sh",
+                                        NULL };
+#else
 const char* SERVICE_CUSTOM_EVENTS[] = { "wan-status|/etc/utopia/service.d/service_ntpd.sh", NULL };
-
+#endif //#ifdef RDKB_EXTENDER_ENABLED
 #endif
 void srv_register(void) {
    sm_register(SERVICE_NAME, SERVICE_DEFAULT_HANDLER, SERVICE_CUSTOM_EVENTS);
