@@ -1327,7 +1327,7 @@ fi
         # Redirection IPv6
         if [ "$BOX_TYPE" = "SR300" ] || [ "$BOX_TYPE" = "SR213" ] || [ "$BOX_TYPE" = "HUB4" ]
         then
-            ip6addr=`ifconfig brlan0 | grep Global | cut -d/ -f1 | awk '{print $3}'`
+            ip6addr=`sysevent get ula_address`
             echo "address=/#/$ip6addr" >> $LOCAL_DHCP_CONF
         fi
 
