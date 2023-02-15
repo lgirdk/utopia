@@ -9829,10 +9829,14 @@ static int do_lan2wan_misc(FILE *filter_fp)
     char query[10] = {'\0'};
     if(isWanReady)
     {
-        if((0==syscfg_get(NULL, "blockipsec::result", query, sizeof(query))) && strcmp(query,"DROP") == 0)
+        if((0==syscfg_get(NULL, "blockipsec::result", query, sizeof(query))) && strcmp(query,"DROP") == 0) {
             fprintf(filter_fp, "-A lan2wan_misc -p udp --dport 500  -j DROP\n");
-        else if(strcmp(query,"ACCEPT") == 0)
+            fprintf(filter_fp, "-A lan2wan_misc -p udp --dport 4500  -j DROP\n");
+        }
+        else if(strcmp(query,"ACCEPT") == 0) {
                 fprintf(filter_fp, "-A lan2wan_misc -p udp --dport 500  -j ACCEPT\n");
+                fprintf(filter_fp, "-A lan2wan_misc -p udp --dport 4500  -j ACCEPT\n");
+        }
         query[0] = '\0';
 
         if((0==syscfg_get(NULL, "blockl2tp::result", query, sizeof(query))) && strcmp(query,"DROP") == 0)
