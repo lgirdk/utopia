@@ -377,7 +377,7 @@ uncompress()
     DIR=$2
     TAR=$1
     cd "$DIR"
-    $RD_LOCK "$TAR" "$UNCOMPRESS_CMD" "$TAR"
+    $RD_LOCK "$TAR" $UNCOMPRESS_CMD "$TAR"
 }
 
 V_FW_LOG_FILE_PATH=`sysevent get FW_LOG_FILE_PATH_V2`
