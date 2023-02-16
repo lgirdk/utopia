@@ -13116,6 +13116,17 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(filter_fp, "-A INPUT -p icmp -m state --state ESTABLISHED -j DROP\n");
 #endif
 
+
+   if (isRipEnabled && isBrlanStaticEnabled)
+   {
+      char query[8];
+      syscfg_get(NULL, "static_ui_enable", query, sizeof(query));
+      if (strcmp(query, "true") != 0)
+      {
+         fprintf(filter_fp, "-I http2self -i %s -d %s -j DROP\n", lan_ifname, lan_ipaddr);
+      }
+   }
+
    do_openPorts(filter_fp);
 
    fprintf(filter_fp, ":%s - [0:0]\n", "LOG_SSH_DROP");
@@ -14783,12 +14794,6 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
 #ifdef _LG_OFW_
    fprintf(filter_fp, "-A http2self -j lan2self_dos\n");
 #endif
-   if(isRipEnabled && isBrlanStaticEnabled)
-   {
-       FIREWALL_DEBUG("Adding rule for GUI access via lan inetrface \n");
-       fprintf(filter_fp, "-I http2self -i %s -d %s -j ACCEPT\n", lan_ifname, lan_ipaddr);
-   }
-
    fprintf(filter_fp, "-A http2self -j DROP\n");
 #ifdef _PUMA6_ARM_
    fprintf(filter_fp, "-I http2self 2 -m physdev --physdev-in l2sd0.100 -d 192.168.100.1 -j ACCEPT\n");
