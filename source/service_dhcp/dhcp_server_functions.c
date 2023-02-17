@@ -1291,7 +1291,7 @@ int prepare_dhcp_conf (char *input, void *bus_handle)
 	}
   
 	//Not taking into account prefix 
-	fprintf(l_fLocal_Dhcp_ConfFile, "%sdhcp-leasefile=%s\n", l_cDns_Only_Prefix, DHCP_LEASE_FILE);
+	fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-leasefile=%s\n", DHCP_LEASE_FILE);
 	#if 0
 	//DHCP_NUM is the number of available dhcp address for the lan
 	syscfg_get(NULL, "dhcp_num", l_cDhcp_Num, sizeof(l_cDhcp_Num));
