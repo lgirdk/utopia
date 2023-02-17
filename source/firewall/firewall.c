@@ -17915,9 +17915,9 @@ static int service_start (char* strBlockTimeCmd)
    shift_localtime_to_utc(&shift_h, &shift_m, &shift_s);
 
    bshift = abs(shift_h);
-   if(v4_dayofweek_block_time_bit_mask_type != BTMASK_ALWAYS)                             // v4 and v6 use the same scheduler type and bitmask so computing new bitmask once for v4 and use same for v6
+   if(v4_dayofweek_block_time_bit_mask_type != BTMASK_ALWAYS || v6_dayofweek_block_time_bit_mask_type != BTMASK_ALWAYS)                             // v4 and v6 use the same scheduler type and bitmask so computing new bitmask once for v4 and use same for v6
    {
-      if(v4_dayofweek_block_time_bit_mask_type == BTMASK_BYDAYHOUR)
+      if(v4_dayofweek_block_time_bit_mask_type == BTMASK_BYDAYHOUR || v6_dayofweek_block_time_bit_mask_type == BTMASK_BYDAYHOUR)
       {
          if(shift_h < 0)
              shiftbits_back(v4DayOfWeekBlockTimeBitMask, strlen(v4DayOfWeekBlockTimeBitMask), bshift);
@@ -17927,7 +17927,7 @@ static int service_start (char* strBlockTimeCmd)
          strcpy(v6DayOfWeekBlockTimeBitMask, v4DayOfWeekBlockTimeBitMask);
       }
 
-      if(v4_dayofweek_block_time_bit_mask_type == BTMASK_BYHOUR)
+      if(v4_dayofweek_block_time_bit_mask_type == BTMASK_BYHOUR || v6_dayofweek_block_time_bit_mask_type == BTMASK_BYHOUR)
       {
          // take bits of one day and shift
          syscfg_get(NULL, "lgfwv4dayofweek_1::v4_dayofweek_block_time_bitmask", v4BitMaskOfOneDay, sizeof(v4BitMaskOfOneDay));
