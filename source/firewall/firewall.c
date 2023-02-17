@@ -13626,6 +13626,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(filter_fp, "-A lan2self -m state --state NEW -p udp --match multiport --dports 53,67,1900,69,5061 -j ACCEPT\n");//udp 53, 67, 1900, 69(tftp)
 
    fprintf(filter_fp, "-A lan2self -m state --state NEW -p icmp -j ACCEPT\n");
+   fprintf(filter_fp, "-A lan2self -m state --state NEW -p igmp -j ACCEPT\n");
 
    fprintf(filter_fp, "-A lan2self -m state --state NEW -j DROP\n");
 
