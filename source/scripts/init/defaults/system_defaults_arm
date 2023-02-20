@@ -1604,6 +1604,9 @@ $user_bridge_mode_allowed=true
 $skenable=0
 $skproperty=none
 
+#ProvisioningCodeSource
+$prov_code_source=0
+
 #DNS_ForceStatic defaults
 $dns_forcestatic=false
 
