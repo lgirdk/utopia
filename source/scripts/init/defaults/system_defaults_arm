@@ -1272,7 +1272,7 @@ $Free_Mem_Threshold=0
 $Mem_Frag_Threshold=0
 
 #Defaults for Telemetry T2 Enable
-$T2Enable=true
+$T2Enable=false
 $T2Version=2.0.1
 $T2ConfigURL=""
 
