@@ -1331,7 +1331,7 @@ int prepare_dhcp_conf (char *input, void *bus_handle)
 		prepare_dhcp_options_wan_dns();
 	}
   
-#if defined (_XB6_PRODUCT_REQ_) || defined (_CBR_PRODUCT_REQ_)
+#if (defined (_XB6_PRODUCT_REQ_) || defined (_CBR_PRODUCT_REQ_)) && !defined(_LG_OFW_)
     {
         struct in_addr ipv4Addr;
         int    ret = -1;
