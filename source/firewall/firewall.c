@@ -17915,19 +17915,19 @@ static int service_start (char* strBlockTimeCmd)
    shift_localtime_to_utc(&shift_h, &shift_m, &shift_s);
 
    bshift = abs(shift_h);
-   if(v4_dayofweek_block_time_bit_mask_type != BTMASK_ALWAYS || v6_dayofweek_block_time_bit_mask_type != BTMASK_ALWAYS)                             // v4 and v6 use the same scheduler type and bitmask so computing new bitmask once for v4 and use same for v6
+   // Compute v4DayOfWeekBlockTimeBitMask and v4BitMaskOfOneDay
+   if(v4_dayofweek_block_time_bit_mask_type != BTMASK_ALWAYS )  
    {
-      if(v4_dayofweek_block_time_bit_mask_type == BTMASK_BYDAYHOUR || v6_dayofweek_block_time_bit_mask_type == BTMASK_BYDAYHOUR)
+      if(v4_dayofweek_block_time_bit_mask_type == BTMASK_BYDAYHOUR)
       {
          if(shift_h < 0)
              shiftbits_back(v4DayOfWeekBlockTimeBitMask, strlen(v4DayOfWeekBlockTimeBitMask), bshift);
          else if(shift_h > 0)
              shiftbits_forward(v4DayOfWeekBlockTimeBitMask, strlen(v4DayOfWeekBlockTimeBitMask), (shift_m != 0) ? bshift+1 : bshift);
 
-         strcpy(v6DayOfWeekBlockTimeBitMask, v4DayOfWeekBlockTimeBitMask);
       }
 
-      if(v4_dayofweek_block_time_bit_mask_type == BTMASK_BYHOUR || v6_dayofweek_block_time_bit_mask_type == BTMASK_BYHOUR)
+      if(v4_dayofweek_block_time_bit_mask_type == BTMASK_BYHOUR)
       {
          // take bits of one day and shift
          syscfg_get(NULL, "lgfwv4dayofweek_1::v4_dayofweek_block_time_bitmask", v4BitMaskOfOneDay, sizeof(v4BitMaskOfOneDay));
@@ -17936,9 +17936,36 @@ static int service_start (char* strBlockTimeCmd)
              shiftbits_back(v4BitMaskOfOneDay, strlen(v4BitMaskOfOneDay), bshift);
          else if(shift_h > 0)
              shiftbits_forward(v4BitMaskOfOneDay, strlen(v4BitMaskOfOneDay), (shift_m != 0) ? bshift+1 : bshift);
-
-         strcpy(v6BitMaskOfOneDay, v4BitMaskOfOneDay);
       }
+      FIREWALL_DEBUG("v4DayOfWeekBlockTimeBitMask= %s\n"COMMA v4DayOfWeekBlockTimeBitMask);
+      FIREWALL_DEBUG("v4BitMaskOfOneDay= %s\n"COMMA v4BitMaskOfOneDay);
+
+   }
+
+   // Compute v6DayOfWeekBlockTimeBitMask and v6BitMaskOfOneDay
+   if(v6_dayofweek_block_time_bit_mask_type != BTMASK_ALWAYS)
+   {
+      if( v6_dayofweek_block_time_bit_mask_type == BTMASK_BYDAYHOUR)
+      {
+         if(shift_h < 0)
+             shiftbits_back(v6DayOfWeekBlockTimeBitMask, strlen(v6DayOfWeekBlockTimeBitMask), bshift);
+         else if(shift_h > 0)
+             shiftbits_forward(v6DayOfWeekBlockTimeBitMask, strlen(v6DayOfWeekBlockTimeBitMask), (shift_m != 0) ? bshift+1 : bshift);
+      }
+
+      if(v6_dayofweek_block_time_bit_mask_type == BTMASK_BYHOUR)
+      {
+         // take bits of one day and shift
+         syscfg_get(NULL, "lgfwv6dayofweek_1::v6_dayofweek_block_time_bitmask", v6BitMaskOfOneDay, sizeof(v6BitMaskOfOneDay));
+
+         if(shift_h < 0)
+             shiftbits_back(v6BitMaskOfOneDay, strlen(v6BitMaskOfOneDay), bshift);
+         else if(shift_h > 0)
+             shiftbits_forward(v6BitMaskOfOneDay, strlen(v6BitMaskOfOneDay), (shift_m != 0) ? bshift+1 : bshift);
+      }
+
+      FIREWALL_DEBUG("v6DayOfWeekBlockTimeBitMask= %s\n"COMMA v6DayOfWeekBlockTimeBitMask);
+      FIREWALL_DEBUG("v6BitMaskOfOneDay= %s\n"COMMA v6BitMaskOfOneDay);
    }
 
    if(mac_dayofweek_block_time_bit_mask_type != BTMASK_ALWAYS)
