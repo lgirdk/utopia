@@ -1436,3 +1436,8 @@ $RemDeviceDetectionTimeout=60
 
 #Direct Download Enable default value
 $SWDLDirectEnable=false
+
+#Latency Measure factory default values
+$LatencyMeasure_IPv4Enable=false
+$LatencyMeasure_IPv6Enable=false
+$LatencyMeasure_TCPReportInterval=15
