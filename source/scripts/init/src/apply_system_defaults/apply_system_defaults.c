@@ -892,7 +892,7 @@ static int get_PartnerID (char *PartnerID)
 	return 0;	
 }
 
-static void ValidateAndUpdatePartnerVersionParam (cJSON *root_etc_json, cJSON *root_nvram_json, bool *do_compare)
+static void ValidateAndUpdatePartnerVersionParam (cJSON *root_etc_json, cJSON *root_nvram_json, bool *do_compare, char *PartnerID)
 {
     cJSON *properties_etc = NULL;
     cJSON *properties_nvram = NULL;
@@ -953,6 +953,26 @@ static void ValidateAndUpdatePartnerVersionParam (cJSON *root_etc_json, cJSON *r
                 {
                     printf ("\n VERSION MISMATCH ######## nvram %s etc %s \n", version_nvram, version_etc);
                 }
+		else
+		{
+		   /* A rare corner case, were version is getting updated,but key and value not added to the
+		    * bootstrap file, this will make the newly added key not available until there is a new
+		    * update version in partner json file, so handling here this case also as compare needed
+		    * case*/
+		   cJSON * subitem_etc = cJSON_GetObjectItem(root_etc_json,PartnerID);
+		   cJSON * subitem_nvram_bs = cJSON_GetObjectItem(root_nvram_json,PartnerID);
+		   int subitem_etc_count = cJSON_GetArraySize(subitem_etc);
+		   int subitem_nvram_bs_count = cJSON_GetArraySize(subitem_nvram_bs);
+		   APPLY_PRINT ("\nversion:%d.%d KEY COUNT in nvram %d and etc %d\n", nvram_major, nvram_minor,
+                                                                 subitem_nvram_bs_count,subitem_etc_count);
+		   if (subitem_etc_count != subitem_nvram_bs_count)
+	           {
+		      APPLY_PRINT ("\nversion:%d.%d KEY COUNT MISMATCH in nvram %d and etc %d,do compare\n", nvram_major, nvram_minor,
+				                                 subitem_nvram_bs_count,subitem_etc_count);
+		      *do_compare = true;
+                   }
+
+		}
             }                   
         }
         else
@@ -1550,7 +1570,7 @@ static int compare_partner_json_param (char *partner_nvram_bs_obj, char *partner
    */
    bool do_compare = false;
    cJSON * root_etc_json = cJSON_Parse(partner_etc_obj);
-   ValidateAndUpdatePartnerVersionParam(root_etc_json, root_nvram_bs_json, &do_compare);
+   ValidateAndUpdatePartnerVersionParam(root_etc_json, root_nvram_bs_json, &do_compare,PartnerID);
    if (!do_compare && !jsonChanged)
       return -1;
    printf("versions are different...\n");
