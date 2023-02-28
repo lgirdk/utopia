@@ -1190,6 +1190,7 @@ int prepare_dhcp_conf (char *input, void *bus_handle)
         fprintf(l_fLocal_Dhcp_ConfFile, "bind-interfaces\n");
         fprintf(l_fLocal_Dhcp_ConfFile, "domain-needed\n");
         fprintf(l_fLocal_Dhcp_ConfFile, "bogus-priv\n");
+        fprintf(l_fLocal_Dhcp_ConfFile, "no-ping\n");
 
         if (TRUE == l_bCaptivePortal_Mode)
         {
