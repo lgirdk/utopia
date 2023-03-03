@@ -33,7 +33,7 @@ executecommand_1_svc(rpc_CommandBuf *argp, struct svc_req *rqstp)
 		{  
 		   if (counter >= MAXCOUNTER ) 
                    {
-                      if ( (strlen(output.buffer) + strlen(line) ) > sizeof(output.buffer) ) 
+                      if ( (strlen(output.buffer) + strlen(line) ) >= sizeof(output.buffer) )
                               break;
                    }
 			/*Here destination output.buffer size is 4096.
