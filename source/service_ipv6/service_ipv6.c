@@ -2167,6 +2167,10 @@ static int dhcpv6s_start(struct serv_ipv6 *si6)
           }
        }
     }
+    else
+    {
+        sleep(5);
+    }
 
     fprintf(fp_v6_dbg, "%s:%d calling dibbler-server start \n",__func__,__LINE__);
     v_secure_system("%s start", DHCPV6_SERVER);
