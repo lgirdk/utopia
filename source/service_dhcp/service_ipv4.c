@@ -198,6 +198,9 @@ void teardown_instance(int l3_inst)
 
 	if ( '\0' != l_cLower[0] )	
 	{
+		char lan_inst[8];
+		sprintf(lan_inst, "%d", l3_inst);
+		ipv4_resync(lan_inst);
 		snprintf(l_cSysevent_Cmd, sizeof(l_cSysevent_Cmd), "ipv4_%d-l2async", l3_inst);
 		sysevent_get(g_iSyseventfd, g_tSysevent_token, l_cSysevent_Cmd, 
 					 l_cAsyncIDString, sizeof(l_cAsyncIDString));
