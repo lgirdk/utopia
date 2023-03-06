@@ -194,6 +194,9 @@ void teardown_instance(int l3_inst)
 
 	if ( '\0' != l_cLower[0] )	
 	{
+		char lan_inst[8];
+		sprintf(lan_inst, "%d", l3_inst);
+		ipv4_resync(lan_inst);
 		snprintf(l_cSysevent_Cmd, sizeof(l_cSysevent_Cmd), "ipv4_%d-l2async", l3_inst);
 		sysevent_get(g_iSyseventfd, g_tSysevent_token, l_cSysevent_Cmd, 
 					 l_cAsyncIDString, sizeof(l_cAsyncIDString));
@@ -1623,7 +1626,7 @@ void resync_instance (int l3_inst)
 		fprintf(stderr, "RDKB_SYSTEM_BOOT_UP_LOG : NV_ENABLED is:%s\n", l_cNv_Enabled);
 	}	
 
-	if (0 == l_cNv_Enabled[0] || !strncmp(l_cNv_Enabled, "false", 5))
+	if (0 == l_cNv_Enabled[0] || '0' == l_cNv_Enabled[0] || !strncmp(l_cNv_Enabled, "false", 5))
 	{
 		fprintf(stderr, "L3 Instance:%d is not enabled\n", l3_inst);
 		teardown_instance(l3_inst); //TODO teardown_instance
