@@ -13619,6 +13619,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
 #endif
    fprintf(filter_fp, "-A lan2self -j lan2self_plugins\n");
 
+#ifdef PENTESTING_LAN2SELF
    //As per MVXREQ-1032, No unused or unneeded service ports MUST be open on the device. The following list are the expected open ports in IPv4 RG mode.
    //TCP: 53, 80, 1900, 5000, 8443	UDP:53, 67, 1900
    //TBD In addition to above list,ports for known services 21(ftp),22(ssh),23(Telnet),554(rtsp),69(tftp),5060(SIP),5061(SIP), are added.This has to be revisited and these  ports will have to be eventually open only when respective service is enabled
@@ -13629,6 +13630,9 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(filter_fp, "-A lan2self -m state --state NEW -p igmp -j ACCEPT\n");
 
    fprintf(filter_fp, "-A lan2self -m state --state NEW -j DROP\n");
+#else
+    fprintf(filter_fp, "-A lan2self -m state --state NEW -j ACCEPT\n");
+#endif
 
    fprintf(filter_fp, "-A lan2self -m state --state RELATED,ESTABLISHED -j ACCEPT\n");
    fprintf(filter_fp, "-A lan2self -j ACCEPT\n");
