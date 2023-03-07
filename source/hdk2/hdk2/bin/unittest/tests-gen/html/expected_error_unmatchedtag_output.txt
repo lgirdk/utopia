@@ -1,4 +1,0 @@
-result = 1
-Generating "actual_error_unmatchedtag.html" ...
-test_error_unmatchedtag.hsl:5: unmatched end tag "</li>"
-

@@ -26,7 +26,6 @@ libUtopia_syslog_conf_la_SOURCES = syslog.conf_default
 
 libUtopia_syslog_conf_la_CPPFLAGS = -I$(top_srcdir)/source/cosa/include/linux \
                                     -I$(top_srcdir)/include \
-                                    -I$(top_srcdir)/source/hdk2/hdk2/include \
                                     -I$(top_srcdir)/source/pal/upnp/include \
                                     -I$(top_srcdir)/source/pal/xml/include \
                                     -I$(top_srcdir)/source/pal/kernel/include \
