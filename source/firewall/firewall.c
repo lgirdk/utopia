@@ -545,6 +545,8 @@ static int do_lan2wan_helpers(FILE *raw_fp);
 #ifdef WAN_FAILOVER_SUPPORTED
 static int checkIfULAEnabled();
 #endif
+#define XHS_IF_NAME    "brlan1"
+#define LNF_IF_NAME    "br106"
 FILE *firewallfp = NULL;
 
 //#define CONFIG_BUILD_TRIGGER 1
@@ -12228,7 +12230,12 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    {
        fprintf(filter_fp, "-A INPUT -p tcp -i %s --match multiport --dport 80,443 -j ACCEPT\n",cmdiag_ifname);  
    }
+
    #if defined(_COSA_BCM_ARM_) || defined(_PLATFORM_TURRIS_)
+       #if !defined(_CBR_PRODUCT_REQ_) && !defined (_BWG_PRODUCT_REQ_) && !defined (_CBR2_PRODUCT_REQ_)
+           fprintf(filter_fp, "-A FORWARD -i %s -o privbr -p tcp -m multiport --dport 22,23,80,443 -j DROP\n",XHS_IF_NAME);
+           fprintf(filter_fp, "-A FORWARD -i %s -o privbr -p tcp -m multiport --dport 22,23,80,443 -j DROP\n",LNF_IF_NAME);
+       #endif
        fprintf(filter_fp, "-A INPUT -p tcp -i privbr --match multiport  --dport 80,443 -j ACCEPT\n");
    #endif
    if(bEthWANEnable)
@@ -12500,7 +12507,6 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
 
 #if defined (INTEL_PUMA7) || ((defined (_COSA_BCM_ARM_) || defined(_PLATFORM_TURRIS_)) && !defined(_CBR_PRODUCT_REQ_)) // ARRIS XB6 ATOM, TCXB6
       // Block forwarding between bridges.
-      #define XHS_IF_NAME     "brlan1"
       fprintf(filter_fp, "-A FORWARD -i %s -o %s -j DROP\n", lan_ifname, iot_ifName);
       fprintf(filter_fp, "-A FORWARD -i %s -o %s -j DROP\n", XHS_IF_NAME, iot_ifName);
       fprintf(filter_fp, "-A FORWARD -i %s -o %s -j DROP\n", iot_ifName, lan_ifname);
@@ -13653,6 +13659,10 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
        fprintf(filter_fp, "-A INPUT -p tcp -i %s --match multiport --dport 80,443 -j ACCEPT\n",cmdiag_ifname);  
    }
    #if defined(_COSA_BCM_ARM_) || defined(_PLATFORM_TURRIS_)
+        #if !defined(_CBR_PRODUCT_REQ_) && !defined (_BWG_PRODUCT_REQ_) && !defined (_CBR2_PRODUCT_REQ_)
+           fprintf(filter_fp, "-A FORWARD -i %s -o privbr -p tcp -m multiport --dport 22,23,80,443 -j DROP\n",XHS_IF_NAME);
+           fprintf(filter_fp, "-A FORWARD -i %s -o privbr -p tcp -m multiport --dport 22,23,80,443 -j DROP\n",LNF_IF_NAME);
+       #endif
        fprintf(filter_fp, "-A INPUT -p tcp -i privbr --match multiport  --dport 80,443 -j ACCEPT\n");
    #endif
    if(bEthWANEnable)
@@ -14663,6 +14673,10 @@ static void do_ipv6_filter_table(FILE *fp){
       fprintf(fp, "-A INPUT -p tcp -i %s --match multiport --dport 80,443 -j ACCEPT\n",cmdiag_ifname);
    }
    #if defined(_COSA_BCM_ARM_) || defined(_PLATFORM_TURRIS_)
+        #if !defined(_CBR_PRODUCT_REQ_) && !defined (_BWG_PRODUCT_REQ_) && !defined (_CBR2_PRODUCT_REQ_)
+           fprintf(fp, "-A FORWARD -i %s -o privbr -p tcp -m multiport --dport 22,23,80,443 -j DROP\n",XHS_IF_NAME);
+           fprintf(fp, "-A FORWARD -i %s -o privbr -p tcp -m multiport --dport 22,23,80,443 -j DROP\n",LNF_IF_NAME);
+       #endif
        fprintf(fp, "-A INPUT -p tcp -i privbr --match multiport  --dport 80,443 -j ACCEPT\n");
        fprintf(fp, "-A FORWARD -i brlan1 -o erouter0 -p tcp -m multiport --dport 22,80,8080,8181,443 -j DROP\n");
    #endif
