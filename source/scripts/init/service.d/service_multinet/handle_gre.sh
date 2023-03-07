@@ -135,7 +135,7 @@ read_greInst()
        inst=1
        count=0
 
-   eval `psmcli get -e BRIDGE_INST_1 $HS_PSM_BASE.${inst}.interface.1.$GRE_PSM_BRIDGES BRIDGE_INST_2 $HS_PSM_BASE.${inst}.interface.2.$GRE_PSM_BRIDGES BRIDGE_INST_3 $HS_PSM_BASE.${inst}.interface.3.$GRE_PSM_BRIDGES BRIDGE_INST_4 $HS_PSM_BASE.${inst}.interface.4.$GRE_PSM_BRIDGES BRIDGE_INST_5 $HS_PSM_BASE.${inst}.interface.5.$GRE_PSM_BRIDGES WECB_BRIDGES dmsb.wecb.hhs_extra_bridges NAME $GRE_PSM_BASE.${inst}.$GRE_PSM_NAME`
+   eval `psmcli get -e BRIDGE_INST_1 $HS_PSM_BASE.${inst}.interface.1.$GRE_PSM_BRIDGES BRIDGE_INST_2 $HS_PSM_BASE.${inst}.interface.2.$GRE_PSM_BRIDGES BRIDGE_INST_3 $HS_PSM_BASE.${inst}.interface.3.$GRE_PSM_BRIDGES BRIDGE_INST_4 $HS_PSM_BASE.${inst}.interface.4.$GRE_PSM_BRIDGES BRIDGE_INST_5 $HS_PSM_BASE.${inst}.interface.5.$GRE_PSM_BRIDGES BRIDGE_INST_6 $HS_PSM_BASE.${inst}.interface.6.$GRE_PSM_BRIDGES WECB_BRIDGES dmsb.wecb.hhs_extra_bridges NAME $GRE_PSM_BASE.${inst}.$GRE_PSM_NAME`
 
         if [ -f /tmp/.enabled_hotspot_ssids ]; then
             ENABLED_SSIDS="`cat /tmp/.enabled_hotspot_ssids`"
@@ -143,7 +143,11 @@ read_greInst()
         else
             ENABLED_SSIDS="6 10"
         fi
-        set '5 6 9 10 16'
+        if [ "$BOX_TYPE" = "TCCBR" ]; then
+            set '5 6 9 10 16'
+        else
+            set '5 6 9 10 16 19 21'
+        fi
 
         for i in $@; do
             count=`expr $count + 1`
@@ -416,7 +420,7 @@ read_init_params () {
 
     inst=`sysevent get gre_$1_inst`
     #eval `psmcli get -e ENDPOINTS $HS_PSM_BASE.${inst}.$GRE_PSM_ENDPOINTS BRIDGE_INSTS $HS_PSM_BASE.${inst}.$GRE_PSM_BRIDGES  KA_INTERVAL $HS_PSM_BASE.${inst}.$GRE_PSM_KAINT KA_FAIL_INTERVAL $HS_PSM_BASE.${inst}.$GRE_PSM_KAFINT KA_POLICY $HS_PSM_BASE.${inst}.$GRE_PSM_KAPOLICY KA_THRESH $HS_PSM_BASE.${inst}.$GRE_PSM_KATHRESH KA_COUNT $HS_PSM_BASE.${inst}.$GRE_PSM_KACOUNT KA_RECON_PRIM $HS_PSM_BASE.${inst}.$GRE_PSM_KARECON SNOOP_CIRCUIT $HS_PSM_BASE.${inst}.$GRE_PSM_SNOOPCIRC SNOOP_REMOTE $HS_PSM_BASE.${inst}.$GRE_PSM_SNOOPREM WECB_BRIDGES dmsb.wecb.hhs_extra_bridges`
-    eval `psmcli get -e PRIMARY $HS_PSM_BASE.${inst}.$GRE_PSM_PRIENDPOINTS SECONDARY $HS_PSM_BASE.${inst}.$GRE_PSM_SECENDPOINTS BRIDGE_INST_1 $HS_PSM_BASE.${inst}.interface.1.$GRE_PSM_BRIDGES BRIDGE_INST_2 $HS_PSM_BASE.${inst}.interface.2.$GRE_PSM_BRIDGES BRIDGE_INST_3 $HS_PSM_BASE.${inst}.interface.3.$GRE_PSM_BRIDGES BRIDGE_INST_4 $HS_PSM_BASE.${inst}.interface.4.$GRE_PSM_BRIDGES BRIDGE_INST_5 $HS_PSM_BASE.${inst}.interface.5.$GRE_PSM_BRIDGES KA_INTERVAL $HS_PSM_BASE.${inst}.$GRE_PSM_KAINT KA_FAIL_INTERVAL $HS_PSM_BASE.${inst}.$GRE_PSM_KAFINT KA_POLICY $HS_PSM_BASE.${inst}.$GRE_PSM_KAPOLICY KA_THRESH $HS_PSM_BASE.${inst}.$GRE_PSM_KATHRESH KA_COUNT $HS_PSM_BASE.${inst}.$GRE_PSM_KACOUNT KA_RECON_PRIM $HS_PSM_BASE.${inst}.$GRE_PSM_KARECON SNOOP_CIRCUIT $HS_PSM_BASE.${inst}.$GRE_PSM_SNOOPCIRC SNOOP_REMOTE $HS_PSM_BASE.${inst}.$GRE_PSM_SNOOPREM WECB_BRIDGES dmsb.wecb.hhs_extra_bridges`
+    eval `psmcli get -e PRIMARY $HS_PSM_BASE.${inst}.$GRE_PSM_PRIENDPOINTS SECONDARY $HS_PSM_BASE.${inst}.$GRE_PSM_SECENDPOINTS BRIDGE_INST_1 $HS_PSM_BASE.${inst}.interface.1.$GRE_PSM_BRIDGES BRIDGE_INST_2 $HS_PSM_BASE.${inst}.interface.2.$GRE_PSM_BRIDGES BRIDGE_INST_3 $HS_PSM_BASE.${inst}.interface.3.$GRE_PSM_BRIDGES BRIDGE_INST_4 $HS_PSM_BASE.${inst}.interface.4.$GRE_PSM_BRIDGES BRIDGE_INST_5 $HS_PSM_BASE.${inst}.interface.5.$GRE_PSM_BRIDGES BRIDGE_INST_6 $HS_PSM_BASE.${inst}.interface.6.$GRE_PSM_BRIDGES KA_INTERVAL $HS_PSM_BASE.${inst}.$GRE_PSM_KAINT KA_FAIL_INTERVAL $HS_PSM_BASE.${inst}.$GRE_PSM_KAFINT KA_POLICY $HS_PSM_BASE.${inst}.$GRE_PSM_KAPOLICY KA_THRESH $HS_PSM_BASE.${inst}.$GRE_PSM_KATHRESH KA_COUNT $HS_PSM_BASE.${inst}.$GRE_PSM_KACOUNT KA_RECON_PRIM $HS_PSM_BASE.${inst}.$GRE_PSM_KARECON SNOOP_CIRCUIT $HS_PSM_BASE.${inst}.$GRE_PSM_SNOOPCIRC SNOOP_REMOTE $HS_PSM_BASE.${inst}.$GRE_PSM_SNOOPREM WECB_BRIDGES dmsb.wecb.hhs_extra_bridges`
 
     status=$?
     if [ "$status" != "0" ]
@@ -435,7 +439,7 @@ read_init_params () {
     fi
     echo "KA_THRESH $KA_THRESH KA_COUNT $KA_COUNT KA_RECON_PRIM $KA_RECON_PRIM"
 
-  BRIDGE_INSTS="$BRIDGE_INST_1,$BRIDGE_INST_2,$BRIDGE_INST_3,$BRIDGE_INST_4,$BRIDGE_INST_5"
+  BRIDGE_INSTS="$BRIDGE_INST_1,$BRIDGE_INST_2,$BRIDGE_INST_3,$BRIDGE_INST_4,$BRIDGE_INST_5,$BRIDGE_INST_6"
 
     bInst_to_bNames "$BRIDGE_INSTS" "$WECB_BRIDGES"
 
@@ -463,11 +467,14 @@ update_bridge_config () {
             continue
         fi
         #changed the queue value for nf queue issue
-        if [ $br = "brpublic" ] || [ $br = "brpub" ]; then
+        if [ $br = "brpublic" ] || [ $br = "brpub" ] || [ $br = "bropen6g" ]; then
            queue=45                               
         fi
         br_snoop_rule="`sysevent setunique GeneralPurposeFirewallRule " -A FORWARD -o $br -p udp --dport=67:68 -j NFQUEUE --queue-bypass --queue-num $queue"`"
         sysevent set gre_${inst}_${br}_snoop_rule "$br_snoop_rule"
+        if [ $queue = "45" ]; then
+            queue=5
+        fi
   if [ "$BOX_TYPE" = "XF3" ] ; then
        sleep 5
   fi
@@ -524,10 +531,14 @@ get_ssids() {
        localif_3=`psmcli get $HS_PSM_BASE.${1}.interface.3.$GRE_PSM_LOCALIFS`
        localif_4=`psmcli get $HS_PSM_BASE.${1}.interface.4.$GRE_PSM_LOCALIFS`
        localif_5=`psmcli get $HS_PSM_BASE.${1}.interface.5.$GRE_PSM_LOCALIFS`
+       localif_6=`psmcli get $HS_PSM_BASE.${1}.interface.6.$GRE_PSM_LOCALIFS`
 
        count=0
-       set '5 6 9 10 16'
-       
+       if [ "$BOX_TYPE" = "TCCBR" ]; then
+           set '5 6 9 10 16'
+       else
+           set '5 6 9 10 19 21'
+       fi
        for i in $@; do          
             count=`expr $count + 1`
             eval localinfo=\${localif_${count}}
@@ -640,7 +651,8 @@ hotspot_down() {
     BRIDGE_INST_3=`psmcli get $HS_PSM_BASE.${inst}.interface.3.$GRE_PSM_BRIDGES`
     BRIDGE_INST_4=`psmcli get $HS_PSM_BASE.${inst}.interface.4.$GRE_PSM_BRIDGES`
     BRIDGE_INST_5=`psmcli get $HS_PSM_BASE.${inst}.interface.5.$GRE_PSM_BRIDGES`
-    bridgeFQDM="$BRIDGE_INST_1,$BRIDGE_INST_2,$BRIDGE_INST_3,$BRIDGE_INST_4,$BRIDGE_INST_5"
+    BRIDGE_INST_6=`psmcli get $HS_PSM_BASE.${inst}.interface.6.$GRE_PSM_BRIDGES`
+    bridgeFQDM="$BRIDGE_INST_1,$BRIDGE_INST_2,$BRIDGE_INST_3,$BRIDGE_INST_4,$BRIDGE_INST_5,$BRIDGE_INST_6"
 	
     remove_bridge_config ${inst} "`sysevent get gre_${inst}_current_bridges`"
 
@@ -682,7 +694,7 @@ hotspot_up() {
 
                 bridgeFQDM="$BRIDGE_INST_1,$BRIDGE_INST_2,$BRIDGE_INST_3,$BRIDGE_INST_4,$BRIDGE_INST_5"
 	else
-		eval `psmcli get -e BRIDGE_INST_1 $HS_PSM_BASE.${inst}.interface.1.$GRE_PSM_BRIDGES BRIDGE_INST_2 $HS_PSM_BASE.${inst}.interface.2.$GRE_PSM_BRIDGES BRIDGE_INST_3 $HS_PSM_BASE.${inst}.interface.3.$GRE_PSM_BRIDGES BRIDGE_INST_4 $HS_PSM_BASE.${inst}.interface.4.$GRE_PSM_BRIDGES BRIDGE_INST_5 $HS_PSM_BASE.${inst}.interface.5.$GRE_PSM_BRIDGES ENABLED $HS_PSM_BASE.${inst}.$HS_PSM_ENABLE GRE_ENABLED $GRE_PSM_BASE.${inst}.$GRE_PSM_ENABLE WECB_BRIDGES dmsb.wecb.hhs_extra_bridges`
+		eval `psmcli get -e BRIDGE_INST_1 $HS_PSM_BASE.${inst}.interface.1.$GRE_PSM_BRIDGES BRIDGE_INST_2 $HS_PSM_BASE.${inst}.interface.2.$GRE_PSM_BRIDGES BRIDGE_INST_3 $HS_PSM_BASE.${inst}.interface.3.$GRE_PSM_BRIDGES BRIDGE_INST_4 $HS_PSM_BASE.${inst}.interface.4.$GRE_PSM_BRIDGES BRIDGE_INST_5 $HS_PSM_BASE.${inst}.interface.5.$GRE_PSM_BRIDGES BRIDGE_INST_6 $HS_PSM_BASE.${inst}.interface.6.$GRE_PSM_BRIDGES ENABLED $HS_PSM_BASE.${inst}.$HS_PSM_ENABLE GRE_ENABLED $GRE_PSM_BASE.${inst}.$GRE_PSM_ENABLE WECB_BRIDGES dmsb.wecb.hhs_extra_bridges`
 
 		if [ x"1" != x$ENABLED -o x"1" != x$GRE_ENABLED ]; then
 			exit 0;
@@ -692,7 +704,11 @@ hotspot_up() {
                     eval `psmcli get -e BRIDGE_INST_1 $HS_PSM_BASE.${inst}.interface.1.$GRE_PSM_BRIDGES BRIDGE_INST_2 $HS_PSM_BASE.${inst}.interface.2.$GRE_PSM_BRIDGES BRIDGE_INST_3 $HS_PSM_BASE.${inst}.interface.3.$GRE_PSM_BRIDGES BRIDGE_INST_4 $HS_PSM_BASE.${inst}.interface.4.$GRE_PSM_BRIDGES WECB_BRIDGES dmsb.wecb.hhs_extra_bridges NAME $GRE_PSM_BASE.${inst}.$GRE_PSM_NAME`
                     count=0
                     bridgeFQDM=""
-                    set '5 6 9 10 16'
+                    if [ "$BOX_TYPE" = "TCCBR" ]; then
+                        set '5 6 9 10 16'
+                    else
+                        set '5 6 9 10 19 21'
+                    fi
                     for i in $@; do
                         count=`expr $count + 1`
                         eval bridgeinfo=\${BRIDGE_INST_${count}}
@@ -784,7 +800,8 @@ set_wecb_bridges() {
 	BRIDGE_INST_3="`psmcli get $HS_PSM_BASE.1.interface.3.$GRE_PSM_BRIDGES`"
 	BRIDGE_INST_4="`psmcli get $HS_PSM_BASE.1.interface.4.$GRE_PSM_BRIDGES`"
 	BRIDGE_INST_5="`psmcli get $HS_PSM_BASE.1.interface.5.$GRE_PSM_BRIDGES`"
-	BRIDGE_INS="$BRIDGE_INST_1,$BRIDGE_INST_2,$BRIDGE_INST_3,$BRIDGE_INST_4,$BRIDGE_INST_5"
+        BRIDGE_INST_6="`psmcli get $HS_PSM_BASE.1.interface.6.$GRE_PSM_BRIDGES`"
+	BRIDGE_INS="$BRIDGE_INST_1,$BRIDGE_INST_2,$BRIDGE_INST_3,$BRIDGE_INST_4,$BRIDGE_INST_5,$BRIDGE_INST_6"
 	
     local binst=""
     local query=""
@@ -1094,7 +1111,7 @@ case "$1" in
     #args: hotspot gre instance
     hotspot-update_bridges)
 		eval `psmcli get -e BRIDGE_INST_1 $HS_PSM_BASE.${2}.interface.1.$GRE_PSM_BRIDGES BRIDGE_INST_2 $HS_PSM_BASE.${2}.interface.2.$GRE_PSM_BRIDGES BRIDGE_INST_3 $HS_PSM_BASE.${2}.interface.3.$GRE_PSM_BRIDGES BRIDGE_INST_4 $HS_PSM_BASE.${2}.interface.4.$GRE_PSM_BRIDGES BRIDGE_INST_5 $HS_PSM_BASE.${2}.interface.5.$GRE_PSM_BRIDGES WECB_BRIDGES dmsb.wecb.hhs_extra_bridges NAME $GRE_PSM_BASE.$2.$GRE_PSM_NAME`
-        BRIDGE_INSTS="$BRIDGE_INST_1,$BRIDGE_INST_2,$BRIDGE_INST_3,$BRIDGE_INST_4,$BRIDGE_INST_5"
+        BRIDGE_INSTS="$BRIDGE_INST_1,$BRIDGE_INST_2,$BRIDGE_INST_3,$BRIDGE_INST_4,$BRIDGE_INST_5,$BRIDGE_INST_6"
         start=""
         brinst=""
         OLD_IFS="$IFS"
