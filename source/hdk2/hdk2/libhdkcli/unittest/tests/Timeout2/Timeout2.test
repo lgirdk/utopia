@@ -1,8 +1,0 @@
-#
-# Timeout2.test
-#   Test the timeout functionality of libhdkcli.
-#
-
-
-method: http://cisco.com/Unittest/SimpleUnittestMethod
-timeout: 2 # seconds
