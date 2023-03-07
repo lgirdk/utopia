@@ -547,7 +547,7 @@ void prepare_dhcp_options_wan_dns()
             {
                 char l_cDnsIpv4Preferred[16], l_cDnsIpv4Alternate[16];
                 char l_cDhcpOptionString[128];
-
+                l_cDhcpOptionString[0] = 0;
                 syscfg_get(NULL, "dns_ipv4_preferred", l_cDnsIpv4Preferred, sizeof(l_cDnsIpv4Preferred));
                 if (l_cDnsIpv4Preferred[0] != 0 && (strcmp(l_cDnsIpv4Preferred, "0.0.0.0") != 0))
                 {
@@ -559,12 +559,17 @@ void prepare_dhcp_options_wan_dns()
                         strcat(l_cDhcpOptionString, ",");
                         strcat(l_cDhcpOptionString, l_cDnsIpv4Alternate);
                     }
+                }
+                else
+                {
                     if (0 != l_cNs[0])
                     {
-                        strcat(l_cDhcpOptionString, ",");
-                        strcat(l_cDhcpOptionString, l_cNs);
+                        strcpy(l_cDhcpOptionString, l_cNs);
                     }
-                    fprintf(l_fLocalDhcpOpt, "option:dns-server, %s\n",l_cDhcpOptionString);
+                }
+                if (l_cDhcpOptionString[0] != 0)
+                {
+                     fprintf(l_fLocalDhcpOpt, "option:dns-server, %s\n",l_cDhcpOptionString);
                 }
             }
             else if (!strncmp(l_cPropagate_Ns, "1", 1))
