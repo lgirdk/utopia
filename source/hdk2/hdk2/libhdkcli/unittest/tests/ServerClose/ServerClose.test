@@ -1,7 +1,0 @@
-#
-# ServerClose.test
-#   Test libhdkcli handling of an abrupt server connection close.
-#
-
-method: http://cisco.com/Unittest/SimpleUnittestMethod
-

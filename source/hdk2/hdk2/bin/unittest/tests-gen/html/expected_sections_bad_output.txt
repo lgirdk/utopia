@@ -1,3 +1,0 @@
-result = 1
-test_sections_bad.hsl:1: Unknown documentation section type
-

@@ -28,7 +28,6 @@ libUtopia_sample_la_CPPFLAGS = -I$(top_srcdir)/source/cosa/include/linux \
                                -I$(top_srcdir)/source/igd/arch/intel_usg/boards/rdkb_arm/include \
                                -I$(top_srcdir)/source/firewall/arch/intel_usg/boards/rdkb_arm/include \
                                -I$(top_srcdir)/source/firewall/arch/intel_usg/boards/arm_shared/include \
-                               -I$(top_srcdir)/source/hdk2/hdk2/include \
                                -I$(top_srcdir)/source/pal/upnp/include \
                                -I$(top_srcdir)/source/pal/xml/include \
                                -I$(top_srcdir)/source/pal/kernel/include \
