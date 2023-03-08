@@ -1539,7 +1539,7 @@ static int do_wan_nat_lan_clients_mapt(FILE *fp)
 void do_webui_rate_limit (FILE *filter_fp)
 {
    FIREWALL_DEBUG("Entering do_webui_rate_limit\n");
-   fprintf(filter_fp, "%s\n", ":webui_limit - [0:0]");
+   fprintf(filter_fp, ":%s - [0:0]\n", "webui_limit");
    fprintf(filter_fp, "-I webui_limit -m state --state ESTABLISHED,RELATED -j ACCEPT\n");
    fprintf(filter_fp, "-A webui_limit -p tcp -m tcp  --tcp-flags FIN,SYN,RST,ACK SYN -m limit --limit 4/sec --limit-burst 5 -j ACCEPT\n");
    fprintf(filter_fp, "-A webui_limit -m limit --limit 1/sec --limit-burst 1 -j LOG --log-prefix \"WebUI Rate Limited: \" --log-level 6\n");
@@ -8859,7 +8859,7 @@ static int do_parcon_mgmt_service(FILE *fp, int iptype, FILE *cron_fp)
 
 #ifdef CONFIG_CISCO_PARCON_WALLED_GARDEN
      /* only ipv4 has nat table, so cannot use nat table to redirect service port */ 
-     fprintf(fp, "%s\n", ":parcon_service_nfq - [0:0]");
+     fprintf(fp, ":%s - [0:0]\n", "parcon_service_nfq");
      fprintf(fp, "-A parcon_service_nfq -p tcp --syn -j ACCEPT\n");
      fprintf(fp, "-A parcon_service_nfq -j MARK --set-mark 0x00\n");
      fprintf(fp, "-A parcon_service_nfq -m string --string \"HTTP\" --algo kmp  -m string --string \"GET\" --algo kmp -j NFQUEUE "HTTP_GET_QUEUE_CONFIG "\n");
@@ -11594,19 +11594,19 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(raw_fp, "%s\n", "*raw");
    fprintf(raw_fp, "%s\n", ":PREROUTING ACCEPT [0:0]");
    fprintf(raw_fp, "%s\n", ":OUTPUT ACCEPT [0:0]");
-   fprintf(raw_fp, "%s\n", ":xlog_drop_lanattack  - [0:0]");
-   fprintf(raw_fp, "%s\n", ":prerouting_ephemeral - [0:0]");
-   fprintf(raw_fp, "%s\n", ":output_ephemeral - [0:0]");
-   fprintf(raw_fp, "%s\n", ":prerouting_raw - [0:0]");
+   fprintf(raw_fp, ":%s - [0:0]\n", "xlog_drop_lanattack");
+   fprintf(raw_fp, ":%s - [0:0]\n", "prerouting_ephemeral");
+   fprintf(raw_fp, ":%s - [0:0]\n", "output_ephemeral");
+   fprintf(raw_fp, ":%s - [0:0]\n", "prerouting_raw");
 #if defined(CONFIG_KERNEL_NETFILTER_XT_TARGET_CT)
    if (AutoConntrackHelperDisabled()) {
-       fprintf(raw_fp, "%s\n", ":lan2wan_helpers - [0:0]");
+       fprintf(raw_fp, ":%s - [0:0]\n", "lan2wan_helpers");
    }
 #endif
 
-   fprintf(raw_fp, "%s\n", ":output_raw - [0:0]");
-   fprintf(raw_fp, "%s\n", ":prerouting_nowan - [0:0]");
-   fprintf(raw_fp, "%s\n", ":output_nowan - [0:0]");
+   fprintf(raw_fp, ":%s - [0:0]\n", "output_raw");
+   fprintf(raw_fp, ":%s - [0:0]\n", "prerouting_nowan");
+   fprintf(raw_fp, ":%s - [0:0]\n", "output_nowan");
  
 #if !defined(_BWG_PRODUCT_REQ_)
    fprintf(raw_fp, "-A PREROUTING -j prerouting_ephemeral\n");
@@ -11638,12 +11638,12 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(mangle_fp, "%s\n", ":OUTPUT ACCEPT [0:0]");
 #ifdef CONFIG_BUILD_TRIGGER
 #ifndef CONFIG_KERNEL_NF_TRIGGER_SUPPORT
-   fprintf(mangle_fp, "%s\n", ":prerouting_trigger - [0:0]");
+   fprintf(mangle_fp, ":%s - [0:0]\n", "prerouting_trigger");
 #endif
 #endif
-   fprintf(mangle_fp, "%s\n", ":prerouting_qos - [0:0]");
-   fprintf(mangle_fp, "%s\n", ":postrouting_qos - [0:0]");
-   fprintf(mangle_fp, "%s\n", ":postrouting_lan2lan - [0:0]");
+   fprintf(mangle_fp, ":%s - [0:0]\n", "prerouting_qos");
+   fprintf(mangle_fp, ":%s - [0:0]\n", "postrouting_qos");
+   fprintf(mangle_fp, ":%s - [0:0]\n", "postrouting_lan2lan");
 #ifdef _HUB4_PRODUCT_REQ_
 #ifdef HUB4_BFD_FEATURE_ENABLED
    fprintf(mangle_fp, ":%s - [0:0]\n", IPOE_HEALTHCHECK);
@@ -11724,30 +11724,30 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    
 #endif
 #if defined (_XB6_PRODUCT_REQ_)
-   fprintf(nat_fp, "%s\n", ":prerouting_noRFCP_redirect - [0:0]");
+   fprintf(nat_fp, ":%s - [0:0]\n", "prerouting_noRFCP_redirect");
 #endif
 #if defined (SR300_FEATURE_SELFHEAL) || defined (HUB4_FEATURE_SELFHEAL)
-   fprintf(nat_fp, "%s\n", ":prerouting_selfheal_redirect - [0:0]");
+   fprintf(nat_fp, ":%s - [0:0]\n", "prerouting_selfheal_redirect");
 #endif
-   fprintf(nat_fp, "%s\n", ":prerouting_ephemeral - [0:0]");
-   fprintf(nat_fp, "%s\n", ":prerouting_fromwan - [0:0]");
-   fprintf(nat_fp, "%s\n", ":prerouting_mgmt_override - [0:0]");
-   fprintf(nat_fp, "%s\n", ":prerouting_plugins - [0:0]");
-   fprintf(nat_fp, "%s\n", ":prerouting_fromwan_todmz - [0:0]");
-   fprintf(nat_fp, "%s\n", ":prerouting_fromlan - [0:0]");
-   fprintf(nat_fp, "%s\n", ":prerouting_devices - [0:0]");
-   fprintf(nat_fp, "%s\n", ":prerouting_redirect - [0:0]");
+   fprintf(nat_fp, ":%s - [0:0]\n", "prerouting_ephemeral");
+   fprintf(nat_fp, ":%s - [0:0]\n", "prerouting_fromwan");
+   fprintf(nat_fp, ":%s - [0:0]\n", "prerouting_mgmt_override");
+   fprintf(nat_fp, ":%s - [0:0]\n", "prerouting_plugins");
+   fprintf(nat_fp, ":%s - [0:0]\n", "prerouting_fromwan_todmz");
+   fprintf(nat_fp, ":%s - [0:0]\n", "prerouting_fromlan");
+   fprintf(nat_fp, ":%s - [0:0]\n", "prerouting_devices");
+   fprintf(nat_fp, ":%s - [0:0]\n", "prerouting_redirect");
 #ifdef CONFIG_BUILD_TRIGGER
 #ifdef CONFIG_KERNEL_NF_TRIGGER_SUPPORT
-   fprintf(nat_fp, "%s\n", ":prerouting_fromlan_trigger - [0:0]");
-   fprintf(nat_fp, "%s\n", ":prerouting_fromwan_trigger - [0:0]");
+   fprintf(nat_fp, ":%s - [0:0]\n", "prerouting_fromlan_trigger");
+   fprintf(nat_fp, ":%s - [0:0]\n", "prerouting_fromwan_trigger");
 #endif
 #endif
 
-   fprintf(nat_fp, "%s\n", ":postrouting_towan - [0:0]");
-   fprintf(nat_fp, "%s\n", ":postrouting_tolan - [0:0]");
-   fprintf(nat_fp, "%s\n", ":postrouting_plugins - [0:0]");
-   fprintf(nat_fp, "%s\n", ":postrouting_ephemeral - [0:0]");
+   fprintf(nat_fp, ":%s - [0:0]\n", "postrouting_towan");
+   fprintf(nat_fp, ":%s - [0:0]\n", "postrouting_tolan");
+   fprintf(nat_fp, ":%s - [0:0]\n", "postrouting_plugins");
+   fprintf(nat_fp, ":%s - [0:0]\n", "postrouting_ephemeral");
 
 #if defined(_COSA_BCM_MIPS_)
    fprintf(nat_fp, "-A POSTROUTING -m physdev --physdev-in %s -j ACCEPT\n", emta_wan_ifname);
@@ -11787,23 +11787,23 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    
 #ifdef CONFIG_CISCO_FEATURE_CISCOCONNECT
    if(isGuestNetworkEnabled) {
-       fprintf(nat_fp, "%s\n", ":guestnet_walled_garden - [0:0]");
-       fprintf(nat_fp, "%s\n", ":guestnet_allow_list - [0:0]");
+       fprintf(nat_fp, ":%s - [0:0]\n", "guestnet_walled_garden");
+       fprintf(nat_fp, ":%s - [0:0]\n", "guestnet_allow_list");
        fprintf(nat_fp, "-A guestnet_walled_garden -j guestnet_allow_list\n");
        fprintf(nat_fp, "-A PREROUTING -s %s/%s -j guestnet_walled_garden\n", guest_network_ipaddr, guest_network_mask);
    }
    
-   fprintf(nat_fp, "%s\n", ":device_based_parcon - [0:0]");
-   fprintf(nat_fp, "%s\n", ":parcon_allow_list - [0:0]");
-   fprintf(nat_fp, "%s\n", ":parcon_walled_garden - [0:0]");
+   fprintf(nat_fp, ":%s - [0:0]\n", "device_based_parcon");
+   fprintf(nat_fp, ":%s - [0:0]\n", "parcon_allow_list");
+   fprintf(nat_fp, ":%s - [0:0]\n", "parcon_walled_garden");
    fprintf(nat_fp, "-A device_based_parcon -j parcon_allow_list\n");
    fprintf(nat_fp, "-A device_based_parcon -j parcon_walled_garden\n");
    fprintf(nat_fp, "-A prerouting_fromlan -j device_based_parcon\n");
 #endif
 #ifdef  CONFIG_CISCO_PARCON_WALLED_GARDEN
-   fprintf(nat_fp, "%s\n", ":managedsite_based_parcon - [0:0]");
-//   fprintf(nat_fp, "%s\n", ":parcon_allow_list - [0:0]");
-   fprintf(nat_fp, "%s\n", ":parcon_walled_garden - [0:0]");
+   fprintf(nat_fp, ":%s - [0:0]\n", "managedsite_based_parcon");
+//   fprintf(nat_fp, ":%s - [0:0]\n", "parcon_allow_list");
+   fprintf(nat_fp, ":%s - [0:0]\n", "parcon_walled_garden");
 //   fprintf(nat_fp, "-A device_based_parcon -j parcon_allow_list\n");
 //   fprintf(nat_fp, "-A device_based_parcon -j parcon_walled_garden\n");
 #endif
@@ -11920,7 +11920,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(filter_fp, "-A OUTPUT -o lo -p tcp -m tcp --sport 49152:49153 -j ACCEPT\n");
    fprintf(filter_fp, "-A OUTPUT ! -o brlan0 -p tcp -m tcp --sport 49152:49153 -j DROP\n");
 #ifdef CONFIG_CISCO_FEATURE_CISCOCONNECT
-   fprintf(filter_fp, "%s\n", ":pp_disabled - [0:0]");
+   fprintf(filter_fp, ":%s - [0:0]\n", "pp_disabled");
    if(isGuestNetworkEnabled) {
        fprintf(filter_fp, "-A pp_disabled -s %s/%s -p tcp -m state --state ESTABLISHED -m connbytes --connbytes 0:5 --connbytes-dir original --connbytes-mode packets -j GWMETA --dis-pp\n", guest_network_ipaddr, guest_network_mask);
        fprintf(filter_fp, "-A pp_disabled -d %s/%s -p tcp -m state --state ESTABLISHED -m connbytes --connbytes 0:5 --connbytes-dir reply --connbytes-mode packets -j GWMETA --dis-pp\n", guest_network_ipaddr, guest_network_mask);
@@ -11931,35 +11931,35 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(filter_fp, "-A FORWARD -j pp_disabled\n");
 #endif
 
-   fprintf(filter_fp, "%s\n", ":lan2wan - [0:0]");
+   fprintf(filter_fp, ":%s - [0:0]\n", "lan2wan");
    
 #ifdef CONFIG_CISCO_FEATURE_CISCOCONNECT
-   fprintf(filter_fp, "%s\n", ":lan2wan_dnsq_intercept - [0:0]"); //dns query nfqueue handler rules
-   fprintf(filter_fp, "%s\n", ":lan2wan_httpget_intercept - [0:0]"); //http nfqueue handler rules
-   fprintf(filter_fp, "%s\n", ":parcon_allow_list  - [0:0]");
+   fprintf(filter_fp, ":%s - [0:0]\n", "lan2wan_dnsq_intercept"); //dns query nfqueue handler rules
+   fprintf(filter_fp, ":%s - [0:0]\n", "lan2wan_httpget_intercept"); //http nfqueue handler rules
+   fprintf(filter_fp, ":%s - [0:0]\n", "parcon_allow_list");
    fprintf(filter_fp, "-A lan2wan_httpget_intercept -j parcon_allow_list\n");
    fprintf(filter_fp, "-A lan2wan -p tcp --dport 80 -j lan2wan_httpget_intercept\n");
    fprintf(filter_fp, "-A lan2wan -p udp --dport 53 -j lan2wan_dnsq_intercept\n");
 #endif
 
-   fprintf(filter_fp, "%s\n", ":lan2wan_misc - [0:0]");
+   fprintf(filter_fp, ":%s - [0:0]\n", "lan2wan_misc");
 #ifdef CONFIG_BUILD_TRIGGER
-   fprintf(filter_fp, "%s\n", ":lan2wan_triggers - [0:0]");
+   fprintf(filter_fp, ":%s - [0:0]\n", "lan2wan_triggers");
 #endif
-   fprintf(filter_fp, "%s\n", ":lan2wan_disable - [0:0]");
+   fprintf(filter_fp, ":%s - [0:0]\n", "lan2wan_disable");
 #ifdef CISCO_CONFIG_TRUE_STATIC_IP
-   fprintf(filter_fp, "%s\n", ":lan2wan_staticip - [0:0]");
+   fprintf(filter_fp, ":%s - [0:0]\n", "lan2wan_staticip");
 #endif
-   fprintf(filter_fp, "%s\n", ":lan2wan_forwarding_accept - [0:0]");
-   fprintf(filter_fp, "%s\n", ":lan2wan_dmz_accept - [0:0]");
-   //fprintf(filter_fp, "%s\n", ":lan2wan_webfilters - [0:0]");
-   //fprintf(filter_fp, "%s\n", ":lan2wan_iap - [0:0]");
-   //fprintf(filter_fp, "%s\n", ":lan2wan_plugins - [0:0]");
-   fprintf(filter_fp, "%s\n", ":lan2wan_pc_device - [0:0]");
-   fprintf(filter_fp, "%s\n", ":lan2wan_pc_site - [0:0]");
-   fprintf(filter_fp, "%s\n", ":lan2wan_pc_service - [0:0]");
-   //fprintf(filter_fp, "%s\n", ":lan2wan_iot_allow - [0:0]");
-   fprintf(filter_fp, "%s\n", ":wan2lan - [0:0]");
+   fprintf(filter_fp, ":%s - [0:0]\n", "lan2wan_forwarding_accept");
+   fprintf(filter_fp, ":%s - [0:0]\n", "lan2wan_dmz_accept");
+   //fprintf(filter_fp, ":%s - [0:0]\n", "lan2wan_webfilters");
+   //fprintf(filter_fp, ":%s - [0:0]\n", "lan2wan_iap");
+   //fprintf(filter_fp, ":%s - [0:0]\n", "lan2wan_plugins");
+   fprintf(filter_fp, ":%s - [0:0]\n", "lan2wan_pc_device");
+   fprintf(filter_fp, ":%s - [0:0]\n", "lan2wan_pc_site");
+   fprintf(filter_fp, ":%s - [0:0]\n", "lan2wan_pc_service");
+   //fprintf(filter_fp, ":%s - [0:0]\n", "lan2wan_iot_allow");
+   fprintf(filter_fp, ":%s - [0:0]\n", "wan2lan");
 #ifdef CONFIG_CISCO_PARCON_WALLED_GARDEN 
 //    fprintf(filterFp, ":lan2wan_dnsq_nfqueue - [0:0]\n");
 //    fprintf(fp, ":lan2wan_http_nfqueue - [0:0]\n");
@@ -11967,65 +11967,65 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
 #endif
 
 #ifdef CONFIG_CISCO_FEATURE_CISCOCONNECT
-   fprintf(filter_fp, "%s\n", ":wan2lan_dns_intercept - [0:0]");
+   fprintf(filter_fp, ":%s - [0:0]\n", "wan2lan_dns_intercept");
 #endif
 
-   fprintf(filter_fp, "%s\n", ":wan2lan_disabled - [0:0]");
+   fprintf(filter_fp, ":%s - [0:0]\n", "wan2lan_disabled");
 #ifdef CISCO_CONFIG_TRUE_STATIC_IP
-   fprintf(filter_fp, "%s\n", ":wan2lan_staticip_pm - [0:0]");
-   fprintf(filter_fp, "%s\n", ":wan2lan_staticip - [0:0]");
-   fprintf(filter_fp, "%s\n", ":wan2lan_staticip_post - [0:0]");
+   fprintf(filter_fp, ":%s - [0:0]\n", "wan2lan_staticip_pm");
+   fprintf(filter_fp, ":%s - [0:0]\n", "wan2lan_staticip");
+   fprintf(filter_fp, ":%s - [0:0]\n", "wan2lan_staticip_post");
 #endif
-   fprintf(filter_fp, "%s\n", ":wan2lan_forwarding_accept - [0:0]");
-   fprintf(filter_fp, "%s\n", ":wan2lan_misc - [0:0]");
-   fprintf(filter_fp, "%s\n", ":wan2lan_accept - [0:0]");
-   fprintf(filter_fp, "%s\n", ":wan2lan_plugins - [0:0]");
-   fprintf(filter_fp, "%s\n", ":wan2lan_nonat - [0:0]");
-   fprintf(filter_fp, "%s\n", ":wan2lan_dmz - [0:0]");
-   fprintf(filter_fp, "%s\n", ":wan2lan_iot_allow - [0:0]");
+   fprintf(filter_fp, ":%s - [0:0]\n", "wan2lan_forwarding_accept");
+   fprintf(filter_fp, ":%s - [0:0]\n", "wan2lan_misc");
+   fprintf(filter_fp, ":%s - [0:0]\n", "wan2lan_accept");
+   fprintf(filter_fp, ":%s - [0:0]\n", "wan2lan_plugins");
+   fprintf(filter_fp, ":%s - [0:0]\n", "wan2lan_nonat");
+   fprintf(filter_fp, ":%s - [0:0]\n", "wan2lan_dmz");
+   fprintf(filter_fp, ":%s - [0:0]\n", "wan2lan_iot_allow");
 #ifdef CONFIG_BUILD_TRIGGER
 #ifdef CONFIG_KERNEL_NF_TRIGGER_SUPPORT
-   fprintf(filter_fp, "%s\n", ":wan2lan_trigger - [0:0]");
+   fprintf(filter_fp, ":%s - [0:0]\n", "wan2lan_trigger");
 #endif
 #endif
-   fprintf(filter_fp, "%s\n", ":lan2self - [0:0]");
-   fprintf(filter_fp, "%s\n", ":lan2self_by_wanip - [0:0]");
-   fprintf(filter_fp, "%s\n", ":lan2self_mgmt - [0:0]");
-   fprintf(filter_fp, "%s\n", ":host_detect - [0:0]");
-   fprintf(filter_fp, "%s\n", ":lanattack - [0:0]");
-   fprintf(filter_fp, "%s\n", ":lan2self_plugins - [0:0]");
+   fprintf(filter_fp, ":%s - [0:0]\n", "lan2self");
+   fprintf(filter_fp, ":%s - [0:0]\n", "lan2self_by_wanip");
+   fprintf(filter_fp, ":%s - [0:0]\n", "lan2self_mgmt");
+   fprintf(filter_fp, ":%s - [0:0]\n", "host_detect");
+   fprintf(filter_fp, ":%s - [0:0]\n", "lanattack");
+   fprintf(filter_fp, ":%s - [0:0]\n", "lan2self_plugins");
 #if defined (MULTILAN_FEATURE)
-   fprintf(filter_fp, "%s\n", ":isolate_lans - [0:0]");
+   fprintf(filter_fp, ":%s - [0:0]\n", "isolate_lans");
 #endif
-   fprintf(filter_fp, "%s\n", ":self2lan - [0:0]");
-   fprintf(filter_fp, "%s\n", ":self2lan_plugins - [0:0]");
-   fprintf(filter_fp, "%s\n", ":moca_isolation - [0:0]");
+   fprintf(filter_fp, ":%s - [0:0]\n", "self2lan");
+   fprintf(filter_fp, ":%s - [0:0]\n", "self2lan_plugins");
+   fprintf(filter_fp, ":%s - [0:0]\n", "moca_isolation");
    //>>DOS
 #ifdef _COSA_INTEL_XB3_ARM_
-   fprintf(filter_fp, "%s\n", ":wandosattack - [0:0]");
-   fprintf(filter_fp, "%s\n", ":mtadosattack - [0:0]");
+   fprintf(filter_fp, ":%s - [0:0]\n", "wandosattack");
+   fprintf(filter_fp, ":%s - [0:0]\n", "mtadosattack");
 #endif
    //<<DOS
-   fprintf(filter_fp, "%s\n", ":wan2self - [0:0]");
-   fprintf(filter_fp, "%s\n", ":wan2self_mgmt - [0:0]");
-   fprintf(filter_fp, "%s\n", ":wan2self_ports - [0:0]");
-   fprintf(filter_fp, "%s\n", ":wanattack - [0:0]");
-   fprintf(filter_fp, "%s\n", ":wan2self_allow - [0:0]");
-   fprintf(filter_fp, "%s\n", ":lanhosts - [0:0]");
-   fprintf(filter_fp, "%s\n", ":general_input - [0:0]");
-   fprintf(filter_fp, "%s\n", ":general_output - [0:0]");
-   fprintf(filter_fp, "%s\n", ":general_forward - [0:0]");
-   fprintf(filter_fp, "%s\n", ":xlog_accept_lan2wan - [0:0]");
-   fprintf(filter_fp, "%s\n", ":xlog_accept_wan2lan - [0:0]");
-   fprintf(filter_fp, "%s\n", ":xlog_accept_wan2self - [0:0]");
-   fprintf(filter_fp, "%s\n", ":xlog_drop_wan2lan - [0:0]");
-   fprintf(filter_fp, "%s\n", ":xlog_drop_lan2wan - [0:0]");
-   fprintf(filter_fp, "%s\n", ":xlog_drop_wan2self - [0:0]");
-   fprintf(filter_fp, "%s\n", ":xlog_drop_wanattack - [0:0]");
-   fprintf(filter_fp, "%s\n", ":xlog_drop_lan2self - [0:0]");
-   fprintf(filter_fp, "%s\n", ":xlog_drop_lanattack - [0:0]");
-   fprintf(filter_fp, "%s\n", ":xlogdrop - [0:0]");
-   fprintf(filter_fp, "%s\n", ":xlogreject - [0:0]");
+   fprintf(filter_fp, ":%s - [0:0]\n", "wan2self");
+   fprintf(filter_fp, ":%s - [0:0]\n", "wan2self_mgmt");
+   fprintf(filter_fp, ":%s - [0:0]\n", "wan2self_ports");
+   fprintf(filter_fp, ":%s - [0:0]\n", "wanattack");
+   fprintf(filter_fp, ":%s - [0:0]\n", "wan2self_allow");
+   fprintf(filter_fp, ":%s - [0:0]\n", "lanhosts");
+   fprintf(filter_fp, ":%s - [0:0]\n", "general_input");
+   fprintf(filter_fp, ":%s - [0:0]\n", "general_output");
+   fprintf(filter_fp, ":%s - [0:0]\n", "general_forward");
+   fprintf(filter_fp, ":%s - [0:0]\n", "xlog_accept_lan2wan");
+   fprintf(filter_fp, ":%s - [0:0]\n", "xlog_accept_wan2lan");
+   fprintf(filter_fp, ":%s - [0:0]\n", "xlog_accept_wan2self");
+   fprintf(filter_fp, ":%s - [0:0]\n", "xlog_drop_wan2lan");
+   fprintf(filter_fp, ":%s - [0:0]\n", "xlog_drop_lan2wan");
+   fprintf(filter_fp, ":%s - [0:0]\n", "xlog_drop_wan2self");
+   fprintf(filter_fp, ":%s - [0:0]\n", "xlog_drop_wanattack");
+   fprintf(filter_fp, ":%s - [0:0]\n", "xlog_drop_lan2self");
+   fprintf(filter_fp, ":%s - [0:0]\n", "xlog_drop_lanattack");
+   fprintf(filter_fp, ":%s - [0:0]\n", "xlogdrop");
+   fprintf(filter_fp, ":%s - [0:0]\n", "xlogreject");
 #ifdef _HUB4_PRODUCT_REQ_
 #ifdef HUB4_BFD_FEATURE_ENABLED
    fprintf(filter_fp, ":%s - [0:0]\n", IPOE_HEALTHCHECK);
@@ -12035,8 +12035,8 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
 
    if(isComcastImage) {
        //tr69 chains for logging and filtering
-       fprintf(filter_fp, "%s\n", ":LOG_TR69_DROP - [0:0]");
-       fprintf(filter_fp, "%s\n", ":tr69_filter - [0:0]");
+       fprintf(filter_fp, ":%s - [0:0]\n", "LOG_TR69_DROP");
+       fprintf(filter_fp, ":%s - [0:0]\n", "tr69_filter");
        fprintf(filter_fp, "-A INPUT -p tcp -m tcp --dport 7547 -j tr69_filter\n");
    }
 #ifdef _COSA_INTEL_XB3_ARM_
@@ -12046,8 +12046,8 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
 
    do_openPorts(filter_fp);
 
-   fprintf(filter_fp, "%s\n", ":LOG_SSH_DROP - [0:0]");
-   fprintf(filter_fp, "%s\n", ":SSH_FILTER - [0:0]");
+   fprintf(filter_fp, ":%s - [0:0]\n", "LOG_SSH_DROP");
+   fprintf(filter_fp, ":%s - [0:0]\n", "SSH_FILTER");
 
    if(bEthWANEnable)
    {
@@ -12076,8 +12076,8 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    }
 
    //SNMPv3 chains for logging and filtering
-   fprintf(filter_fp, "%s\n", ":SNMPDROPLOG - [0:0]");
-   fprintf(filter_fp, "%s\n", ":SNMP_FILTER - [0:0]");
+   fprintf(filter_fp, ":%s - [0:0]\n", "SNMPDROPLOG");
+   fprintf(filter_fp, ":%s - [0:0]\n", "SNMP_FILTER");
    //Adding 10163 port to suport SNMPv3 SHA-256
    fprintf(filter_fp, "-A INPUT -p udp -m udp --match multiport --dports 10161,10163 -j SNMP_FILTER\n");
 
@@ -13283,12 +13283,12 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    fprintf(mangle_fp, "%s\n", ":OUTPUT ACCEPT [0:0]");
 #ifdef CONFIG_BUILD_TRIGGER
 #ifndef CONFIG_KERNEL_NF_TRIGGER_SUPPORT
-   fprintf(mangle_fp, "%s\n", ":prerouting_trigger - [0:0]");
+   fprintf(mangle_fp, ":%s - [0:0]\n", "prerouting_trigger");
 #endif
 #endif
-   fprintf(mangle_fp, "%s\n", ":prerouting_qos - [0:0]");
-   fprintf(mangle_fp, "%s\n", ":postrouting_qos - [0:0]");
-   fprintf(mangle_fp, "%s\n", ":postrouting_lan2lan - [0:0]");
+   fprintf(mangle_fp, ":%s - [0:0]\n", "prerouting_qos");
+   fprintf(mangle_fp, ":%s - [0:0]\n", "postrouting_qos");
+   fprintf(mangle_fp, ":%s - [0:0]\n", "postrouting_lan2lan");
    
    //zqiu: RDKB-5686: xconf rule should work for pseudo bridge mode
    prepare_xconf_rules(mangle_fp);
@@ -13324,7 +13324,7 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    fprintf(nat_fp, "%s\n", ":PREROUTING ACCEPT [0:0]");
    fprintf(nat_fp, "%s\n", ":POSTROUTING ACCEPT [0:0]");
    fprintf(nat_fp, "%s\n", ":OUTPUT ACCEPT [0:0]");
-   fprintf(nat_fp, "%s\n", ":postrouting_towan - [0:0]");
+   fprintf(nat_fp, ":%s - [0:0]\n", "postrouting_towan");
 #if defined (FEATURE_SUPPORT_MAPT_NAT46)
    if (isMAPTReady)
    {
@@ -13364,14 +13364,14 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
     */
    fprintf(filter_fp, "%s\n", "*filter");
    fprintf(filter_fp, "%s\n", ":INPUT ACCEPT [0:0]");
-   fprintf(filter_fp, "%s\n", ":wan2self_mgmt - [0:0]");
-   fprintf(filter_fp, "%s\n", ":lan2self_mgmt - [0:0]");
-   fprintf(filter_fp, "%s\n", ":xlog_drop_wan2self - [0:0]");
-   fprintf(filter_fp, "%s\n", ":xlog_drop_lan2self - [0:0]");
+   fprintf(filter_fp, ":%s - [0:0]\n", "wan2self_mgmt");
+   fprintf(filter_fp, ":%s - [0:0]\n", "lan2self_mgmt");
+   fprintf(filter_fp, ":%s - [0:0]\n", "xlog_drop_wan2self");
+   fprintf(filter_fp, ":%s - [0:0]\n", "xlog_drop_lan2self");
    //>>DOS
 #ifdef _COSA_INTEL_XB3_ARM_
-   fprintf(filter_fp, "%s\n", ":wandosattack - [0:0]");
-   fprintf(filter_fp, "%s\n", ":mtadosattack - [0:0]");
+   fprintf(filter_fp, ":%s - [0:0]\n", "wandosattack");
+   fprintf(filter_fp, ":%s - [0:0]\n", "mtadosattack");
 #endif
    //<<DOS
  
@@ -13390,9 +13390,9 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
            fprintf(filter_fp, "-I FORWARD -i %s -o %s -j ACCEPT\n", NAT46_INTERFACE, LNF_BRIDGE);
        }
 #endif
-       fprintf(filter_fp, "%s\n", ":general_input - [0:0]");
-       fprintf(filter_fp, "%s\n", ":general_output - [0:0]");
-       fprintf(filter_fp, "%s\n", ":general_forward - [0:0]");
+       fprintf(filter_fp, ":%s - [0:0]\n", "general_input");
+       fprintf(filter_fp, ":%s - [0:0]\n", "general_output");
+       fprintf(filter_fp, ":%s - [0:0]\n", "general_forward");
        fprintf(filter_fp, "-A INPUT -j general_input\n");
        fprintf(filter_fp, "-A FORWARD -j general_forward\n");
        fprintf(filter_fp, "-A OUTPUT -j general_output\n");
@@ -13436,8 +13436,8 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    /* Enabling SSH, SNMP and TR-069 firewall rules in bridge mode */
    if(isBridgeMode) {
    /* Filtering firewall rules for ssh and SNMP in bridgemode*/
-   fprintf(filter_fp, "%s\n", ":LOG_SSH_DROP - [0:0]");
-   fprintf(filter_fp, "%s\n", ":SSH_FILTER - [0:0]");
+   fprintf(filter_fp, ":%s - [0:0]\n", "LOG_SSH_DROP");
+   fprintf(filter_fp, ":%s - [0:0]\n", "SSH_FILTER");
    fprintf(filter_fp, "-A INPUT -i %s -p tcp -m tcp --dport 22 -j SSH_FILTER\n", ecm_wan_ifname);
    if (erouterSSHEnable)
        fprintf(filter_fp, "-A INPUT -i %s -p tcp -m tcp --dport 22 -j SSH_FILTER\n",current_wan_ifname);
@@ -13447,8 +13447,8 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    fprintf(filter_fp, "-A INPUT -i %s -p udp -m udp --dport 161 -j xlog_drop_lan2self\n", cmdiag_ifname); //SNMP filter
 
    //SNMPv3 chains for logging and filtering
-   fprintf(filter_fp, "%s\n", ":SNMPDROPLOG - [0:0]");
-   fprintf(filter_fp, "%s\n", ":SNMP_FILTER - [0:0]");
+   fprintf(filter_fp, ":%s - [0:0]\n", "SNMPDROPLOG");
+   fprintf(filter_fp, ":%s - [0:0]\n", "SNMP_FILTER");
    fprintf(filter_fp, "-A INPUT -p udp -m udp --match multiport --dports 10161,10163 -j SNMP_FILTER\n");
    fprintf(filter_fp, "-A SNMPDROPLOG -m limit --limit 1/minute -j LOG --log-level %d --log-prefix \"SNMP Connection Blocked:\"\n",syslog_level);
    fprintf(filter_fp, "-A SNMPDROPLOG -j DROP\n");
@@ -13478,8 +13478,8 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
 
    if(isComcastImage && isBridgeMode) {
        //tr69 chains for logging and filtering
-       fprintf(filter_fp, "%s\n", ":LOG_TR69_DROP - [0:0]");
-       fprintf(filter_fp, "%s\n", ":tr69_filter - [0:0]");
+       fprintf(filter_fp, ":%s - [0:0]\n", "LOG_TR69_DROP");
+       fprintf(filter_fp, ":%s - [0:0]\n", "tr69_filter");
        fprintf(filter_fp, "-A INPUT -p tcp -m tcp --dport 7547 -j tr69_filter\n");
        fprintf(filter_fp, "-A LOG_TR69_DROP -m limit --limit 1/minute -j LOG --log-level %d --log-prefix \"TR-069 ACS Server Blocked:\"\n",syslog_level);
        fprintf(filter_fp, "-A LOG_TR69_DROP -j DROP\n");
@@ -13846,7 +13846,7 @@ static void do_ipv6_sn_filter(FILE* fp) {
     char ifIpv6AddrKey[64];
     fprintf(fp, "*mangle\n");
     
-   fprintf(fp, "%s\n", ":postrouting_qos - [0:0]");
+   fprintf(fp, ":%s - [0:0]\n", "postrouting_qos");
  
    #ifdef RDKB_EXTENDER_ENABLED
       add_if_mss_clamping(fp,AF_INET6);
@@ -14016,8 +14016,8 @@ static void do_ipv6_nat_table(FILE* fp)
 {
     char IPv6[INET6_ADDRSTRLEN] = "0";
     fprintf(fp, "*nat\n");
-	fprintf(fp, "%s\n", ":prerouting_devices - [0:0]");
-	fprintf(fp, "%s\n", ":prerouting_redirect - [0:0]");
+	fprintf(fp, ":%s - [0:0]\n", "prerouting_devices");
+	fprintf(fp, ":%s - [0:0]\n", "prerouting_redirect");
 
 #ifdef WAN_FAILOVER_SUPPORTED
       redirect_dns_to_extender(fp,AF_INET6);
@@ -14047,7 +14047,7 @@ static void do_ipv6_nat_table(FILE* fp)
 #if defined (_XB6_PRODUCT_REQ_)
    if(rfstatus == 1)
    {
-      fprintf(fp, "%s\n", ":prerouting_noRFCP_redirect - [0:0]");
+      fprintf(fp, ":%s - [0:0]\n", "prerouting_noRFCP_redirect");
       fprintf(fp, "-I PREROUTING 1 -i %s -j prerouting_noRFCP_redirect\n", lan_ifname);
       fprintf(fp, "-I prerouting_noRFCP_redirect -p udp ! --dport 53 -j DNAT --to-destination [%s]:80\n",IPv6);
       fprintf(fp, "-I prerouting_noRFCP_redirect -p tcp -j DNAT --to-destination [%s]:80\n",IPv6);
@@ -14442,8 +14442,8 @@ static void do_ipv6_filter_table(FILE *fp){
 #endif //_HUB4_PRODUCT_REQ_
    //>>DOS
 #ifdef _COSA_INTEL_XB3_ARM_
-   fprintf(fp, "%s\n", ":wandosattack - [0:0]");
-   fprintf(fp, "%s\n", ":mtadosattack - [0:0]");
+   fprintf(fp, ":%s - [0:0]\n", "wandosattack");
+   fprintf(fp, ":%s - [0:0]\n", "mtadosattack");
 #endif
    //<<DOS
 
@@ -14452,12 +14452,12 @@ static void do_ipv6_filter_table(FILE *fp){
    fprintf(fp, "-A FORWARD -i a-mux -j ACCEPT\n");
 #endif
 
-   fprintf(fp, "%s\n", ":LOG_INPUT_DROP - [0:0]");
-   fprintf(fp, "%s\n", ":LOG_FORWARD_DROP - [0:0]");
+   fprintf(fp, ":%s - [0:0]\n", "LOG_INPUT_DROP");
+   fprintf(fp, ":%s - [0:0]\n", "LOG_FORWARD_DROP");
    if(isComcastImage) {
        //tr69 chains for logging and filtering
-       fprintf(fp, "%s\n", ":LOG_TR69_DROP - [0:0]");
-       fprintf(fp, "%s\n", ":tr69_filter - [0:0]");
+       fprintf(fp, ":%s - [0:0]\n", "LOG_TR69_DROP");
+       fprintf(fp, ":%s - [0:0]\n", "tr69_filter");
        fprintf(fp, "-A INPUT -p tcp -m tcp --dport 7547 -j tr69_filter\n");
        fprintf(fp, "-A LOG_TR69_DROP -m limit --limit 1/minute -j LOG --log-level %d --log-prefix \"TR-069 ACS Server Blocked:\"\n",syslog_level);
        fprintf(fp, "-A LOG_TR69_DROP -j DROP\n");
@@ -14476,8 +14476,8 @@ static void do_ipv6_filter_table(FILE *fp){
 #endif
 
    do_block_ports(fp);	
-   fprintf(fp, "%s\n", ":LOG_SSH_DROP - [0:0]");
-   fprintf(fp, "%s\n", ":SSH_FILTER - [0:0]");
+   fprintf(fp, ":%s - [0:0]\n", "LOG_SSH_DROP");
+   fprintf(fp, ":%s - [0:0]\n", "SSH_FILTER");
    if(bEthWANEnable)
    {
    fprintf(fp, "-A INPUT -i %s -p tcp -m tcp --dport 22 -j SSH_FILTER\n",current_wan_ifname);
@@ -14505,8 +14505,8 @@ static void do_ipv6_filter_table(FILE *fp){
    fprintf(fp, "-A LOG_SSH_DROP -j DROP\n");
 
 //SNMPv3 chains for logging and filtering
-   fprintf(fp, "%s\n", ":SNMPDROPLOG - [0:0]");
-   fprintf(fp, "%s\n", ":SNMP_FILTER - [0:0]");
+   fprintf(fp, ":%s - [0:0]\n", "SNMPDROPLOG");
+   fprintf(fp, ":%s - [0:0]\n", "SNMP_FILTER");
    fprintf(fp, "-A INPUT -p udp -m udp --match multiport --dports 10161,10163 -j SNMP_FILTER\n");
    fprintf(fp, "-A SNMPDROPLOG -m limit --limit 1/minute -j LOG --log-level %d --log-prefix \"SNMP Connection Blocked:\"\n",syslog_level);
    fprintf(fp, "-A SNMPDROPLOG -j DROP\n");
@@ -14619,7 +14619,7 @@ static void do_ipv6_filter_table(FILE *fp){
    fprintf(fp, "-A LOG_INPUT_DROP -j DROP\n"); 
    fprintf(fp, "-A LOG_FORWARD_DROP -j DROP\n"); 
 
-   fprintf(fp, "%s\n", ":PING_FLOOD - [0:0]");
+   fprintf(fp, ":%s - [0:0]\n", "PING_FLOOD");
    fprintf(fp, "-A PING_FLOOD -m limit --limit 10/sec -j ACCEPT\n");
    fprintf(fp, "-A PING_FLOOD -j DROP\n");
 
@@ -15238,7 +15238,7 @@ v6GPFirewallRuleNext:
       fprintf(fp, "-A lan2wan -j lan2wan_pc_service\n");
 
 #ifdef CONFIG_CISCO_PARCON_WALLED_GARDEN
-      fprintf(fp, "%s\n", ":wan2lan_dnsr_nfqueue - [0:0]");
+      fprintf(fp, ":%s - [0:0]\n", "wan2lan_dnsr_nfqueue");
       fprintf(fp, "-A FORWARD -i %s -p udp --sport 53 -j wan2lan_dnsr_nfqueue\n", wan6_ifname);
 #endif
 
