@@ -471,6 +471,10 @@ char cellular_ifname[32];
 #endif //HUB4_SELFHEAL_FEATURE_ENABLED
 #endif //_HUB4_PRODUCT_REQ_
 
+#if defined(_LG_MV3_)
+#define IPOE_HEALTHCHECK "ipoe_healthcheck"
+#endif
+
 #if defined (FEATURE_MAPT) || defined (FEATURE_SUPPORT_MAPT_NAT46)
 #define SYSEVENT_MAPT_CONFIG_FLAG "mapt_config_flag"
 #define SYSEVENT_MAPT_IP_ADDRESS "mapt_ip_address"
@@ -13061,13 +13065,10 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(filter_fp, ":%s - [0:0]\n", "xlog_drop_lanattack");
    fprintf(filter_fp, ":%s - [0:0]\n", "xlogdrop");
    fprintf(filter_fp, ":%s - [0:0]\n", "xlogreject");
-#ifdef _HUB4_PRODUCT_REQ_
-#ifdef HUB4_BFD_FEATURE_ENABLED
+#if (defined (_HUB4_PRODUCT_REQ_) && defined (HUB4_BFD_FEATURE_ENABLED)) || defined (_LG_MV3_)
    fprintf(filter_fp, ":%s - [0:0]\n", IPOE_HEALTHCHECK);
    fprintf(filter_fp, "-I INPUT -j %s\n", IPOE_HEALTHCHECK);
-#endif //HUB4_BFD_FEATURE_ENABLED
-#endif //_HUB4_PRODUCT_REQ_
-
+#endif
 
 #ifdef _LG_OFW_
    fprintf(filter_fp, "-A lan2self_dos -p tcp -j lan2self_dos_tcp\n");
@@ -13604,6 +13605,11 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
        fprintf(filter_fp, "-A general_input -i %s -p udp --dport 68 -j ACCEPT\n", emta_wan_ifname);
 #endif /*_HUB4_PRODUCT_REQ_*/
    }
+
+#if defined(_LG_MV3_)
+   //Open port for BFD echo
+   fprintf(filter_fp, "-A ipoe_healthcheck -i erouter0 -p udp -m udp --dport 3785 -j ACCEPT\n");
+#endif
    fprintf(filter_fp, "-A general_input -i %s -p udp -m udp --dport 161 -j xlog_drop_lan2self\n", lan_ifname);
 #if defined (MULTILAN_FEATURE)
    fprintf(filter_fp, "-A lan2self -j lan2self_by_wanip\n");
