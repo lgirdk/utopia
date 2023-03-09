@@ -706,24 +706,32 @@ void ipv4_status(int l3_inst, char *status)
 	}	
     else
 	{
-		sysevent_get(g_iSyseventfd, g_tSysevent_token, "lan-status",
-                     l_cLan_Status, sizeof(l_cLan_Status));
-
-		if (!strncmp(l_cLan_Status, "started", 7))
+		if (l3_inst == 4)
 		{
-			char bridge_mode[16] = {0};
-			static int isBridgeMode;
-			sysevent_get(g_iSyseventfd, g_tSysevent_token, "bridge_mode", bridge_mode, sizeof(bridge_mode));
-			isBridgeMode        = (0 == strcmp("0", bridge_mode)) ? 0 : 1;
-			if(!isBridgeMode)
+			sysevent_get(g_iSyseventfd, g_tSysevent_token, "lan-status", l_cLan_Status, sizeof(l_cLan_Status));
+
+			if (!strncmp(l_cLan_Status, "started", 7))
 			{
-			    fprintf(stderr, "LAN HANDLER : Device in Router mode and lan-status: stopped\n");
+				char bridge_mode[16] = {0};
+				static int isBridgeMode;
+				sysevent_get(g_iSyseventfd, g_tSysevent_token, "bridge_mode", bridge_mode, sizeof(bridge_mode));
+				isBridgeMode        = (0 == strcmp("0", bridge_mode)) ? 0 : 1;
+				if(!isBridgeMode)
+				{
+			    		fprintf(stderr, "LAN HANDLER : Device in Router mode and lan-status: stopped\n");
+				}
+				else
+				{
+			    		fprintf(stderr, "LAN HANDLER : Device in Bridge mode and lan-status: stopped\n");
+				}
+				fprintf(stderr, "LAN HANDLER : primary lan instance down\n");
+				sysevent_set(g_iSyseventfd, g_tSysevent_token, "lan-status", "stopped", 0);
 			}
-			else
-			{
-			    fprintf(stderr, "LAN HANDLER : Device in Bridge mode and lan-status: stopped\n");
-			}
-			sysevent_set(g_iSyseventfd, g_tSysevent_token, "lan-status", "stopped", 0);
+		}
+		else
+		{
+			fprintf(stderr, "LAN HANDLER : LAN configuration has changed\n");
+			sysevent_set(g_iSyseventfd, g_tSysevent_token, "dhcp_server-restart", "", 0);
 		}
     }
 
