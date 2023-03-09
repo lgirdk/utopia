@@ -790,11 +790,15 @@ void ipv4_status(int l3_inst, char *status)
                     fprintf(stderr, "LAN HANDLER : Device in Bridge mode and lan-status: stopped\n");
                 }
 
+                fprintf(stderr, "LAN HANDLER : primary lan instance down\n");
                 sysevent_set(g_iSyseventfd, g_tSysevent_token, "lan-status", "stopped", 0);
             }      
         }
-
-
+        else
+        {
+            fprintf(stderr, "LAN HANDLER : LAN configuration has changed\n");
+            sysevent_set(g_iSyseventfd, g_tSysevent_token, "dhcp_server-restart", "", 0);
+        }
     }
 
     snprintf(l_cPsm_Parameter, sizeof(l_cPsm_Parameter),
