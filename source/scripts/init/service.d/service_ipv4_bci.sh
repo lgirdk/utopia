@@ -169,7 +169,6 @@ handle_l2_status () {
     
         IFNAME=`sysevent get "${L2SERVICE_NAME}"_"$2"-"${L2SERVICE_IFNAME}"`
         sysevent set ${SERVICE_NAME}_"$1"-ifname "$IFNAME"
-        
         load_static_l3 "$1"
         if [ x != x"${STATIC_IPV4ADDR}" -a x != x"${STATIC_IPV4SUBNET}" ]; then
             #apply static config if exists
@@ -603,7 +602,11 @@ case "$1" in
         #args: l2 status value, ipv4 instance
         INST=${1%-*}
         INST=${INST#*_}
-        handle_l2_status "$3" "$INST" "$2" 
+        LAN_MODE=`sysevent get bridge_mode`
+        if !([ "1" == "$INST" ] && [ "$LAN_MODE" -gt "0" ]) ; then
+            handle_l2_status "$3" "$INST" "$2" 
+        fi
+        
    ;;
    
    #args: none

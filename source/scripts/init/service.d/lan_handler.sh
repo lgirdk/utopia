@@ -458,8 +458,8 @@ case "$1" in
             fi
             ip -6 addr add $SYSEVT_lan_ipaddr_v6/64 dev $LAN_IFNAME valid_lft forever preferred_lft forever
         fi
-
-	sysevent set lan_restarted done
+	lan_restarted_value="true"
+	sysevent set lan_restarted $lan_restarted_value
 
    ;;
    # TODO: register for lan-stop and lan-start
@@ -471,7 +471,6 @@ case "$1" in
         
         SYSEVT_lan_ipaddr_v6_prev=`sysevent get lan_ipaddr_v6_prev`
         SYSEVT_lan_prefix_v6=`sysevent get lan_prefix_v6`
-
         ip -6 addr flush dev $LAN_IFNAME
 
         #we need to restart necessary application when lan restart
