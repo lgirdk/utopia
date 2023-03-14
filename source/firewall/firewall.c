@@ -3191,7 +3191,7 @@ static int do_single_port_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, 
       }
 #if defined (FEATURE_MAPT) || defined (FEATURE_SUPPORT_MAPT_NAT46)
       if(iptype == AF_INET){
-          FIREWALL_DEBUG("PortMapping:Internal Client %s\n" COMMA toip);
+          FIREWALL_DEBUG("PortMapping:Internal Client IPv4 %s\n" COMMA toip);
       } else {
           FIREWALL_DEBUG("PortMapping:Internal Client IPv6 %s\n" COMMA toipv6);
       }
@@ -3589,7 +3589,7 @@ static int do_port_range_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, F
           PfRangeCount++ ;
 #endif
 #if defined (FEATURE_MAPT) || defined (FEATURE_SUPPORT_MAPT_NAT46)
-          FIREWALL_DEBUG("PortMapping:Internal Client %s\n" COMMA toip);
+          FIREWALL_DEBUG("PortMapping:Internal Client IPv4 %s\n" COMMA toip);
 #endif
 
           rc = syscfg_get(namespace, "public_ip", public_ip, sizeof(public_ip));
@@ -3657,7 +3657,7 @@ static int do_port_range_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, F
       }
 
 #if defined (FEATURE_MAPT) || defined (FEATURE_SUPPORT_MAPT_NAT46)
-      FIREWALL_DEBUG("PortMapping:External Port %s\n" COMMA sdport);
+      FIREWALL_DEBUG("PortMapping:External Port Start Range %s\n" COMMA sdport);
       FIREWALL_DEBUG("PortMapping:External Port End Range %s\n" COMMA edport);
 #endif
 
