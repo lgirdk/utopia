@@ -105,6 +105,7 @@ static SWFabHAL halList[] = {
 static PlatformPort wifiPortList[] = {
     {(void*)"cei00", ENTITY_AP, halList + HAL_WIFI, 0},
     {(void*)"wdev0ap0", ENTITY_AP, halList + HAL_WIFI, 0},
+    {(void*)"sw_6", ENTITY_AP, halList + HAL_WIFI, 0},
     {(void*)"cei01", ENTITY_AP, halList + HAL_WIFI, 0},
     {(void*)"wdev0ap1", ENTITY_AP, halList + HAL_WIFI, 0},
     {(void*)"cei02", ENTITY_AP, halList + HAL_WIFI, 0},
