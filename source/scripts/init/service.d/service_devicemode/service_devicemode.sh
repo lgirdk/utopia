@@ -106,8 +106,9 @@ update_v4route()
             ip route add "$cellular_manager_dns1" via "$cellular_manager_gw" dev "$cellular_ifname" proto static metric 100
             ip route add "$cellular_manager_dns2" via "$cellular_manager_gw" dev "$cellular_ifname" proto static metric 100
         elif [ -z "$dns1_missing" ] || [ -z "$dns2_missing" ] ;then
-            ip route add "$cellular_manager_dns1" via "$cellular_manager_gw" dev "$cellular_ifname" proto static metric 100
-            ip route add "$cellular_manager_dns2" via "$cellular_manager_gw" dev "$cellular_ifname" proto static metric 100
+            echo "v4 dns entries missing in route, adding it"
+            ip route add "$cellular_manager_dns1" via "$cellular_manager_gw" dev "$cellular_ifname" proto static metric 100 > /dev/null
+            ip route add "$cellular_manager_dns2" via "$cellular_manager_gw" dev "$cellular_ifname" proto static metric 100 > /dev/null
         fi
         if [ "1" = "$DEVICE_MODE" ] ; then
             #ip rule add from all dport 53 lookup 12
@@ -164,8 +165,9 @@ update_v6route()
             ip -6 route add "$cellular_manager_dns1" via "$cellular_manager_v6_gw" dev "$cellular_ifname" proto static metric 100
             ip -6 route add "$cellular_manager_dns2" via "$cellular_manager_v6_gw" dev "$cellular_ifname" proto static metric 100
         elif [ -z "$dns1_missing" ] || [ -z "$dns2_missing" ] ;then
-            ip -6 route add "$cellular_manager_dns1" via "$cellular_manager_v6_gw" dev "$cellular_ifname" proto static metric 100
-            ip -6 route add "$cellular_manager_dns2" via "$cellular_manager_v6_gw" dev "$cellular_ifname" proto static metric 100
+            echo "v6 dns entries missing in route, adding it"
+            ip -6 route add "$cellular_manager_dns1" via "$cellular_manager_v6_gw" dev "$cellular_ifname" proto static metric 100 > /dev/null
+            ip -6 route add "$cellular_manager_dns2" via "$cellular_manager_v6_gw" dev "$cellular_ifname" proto static metric 100 > /dev/null
         fi
         
         if [ "1" = "$DEVICE_MODE" ] ; then
@@ -359,6 +361,8 @@ case "$1" in
 
                 sysevent set routeset-ula
    	    fi
+        update_v4route
+        update_v6route
         touch "$DEV_MODE_SWITCHED" 
         ;;
     mesh_wan_linkstatus)
