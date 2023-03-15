@@ -12060,7 +12060,14 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    if(bEthWANEnable)
    {
            //ETH WAN is TC XB6 exclusive feature
-           fprintf(filter_fp, "-A INPUT -i %s -p tcp -m tcp --dport 22 -j SSH_FILTER\n",current_wan_ifname);
+            if (strcmp(current_wan_ifname, default_wan_ifname ) == 0)
+            {
+              fprintf(filter_fp, "-A INPUT -i %s -p tcp -m tcp --dport 22 -j SSH_FILTER\n", current_wan_ifname);
+            }
+            else
+            {
+              fprintf(filter_fp, "-A INPUT -i %s -p tcp -m tcp --dport 22 -j SSH_FILTER\n", default_wan_ifname);
+            }
    }
    else if (erouterSSHEnable)  // Applicable only for PUMA7 platforms
    {
@@ -12072,14 +12079,15 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
            fprintf(filter_fp, "-A INPUT -i %s -p tcp -m tcp --dport 22 -j DROP\n", ecm_wan_ifname);
        else
          {
-               if (strcmp(current_wan_ifname,default_wan_ifname ) == 0)
-               {
-                  fprintf(filter_fp, "-A INPUT -i %s -p tcp -m tcp --dport 22 -j SSH_FILTER\n", ecm_wan_ifname);
-               }
-               else
-               {
-                  fprintf(filter_fp, "-A INPUT -i %s -p tcp -m tcp --dport 22 -j SSH_FILTER\n", current_wan_ifname);
-               }
+            if (strcmp(current_wan_ifname, default_wan_ifname ) == 0)
+            {
+               fprintf(filter_fp, "-A INPUT -i %s -p tcp -m tcp --dport 22 -j SSH_FILTER\n", ecm_wan_ifname);
+               fprintf(filter_fp, "-A INPUT -i %s -p tcp -m tcp --dport 22 -j SSH_FILTER\n", current_wan_ifname);
+            }
+            else
+            {
+               fprintf(filter_fp, "-A INPUT -i %s -p tcp -m tcp --dport 22 -j SSH_FILTER\n", default_wan_ifname);
+            }
          }
    }
 
