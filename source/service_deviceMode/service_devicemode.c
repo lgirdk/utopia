@@ -348,6 +348,8 @@ int service_stop(int mode)
 #if defined (_COSA_BCM_ARM_)
             sysevent_set(sysevent_fd, sysevent_token, "wan-stop", "", 0);
 #endif
+             //lte-1312
+            runCommandInShellBlocking("killall zebra");
             snprintf(buf,sizeof(buf),"execute_dir %s stop", ROUTER_MODE_SERVICES_PATH_1);
             runCommandInShellBlocking(buf);
             runCommandInShellBlocking("systemctl stop CcspLMLite.service");
@@ -439,11 +441,14 @@ int service_start(int mode)
             sysevent_set(sysevent_fd, sysevent_token, "lnf-setup", buf, 0);
 
             runCommandInShellBlocking("systemctl restart CcspLMLite.service");
+            sysevent_set(sysevent_fd, sysevent_token, "zebra-restart", "", 0);
         }
         break;
         case DEVICE_MODE_EXTENDER:
         {
             char tmpbuf[64] = {0};
+            //lte-1312
+            runCommandInShellBlocking("killall zebra");
             sysevent_set(sysevent_fd, sysevent_token, "lan-start", "", 0);
             sysevent_set(sysevent_fd, sysevent_token, "lan_status-dhcp", "started", 0);
 // Do wan start only in XB technicolor for xb->xb backup wan testing.
@@ -479,7 +484,6 @@ int service_start(int mode)
 
     // restart common services.
     sysevent_set(sysevent_fd, sysevent_token, "dhcp_server-restart", "", 0);
-    sysevent_set(sysevent_fd, sysevent_token, "zebra-restart", "", 0);
     sysevent_set(sysevent_fd, sysevent_token, "firewall-restart", "", 0);
     return 0;
 }
