@@ -1883,6 +1883,47 @@ int prepare_dhcp_conf (char *input)
     copy_file(l_cLocalDhcpConf, DHCP_CONF);
 	remove_file(l_cLocalDhcpConf);
 	fprintf(g_fArmConsoleLog, "DHCP SERVER : Completed preparing DHCP configuration\n");
+
+#if defined (WAN_FAILOVER_SUPPORTED)
+    #if !defined (RDKB_EXTENDER_ENABLED)
+    char lan_ipaddr[20]={'\0'};
+    char l_cLine[255] = {0};
+    FILE *l_fResolv_Conf = NULL;
+    int Flag=0;
+    l_fResolv_Conf = fopen(RESOLV_CONF, "r");
+	if (NULL != l_fResolv_Conf)
+	{
+        while(fgets(l_cLine, 80, l_fResolv_Conf) != NULL )
+            {
+            	char *property = NULL;
+                if (NULL != (property = strstr(l_cLine, "127.0.0.1")))
+                {
+                    Flag=1;
+                    break;
+                }
+            }
+        fclose(l_fResolv_Conf);
+        if(Flag==1)
+        {
+            l_fResolv_Conf = fopen(RESOLV_CONF, "w");
+            if (NULL != l_fResolv_Conf)
+            {
+                syscfg_get(NULL, "lan_ipaddr", lan_ipaddr, sizeof(lan_ipaddr));
+                //fprintf(g_fArmConsoleLog, "strlen of lan_ipaddr:%d\n",strlen(lan_ipaddr));
+                if(strlen(lan_ipaddr)>0)
+                {
+                    fprintf(l_fResolv_Conf,"nameserver %s\n",lan_ipaddr);
+                }
+                fclose(l_fResolv_Conf);
+            }
+        }
+    }
+    else
+    {
+        fprintf(g_fArmConsoleLog, "opening of %s file failed with error:%d\n", RESOLV_CONF, errno);
+    }
+    #endif//RDKB_EXTENDER_ENABLED
+#endif //WAN_FAILOVER_SUPPORTED
 	return 0;
 }
 
