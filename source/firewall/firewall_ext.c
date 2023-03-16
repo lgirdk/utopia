@@ -138,7 +138,7 @@ int prepare_ipv4_rule_ex_mode(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE 
    prepare_subtables_ext_mode(raw_fp, mangle_fp, nat_fp, filter_fp);
 
    if (strlen(cellular_ipaddr) != 0 )
-      fprintf(nat_fp, "-A  POSTROUTING -o %s -j SNAT --to-source %s\n",cellular_ifname,cellular_ipaddr);
+      fprintf(nat_fp, "-A  POSTROUTING -o %s -j MASQUERADE\n",cellular_ifname);
 
    add_if_mss_clamping(mangle_fp,AF_INET);
    if (strlen(mesh_wan_ipaddr) != 0 )
