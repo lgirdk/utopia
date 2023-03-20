@@ -286,7 +286,7 @@ service_start() {
 	#if [ "$SSH_ENABLE" = "0" ]; then
 
    if ([ "$BOX_TYPE" = "XB6" -a "$MANUFACTURE" = "Arris" ] || [ "$MODEL_NUM" = "INTEL_PUMA" ]) ;then
-        if [ -n "$CURRENT_WAN_STATE" -a "started" = "$CURRENT_WAN_STATE" ]; then
+        if [ -n "$CURRENT_WAN_STATE" -a "started" = "$CURRENT_WAN_STATE" ] || [ "$WAN_INTERFACE" != "$DEFAULT_WAN_INTERFACE" ] ; then
             rm -f $PID_FILE 2>/dev/null
             do_start
         fi
