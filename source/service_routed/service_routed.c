@@ -965,6 +965,26 @@ static int gen_zebra_conf(int sefd, token_t setok)
                     else
                     {
                         fprintf(fp, "   ipv6 nd prefix %s %s %s\n", prefix, valid_lft, preferred_lft);
+			//LTE-1322
+#ifdef RDKB_EXTENDER_ENABLED
+			char buf[8] = {0}, prefix_primary[64];
+                        int deviceMode = -1;
+                        memset(buf,0,sizeof(buf));
+                        if ( 0 == syscfg_get(NULL, "Device_Mode", buf, sizeof(buf)))
+			{
+				deviceMode = atoi(buf);
+                                if ( DEVICE_MODE_ROUTER == deviceMode )
+                                {
+					memset(prefix_primary,0,sizeof(prefix_primary));
+                         	           sysevent_get(sefd, setok, "ipv6_prefix_primary", prefix_primary, sizeof(prefix_primary));
+					if( strlen(prefix_primary) > 0)
+					{
+						fprintf(fp, "   ipv6 nd prefix %s 0 0\n", prefix_primary);
+					}	
+				}
+					    
+                         }
+#endif
                     }
                 }
             }
