@@ -550,6 +550,7 @@ set_ssids_enabled() {
     sysevent set hotspot_$1-delay 0
     
     get_ssids $1
+    echo_t "setting SSIDS: $ssids"
     for instance in $ssids; do
        dmcli eRT setv Device.WiFi.SSID.${instance}.X_CISCO_COM_RouterEnabled bool $2 &
        dmcli eRT setv Device.WiFi.SSID.${instance}.X_CISCO_COM_EnableOnline bool true &
@@ -560,7 +561,7 @@ set_ssids_enabled() {
     fi
     done
     for rad in $radios; do
-        echo "Executing ApplySetting"
+        echo_t "Executing ApplySetting for Radio $rad"
         eval dmcli eRT setv Device.WiFi.Radio.$rad.X_CISCO_COM_ApplySettingSSID int \${mask_${rad}}
         dmcli eRT setv Device.WiFi.Radio.$rad.X_CISCO_COM_ApplySetting bool true &
     done
@@ -742,14 +743,17 @@ check_ssids () {
     
     if [ x"started" = x$WAN -a x != x$EP -a x"0.0.0.0" != x$EP ]; then
         if [ x"true" = x$curSSIDSTATE ]; then
+            echo_t "Kicking Hotspot clients"
             kick_clients 1
         else
-            set_ssids_enabled $inst true > /dev/null
+            echo_t "Bringing Hotspot SSIDs UP"
+            set_ssids_enabled $inst true
         fi
     else
         #SSIDs should be down
         if [ x"true" = x$curSSIDSTATE ]; then
-            set_ssids_enabled $inst false > /dev/null
+            echo_t "Bringing Hotspot SSIDs DOWN"
+            set_ssids_enabled $inst false
         fi
     fi
 }
@@ -884,6 +888,10 @@ case "$1" in
     hotspotfd-tunnelEP)
     
         echo "GRE EP called : $2"
+
+        if [ $2 = "dummy_EP" ] ; then
+             exit 0
+        fi
 
         if [ $2 = "recover" ] ; then                                    
              recover="true"                    
