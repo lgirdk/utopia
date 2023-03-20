@@ -266,7 +266,15 @@ sync_dns()
         update_dns_conf "ipv6" "$ipv6_dns"
     fi
 }
-                    
+set_dummy_route()
+{
+    ip link add dummy1 type dummy 
+    ifconfig dummy1 up
+    ip route add default dev dummy1 scope link metric 1026 table MODEM
+    ip route add default dev dummy1 scope link metric 1026 table 12
+    #ip -6 route add default dev dummy1 scope link metric 1 table MODEM
+    ip -6 route add default dev dummy1 scope link metric 1026 table 12
+}                    
 case "$1" in
     "${SERVICE_NAME}-start")
         service_devicemode start $2
@@ -434,6 +442,9 @@ case "$1" in
     ;;  
     cellular_wan_v6_ip)
         update_v6route
+    ;; 
+    dummy_route)
+        set_dummy_route
     ;; 
     *)
         echo "Usage: service-${SERVICE_NAME} [ ${SERVICE_NAME}-start | ${SERVICE_NAME}-stop | ${SERVICE_NAME}-restart]" > /dev/console

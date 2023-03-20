@@ -24,8 +24,10 @@ static char mesh_wan_ipaddr[32];
 extern int mesh_wan_ipv6_num ;
 extern char mesh_wan_ipv6addr[IF_IPV6ADDR_MAX][40];
 
+#if 0
 int cellular_wan_ipv6_num = 0;
 char cellular_wan_ipv6addr[IF_IPV6ADDR_MAX][40];
+#endif
 
 #define SYSEVENT_IPV4_MTU_SIZE "ipv4_%s_mtu"
 
@@ -137,8 +139,7 @@ int prepare_ipv4_rule_ex_mode(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE 
    FIREWALL_DEBUG("Entering prepare_ipv4_rule_ex_mode \n"); 
    prepare_subtables_ext_mode(raw_fp, mangle_fp, nat_fp, filter_fp);
 
-   if (strlen(cellular_ipaddr) != 0 )
-      fprintf(nat_fp, "-A  POSTROUTING -o %s -j MASQUERADE\n",cellular_ifname);
+   fprintf(nat_fp, "-A  POSTROUTING -o %s -j MASQUERADE\n",cellular_ifname);
 
    add_if_mss_clamping(mangle_fp,AF_INET);
    if (strlen(mesh_wan_ipaddr) != 0 )
@@ -310,17 +311,12 @@ int prepare_ipv6_rule_ex_mode(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE 
       }
     }
 
+   #if 0
    memset(cellular_wan_ipv6addr,0,sizeof(cellular_wan_ipv6addr));
    get_ip6address(cellular_ifname, cellular_wan_ipv6addr, &cellular_wan_ipv6_num,IPV6_ADDR_SCOPE_GLOBAL);
+   #endif
 
-    for(i = 0; i < cellular_wan_ipv6_num; i++)
-    {
-      if(cellular_wan_ipv6addr[i][0] != '\0' )
-      {
-         fprintf(nat_fp, "-A  POSTROUTING -o %s -j SNAT --to-source %s\n",cellular_ifname,cellular_wan_ipv6addr[i]);
-      }
-    }
-
+   fprintf(nat_fp, "-A  POSTROUTING -o %s -j MASQUERADE\n",cellular_ifname);
    fprintf(filter_fp, "%s\n", "*filter");
    fprintf(filter_fp, "%s\n", ":LOG_SSH_DROP - [0:0]");
    fprintf(filter_fp, "%s\n", ":SSH_FILTER - [0:0]");

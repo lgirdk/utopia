@@ -47,10 +47,13 @@ const char* SERVICE_CUSTOM_EVENTS[] = {
       "ipv4_nameserver|/etc/utopia/service.d/service_devicemode/service_devicemode.sh|NULL|"TUPLE_FLAG_EVENT,
      "cellular_wan_v4_ip|/etc/utopia/service.d/service_devicemode/service_devicemode.sh|NULL|"TUPLE_FLAG_EVENT,
      "cellular_wan_v6_ip|/etc/utopia/service.d/service_devicemode/service_devicemode.sh|NULL|"TUPLE_FLAG_EVENT,
+     "dummy_route|/etc/utopia/service.d/service_devicemode/service_devicemode.sh|NULL|"TUPLE_FLAG_EVENT,
+
     NULL };
 
 void srv_register(void) {
    sm_register(SERVICE_NAME, SERVICE_DEFAULT_HANDLER, SERVICE_CUSTOM_EVENTS);
+   system("sysevent set dummy_route");
 }
 
 void srv_unregister(void) {
