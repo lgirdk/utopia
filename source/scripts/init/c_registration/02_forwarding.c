@@ -42,7 +42,11 @@
 #endif
 #define SERVICE_NAME "forwarding"
 #define SERVICE_DEFAULT_HANDLER "/etc/utopia/service.d/service_forwarding.sh"
-const char* SERVICE_CUSTOM_EVENTS[] = { NULL };
+
+const char* SERVICE_CUSTOM_EVENTS[] = {
+                                        "router-restart|/etc/utopia/service.d/service_forwarding.sh|NULL|"TUPLE_FLAG_EVENT,
+                                        NULL
+                                      };
 
 void srv_register(void) {
    sm_register(SERVICE_NAME, SERVICE_DEFAULT_HANDLER, SERVICE_CUSTOM_EVENTS);
