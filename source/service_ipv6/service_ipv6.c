@@ -2011,6 +2011,12 @@ static int serv_ipv6_start(struct serv_ipv6 *si6)
     }
 
     sysevent_set(si6->sefd, si6->setok, "service_ipv6-status", "starting", 0);
+
+    /* Fix for IPv6 prefix not getting updated in dibbler server conf file on WAN mode  change */    
+#if defined(_CBR2_PRODUCT_REQ_)  
+    sysevent_get(si6->sefd, si6->setok, "ipv6_prefix", si6->mso_prefix, sizeof(si6->mso_prefix));
+    sysevent_set(si6->sefd, si6->setok, "ipv6_prefix-divided", "", 0);
+#endif
     
     /*
      * Update MTU of all the enabled IPv6 instances
