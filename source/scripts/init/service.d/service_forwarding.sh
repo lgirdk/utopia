@@ -122,9 +122,20 @@ service_start ()
            sleep 1
            wait_till_state bridge stopped
         fi
-		#router mode handle
-		if [ "0" = "$bridge_mode" ]; then 
-	    
+
+        #router mode handle
+        if [ "0" = "$bridge_mode" ]; then
+          if [ "$1" == "router-restart" ] ; then
+           STATUS=`sysevent get wan-status`
+           if [ "stopped" != "$STATUS" ] ; then
+             ulog forwarding status "stopping wan"
+            if [ "$RPI_SPECIFIC" != "rpi" ] ; then
+              sysevent set wan-stop
+            fi
+              wait_till_state wan stopped
+           fi
+          fi
+
 	    if [ "true" = "$LANRESTART_STATUS" ] ; then
 		BREAK_LOOP=0
 	        BREAK_COUNT=0
@@ -244,14 +255,14 @@ case "$1" in
    "${SERVICE_NAME}-stop")
       service_stop
       ;;
-   "${SERVICE_NAME}-restart")
+   "${SERVICE_NAME}-restart" | "router-restart")
 #      service_stop
        reboot=`sysevent get reboot-triggered`
        if [ "$reboot" = "1" ]; then
           exit 0
        fi
       sysevent set ${SERVICE_NAME}-status restarting
-      service_start
+      service_start "$@"
       ;;
    *)
       echo "Usage: service-${SERVICE_NAME} [ ${SERVICE_NAME}-start | ${SERVICE_NAME}-stop | ${SERVICE_NAME}-restart]" > /dev/console
