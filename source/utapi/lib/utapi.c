@@ -2197,10 +2197,9 @@ static int s_getportfwd (UtopiaContext *ctx, int index, portFwdSingle_t *portmap
     Utopia_GetIndexedInt(ctx, UtopiaValue_SPF_ExternalPort, index, &portmap->external_port);
     Utopia_GetIndexedInt(ctx, UtopiaValue_SPF_InternalPort, index, &portmap->internal_port);
 //    Utopia_GetIndexedInt(ctx, UtopiaValue_SPF_ToIp, index, &portmap->dest_ip);
-    Utopia_GetIndexed(ctx, UtopiaValue_SPF_ToIp, index, (char *)&portmap->dest_ip, NAME_SZ);
+    Utopia_GetIndexed(ctx, UtopiaValue_SPF_ToIp, index, (char *)&portmap->dest_ip, IPADDR_SZ);
     Utopia_GetIndexed(ctx, UtopiaValue_SPF_ToIpV6, index, (char *)&portmap->dest_ipv6, IPADDR_SZ);
     Utopia_GetIndexed(ctx, UtopiaValue_SPF_Protocol, index, tokenbuf, sizeof(tokenbuf));
-    Utopia_GetIndexed(ctx, UtopiaValue_SPF_RemoteHost, index, (char *)&portmap->remotehost, IPADDR_SZ);
     portmap->protocol = s_StrToEnum(g_ProtocolMap, tokenbuf);
     
     return SUCCESS;
@@ -2216,7 +2215,6 @@ static int s_setportfwd (UtopiaContext *ctx, int index, portFwdSingle_t *portmap
 //    UTOPIA_SETINDEXEDINT(ctx, UtopiaValue_SPF_ToIp, index, portmap->dest_ip);
     UTOPIA_SETINDEXED(ctx, UtopiaValue_SPF_ToIp, index,portmap->dest_ip);
     UTOPIA_SETINDEXED(ctx, UtopiaValue_SPF_ToIpV6, index,portmap->dest_ipv6);
-    UTOPIA_SETINDEXED(ctx, UtopiaValue_SPF_RemoteHost, index,portmap->remotehost);
     char *p = s_EnumToStr(g_ProtocolMap, portmap->protocol);
     UTOPIA_SETINDEXED(ctx, UtopiaValue_SPF_Protocol, index, p);
     
@@ -2233,7 +2231,6 @@ static int s_unsetportfwd (UtopiaContext *ctx, int index)
     UTOPIA_UNSETINDEXED(ctx, UtopiaValue_SPF_ToIp, index);
     UTOPIA_UNSETINDEXED(ctx, UtopiaValue_SPF_ToIpV6, index);
     UTOPIA_UNSETINDEXED(ctx, UtopiaValue_SPF_Protocol, index);
-    UTOPIA_UNSETINDEXED(ctx, UtopiaValue_SPF_RemoteHost, index);
 
     return SUCCESS;
 }
@@ -2252,10 +2249,10 @@ int Utopia_SetPortForwarding (UtopiaContext *ctx, int count, portFwdSingle_t *fw
         {
             return ERR_INVALID_VALUE;
         }
-        /*if(!IsValid_IPAddr(fwdinfo[i].dest_ip))
+        if(!IsValid_IPAddr(fwdinfo[i].dest_ip))
         {
             return ERR_INVALID_IP;       
-        }*/
+        }
     }
 
     Utopia_GetPortForwardingCount(ctx, &old_count);
@@ -2285,10 +2282,10 @@ int Utopia_AddPortForwarding (UtopiaContext *ctx, portFwdSingle_t *portmap)
     {
         return ERR_INVALID_VALUE;
     }
-    /*else if(!IsValid_IPAddr(portmap->dest_ip))
+    else if(!IsValid_IPAddr(portmap->dest_ip))
     {
         return ERR_INVALID_IP;       
-    }*/
+    }
     else if (portmap->rule_id == 0)
     {
         s_setportfwd_ruleid(ctx, count+1, count+1); // maintain legacy behavior for backware compatibility
@@ -3129,11 +3126,10 @@ static int s_getportfwdrange (UtopiaContext *ctx, int index, portFwdRange_t *por
     Utopia_GetIndexedInt(ctx, UtopiaValue_PFR_InternalPort, index, &portmap->internal_port);
     Utopia_GetIndexedInt(ctx, UtopiaValue_PFR_InternalPortRangeSize, index, &portmap->internal_port_range_size);
     //Utopia_GetIndexedInt(ctx, UtopiaValue_PFR_ToIp, index, &portmap->dest_ip);
-    Utopia_GetIndexed(ctx, UtopiaValue_PFR_ToIp, index, (char *)&portmap->dest_ip, NAME_SZ);
+    Utopia_GetIndexed(ctx, UtopiaValue_PFR_ToIp, index, (char *)&portmap->dest_ip, IPADDR_SZ);
     Utopia_GetIndexed(ctx, UtopiaValue_PFR_ToIpV6, index, (char *)&portmap->dest_ipv6, IPADDR_SZ);
     Utopia_GetIndexed(ctx, UtopiaValue_PFR_PublicIp, index, (char *)&portmap->public_ip, IPADDR_SZ);
     Utopia_GetIndexed(ctx, UtopiaValue_PFR_Protocol, index, tokenbuf, sizeof(tokenbuf));
-    Utopia_GetIndexed(ctx, UtopiaValue_PFR_RemoteHost, index, (char *)&portmap->remotehost, IPADDR_SZ);
     portmap->protocol = s_StrToEnum(g_ProtocolMap, tokenbuf);
 
     *port_range = '\0';
@@ -3174,8 +3170,7 @@ static int s_setportfwdrange (UtopiaContext *ctx, int index, portFwdRange_t *por
     UTOPIA_SETINDEXED(ctx, UtopiaValue_PFR_Protocol, index, p);
     snprintf(port_range, sizeof(port_range), "%d %d", portmap->start_port, portmap->end_port);
     UTOPIA_SETINDEXED(ctx, UtopiaValue_PFR_ExternalPortRange, index, port_range);
-    UTOPIA_SETINDEXED(ctx, UtopiaValue_PFR_RemoteHost, index,portmap->remotehost);
-
+    
     return SUCCESS;
 }
 
@@ -3191,8 +3186,7 @@ static int s_unsetportfwdrange (UtopiaContext *ctx, int index)
     UTOPIA_UNSETINDEXED(ctx, UtopiaValue_PFR_ToIpV6, index);
     UTOPIA_UNSETINDEXED(ctx, UtopiaValue_PFR_Protocol, index);
     UTOPIA_UNSETINDEXED(ctx, UtopiaValue_PFR_ExternalPortRange, index);
-    UTOPIA_UNSETINDEXED(ctx, UtopiaValue_PFR_RemoteHost, index);
-
+    
     return SUCCESS;
 }
 
@@ -3210,14 +3204,14 @@ int Utopia_SetPortForwardingRange (UtopiaContext *ctx, int count, portFwdRange_t
         {
             return ERR_INVALID_VALUE;
         }
-       /* if(!IsValid_IPAddr(fwdinfo[i].dest_ip))
+        if(!IsValid_IPAddr(fwdinfo[i].dest_ip))
         {
             return ERR_INVALID_IP;       
         }
         if(fwdinfo[i].public_ip[0] != 0 && !IsValid_IPAddr(fwdinfo[i].public_ip))
         {
             return ERR_INVALID_IP;       
-        }*/
+        }
     }
 
     Utopia_GetInt(ctx, UtopiaValue_Firewall_PFRCount, &old_count);
@@ -3288,14 +3282,14 @@ int Utopia_AddPortForwardingRange (UtopiaContext *ctx, portFwdRange_t *portmap)
         s_setportfwdrange_ruleid(ctx, count+1, count+1);
         s_setportfwdrange(ctx, count+1, portmap);
     }
-    /*else if(!IsValid_IPAddr(portmap->dest_ip))
+    else if(!IsValid_IPAddr(portmap->dest_ip))
     {
         return ERR_INVALID_IP;       
     }
     else if(portmap->public_ip[0] != 0 && !IsValid_IPAddr(portmap->dest_ip))
     {
         return ERR_INVALID_IP;       
-    }*/
+    }
     else
     {
         int i, j;
