@@ -224,7 +224,6 @@ service_enable ()
 
    service_start
    sysevent set dhcpv6c_enabled 1
-   sysevent set ${SERVICE_NAME}-status started
    register_dhcpv6_client_handler
    DHCPV6C_ENABLED=1
 }
@@ -240,7 +239,6 @@ service_disable ()
    fi
 
    sysevent set dhcpv6c_enabled 0
-   sysevent set ${SERVICE_NAME}-status stopped
    unregister_dhcpv6_client_handler
    DHCPV6C_ENABLED=0
    
@@ -261,18 +259,12 @@ echo_t "SERVICE_DHCP6C : service_dhcpv6_client 1st param is $1, 2nd param is $2"
 service_init 
 
 case "$1" in
-    ${SERVICE_NAME}-start)
-       service_enable
-       ;;
-    ${SERVICE_NAME}-stop)
-       service_disable
-       ;;
-    ${SERVICE_NAME}-restart)
-       #Restart is not implemented. Simple sequence |stop-start| not working - it causes problems
-       #in next start/stop calls.
-       #Sequence |stop-sleep 3 secs-start| works.
-       echo "${SERVICE_NAME}-restart is not implemented yet"
-       ;;
+   enable)	
+      service_enable
+      ;;
+   disable)
+      service_disable
+      ;;
    #----------------------------------------------------------------------------------
    # Add other event entry points here
    #----------------------------------------------------------------------------------
@@ -289,7 +281,7 @@ case "$1" in
 	;;
 
    *)
-      echo "Usage: service-${SERVICE_NAME} [ ${SERVICE_NAME}-start | ${SERVICE_NAME}-stop | ${SERVICE_NAME}-restart]" > /dev/console
+      echo "Usage: $SERVICE_NAME enable | disable" > /dev/console
       exit 3
       ;;
 esac
