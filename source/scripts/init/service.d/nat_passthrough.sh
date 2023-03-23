@@ -88,8 +88,8 @@ refresh_ebtables()
     for mac in $client_macs; do
         ebtables -A nat_passthrough_from_host -s $mac -j ACCEPT
         ebtables -A nat_passthrough_to_host   -d $mac -j ACCEPT
-        ebtables -A nat_passthrough_to_lan    -s $mac -j DROP
-        ebtables -A nat_passthrough_to_lan    -d $mac -j DROP
+        ebtables -A nat_passthrough_to_lan    -s $mac -p IPv4 -j DROP
+        ebtables -A nat_passthrough_to_lan    -d $mac -p IPv4 -j DROP
     done
 
 }
