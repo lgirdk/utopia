@@ -64,6 +64,7 @@ v6_dns_configured="/tmp/.v6dnsconfigured"
 v4_dns_configured="/tmp/.v4dnsconfigured"
 
 DEV_MODE_SWITCHED="/tmp/.deviceMode_switched"
+
 update_v4route()
 {
     backup_v4_dns1=$(sysevent get backup_cellular_wan_v4_dns1)
@@ -112,12 +113,12 @@ update_v4route()
         fi
         if [ "1" = "$DEVICE_MODE" ] ; then
             #ip rule add from all dport 53 lookup 12
+            ip rule del iif "$cellular_ifname" lookup 11 > /dev/null
             ip rule add iif "$cellular_ifname" lookup 11
             ip route del default dev "$cellular_ifname" table 12 > /dev/null
             ip route add default via $cellular_manager_gw dev "$cellular_ifname" table 12
         fi
     fi
-
     sysevent set backup_cellular_wan_v4_gw "$cellular_manager_gw"
     sysevent set backup_cellular_wan_v4_dns1 "$cellular_manager_dns1"
     sysevent set backup_cellular_wan_v4_dns2 "$cellular_manager_dns2"
@@ -171,6 +172,7 @@ update_v6route()
         fi
         
         if [ "1" = "$DEVICE_MODE" ] ; then
+            ip -6 rule del iif "$cellular_ifname" lookup 11 > /dev/null
             ip -6 rule add iif "$cellular_ifname" lookup 11
         fi
     fi
@@ -313,6 +315,7 @@ case "$1" in
         	if_status=`ifconfig "$cellular_ifname" | grep UP`
                 if [ -n "$if_status" ];then
                	    #ip rule add from all dport 53 lookup 12
+                    ip rule del iif "$cellular_ifname" lookup 11 > /dev/null
                     ip rule add iif "$cellular_ifname" lookup 11
 
                    	Ipv4_Gateway_Addr=$(sysevent get cellular_wan_v4_gw)
@@ -324,7 +327,8 @@ case "$1" in
                    	fi
 
                    	#ip -6 rule add from all dport 53 lookup 12
-                        ip -6 rule add iif "$cellular_ifname" lookup 11
+                    ip -6 rule del iif "$cellular_ifname" lookup 11 > /dev/null
+                    ip -6 rule add iif "$cellular_ifname" lookup 11
 
                    	Ipv6_Gateway_Addr=$(sysevent get cellular_wan_v6_gw)
                    	if [ -n "$Ipv6_Gateway_Addr" ];then
@@ -396,8 +400,10 @@ case "$1" in
                 mesh_wan_ula_ipv6=$(sysevent get MeshWANInterface_UlaAddr)
                 mesh_remote_wan_ula_ipv6=$(sysevent get MeshRemoteWANInterface_UlaAddr)
                 if [ "$2" = "up" ];then
+                    ip rule del from all iif "$mesh_wan_ifname" lookup 12 > /dev/null
                 	ip rule add from all iif "$mesh_wan_ifname" lookup 12
                     ip route add default via "$mesh_wan_ifname_ipaddr" dev "$mesh_wan_ifname" table 11
+                    ip -6 rule del from all iif "$mesh_wan_ifname" lookup 12 > /dev/null 
                     ip -6 rule add from all iif "$mesh_wan_ifname" lookup 12
                     ip -6 addr add "$mesh_wan_ula_ipv6" dev "$mesh_wan_ifname" 
                     if [ -n "$mesh_remote_wan_ula_ipv6" ];then
@@ -441,6 +447,10 @@ case "$1" in
         update_v4route
     ;;  
     cellular_wan_v6_ip)
+        update_v6route
+    ;;
+    correct_dns_route)
+        update_v4route
         update_v6route
     ;; 
     dummy_route)

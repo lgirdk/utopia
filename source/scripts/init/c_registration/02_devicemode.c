@@ -48,6 +48,7 @@ const char* SERVICE_CUSTOM_EVENTS[] = {
      "cellular_wan_v4_ip|/etc/utopia/service.d/service_devicemode/service_devicemode.sh|NULL|"TUPLE_FLAG_EVENT,
      "cellular_wan_v6_ip|/etc/utopia/service.d/service_devicemode/service_devicemode.sh|NULL|"TUPLE_FLAG_EVENT,
      "dummy_route|/etc/utopia/service.d/service_devicemode/service_devicemode.sh|NULL|"TUPLE_FLAG_EVENT,
+      "correct_dns_route|/etc/utopia/service.d/service_devicemode/service_devicemode.sh|NULL|"TUPLE_FLAG_EVENT,
 
     NULL };
 
