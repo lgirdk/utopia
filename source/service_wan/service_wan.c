@@ -1205,6 +1205,7 @@ static int wan_start(struct serv_wan *sw)
             v_secure_system("touch " POSTD_START_FILE "; execute_dir /etc/utopia/post.d/");
     }
 
+#if !defined(_WAN_MANAGER_ENABLED_)
     sysevent_set(sw->sefd, sw->setok, "wan_service-status", "started", 0);
     sysevent_set(sw->sefd, sw->setok, "current_wan_state", "up", 0);
 
@@ -1213,6 +1214,7 @@ static int wan_start(struct serv_wan *sw)
     sysevent_get(sw->sefd, sw->setok, "wan-status", status, sizeof(status));
     if(strcmp(status,"started") != 0)
         sysevent_set(sw->sefd, sw->setok, "wan-status", "started", 0);
+#endif /*_WAN_MANAGER_ENABLED_*/
 
     t2_event_s("RF_INFO_Wan_stat_starting_split","started");
     fprintf(fp_wan_dbg, "[%s] start firewall fully\n", PROG_NAME);
