@@ -1208,6 +1208,8 @@ static int wan_start(struct serv_wan *sw)
         v_secure_system("touch " POSTD_START_FILE "; execute_dir /etc/utopia/post.d/");
     }
 
+#if !defined(_WAN_MANAGER_ENABLED_)
+
 #if defined(FEATURE_TAD_HEALTH_CHECK)
     if((nConnCheck & (1 << (NET_CONNNECTIVITY_CHECK_STARTED - 1))) ||
        (nConnCheck == NET_CONNNECTIVITY_CHECK_DISABLED) )
@@ -1229,12 +1231,16 @@ static int wan_start(struct serv_wan *sw)
 
     sysevent_set(sw->sefd, sw->setok, "wan_service-status", "started", 0);
 
+#endif /*_WAN_MANAGER_ENABLED_*/
+
 #if defined(FEATURE_TAD_HEALTH_CHECK)
     if((nConnCheck & (1 << (NET_CONNNECTIVITY_CHECK_STARTED - 1))) ||
        (nConnCheck == NET_CONNNECTIVITY_CHECK_DISABLED) )
 #endif
     {
+#if !defined(_WAN_MANAGER_ENABLED_)
         sysevent_set(sw->sefd, sw->setok, "current_wan_state", "up", 0);
+#endif /*_WAN_MANAGER_ENABLED_*/
 
 #if defined (FEATURE_RDKB_LED_MANAGER_CAPTIVE_PORTAL)
         char redirFlag[10]={0};
