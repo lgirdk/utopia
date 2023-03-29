@@ -1433,6 +1433,7 @@ $StationModeTimeOut=30
 $HealthCheckTimeout=60
 $GatewayRestoreAttemptCount=0
 $RemDeviceDetectionTimeout=60
+$FailoverEnable=-1
 
 #Direct Download Enable default value
 $SWDLDirectEnable=false
