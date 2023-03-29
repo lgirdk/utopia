@@ -871,6 +871,15 @@ static int gen_zebra_conf(int sefd, token_t setok)
         snprintf(evt_name, sizeof(evt_name), "ipv6_%s-addr", lan_if);
         sysevent_get(sefd, setok, evt_name, lan_addr, sizeof(lan_addr));
 #endif
+//RDKB-47758
+#ifdef WAN_FAILOVER_SUPPORTED
+	if (gIpv6AddrAssignment == ULA_IPV6)
+    {
+        sysevent_get(sefd, setok, "ipv6_prefix_ula", prefix, sizeof(prefix));
+
+    }
+#endif
+
 #if defined (_COSA_BCM_MIPS_)
        if (strlen(prefix) == 0)
          {
@@ -892,10 +901,10 @@ static int gen_zebra_conf(int sefd, token_t setok)
 
 #if defined (MULTILAN_FEATURE)
         fprintf(fp, "# Based on prefix=%s, old_previous=%s, LAN IPv6 address=%s\n", 
-            prefix, orig_lan_prefix, lan_addr);
+           prefix, orig_lan_prefix, lan_addr);
 #else
         fprintf(fp, "# Based on prefix=%s, old_previous=%s, LAN IPv6 address=%s\n", 
-            prefix, orig_prefix, lan_addr);
+           prefix, orig_prefix, lan_addr);
 #endif
 
 #if defined(_COSA_FOR_BCI_)
