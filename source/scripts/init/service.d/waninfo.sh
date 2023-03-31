@@ -24,7 +24,9 @@ source /etc/device.properties
 getWanInterfaceName()
 {
   interface_name=`sysevent get current_wan_ifname`
-  if [ -z "$interface_name" ];then
+  sysevent_ret=`echo $?`
+  #TCXB7-5773 - checking sysevent returns any value other than interface name by return status
+  if [ -z "$interface_name" ] || [ $sysevent_ret -ne 0 ];then
       interface_name="erouter0"
   fi
   echo "$interface_name"
