@@ -872,11 +872,13 @@ static int handle_wan (udhcpc_script_t *pinfo)
         return -1;
     }
 
+#ifndef _LG_MV2_PLUS_
     if (get_and_pass_acs_info() != 0)
     {
         OnboardLog("[%s][%d] Failed to get dhcpv4 acs data from env \n", __FUNCTION__,__LINE__);
         return -1;
     }
+#endif
 
     OnboardLog("[%s][%d] Received [%s] event from udhcpc \n", __FUNCTION__,__LINE__,pinfo->input_option);
     int ret = 0;
