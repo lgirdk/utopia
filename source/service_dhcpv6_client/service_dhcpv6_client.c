@@ -264,7 +264,8 @@ void dhcpv6_client_service_stop ()
             }
             fprintf(stderr, "SERVICE_DHCP6C : Sending SIGTERM to %s\n",DHCPV6_PID_FILE);
 
-            while (0 < (pid = pid_of(DHCPV6_BINARY, NULL)))
+            pid = pid_of(DHCPV6_BINARY, NULL);
+            if (pid > 0)
             {
                 fprintf(stderr, "SERVICE_DHCP6C : Terminating ti_dhcp6c process with pid %d\n",pid);
                 kill(pid, SIGTERM);
