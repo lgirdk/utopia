@@ -1137,8 +1137,10 @@ static int wan_start(struct serv_wan *sw)
 #endif
 
                    fprintf(fp_wan_dbg, "Starting DHCPv6 Client now\n");
+#if !defined(_WAN_MANAGER_ENABLED_)
                     /* In IPv6 or dual mode, raise wan-status event here */
                     sysevent_set(sw->sefd, sw->setok, "wan-status", "starting", 0);
+#endif /*_WAN_MANAGER_ENABLED_*/
 
                    v_secure_system("/etc/utopia/service.d/service_dhcpv6_client.sh enable");
 #ifdef DSLITE_FEATURE_SUPPORT
