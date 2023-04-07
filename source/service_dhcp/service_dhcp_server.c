@@ -146,6 +146,14 @@ static void refresh_wifi (void* bus_handle)
     sysevent_get(g_iSyseventfd, g_tSysevent_token, "refresh-plume", refresh_plume, sizeof(refresh_plume));
     if (strcmp(refresh_plume, "true") == 0)
     {
+        /*Disassociate the backaul SSIDs, so that PODs receive new ip addresses*/
+        parameterValStruct_t param_val[] = {
+	    {"Device.WiFi.AccessPoint.13.X_CISCO_COM_KickAssocDevices", "true", ccsp_boolean},
+	    {"Device.WiFi.AccessPoint.14.X_CISCO_COM_KickAssocDevices", "true", ccsp_boolean}
+        };
+
+        ret = CcspBaseIf_setParameterValues(bus_handle, component, bus_path, 0, 0x0, param_val, sizeof(param_val)/sizeof(*param_val), TRUE, &faultParam);
+
         system("rpcclient2 '/etc/plume_init.sh restart'");
         sysevent_set(g_iSyseventfd, g_tSysevent_token, "refresh-plume", "false", 0);
     }
