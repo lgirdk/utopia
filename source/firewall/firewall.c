@@ -14556,7 +14556,6 @@ static void do_ipv6_filter_table(FILE *fp){
            fprintf(fp, "-A FORWARD -i %s -o privbr -p tcp -m multiport --dport 22,23,80,443 -j DROP\n",LNF_IF_NAME);
        #endif
        fprintf(fp, "-A INPUT -p tcp -i privbr --match multiport  --dport 80,443 -j ACCEPT\n");
-       fprintf(fp, "-A FORWARD -i brlan1 -o erouter0 -p tcp -m multiport --dport 22,80,8080,8181,443 -j DROP\n");
    #endif
    if(bEthWANEnable)
    {
