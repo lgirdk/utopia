@@ -1932,7 +1932,6 @@ static int routeset_ula(struct serv_routed *sr)
     char *token_pref = NULL ;
     char *pt;
 
-    char lan_ipv6_addr[128]={0};
     memset(prefix,0,sizeof(prefix));
     memset(lan_if,0,sizeof(lan_if));
 
@@ -1961,6 +1960,9 @@ static int routeset_ula(struct serv_routed *sr)
         SetV6Route(lan_if,prefix);
         char *token;
         token = strtok(prefix,"/");
+
+        
+        char lan_ipv6_addr[128]={0};
         memset(lan_ipv6_addr,0,sizeof(lan_ipv6_addr));
         sysevent_get(sr->sefd, sr->setok,"lan_ipaddr_v6", lan_ipv6_addr, sizeof(lan_ipv6_addr));
         if (strlen(lan_ipv6_addr) != 0 )
@@ -1970,7 +1972,7 @@ static int routeset_ula(struct serv_routed *sr)
         }
 
         sysevent_set(sr->sefd, sr->setok, "lan_ipaddr_v6",token, 0);
-
+        
         AssignIpv6Addr(lan_if,token,pref_len);
     }
     
