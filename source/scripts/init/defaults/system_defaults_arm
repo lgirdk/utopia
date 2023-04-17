@@ -935,6 +935,7 @@ $Adv_DFICMPv6RFCEnable=1
 $Adv_WSDisAnaRFCEnable=1
 $Adv_AdvSecOTMRFCEnable=1
 $Adv_AdvSecUserSpaceRFCEnable=0
+$Adv_WifiDataCollectionRFCEnable=0
 $Adv_AdvSecCujoTracerRFCEnable=0
 $Adv_AdvSecCujoTelemetryRFCEnable=0
 $Adv_RaptrRFCEnable=1
@@ -1273,8 +1274,8 @@ $DNSStrictOrder=false
 # Rabid Enable
 $$Advsecurity_RabidEnable=1
 
-# Rabid memory limit
-$Advsecurity_RabidMemoryLimit=30
+# cujo-agent memory limit
+$Advsecurity_RabidMemoryLimit=50
 
 # Rabid maccache size
 $Advsecurity_RabidMacCacheSize=10000
