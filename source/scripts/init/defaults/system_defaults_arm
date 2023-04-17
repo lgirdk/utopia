@@ -1270,7 +1270,7 @@ $DNSStrictOrder=false
 $$Advsecurity_RabidEnable=1
 
 # Rabid memory limit
-$Advsecurity_RabidMemoryLimit=20
+$Advsecurity_RabidMemoryLimit=30
 
 # Rabid maccache size
 $Advsecurity_RabidMacCacheSize=10000
