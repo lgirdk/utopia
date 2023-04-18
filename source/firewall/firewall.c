@@ -11001,15 +11001,43 @@ static int prepare_multinet_filter_forward (FILE *filter_fp)
 #elif defined(_XB7_PRODUCT_REQ_)
     fprintf(filter_fp, "-A INPUT -i brlan112 -d 169.254.0.0/24 -j ACCEPT\n");
     fprintf(filter_fp, "-A INPUT -i brlan112 -m pkttype ! --pkt-type unicast -j ACCEPT\n");
+    fprintf(filter_fp, "-A FORWARD -i brlan112 -o erouter0 -j DROP\n");
+    fprintf(filter_fp, "-A FORWARD -i brlan0 -o brlan112 -j DROP\n");
+    fprintf(filter_fp, "-A FORWARD -i brlan1 -o brlan112 -j DROP\n");
+    fprintf(filter_fp, "-A FORWARD -i brlan112 -o brlan0 -j DROP\n");
+    fprintf(filter_fp, "-A FORWARD -i brlan112 -o brlan1 -j DROP\n");
+    fprintf(filter_fp, "-A FORWARD -i erouter0 -o brlan112 -j DROP\n");
+
     fprintf(filter_fp, "-A INPUT -i brlan113 -d 169.254.1.0/24 -j ACCEPT\n");
     fprintf(filter_fp, "-A INPUT -i brlan113 -m pkttype ! --pkt-type unicast -j ACCEPT\n");
+    fprintf(filter_fp, "-A FORWARD -i brlan113 -o erouter0 -j DROP\n");
+    fprintf(filter_fp, "-A FORWARD -i brlan0 -o brlan113 -j DROP\n");
+    fprintf(filter_fp, "-A FORWARD -i brlan1 -o brlan113 -j DROP\n");
+    fprintf(filter_fp, "-A FORWARD -i brlan113 -o brlan0 -j DROP\n");
+    fprintf(filter_fp, "-A FORWARD -i brlan113 -o brlan1 -j DROP\n");
+    fprintf(filter_fp, "-A FORWARD -i erouter0 -o brlan113 -j DROP\n");
+
     fprintf(filter_fp, "-A INPUT -i brebhaul -d 169.254.85.0/24 -j ACCEPT\n");
     fprintf(filter_fp, "-A INPUT -i brebhaul -m pkttype ! --pkt-type unicast -j ACCEPT\n");
 #elif defined (INTEL_PUMA7) || (defined (_COSA_BCM_ARM_) && !defined(_CBR_PRODUCT_REQ_) && !defined(_HUB4_PRODUCT_REQ_)) // ARRIS XB6 ATOM, TCXB6
     fprintf(filter_fp, "-A INPUT -i ath12 -d 169.254.0.0/24 -j ACCEPT\n");
     fprintf(filter_fp, "-A INPUT -i ath12 -m pkttype ! --pkt-type unicast -j ACCEPT\n");
+    fprintf(filter_fp, "-A FORWARD -i ath12 -o erouter0 -j DROP\n");
+    fprintf(filter_fp, "-A FORWARD -i brlan0 -o ath12 -j DROP\n");
+    fprintf(filter_fp, "-A FORWARD -i brlan1 -o ath12 -j DROP\n");
+    fprintf(filter_fp, "-A FORWARD -i ath12 -o brlan0 -j DROP\n");
+    fprintf(filter_fp, "-A FORWARD -i ath12 -o brlan1 -j DROP\n");
+    fprintf(filter_fp, "-A FORWARD -i erouter0 -o ath12 -j DROP\n");
+
     fprintf(filter_fp, "-A INPUT -i ath13 -d 169.254.1.0/24 -j ACCEPT\n");
     fprintf(filter_fp, "-A INPUT -i ath13 -m pkttype ! --pkt-type unicast -j ACCEPT\n");
+    fprintf(filter_fp, "-A FORWARD -i ath13 -o erouter0 -j DROP\n");
+    fprintf(filter_fp, "-A FORWARD -i brlan0 -o ath13 -j DROP\n");
+    fprintf(filter_fp, "-A FORWARD -i brlan1 -o ath13 -j DROP\n");
+    fprintf(filter_fp, "-A FORWARD -i ath13 -o brlan0 -j DROP\n");
+    fprintf(filter_fp, "-A FORWARD -i ath13 -o brlan1 -j DROP\n");
+    fprintf(filter_fp, "-A FORWARD -i erouter0 -o ath13 -j DROP\n");
+
     fprintf(filter_fp, "-A INPUT -i brebhaul -d 169.254.85.0/24 -j ACCEPT\n");
     fprintf(filter_fp, "-A INPUT -i brebhaul -m pkttype ! --pkt-type unicast -j ACCEPT\n");
 #elif defined (_PLATFORM_TURRIS_)
