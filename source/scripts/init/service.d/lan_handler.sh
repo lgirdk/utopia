@@ -185,7 +185,13 @@ case "$1" in
 
     if [ xbrlan0 = x${LAN_IFNAME} ]; then
         SYSEVT_lan_ipaddr_v6_prev=`sysevent get lan_ipaddr_v6_prev`
-        SYSEVT_lan_ipaddr_v6=`sysevent get lan_ipaddr_v6`
+
+        if [ "1" = $(sysevent get ula_ipv6_enabled) ] && [ "1" != $(syscfg get Device_Mode) ];then
+            SYSEVT_lan_ipaddr_v6=$(sysevent get ipv6_prefix_ula | cut -d "/" -f 1)
+            SYSEVT_lan_ipaddr_v6=${SYSEVT_lan_ipaddr_v6}1
+        else
+            SYSEVT_lan_ipaddr_v6=`sysevent get lan_ipaddr_v6`
+        fi
         SYSEVT_lan_prefix_v6=`sysevent get lan_prefix_v6`
 
         if [ x$SYSEVT_lan_ipaddr_v6_prev != x$SYSEVT_lan_ipaddr_v6 ] && [ -n "$SYSEVT_lan_ipaddr_v6" ]
@@ -446,7 +452,14 @@ case "$1" in
  
         #handle ipv6 address on brlan0. Because it's difficult to add ipv6 operation in ipv4 process. So just put here as a temporary method
         SYSEVT_lan_ipaddr_v6_prev=`sysevent get lan_ipaddr_v6_prev`
-        SYSEVT_lan_ipaddr_v6=`sysevent get lan_ipaddr_v6`
+
+        if [ "1" = $(sysevent get ula_ipv6_enabled) ] && [ "1" != $(syscfg get Device_Mode) ];then
+            SYSEVT_lan_ipaddr_v6=$(sysevent get ipv6_prefix_ula | cut -d "/" -f 1)
+            SYSEVT_lan_ipaddr_v6=${SYSEVT_lan_ipaddr_v6}1
+        else
+            SYSEVT_lan_ipaddr_v6=`sysevent get lan_ipaddr_v6`
+        fi
+
         SYSEVT_lan_prefix_v6=`sysevent get lan_prefix_v6`
         LAN_IFNAME=`sysevent get ipv4_${LAN_INST}-ifname`
 	    LAN_RESTARTED=`sysevent get lan_restarted`

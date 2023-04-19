@@ -1575,6 +1575,21 @@ static void checkIfModeIsSwitched(int sefd, token_t setok)
 static int radv_start(struct serv_routed *sr)
 {
 
+#ifdef RDKB_EXTENDER_ENABLED
+    char buf[8] = {0};
+    int deviceMode = -1;
+    memset(buf,0,sizeof(buf));
+    if ( 0 == syscfg_get(NULL, "Device_Mode", buf, sizeof(buf)))
+    {
+        deviceMode = atoi(buf);
+        if ( DEVICE_MODE_EXTENDER == deviceMode )
+        {
+            fprintf(stderr, "Device is EXT mode , no need of running zebra for radv\n");
+            return -1;
+        }
+    }
+#endif
+
 #if defined (_HUB4_PRODUCT_REQ_) && !defined (_WNXL11BWL_PRODUCT_REQ_)
     int result;
     int ipv6_enable;
@@ -1883,21 +1898,6 @@ static int serv_routed_init(struct serv_routed *sr)
         return -1;
     }
 
-#ifdef RDKB_EXTENDER_ENABLED
-    char buf[8] = {0};
-    int deviceMode = -1;
-    memset(buf,0,sizeof(buf));
-    if ( 0 == syscfg_get(NULL, "Device_Mode", buf, sizeof(buf)))
-    {
-        deviceMode = atoi(buf);
-        if ( DEVICE_MODE_EXTENDER == deviceMode )
-        {
-            fprintf(stderr, "Device is EXT mode , no need of running zebra for radv\n");
-            return -1;
-        }
-    }
-#endif
-
     sysevent_get(sr->sefd, sr->setok, "wan-status", wan_st, sizeof(wan_st));
     if (strcmp(wan_st, "started") == 0)
         sr->wan_ready = true;
@@ -1981,7 +1981,7 @@ static int routeset_ula(struct serv_routed *sr)
         char *token;
         token = strtok(prefix,"/");
 
-        
+        /*
         char lan_ipv6_addr[128]={0};
         memset(lan_ipv6_addr,0,sizeof(lan_ipv6_addr));
         sysevent_get(sr->sefd, sr->setok,"lan_ipaddr_v6", lan_ipv6_addr, sizeof(lan_ipv6_addr));
@@ -1992,7 +1992,7 @@ static int routeset_ula(struct serv_routed *sr)
         }
 
         sysevent_set(sr->sefd, sr->setok, "lan_ipaddr_v6",token, 0);
-        
+        */
         AssignIpv6Addr(lan_if,token,pref_len);
     }
     

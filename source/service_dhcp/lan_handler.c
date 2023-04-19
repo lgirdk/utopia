@@ -450,8 +450,13 @@ void ipv4_status(int l3_inst, char *status)
 	errno_t safec_rc = -1;
     char primary_l3net[8] = {0};
 
-            sysevent_get(g_iSyseventfd, g_tSysevent_token, "primary_lan_l3net",
+    sysevent_get(g_iSyseventfd, g_tSysevent_token, "primary_lan_l3net",
                      primary_l3net, sizeof(primary_l3net));
+
+#if defined  (WAN_FAILOVER_SUPPORTED) || defined(RDKB_EXTENDER_ENABLED)
+    int devMode=0, ulaEnable=0;
+    char buf[128] = {0};
+#endif
 
 	if (!strncmp(status, "up", 2))
 	{	
@@ -543,9 +548,31 @@ void ipv4_status(int l3_inst, char *status)
 		{
 	    	sysevent_get(g_iSyseventfd, g_tSysevent_token, "lan_ipaddr_v6_prev", 
 						 l_cLan_IpAddrv6_prev, sizeof(l_cLan_IpAddrv6_prev));
-
-	    	sysevent_get(g_iSyseventfd, g_tSysevent_token, "lan_ipaddr_v6", 
-						 l_cLan_IpAddrv6, sizeof(l_cLan_IpAddrv6));
+#if defined  (WAN_FAILOVER_SUPPORTED) || defined(RDKB_EXTENDER_ENABLED)
+            char *token = NULL;
+            memset(buf,0,sizeof(buf));
+            sysevent_get(g_iSyseventfd, g_tSysevent_token, "ula_ipv6_enabled", 
+                         buf, sizeof(buf));
+            ulaEnable=atoi(buf);
+            memset(buf,0,sizeof(buf));
+            syscfg_get(NULL, "Device_Mode", buf, sizeof(buf));
+            devMode=atoi(buf);
+            if ( ulaEnable == 1 && devMode !=1 )
+            {
+                sysevent_get(g_iSyseventfd, g_tSysevent_token, "ipv6_prefix_ula", 
+                         buf, sizeof(buf));  
+                token = strtok(buf,"/");
+                snprintf(l_cLan_IpAddrv6,sizeof(l_cLan_IpAddrv6),"%s1",token);
+            }
+            else
+            {
+                sysevent_get(g_iSyseventfd, g_tSysevent_token, "lan_ipaddr_v6", 
+                         l_cLan_IpAddrv6, sizeof(l_cLan_IpAddrv6));    
+            }
+#else
+    sysevent_get(g_iSyseventfd, g_tSysevent_token, "lan_ipaddr_v6", 
+                         l_cLan_IpAddrv6, sizeof(l_cLan_IpAddrv6));   
+#endif
 	
     		sysevent_get(g_iSyseventfd, g_tSysevent_token, "lan_prefix_v6", 
 						 l_cLan_PrefixV6, sizeof(l_cLan_PrefixV6));
@@ -789,6 +816,10 @@ void lan_restart()
 	int l_iLanInst, l_iRetVal;
 	errno_t safec_rc = -1;
 
+#if defined  (WAN_FAILOVER_SUPPORTED) || defined(RDKB_EXTENDER_ENABLED)
+    int devMode=0, ulaEnable=0;
+    char buf[128] = {0};
+#endif
 	syscfg_get(NULL, "lan_ipaddr", l_cLanIpAddr, sizeof(l_cLanIpAddr));
 
 	syscfg_get(NULL, "lan_netmask", l_cLanNetMask, sizeof(l_cLanNetMask));
@@ -880,9 +911,31 @@ void lan_restart()
     sysevent_get(g_iSyseventfd, g_tSysevent_token, "lan_ipaddr_v6_prev", 
                  l_cLan_IpAddrv6_prev, sizeof(l_cLan_IpAddrv6_prev));
 
+#if defined  (WAN_FAILOVER_SUPPORTED) || defined(RDKB_EXTENDER_ENABLED)
+    char *token=NULL;
+    memset(buf,0,sizeof(buf));
+    sysevent_get(g_iSyseventfd, g_tSysevent_token, "ula_ipv6_enabled", 
+                         buf, sizeof(buf));
+    ulaEnable=atoi(buf);
+    memset(buf,0,sizeof(buf));
+    syscfg_get(NULL, "Device_Mode", buf, sizeof(buf));
+    devMode=atoi(buf);
+    if ( ulaEnable == 1 && devMode != 1 )
+    {
+        sysevent_get(g_iSyseventfd, g_tSysevent_token, "ipv6_prefix_ula", 
+            buf, sizeof(buf));  
+        token = strtok(buf,"/");
+        snprintf(l_cLan_IpAddrv6,sizeof(l_cLan_IpAddrv6),"%s1",token);
+    }
+    else
+    {
+        sysevent_get(g_iSyseventfd, g_tSysevent_token, "lan_ipaddr_v6", 
+            l_cLan_IpAddrv6, sizeof(l_cLan_IpAddrv6));    
+    }
+#else
     sysevent_get(g_iSyseventfd, g_tSysevent_token, "lan_ipaddr_v6", 
-                 l_cLan_IpAddrv6, sizeof(l_cLan_IpAddrv6));
-    
+                         l_cLan_IpAddrv6, sizeof(l_cLan_IpAddrv6));   
+#endif
     sysevent_get(g_iSyseventfd, g_tSysevent_token, "lan_prefix_v6", 
                  l_cLan_PrefixV6, sizeof(l_cLan_PrefixV6));
 
