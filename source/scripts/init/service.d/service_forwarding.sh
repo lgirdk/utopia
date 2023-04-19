@@ -80,6 +80,7 @@ service_start ()
    wait_till_end_state ${SERVICE_NAME}
    STATUS=`sysevent get ${SERVICE_NAME}-status`
    bridge_mode=`sysevent get bridge_mode`
+   ssam_enable=`syscfg get ssam_enable`
    PAUSE=0
 
    if [ "started" != "$STATUS" ] ; then
@@ -176,6 +177,11 @@ service_start ()
          echo "service_forwarding : Triggering RDKB_FIREWALL_RESTART before bridge starting"
 	 t2CountNotify "RF_INFO_RDKB_FIREWALL_RESTART"
          sysevent set firewall-restart
+
+         if [ "1" = "$ssam_enable" ]; then
+            killall -s SIGINT sam
+            rm /var/sam/.sam.pid /var/sam/agent_version /var/sam/status
+         fi
       else
          ulog forwarding status "starting wan"
 	if [ "$RPI_SPECIFIC" = "rpi" ] ; then
@@ -199,6 +205,10 @@ service_start ()
          fi
          wait_till_state lan starting
          wait_till_state wan starting
+ 
+         if [ "1" = "$ssam_enable" ]; then
+            dmcli eRT setv Device.X_LGI-COM_DigitalSecurity.Enable bool true
+         fi
       fi
 
       sysevent set ${SERVICE_NAME}-status started 
