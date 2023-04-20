@@ -1229,6 +1229,30 @@ static void addInSysCfgdDB (char *key, char *value)
          IsPSMMigrationNeeded = 1;
       }
    }
+   if ( 0 == strcmp ( key, "Device.X_RDK_MQTT.BrokerURL") )
+   {
+      if ( 0 == IsValuePresentinSyscfgDB( "MQTT_INIT_URL" ) )
+      {
+         set_syscfg_partner_values( value,"MQTT_INIT_URL" );
+         IsPSMMigrationNeeded = 1;
+      }
+   }
+   if ( 0 == strcmp ( key, "Device.X_RDK_MQTT.LocationID") )
+   {
+      if ( 0 == IsValuePresentinSyscfgDB( "MQTT_INIT_LOCATIONID" ) )
+      {
+         set_syscfg_partner_values( value,"MQTT_INIT_LOCATIONID" );
+         IsPSMMigrationNeeded = 1;
+      }
+   }
+   if ( 0 == strcmp ( key, "Device.X_RDK_MQTT.Port") )
+   {
+      if ( 0 == IsValuePresentinSyscfgDB( "MQTT_INIT_PORT" ) )
+      {
+         set_syscfg_partner_values( value,"MQTT_INIT_PORT" );
+         IsPSMMigrationNeeded = 1;
+      }
+   }
    if ( 0 == strcmp ( key, "Device.X_RDKCENTRAL-COM_Webpa.Server.URL") )
    {
       if ( 0 == IsValuePresentinSyscfgDB( "WEBPA_SERVER_URL" ) )
@@ -1338,6 +1362,21 @@ static void updateSysCfgdDB (char *key, char *value)
    if ( 0 == strcmp ( key, "Device.X_RDK_WebConfig.SupplementaryServiceUrls.Telemetry") )
    {
          set_syscfg_partner_values( value,"TELEMETRY_INIT_URL" );
+         IsPSMMigrationNeeded = 1;
+   }
+   if ( 0 == strcmp ( key, "Device.X_RDK_MQTT.BrokerURL") )
+   {
+         set_syscfg_partner_values( value,"MQTT_INIT_URL" );
+         IsPSMMigrationNeeded = 1;
+   }
+   if ( 0 == strcmp ( key, "Device.X_RDK_MQTT.LocationID") )
+   {
+         set_syscfg_partner_values( value,"MQTT_INIT_LOCATIONID" );
+         IsPSMMigrationNeeded = 1;
+   }
+   if ( 0 == strcmp ( key, "Device.X_RDK_MQTT.Port") )
+   {
+         set_syscfg_partner_values( value,"MQTT_INIT_PORT" );
          IsPSMMigrationNeeded = 1;
    }
    if ( 0 == strcmp ( key, "Device.X_RDKCENTRAL-COM_Webpa.Server.URL") )
@@ -2017,6 +2056,57 @@ static int apply_partnerId_default_values (char *data, char *PartnerID)
 						else
 						{
 							APPLY_PRINT("%s - telemetryurl Value is NULL\n", __FUNCTION__ );
+						}
+					}
+
+					paramObjVal = cJSON_GetObjectItem(cJSON_GetObjectItem( partnerObj, "Device.X_RDK_MQTT.BrokerURL"), "ActiveValue");
+					if ( paramObjVal != NULL )
+					{
+						char *mqtturl = NULL;
+						mqtturl = paramObjVal->valuestring;
+
+						if (mqtturl != NULL)
+						{
+							set_syscfg_partner_values(mqtturl,"MQTT_INIT_URL");
+							mqtturl = NULL;
+						}
+						else
+						{
+							APPLY_PRINT("%s - mqtturl Value is NULL\n", __FUNCTION__ );
+						}
+					}
+
+					paramObjVal = cJSON_GetObjectItem(cJSON_GetObjectItem( partnerObj, "Device.X_RDK_MQTT.LocationID"), "ActiveValue");
+					if ( paramObjVal != NULL )
+					{
+						char *mqttlocation = NULL;
+						mqttlocation = paramObjVal->valuestring;
+
+						if (mqttlocation != NULL)
+						{
+							set_syscfg_partner_values(mqttlocation,"MQTT_INIT_LOCATIONID");
+							mqttlocation = NULL;
+						}
+						else
+						{
+							APPLY_PRINT("%s - mqttlocationid Value is NULL\n", __FUNCTION__ );
+						}
+					}
+
+					paramObjVal = cJSON_GetObjectItem(cJSON_GetObjectItem( partnerObj, "Device.X_RDK_MQTT.Port"), "ActiveValue");
+					if ( paramObjVal != NULL )
+					{
+						char *mqttport = NULL;
+						mqttport = paramObjVal->valuestring;
+
+						if (mqttport != NULL)
+						{
+							set_syscfg_partner_values(mqttport,"MQTT_INIT_PORT");
+							mqttport = NULL;
+						}
+						else
+						{
+							APPLY_PRINT("%s - mqttport Value is NULL\n", __FUNCTION__ );
 						}
 					}
 
