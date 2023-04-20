@@ -599,7 +599,11 @@ dhcp_server_start ()
    #USGv2: to refresh Ethernet ports/WiFI/MoCA
    PSM_MODE=`sysevent get system_psm_mode`
    if [ "$PSM_MODE" != "1" ]; then
-       if [ ! -f "/var/tmp/lan_not_restart" ] && [ "$1" != "lan_not_restart" ]; then
+       if [ -f "/var/tmp/.refreshlan" ];then
+            echo_t "RDKB_SYSTEM_BOOT_UP_LOG : Call gw_lan_refresh_from_dhcpscript:`uptime | cut -d "," -f1 | tr -d " \t\n\r"`"
+            gw_lan_refresh &
+            rm -f /var/tmp/.refreshlan
+       elif [ ! -f "/var/tmp/lan_not_restart" ] && [ "$1" != "lan_not_restart" ]; then
            if [ x"ready" = x`sysevent get start-misc` ]; then
                echo_t "RDKB_SYSTEM_BOOT_UP_LOG : Call gw_lan_refresh_from_dhcpscript:`uptime | cut -d "," -f1 | tr -d " \t\n\r"`"
                gw_lan_refresh &
@@ -853,7 +857,7 @@ case "$1" in
       dhcp_server_stop
       ;;
    ${SERVICE_NAME}-restart)
-      #dhcp_server_stop
+      dhcp_server_stop
 	  echo_t "SERVICE DHCP : Got restart with $2.. Call dhcp_server_start"
       dhcp_server_start $2
       ;;

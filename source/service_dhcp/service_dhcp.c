@@ -434,8 +434,22 @@ int main(int argc, char *argv[])
 		sysevent_syscfg_init();
 	
 	fprintf(g_fArmConsoleLog, "%s case\n", argv[1]);
-	if ((!strncmp(argv[1], "dhcp_server-start", 17)) ||
-		(!strncmp(argv[1], "dhcp_server-restart", 19)))
+
+    if (!strncmp(argv[1], "dhcp_server-restart", 19))
+    {
+#if !defined (FEATURE_RDKB_DHCP_MANAGER)
+        dhcp_server_stop();
+        if (3 == argc)
+        {   
+            dhcp_server_start(argv[2]);
+        }
+        else
+        {
+            dhcp_server_start(NULL);
+        }
+#endif
+    }
+	else if (!strncmp(argv[1], "dhcp_server-start", 17))
 	{
 #if !defined (FEATURE_RDKB_DHCP_MANAGER)
 		if (3 == argc)
