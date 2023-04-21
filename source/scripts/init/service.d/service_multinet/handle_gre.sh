@@ -751,7 +751,7 @@ check_ssids () {
         fi
     else
         #SSIDs should be down
-        if [ x"true" = x$curSSIDSTATE ]; then
+        if [ x"false" != x$curSSIDSTATE ]; then
             echo_t "Bringing Hotspot SSIDs DOWN"
             set_ssids_enabled $inst false
         fi
@@ -941,7 +941,7 @@ case "$1" in
                        ifconfig gretap0 up
                fi
          fi
-    if [ "$BOX_TYPE" = "XB6" ] ; then
+    if [ "$BOX_TYPE" = "XB6" -a x"NULL" != x${2} ] ; then
         read_greInst 
     fi
     if [ $recover != "true" ] ; then                            
