@@ -14174,6 +14174,7 @@ void getIpv6Interfaces(char Interface[MAX_NO_IPV6_INF][MAX_LEN_IPV6_INF],int *le
 {
 char *token = NULL;char *pt;
 char buf[MAX_BUFF_LEN];
+
 char str[MAX_BUFF_LEN],prefixlen[MAX_BUFF_LEN];
 int i =0, ret;
 errno_t safec_rc = -1;
@@ -14183,21 +14184,26 @@ errno_t safec_rc = -1;
 		{
 			if(!strncmp(buf,"true",4))
 			{
-				 sysevent_get(sysevent_fd, sysevent_token, "lan_prefix_v6", prefixlen, sizeof(prefixlen));
-     				 if ( '\0' != prefixlen[0] ) 
+				sysevent_get(sysevent_fd, sysevent_token, "lan_prefix_v6", prefixlen, sizeof(prefixlen));
+     				if ( '\0' != prefixlen[0] ) 
+				{
+					if(atoi(prefixlen) < 64)
 					{
-
-						if(atoi(prefixlen) < 64)
-						{
-							 syscfg_get(NULL, "IPv6_Interface", str, sizeof(str));
-						}
-						else
-						{
-							*len = 0;
-							return;
-						}
-						
+						 syscfg_get(NULL, "IPv6_Interface", str, sizeof(str));
 					}
+					else
+					{
+						*len = 0;
+						return;
+					}
+						
+				}
+            			#if defined  (WAN_FAILOVER_SUPPORTED) || defined(RDKB_EXTENDER_ENABLED)
+               			else if (0 == checkIfULAEnabled())
+               			{
+                  			syscfg_get(NULL, "IPv6_Interface", str, sizeof(str));
+               			}
+            			#endif
 			}
 			else
 			{
