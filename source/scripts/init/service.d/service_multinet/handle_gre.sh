@@ -100,6 +100,7 @@ HOTSPOT_COMP=CcspHotspot
 ARP_NFQUEUE=0
 
 WAN_IF=erouter0
+HANDLE_GRE_ASYNC="/tmp/.hotspot_path"
 
 AB_SSID_DELIM=':'
 AB_DELIM=","
@@ -805,15 +806,18 @@ case "$1" in
         #Initialize
         if [ x = x`sysevent get ${inst}_keepalive_pid` ]; then
             echo "GRE INITIALIZING..."
-            async="`sysevent async hotspotfd-tunnelEP $THIS`"
-            sysevent set gre_ep_async "$async" > /dev/null
+# Register the async sysevents only if it is not done by the Hotspot APIs already
+            if [ ! -f $HANDLE_GRE_ASYNC ]; then
+                async="`sysevent async hotspotfd-tunnelEP $THIS`"
+                sysevent set gre_ep_async "$async" > /dev/null
 #             async="`sysevent async snooper-wifi-clients $THIS`"
 #             sysevent set gre_snooper_clients_async "$async" > /dev/null
-            async="`sysevent async wan-status $THIS`"
-            sysevent set gre_wan_async "$async" > /dev/null
-            async="`sysevent async hotspotfd-primary $THIS`"
-            sysevent set gre_primary_async "$async" > /dev/null
-            
+                async="`sysevent async wan-status $THIS`"
+                sysevent set gre_wan_async "$async" > /dev/null
+                async="`sysevent async hotspotfd-primary $THIS`"
+                sysevent set gre_primary_async "$async" > /dev/null
+            fi
+
             init_keepalive_sysevents > /dev/null
             init_snooper_sysevents
             sysevent set snooper-log-enable 1
@@ -821,8 +825,10 @@ case "$1" in
             if [ -z "$HOTSPOT_PID" ]; then
                echo_t "Starting hotspot component"
                $HOTSPOT_COMP -subsys eRT. > /dev/null &
+               sysevent set ${inst}_keepalive_pid $! > /dev/null
+            else
+               sysevent set ${inst}_keepalive_pid $HOTSPOT_PID > /dev/null
             fi
-            sysevent set ${inst}_keepalive_pid $! > /dev/null
             
             update_bridge_config $3 > /dev/null
             if [ "$BOX_TYPE" = "XF3" ] ; then
