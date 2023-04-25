@@ -14621,6 +14621,7 @@ static void do_ipv6_filter_table(FILE *fp){
          && a[12] == 0 && a[13] == 0 && a[14] == 0 && a[15] == 0))
          {
             fprintf(fp, "-I FORWARD -d %s -i %s  -j DROP\n", cm_ipv6addr, lan_ifname);
+            fprintf(fp, "-I FORWARD -d %s -i brlan1  -j DROP\n", cm_ipv6addr);
          }
 
          pclose(f);
@@ -14638,6 +14639,8 @@ static void do_ipv6_filter_table(FILE *fp){
    }
    #if defined(_COSA_BCM_ARM_) || defined(_PLATFORM_TURRIS_)
        fprintf(fp, "-A INPUT -p tcp -i privbr --match multiport  --dport 80,443 -j ACCEPT\n");
+       
+       fprintf(fp, "-A FORWARD -i brlan1 -o erouter0 -p tcp -m multiport --dport 22,8080,8181 -j DROP\n");
    #endif
    if(bEthWANEnable)
    {
