@@ -964,12 +964,10 @@ static int handle_wan (udhcpc_script_t *pinfo)
         if (ip)
         {
             if(broadcast_ip){
-            	v_secure_system("/sbin/ifconfig %s %s broadcast %s netmask %s",
-                    	interface,ip,broadcast_ip,subnet);
+            	v_secure_system("/sbin/ifconfig %s %s broadcast %s netmask %s",interface,ip,broadcast_ip,subnet);
 		printf("\n %s router:%s buf: /sbin/ifconfig %s %s broadcast %s netmask %s",__FUNCTION__,router,interface,ip,broadcast_ip,subnet);
 	    }else{
-                v_secure_system("/sbin/ifconfig %s %s netmask %s",
-                        interface,ip,subnet);
+                v_secure_system("/sbin/ifconfig %s %s netmask %s",interface,ip,subnet);
 		printf("\n %s router:%s buf:/sbin/ifconfig %s %s netmask %s",__FUNCTION__,router,interface,ip,subnet);
             }
         }
@@ -988,7 +986,7 @@ static int handle_wan (udhcpc_script_t *pinfo)
                 }
                 else
                 {
-                    v_secure_system("/etc/utopia_ip_interface.sh %s",getenv("interface"));
+                    v_secure_system("/etc/utopia_ip_interface.sh %s",interface);
                 }
             }        
         }
@@ -1005,15 +1003,10 @@ static int handle_wan (udhcpc_script_t *pinfo)
         {
                 v_secure_system("ip -4 rule del from %s lookup erouter",prev_ip);
                 v_secure_system("ip -4 rule del from %s lookup all_lans",prev_ip);
-
         }
 
-                v_secure_system("ip -4 rule add from %s lookup erouter",ip);
-                v_secure_system("ip -4 rule add from %s lookup all_lans",ip);
-
-
-
-
+        v_secure_system("ip -4 rule add from %s lookup erouter",ip);
+        v_secure_system("ip -4 rule add from %s lookup all_lans",ip);
     }
 
     // Set default route
