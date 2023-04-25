@@ -355,7 +355,7 @@ service_start ()
    echo "restrict -6 ::1" >> $NTP_CONF_TMP
 
    if [ "$SYSCFG_new_ntp_enabled" = "true" ]; then
-       if [ "$BOX_TYPE" = "SR300" ]; then
+       if [ "$BOX_TYPE" = "SR300" ] || [ "$BOX_TYPE" = "SR213" ]; then
             IPV4_CONN_STATE=$(sysevent get ipv4_connection_state)
             if [ "$IPV4_CONN_STATE" != "up" ]; then
                 SYSCFG_ntp_server1="time.google.com"
@@ -419,7 +419,7 @@ service_start ()
            fi
        fi
 
-        if [ "$BOX_TYPE" = "SR300" ]; then
+        if [ "$BOX_TYPE" = "SR300" ] || [ "$BOX_TYPE" = "SR213" ]; then
             IPV4_CONN_STATE=$(sysevent get ipv4_connection_state)           
             if [ "$IPV4_CONN_STATE" != "up" ]; then
                 SYSCFG_ntp_server1="time.google.com"
@@ -685,15 +685,20 @@ case "$1" in
       ;;
   ipv6_connection_state)
       if [ "$BOX_TYPE" = "HUB4" ] || [ "$BOX_TYPE" = "SR300" ] || [ "$BOX_TYPE" = "SE501" ] || [ "$BOX_TYPE" = "WNXL11BWL" ] || [ "$BOX_TYPE" = "SR213" ]; then
-          WAN_IPV6_STATUS=`sysevent get ipv6_connection_state`
-          if [ "up" = "$WAN_IPV6_STATUS" ] ; then
-              CURRENT_WAN_V6_PREFIX=`syscfg get ipv6_prefix_address`
-              NTP_PREFIX=`sysevent get ntp_prefix`
-              NTP_IPV6_LISTEN=`sysevent get ntp_ipv6_listen`
-              if [ -n "$CURRENT_WAN_V6_PREFIX" ] && ([ "$NTP_PREFIX" != "$CURRENT_WAN_V6_PREFIX" ] || [ "set" != "$NTP_IPV6_LISTEN" ]) ; then
-                  echo_t "SERVICE_NTPD : ipv6_connection_state calling service_start" >> $NTPD_LOG_NAME
-                  sysevent set ntp_prefix $CURRENT_WAN_V6_PREFIX
-                  service_start
+         NTPD_PROCESS=`pidof $BIN`
+         if [ -n "$NTPD_PROCESS" ];then
+             echo_t "SERVICE_NTPD : ntp process is already running and pid is = $NTPD_PROCESS" >> $NTPD_LOG_NAME
+         else
+             WAN_IPV6_STATUS=`sysevent get ipv6_connection_state`
+             if [ "up" = "$WAN_IPV6_STATUS" ] ; then
+                  CURRENT_WAN_V6_PREFIX=`syscfg get ipv6_prefix_address`
+                  NTP_PREFIX=`sysevent get ntp_prefix`
+                  NTP_IPV6_LISTEN=`sysevent get ntp_ipv6_listen`
+                  if [ -n "$CURRENT_WAN_V6_PREFIX" ] && ([ "$NTP_PREFIX" != "$CURRENT_WAN_V6_PREFIX" ] || [ "set" != "$NTP_IPV6_LISTEN" ]) ; then
+                      echo_t "SERVICE_NTPD : ipv6_connection_state calling service_start" >> $NTPD_LOG_NAME
+                      sysevent set ntp_prefix $CURRENT_WAN_V6_PREFIX
+                      service_start
+                  fi
               fi
           fi
       fi
