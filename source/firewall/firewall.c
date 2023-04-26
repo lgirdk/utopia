@@ -13228,7 +13228,12 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
       syscfg_get(NULL, "static_ui_enable", query, sizeof(query));
       if (strcmp(query, "true") != 0)
       {
-         fprintf(filter_fp, "-I http2self -i %s -d %s -j DROP\n", lan_ifname, lan_ipaddr);
+         char cloudui_enable[8];
+         syscfg_get(NULL, "cloud_enable_flag", cloudui_enable, sizeof(cloudui_enable));
+         if (strcmp(cloudui_enable,"1") != 0)
+         {
+            fprintf(filter_fp, "-I http2self -i %s -d %s -j DROP\n", lan_ifname, lan_ipaddr);
+         }
       }
    }
 
