@@ -522,8 +522,8 @@ void prepare_dhcp_options_wan_dns()
             sysevent_get(g_iSyseventfd, g_tSysevent_token, "wan_dhcp_dns", l_cWan_Dhcp_Dns, sizeof(l_cWan_Dhcp_Dns));
             if (l_cWan_Dhcp_Dns[0] == 0)
             {
-                //In ipv6/ipv6 ds-lite mode, the device is unable to fetch the defalut ipv4 DNS, so we fetch default ipv6 DNS address.
-                sysevent_get(g_iSyseventfd, g_tSysevent_token, "ipv6_nameserver", l_cWan_Dhcp_Dns, sizeof(l_cWan_Dhcp_Dns));
+                //In ipv6/ipv6 ds-lite mode, the device is unable to fetch the Wan DHCP DNS, so we fetch default LanIP as default DNS.
+                syscfg_get(NULL, "lan_ipaddr", l_cWan_Dhcp_Dns, sizeof(l_cWan_Dhcp_Dns));
             }
             if (0 != l_cWan_Dhcp_Dns[0])
             {
@@ -558,6 +558,11 @@ void prepare_dhcp_options_wan_dns()
                     {
                         strcat(l_cDhcpOptionString, ",");
                         strcat(l_cDhcpOptionString, l_cDnsIpv4Alternate);
+                    }
+                    else
+                    {
+                        strcat(l_cDhcpOptionString, ",");
+                        strcat(l_cDhcpOptionString, l_cNs);
                     }
                 }
                 else
