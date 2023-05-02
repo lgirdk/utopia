@@ -79,6 +79,8 @@ if [ "$DNS_OVERRIDE" == "true" ] ; then
     fi
     if [ -n "$DNS_IPv6_ALTERNATE" ] ; then
         ips=$ips" "$DNS_IPv6_ALTERNATE
+    else
+        ips=$ips" "$dhcp_dns_ips
     fi
 else
     if [ "$dns_proxy" == "1" ] ; then
