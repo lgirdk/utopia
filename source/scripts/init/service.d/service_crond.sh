@@ -122,6 +122,11 @@ service_start ()
 #RDKB-45059 log the zebra.conf status for every 12 hours
       echo "0 */12 * * *  /usr/ccsp/tad/Zebra_conf_status.sh" >> $CRONTAB_FILE
 
+     if [ "$BOX_TYPE" == "WNXL11BWL" ] || [ "$BOX_TYPE" == "XB6" ]; then
+        #run idm recovery for each 10 minutes
+        echo "*/10 * * * *   /etc/idm/idm_recovery.sh" >> $CRONTAB_FILE
+     fi
+
       num1=$RANDOM
       num2=$RANDOM
       rand1=`expr "$num1" % 60`
