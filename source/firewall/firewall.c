@@ -3216,11 +3216,13 @@ static int do_single_port_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, 
           /* some time user only need IPv6 forwarding, in this case 255.255.255.255 will be set as toip. 
           * so we needn't do anything about those entry */
           if (0 != rc || '\0' == toip[0] || !strcmp("255.255.255.255", toip)) {
+             FIREWALL_DEBUG("PortMapping:Internal Client IPv4 (null)\n");
              continue;
           }
       }else{
         rc = syscfg_get(namespace, "to_ipv6", toipv6, sizeof(toipv6));
         if (0 != rc || '\0' == toipv6[0] || strcmp("x", toipv6) == 0) {
+            FIREWALL_DEBUG("PortMapping:Internal Client IPv6 (null)\n");
             continue;
         }
       }
