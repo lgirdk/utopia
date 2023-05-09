@@ -181,6 +181,7 @@ service_stop () {
 
    sysevent set ${SERVICE_NAME}-errinfo
    sysevent set ${SERVICE_NAME}-status "stopped"
+   IGD_STATUS="stopped" 
 }
 
 init_once () {
