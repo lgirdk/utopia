@@ -54,7 +54,6 @@ if [ -f /etc/utopia/service.d/cosa_misc.sh ];then
 else
 	echo "cosa_misc.sh is not found"
 fi
-/etc/utopia/service.d/service_igd.sh snmp_subagent-status
 #unit in bridge mode
 if [ "$BR_MD" != "0" -o "$RG_MD" = "0" ]; then
 #    execute_dir /etc/utopia/post.d/
@@ -70,6 +69,8 @@ fi
 if [ "$LAN_ST" != "started" ]; then
 	exit 0;
 fi
+
+/etc/utopia/service.d/service_igd.sh snmp_subagent-status
 
 if [ "$RG_MD" = "1" -o "$RG_MD" = "3" ]; then
 	/etc/utopia/service.d/service_igd.sh lan-status&
