@@ -1486,6 +1486,7 @@ static int lan_addr6_set(struct serv_ipv6 *si6)
         if (l2_insts[i] == primary_l2_instance) {
             snprintf(evt_name, sizeof(evt_name), "lan_ipaddr_v6");
             sysevent_set(si6->sefd, si6->setok, evt_name, ipv6_addr, 0);
+            sysevent_set(si6->sefd, si6->setok, "lan_prefix_set", ipv6_addr, 0);
         }
 #endif
 
