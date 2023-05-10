@@ -383,17 +383,6 @@ int sysevent_syscfg_init()
 {
 	g_iSyseventfd = sysevent_open("127.0.0.1", SE_SERVER_WELL_KNOWN_PORT, SE_VERSION,
                                                "service_dhcp", &g_tSysevent_token);
-	g_fArmConsoleLog = fopen(CONSOLE_LOG_FILE, "a+");
-
-	if (NULL == g_fArmConsoleLog) //In error case not returning as it is ok to continue
-	{
-		g_fArmConsoleLog = stderr; //Redirecting the messages to console terminal
-		fprintf(stderr, "Error:%d while opening Log file:%s\n", errno, CONSOLE_LOG_FILE);
-	}
-	else
-	{
-		fprintf(stderr, "Successful in opening while opening Log file:%s\n", CONSOLE_LOG_FILE);
-	}	
 
     if (g_iSyseventfd < 0)       
     {    
@@ -688,6 +677,5 @@ int main(int argc, char *argv[])
         }
     }
 	close(g_iSyseventfd); //can be a memory / fd leak if not done
-	fclose(g_fArmConsoleLog);
 	return 0;
 }
