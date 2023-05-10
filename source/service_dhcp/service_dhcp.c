@@ -101,7 +101,7 @@ static int dbusInit( void )
         if (ret == -1)
         {
             // Dbus connection error
-            fprintf(g_fArmConsoleLog, "DBUS connection error\n");
+            fprintf(stderr, "DBUS connection error\n");
         }
     }
     return ret;
@@ -129,7 +129,7 @@ void print_with_uptime(const char* input)
                            l_sTimeInfo->tm_hour, l_sTimeInfo->tm_min, l_sTimeInfo->tm_sec, 
                            l_iDays, l_iHours, l_iMins, l_iSec);
 
-    fprintf(g_fArmConsoleLog, "%s%s\n", input,l_cLocalTime);
+    fprintf(stderr, "%s%s\n", input,l_cLocalTime);
 }
 
 void get_device_props()
@@ -181,7 +181,7 @@ int executeCmd(char *cmd)
 	l_iSystem_Res = system(cmd);
     if (0 != l_iSystem_Res && ECHILD != errno)
     {
-        fprintf(g_fArmConsoleLog, "%s command didnt execute successfully\n", cmd);
+        fprintf(stderr, "%s command didnt execute successfully\n", cmd);
         return l_iSystem_Res;
     }
     return 0;
@@ -203,7 +203,7 @@ void copy_file(char *input_file, char *target_file)
     }
 	else
 	{
-		fprintf(g_fArmConsoleLog, "copy of files failed due to error in opening one of the files \n");
+		fprintf(stderr, "copy of files failed due to error in opening one of the files \n");
 	}
 
     if(l_fInputFile) {
@@ -221,7 +221,7 @@ void remove_file(char *tb_removed_file)
     l_iRemove_Res = remove(tb_removed_file);
     if (0 != l_iRemove_Res)
     {
-        fprintf(g_fArmConsoleLog, "remove of %s file is not successful error is:%d\n", 
+        fprintf(stderr, "remove of %s file is not successful error is:%d\n", 
 				tb_removed_file, errno);
     }
 }
@@ -236,7 +236,7 @@ void print_file(char *to_print_file)
     {   
         while(fgets(l_cLine, sizeof(l_cLine), l_fP) != NULL)
         {   
-            fprintf(g_fArmConsoleLog, "%s", l_cLine);
+            fprintf(stderr, "%s", l_cLine);
         }   
         fclose(l_fP);
     }
@@ -270,7 +270,7 @@ BOOL compare_files(char *input_file1, char *input_file2)
     l_fP1 = fopen(input_file1, "r");/* opens First file which is read */
     if (l_fP1 == NULL)
     {
-        fprintf(g_fArmConsoleLog, "Can't open %s for reading\n", input_file1);
+        fprintf(stderr, "Can't open %s for reading\n", input_file1);
         return FALSE;
     }
 
@@ -278,7 +278,7 @@ BOOL compare_files(char *input_file1, char *input_file2)
     if (l_fP2 == NULL)
     {
 	fclose(l_fP1);
-        fprintf(g_fArmConsoleLog, "Can't open %s for reading\n", input_file2);
+        fprintf(stderr, "Can't open %s for reading\n", input_file2);
         return FALSE;
     }
 
@@ -359,7 +359,7 @@ unsigned int countSetBits(int byte)
     }
     else
     {
-        fprintf(g_fArmConsoleLog, "Invalid subnet byte:%d\n", byte);
+        fprintf(stderr, "Invalid subnet byte:%d\n", byte);
         return 0;
     }
 }
@@ -388,16 +388,16 @@ int sysevent_syscfg_init()
 	if (NULL == g_fArmConsoleLog) //In error case not returning as it is ok to continue
 	{
 		g_fArmConsoleLog = stderr; //Redirecting the messages to console terminal
-		fprintf(g_fArmConsoleLog, "Error:%d while opening Log file:%s\n", errno, CONSOLE_LOG_FILE);
+		fprintf(stderr, "Error:%d while opening Log file:%s\n", errno, CONSOLE_LOG_FILE);
 	}
 	else
 	{
-		fprintf(g_fArmConsoleLog, "Successful in opening while opening Log file:%s\n", CONSOLE_LOG_FILE);
+		fprintf(stderr, "Successful in opening while opening Log file:%s\n", CONSOLE_LOG_FILE);
 	}	
 
     if (g_iSyseventfd < 0)       
     {    
-        fprintf(g_fArmConsoleLog, "service_dhcp::sysevent_open failed\n");
+        fprintf(stderr, "service_dhcp::sysevent_open failed\n");
 		return ERROR;
     }        
 
@@ -407,7 +407,7 @@ int sysevent_syscfg_init()
 
     if(g_vBus_handle == NULL)
     {
-        fprintf(g_fArmConsoleLog, "service_dhcp_init, DBUS init error\n");
+        fprintf(stderr, "service_dhcp_init, DBUS init error\n");
         return ERROR;
     }
 	return SUCCESS;
@@ -419,14 +419,14 @@ int main(int argc, char *argv[])
 	int l_iL3Inst;
 	if (argc < 2)	
 	{
-		fprintf(g_fArmConsoleLog, "Insufficient number of args return\n");
+		fprintf(stderr, "Insufficient number of args return\n");
 		return 0;
 	}
 
 	if (0 == g_iSyseventfd)
 		sysevent_syscfg_init();
 	
-	fprintf(g_fArmConsoleLog, "%s case\n", argv[1]);
+	fprintf(stderr, "%s case\n", argv[1]);
 
     if (!strncmp(argv[1], "dhcp_server-restart", 19))
     {
@@ -531,7 +531,7 @@ int main(int argc, char *argv[])
                 }
                 else
                 {
-                        fprintf(g_fArmConsoleLog, "Insufficient number of arguments for %s\n", argv[1]);
+                        fprintf(stderr, "Insufficient number of arguments for %s\n", argv[1]);
                 }
 	}
     else if (!strncmp(argv[1], "ipv4-resync", 11))
@@ -549,13 +549,13 @@ int main(int argc, char *argv[])
     }
     else if (!strncmp(argv[1], "iot_status", 10))
     {
-        fprintf(g_fArmConsoleLog, "IOT_LOG : lan_handler received %s status\n", argv[2]);
+        fprintf(stderr, "IOT_LOG : lan_handler received %s status\n", argv[2]);
         if (!strncmp(argv[2],"up",2))
         {
             snprintf(l_cSysevent_Cmd, sizeof(l_cSysevent_Cmd),"%s/handle_sw.sh %s", SERVICE_MULTINET_PATH, "addIotVlan 0 106 -t");
             executeCmd(l_cSysevent_Cmd);
 
-            fprintf(g_fArmConsoleLog, "IOT_LOG : lan_handler done with handle_sw call\n");
+            fprintf(stderr, "IOT_LOG : lan_handler done with handle_sw call\n");
 
             snprintf(l_cSysevent_Cmd, sizeof(l_cSysevent_Cmd),"%s/iot_service.sh up", IOT_SERVICE_PATH);
             executeCmd(l_cSysevent_Cmd);
@@ -582,7 +582,7 @@ int main(int argc, char *argv[])
 					 sizeof(l_cL3Inst));	
 
 		l_iL3Inst = atoi(l_cL3Inst);
-		fprintf(g_fArmConsoleLog, "Calling ipv4_up with L3 Instance:%d\n", l_iL3Inst);
+		fprintf(stderr, "Calling ipv4_up with L3 Instance:%d\n", l_iL3Inst);
 		sysevent_set(g_iSyseventfd, g_tSysevent_token, "ipv4-up", l_cL3Inst, 0);
 	}
 	//service_ipv4.sh related
