@@ -25,7 +25,6 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <arpa/inet.h>
 #include "sysevent/sysevent.h"
 #include "syscfg/syscfg.h"
 #include "errno.h"
