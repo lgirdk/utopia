@@ -271,6 +271,7 @@ int dnsmasq_server_start()
         }
     }
 #else
+#ifdef XDNS_ENABLE
     char *XDNS_Enable=NULL;
     char *Box_Type=NULL;
     getValueFromDevicePropsFile("XDNS_ENABLE", &XDNS_Enable);
@@ -320,6 +321,7 @@ int dnsmasq_server_start()
          }
     }
     else // XDNS not enabled
+#endif
     {
         safec_rc = sprintf_s(l_cSystemCmd, sizeof(l_cSystemCmd),"%s -P 4096 -C %s",SERVER, DHCP_CONF);
         if(safec_rc < EOK)
