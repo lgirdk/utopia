@@ -1135,7 +1135,9 @@ static int wan_start(struct serv_wan *sw)
                  sleep (5);
              }
 #endif
-
+             /* TODO: Need to revisit and check the requirement of service_wan when Wanamanager is enabled. */
+             if (access("/var/lib/dibbler/client.pid", F_OK) != 0)
+             {
                    fprintf(fp_wan_dbg, "Starting DHCPv6 Client now\n");
                     /* In IPv6 or dual mode, raise wan-status event here */
                     sysevent_set(sw->sefd, sw->setok, "wan-status", "starting", 0);
@@ -1144,6 +1146,7 @@ static int wan_start(struct serv_wan *sw)
 #ifdef DSLITE_FEATURE_SUPPORT
                  wait_till_dhcpv6_client_reply(sw);
 #endif
+             }
                    break;
              case WAN_PROT_STATIC:
                    if (wan_static_start_v6(sw) != 0) {
