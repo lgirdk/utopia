@@ -121,6 +121,7 @@
  ************************************************************/
 extern CHAR* IGD_pii_get_serial_number(VOID);
 
+extern CHAR* IGD_pii_get_model_name(VOID);
 /************************************************************
  * Function: IGD_pii_get_uuid
  *

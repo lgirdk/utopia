@@ -134,6 +134,17 @@ char *IGD_pii_get_serial_number (void)
     return prodSn;
 }
 
+char *IGD_pii_get_model_name(void)
+{
+    static char modelname[128] = {'\0'};
+
+    if (modelname[0] == 0)
+    {
+        platform_hal_GetModelName(modelname);
+    }
+    return modelname;
+}
+
 /************************************************************
  * Function: IGD_pii_get_uuid
  *
