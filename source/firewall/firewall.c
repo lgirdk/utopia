@@ -10715,7 +10715,7 @@ static void add_usgv2_wan2lan_general_rules(FILE *fp)
        fprintf(fp, "-A wan2lan_misc -p udp -m iprange --dst-range 232.0.1.0-232.255.255.255 -j ACCEPT\n");
     }
     /* drop all non-ssm multicast range */
-    fprintf(fp, "-A wan2lan_misc --destination 224.0.0.0/4 -j xlog_drop_wan2lan\n");
+    fprintf(fp, "-A wan2lan_misc --destination 224.0.0.0/4 -j DROP\n");
 
     if (strncasecmp(firewall_level, "High", strlen("High")) == 0) {
         if (isDmzEnabled) {
