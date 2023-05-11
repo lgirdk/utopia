@@ -40,10 +40,10 @@
 #define MANUFACTURER                "Cisco"
 #define MANUFACTURER_URL            "http://www.cisco.com/"
 #define MODULE_DESCRIPTION          "RDKB_ARM"
-#define MODULE_NAME                 "RDKB_ARM"
-#define MODULE_NUMBER               "RDKB_ARM"
+#define MODULE_NAME                 IGD_pii_get_model_name()
+#define MODULE_NUMBER               IGD_pii_get_model_name()
 #define MODULE_URL              	"http://www.cisco.com"
-#define UPC                     	"RDKB_ARM"
+#define UPC                     	IGD_pii_get_model_name()
 
 #endif
 
