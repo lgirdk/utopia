@@ -174,6 +174,10 @@ update_v6route()
         if [ "1" = "$DEVICE_MODE" ] ; then
             ip -6 rule del iif "$cellular_ifname" lookup 11 > /dev/null
             ip -6 rule add iif "$cellular_ifname" lookup 11
+        else 
+            echo "Adding v6 route in router mode"
+            ip -6 route add default via "$cellular_manager_v6_gw" dev "$cellular_ifname"
+
         fi
     fi
 

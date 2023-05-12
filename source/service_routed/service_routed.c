@@ -450,11 +450,38 @@ static int route_set(struct serv_routed *sr)
     vsystem("ip -6 rule del iif brlan0 table erouter");
 #endif
 
+
+#ifdef RDKB_EXTENDER_ENABLED
+int max_retries = 10;
+int retry_count = 0;
+char wanIface[64] = {'\0'};
+
+while (retry_count < max_retries) {
+    sysevent_get(sr->sefd, sr->setok, "current_wan_ifname", wanIface, sizeof(wanIface));
+    if (wanIface[0] != '\0') {
+        // Success, exit the loop
+        break;
+    } else {
+        // Failure, retry after a delay
+         fprintf(stderr, "Failed to get current_wan_ifname after %d retries\n", retry_count);
+        retry_count++;
+        sleep(2); // Wait for 2 seconds before retrying
+    }
+}
+
+    if (strcmp(wanIface, "") == 0) {
+        fprintf(stderr, "Failed to get current_wan_ifname after max %d retries\n", max_retries);
+        strcpy(wanIface, "wwan0"); // default wan interface
+    }
+  
+
+#else
     char wanIface[64] = {'\0'};
     sysevent_get(sr->sefd, sr->setok, "current_wan_ifname", wanIface, sizeof(wanIface));
     if(wanIface[0] == '\0'){
         strcpy(wanIface,"erouter0"); // default wan interface
     }
+#endif
 
 #if defined (MULTILAN_FEATURE)
     /* Test to see if the default route for erouter0 is not empty and the default
