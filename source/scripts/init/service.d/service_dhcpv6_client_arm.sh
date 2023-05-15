@@ -53,15 +53,8 @@ source /etc/utopia/service.d/log_capture_path.sh
 #------------------------------------------------------------------
 SERVICE_NAME="dhcpv6_client"
 
-DIBBLER_ENABLED=`syscfg get dibbler_client_enable_v2`
-
-if ([ "$BOX_TYPE" = "XB3" ] || [ "$BOX_TYPE" = "XB6" -a "$MANUFACTURE" = "Arris" ] || [ "$MODEL_NUM" = "INTEL_PUMA" ]) && [[ "$DIBBLER_ENABLED" != "true" ]] ;then
-	DHCPV6_BINARY=/sbin/ti_dhcp6c
-        DHCPV6_PID_FILE=/var/run/erouter_dhcp6c.pid
-else
-	DHCPV6_BINARY=dibbler-client
-	DHCPV6_PID_FILE=/tmp/dibbler/client.pid
-fi
+DHCPV6_BINARY=dibbler-client
+DHCPV6_PID_FILE=/tmp/dibbler/client.pid
 DHCPV6_CONF_FILE=/etc/dhcp6c.conf
 
 DHCPV6_REGISTER_FILE=/tmp/dhcpv6_registered_events
@@ -124,14 +117,9 @@ service_start()
 		then
 			touch $DHCP6C_PROGRESS_FILE
 			echo_t "SERVICE_DHCP6C : Starting DHCPv6 Client from service_dhcpv6_client"
-                        if ([ "$BOX_TYPE" = "XB3" ] || [ "$BOX_TYPE" = "XB6" -a "$MANUFACTURE" = "Arris" ] || [ "$MODEL_NUM" = "INTEL_PUMA" ]) && [[ "$DIBBLER_ENABLED" != "true" ]] ;then
-        			ti_dhcp6c -i "$WAN_INTERFACE_NAME" -p $DHCPV6_PID_FILE -plugin /fss/gw/lib/libgw_dhcp6plg.so
-				echo_t "SERVICE_DHCP6C : dhcp6c PID is `cat $DHCPV6_PID_FILE`"
-			else
-				echo_t "SERVICE_DHCP6C : Starting dibbler client"
-				sh /lib/rdk/dibbler-init.sh
-				$DHCPV6_BINARY start
-			fi
+			echo_t "SERVICE_DHCP6C : Starting dibbler client"
+			sh /lib/rdk/dibbler-init.sh
+			$DHCPV6_BINARY start
 			rm -f $DHCP6C_PROGRESS_FILE
 
 		else
@@ -143,36 +131,8 @@ service_start()
 service_stop()
 {
    echo_t "SERVICE_DHCP6C : SERVICE STOP"
-   if ([ "$BOX_TYPE" = "XB3" ] || [ "$BOX_TYPE" = "XB6" -a "$MANUFACTURE" = "Arris" ] || [ "$MODEL_NUM" = "INTEL_PUMA" ]) && [[ "$DIBBLER_ENABLED" != "true" ]] ;then
-   	if [ -f $DHCPV6_PID_FILE ]
-   	then
-        DSLite_Enabled=`syscfg get dslite_enable`
-        if [ "$DSLITE_DHCP_OPTION_ENABLED" = "true" ] && [ "$DSLite_Enabled" = "1" ]
-        then
-           # We need to make sure the erouter0 interface is UP when the DHCPv6 client process plan to send
-           # the RELEASE message. Otherwise it will wait to send the message and get messed when another
-           # DHCPv6 client process plan to start in service_start().
-           EROUTER0_STATUS=`ip -d link show erouter0 | grep state | awk '/erouter0/{print $9}'`
-           if [ "$EROUTER0_STATUS" != "UP" ]
-           then
-              ip link set erouter0 up
-              sleep 1
-           fi
-        fi
-  	   echo_t "SERVICE_DHCP6C : Sending SIGTERM to`cat $DHCPV6_PID_FILE`"
-    	   kill -TERM `cat $DHCPV6_PID_FILE`
-   	   rm -f $DHCPV6_PID_FILE
-        if [ "$DSLITE_DHCP_OPTION_ENABLED" = "true" ] && [ "$DSLite_Enabled" = "1" ]
-        then
-           # After stop the DHCPv6 client, need to clear the sysevent tr_erouter0_dhcpv6_client_v6addr
-           # So that it can be triggered again once DHCPv6 client got the same IPv6 address with the old address
-           sysevent set tr_erouter0_dhcpv6_client_v6addr
-        fi
- 	fi
-    else
-		$DHCPV6_BINARY stop
-                rm -f $DHCPV6_PID_FILE
-    fi
+   $DHCPV6_BINARY stop
+   rm -f $DHCPV6_PID_FILE
 }
 
 service_update()
