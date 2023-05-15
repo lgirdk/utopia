@@ -137,14 +137,27 @@ read_greInst()
 
    eval `psmcli get -e BRIDGE_INST_1 $HS_PSM_BASE.${inst}.interface.1.$GRE_PSM_BRIDGES BRIDGE_INST_2 $HS_PSM_BASE.${inst}.interface.2.$GRE_PSM_BRIDGES BRIDGE_INST_3 $HS_PSM_BASE.${inst}.interface.3.$GRE_PSM_BRIDGES BRIDGE_INST_4 $HS_PSM_BASE.${inst}.interface.4.$GRE_PSM_BRIDGES BRIDGE_INST_5 $HS_PSM_BASE.${inst}.interface.5.$GRE_PSM_BRIDGES WECB_BRIDGES dmsb.wecb.hhs_extra_bridges NAME $GRE_PSM_BASE.${inst}.$GRE_PSM_NAME`
 
+        if [ -f /tmp/.enabled_hotspot_ssids ]; then
+            ENABLED_SSIDS="`cat /tmp/.enabled_hotspot_ssids`"
+            rm /tmp/.enabled_hotspot_ssids
+        else
+            ENABLED_SSIDS="6 10"
+        fi
         set '5 6 9 10 16'
 
         for i in $@; do
             count=`expr $count + 1`
             eval bridgeinfo=\${BRIDGE_INST_${count}}
-            succeed_check=`dmcli eRT getv Device.WiFi.SSID.$i.Enable | grep value | cut -f3 -d : | cut -f2 -d " "`
-            if [ "true" = "$succeed_check" ]; then
-                  BRIDGE_INSTS="$BRIDGE_INSTS $bridgeinfo"
+            if [ "$OneWiFiEnabled" = "true" ]; then
+                succeed_check="`echo $ENABLED_SSIDS | grep -w \"$i\"`"
+                if [ ! -z "$succeed_check" ]; then
+                    BRIDGE_INSTS="$BRIDGE_INSTS $bridgeinfo"
+                fi
+            else
+                succeed_check=`dmcli eRT getv Device.WiFi.SSID.$i.Enable | grep value | cut -f3 -d : | cut -f2 -d " "`
+                if [ "true" = "$succeed_check" ]; then
+                    BRIDGE_INSTS="$BRIDGE_INSTS $bridgeinfo"
+                fi
             fi
         done
         
@@ -547,26 +560,29 @@ get_ssids() {
 #bring_down_ssids () {
 set_ssids_enabled() {
     #delay SSID manipulation if requested
-    sleep `sysevent get hotspot_$1-delay` 2> /dev/null
-    sysevent set hotspot_$1-delay 0
-    
-    get_ssids $1
-    echo_t "setting SSIDS: $ssids"
-    for instance in $ssids; do
-       dmcli eRT setv Device.WiFi.SSID.${instance}.X_CISCO_COM_RouterEnabled bool $2 &
-       dmcli eRT setv Device.WiFi.SSID.${instance}.X_CISCO_COM_EnableOnline bool true &
-        eval eval mask=\\\${mask_\${ssid_${instance}_radio}}
-        eval eval mask_\${ssid_${instance}_radio}=$(( (2 ** ($instance - 1)) + $mask )) 
-    if [ "$BOX_TYPE" = "TCCBR" ] ; then
-       dmcli eRT setv Device.WiFi.SSID.${instance}.Enable bool $2 &
+    if [ "$OneWiFiEnabled" = "true" ]; then
+        echo_t "SSIDs will be brought up/down by the TunnelStatus Event in OneWifi builds"
+    else
+        sleep `sysevent get hotspot_$1-delay` 2> /dev/null
+        sysevent set hotspot_$1-delay 0
+
+        get_ssids $1
+        echo_t "setting SSIDS: $ssids"
+        for instance in $ssids; do
+           dmcli eRT setv Device.WiFi.SSID.${instance}.X_CISCO_COM_RouterEnabled bool $2 &
+           dmcli eRT setv Device.WiFi.SSID.${instance}.X_CISCO_COM_EnableOnline bool true &
+           eval eval mask=\\\${mask_\${ssid_${instance}_radio}}
+           eval eval mask_\${ssid_${instance}_radio}=$(( (2 ** ($instance - 1)) + $mask )) 
+        if [ "$BOX_TYPE" = "TCCBR" ] ; then
+           dmcli eRT setv Device.WiFi.SSID.${instance}.Enable bool $2 &
+        fi
+        done
+        for rad in $radios; do
+            echo_t "Executing ApplySetting for Radio $rad"
+            eval dmcli eRT setv Device.WiFi.Radio.$rad.X_CISCO_COM_ApplySettingSSID int \${mask_${rad}}
+            dmcli eRT setv Device.WiFi.Radio.$rad.X_CISCO_COM_ApplySetting bool true &
+        done
     fi
-    done
-    for rad in $radios; do
-        echo_t "Executing ApplySetting for Radio $rad"
-        eval dmcli eRT setv Device.WiFi.Radio.$rad.X_CISCO_COM_ApplySettingSSID int \${mask_${rad}}
-        dmcli eRT setv Device.WiFi.Radio.$rad.X_CISCO_COM_ApplySetting bool true &
-    done
-    
     sysevent set hotspot_ssids_up $2
 }
 
