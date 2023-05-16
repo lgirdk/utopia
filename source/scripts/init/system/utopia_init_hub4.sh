@@ -121,6 +121,7 @@ SYSCFG_NEW_BKUP_FILE=$SYSCFG_PERSISTENT_PATH/syscfg_bkup.db
 PSM_CUR_XML_CONFIG_FILE_NAME="$SYSCFG_TMP_LOCATION/bbhm_cur_cfg.xml"
 PSM_BAK_XML_CONFIG_FILE_NAME="$SYSCFG_MOUNT/bbhm_bak_cfg.xml"
 PSM_TMP_XML_CONFIG_FILE_NAME="$SYSCFG_MOUNT/bbhm_tmp_cfg.xml"
+PSM_DEF_XML_CONFIG_FILE_NAME="/usr/ccsp/config/bbhm_def_cfg.xml"
 XDNS_DNSMASQ_SERVERS_CONFIG_FILE_NAME="$SYSCFG_MOUNT/dnsmasq_servers.conf"
 FACTORY_RESET_REASON=false
 FR_COUNT_FILE=/nvram/.factory_reset_count
@@ -621,6 +622,32 @@ if [ "$FACTORY_RESET_REASON" = "true" ]; then
        ifconfig "$LAN_IF_NAME" "$LAN_DEFAULT_IP" netmask "$LAN_DEFAULT_NETMASK"
        ifconfig "$LAN_IF_NAME" up
    fi
+fi
+
+#RDKB-48859 - V2 DML PSM Migration
+if [ "$FACTORY_RESET_REASON" = "false" ]; then
+   wanifcount=`sed -n "/dmsb.wanmanager.wanifcount/p" $PSM_CUR_XML_CONFIG_FILE_NAME | awk -F"[><]" '{print $3}'`
+   echo "[utopia][init] No. of WAN Interface:"$wanifcount
+   c=1
+   if [ "$wanifcount" != "" ]; then
+      while [ $c -le $wanifcount ]
+      do
+         wanvifcount=`sed -n "/dmsb.wanmanager.if.$c.VirtualInterfaceifcount/p" $PSM_CUR_XML_CONFIG_FILE_NAME | awk -F"[><]" '{print $3}'`
+         if [ "$wanvifcount" = "" ]; then
+            wanvifdefcount=`sed -n "/dmsb.wanmanager.if.$c.VirtualInterfaceifcount/p" $PSM_DEF_XML_CONFIG_FILE_NAME | awk -F"[><]" '{print $3}'`
+            c1=1
+            while [ $c1 -le $wanvifdefcount ]
+            do
+               preVal=`sed -n "/dmsb.wanmanager.if.$c.EnableMAPT/p" $PSM_CUR_XML_CONFIG_FILE_NAME | awk -F "[><]" '{print $3}'`
+               delCmd=`sed -i "/dmsb.wanmanager.if.$c.VirtualInterface.$c1.EnableMAPT/d" $PSM_CUR_XML_CONFIG_FILE_NAME`
+               insCmd=`sed -i '10 i   <Record name="dmsb.wanmanager.if.'$c'.VirtualInterface.'$c1'.EnableMAPT" type="astr">'$preVal'</Record>' $PSM_CUR_XML_CONFIG_FILE_NAME`
+               echo "[utopia][init] Adding EnableMAPT with older WAN version DB value[$preVal]"
+	       (( c1++ ))
+            done
+         fi
+         (( c++ ))
+      done
+   fi 
 fi
 
 #RDKB-24155 - TLVData.bin should not be used in EWAN mode
