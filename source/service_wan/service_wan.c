@@ -206,27 +206,8 @@ static struct cmd_op cmd_ops[] = {
 #if !defined (FEATURE_RDKB_DHCP_MANAGER)
 static int Getdhcpcpidfile(char *pidfile,int size )
 {
-#if defined(_PLATFORM_IPQ_)
-        strncpy(pidfile,"/tmp/udhcpc.erouter0.pid",size);
-
-#elif (defined _COSA_INTEL_XB3_ARM_) || (defined INTEL_PUMA7)
-      {
-
-        
-        char udhcpflag[10]="";
-        syscfg_get( NULL, "UDHCPEnable_v2", udhcpflag, sizeof(udhcpflag));
-        if( 0 == strcmp(udhcpflag,"true")){
-                strncpy(pidfile,"/tmp/udhcpc.erouter0.pid",size);
-        }
-        else
-        {
-                strncpy(pidfile,"/var/run/eRT_ti_udhcpc.pid",size);
-        }
-     }
-#else
-        strncpy(pidfile,"/tmp/udhcpc.erouter0.pid",size);
-#endif
-return 0;
+    strncpy(pidfile,"/tmp/udhcpc.erouter0.pid",size);
+    return 0;
 }
 
 static int dhcp_stop(const char *ifname)
@@ -244,23 +225,7 @@ static int dhcp_stop(const char *ifname)
     }
 
     if (pid <= 0)
-#if defined(_PLATFORM_IPQ_)
         pid = pid_of("udhcpc", ifname);
-#elif (defined _COSA_INTEL_XB3_ARM_) || (defined INTEL_PUMA7)
-        {
-        char udhcpflag[10]="";
-        syscfg_get( NULL, "UDHCPEnable_v2", udhcpflag, sizeof(udhcpflag));
-        if( 0 == strcmp(udhcpflag,"true")){
-                pid = pid_of("udhcpc", ifname);
-        }
-        else
-        {
-                pid = pid_of("ti_udhcpc", ifname);
-        }
-        }
-#else
-        pid = pid_of("udhcpc", ifname);
-#endif
 
     if (pid > 0) {
         kill(pid, SIGUSR2); // triger DHCP release
@@ -435,33 +400,12 @@ static int dhcp_start(struct serv_wan *sw)
         }
 #elif (defined _COSA_INTEL_XB3_ARM_) || (defined INTEL_PUMA7)
         {
-
-            char udhcpflag[10]="";
-            syscfg_get( NULL, "UDHCPEnable_v2", udhcpflag, sizeof(udhcpflag));
-
-            if( 0 == strcmp(udhcpflag,"true"))
-            {
                 char options[VENDOR_OPTIONS_LENGTH];
 
                 if ((err = dhcp_parse_vendor_info(options, VENDOR_OPTIONS_LENGTH,cEthWanMode)) == 0)
                 {
                     err = vsystem("/sbin/udhcpc -b -i %s -p %s -V eRouter1.0 -O ntpsrv -O timezone -O 125 -O 2 -x %s -s /etc/udhcpc.script", sw->ifname, DHCPC_PID_FILE, options);
                 }
-            }
-            else
-            {
-//#if defined (INTEL_PUMA7)
-    //Intel Proposed RDKB Generic Bug Fix from XB6 SDK
-                err = v_secure_system("ti_udhcpc -plugin /lib/libert_dhcpv4_plugin.so -i %s "
-                             "-H DocsisGateway -p %s -B -b 4",
-                             sw->ifname, DHCPC_PID_FILE);
-
-//#else
-    /*err = vsystem("ti_udhcpc -plugin /lib/libert_dhcpv4_plugin.so -i %s "
-                 "-H DocsisGateway -p %s -B -b 1",
-                 sw->ifname, DHCPC_PID_FILE);*/
-//#endif
-           }
        }
 #else
 
@@ -1665,23 +1609,7 @@ static int wan_dhcp_start(struct serv_wan *sw)
     int ret = -1;
 #endif
 
-# if defined(_PLATFORM_IPQ_)
-        pid = pid_of("udhcpc", sw->ifname);
-#elif (defined _COSA_INTEL_XB3_ARM_) || (defined INTEL_PUMA7)
-       {
-        char udhcpflag[10]="";
-        syscfg_get( NULL, "UDHCPEnable_v2", udhcpflag, sizeof(udhcpflag));
-        if( 0 == strcmp(udhcpflag,"true")){
-                pid = pid_of("udhcpc", sw->ifname);
-        }
-        else
-        {
-                pid = pid_of("ti_udhcpc", sw->ifname);
-        }
-      }
-#else
-        pid = pid_of("udhcpc", sw->ifname);
-#endif
+    pid = pid_of("udhcpc", sw->ifname);
 
     Getdhcpcpidfile(DHCPC_PID_FILE,sizeof(DHCPC_PID_FILE));
     if (access(DHCPC_PID_FILE, F_OK) == 0)
