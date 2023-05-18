@@ -14654,6 +14654,7 @@ static void do_ipv6_filter_table(FILE *fp){
          {
             fprintf(fp, "-I FORWARD -d %s -i %s  -j DROP\n", cm_ipv6addr, lan_ifname);
             fprintf(fp, "-I FORWARD -d %s -i brlan1  -j DROP\n", cm_ipv6addr);
+	    fprintf(fp, "-I FORWARD -d %s -i br106  -j DROP\n", cm_ipv6addr);
          }
 
          pclose(f);
@@ -14673,6 +14674,7 @@ static void do_ipv6_filter_table(FILE *fp){
        fprintf(fp, "-A INPUT -p tcp -i privbr --match multiport  --dport 80,443 -j ACCEPT\n");
        
        fprintf(fp, "-A FORWARD -i brlan1 -o erouter0 -p tcp -m multiport --dport 22,8080,8181 -j DROP\n");
+       fprintf(fp, "-A FORWARD -i br106 -o erouter0 -p tcp -m multiport --dport 22,8080,8181 -j DROP\n");
    #endif
    if(bEthWANEnable)
    {
