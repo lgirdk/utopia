@@ -584,7 +584,7 @@ set_ssids_enabled() {
            dmcli eRT setv Device.WiFi.SSID.${instance}.X_CISCO_COM_EnableOnline bool true &
            eval eval mask=\\\${mask_\${ssid_${instance}_radio}}
            eval eval mask_\${ssid_${instance}_radio}=$(( (2 ** ($instance - 1)) + $mask )) 
-        if [ "$BOX_TYPE" = "TCCBR" ] ; then
+        if [ "$BOX_TYPE" = "TCCBR" ] || [ "$BOX_TYPE" = "XB6" ]; then
            dmcli eRT setv Device.WiFi.SSID.${instance}.Enable bool $2 &
         fi
         done
