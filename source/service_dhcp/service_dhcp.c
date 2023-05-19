@@ -480,20 +480,9 @@ int main(int argc, char *argv[])
 	{
 		lan_restart();
 	}
-    else if (!strncmp(argv[1], "ipv4_6-status", 13))
-    {
-        if (argc > 2)
-        {
-            sscanf(argv[1], "ipv4_%d-status", &l_iL3Inst);
-            ipv4_status(l_iL3Inst, argv[2]);
-        }
-        else
-        {
-            fprintf(stderr, "Insufficient number of arguments for %s\n", argv[1]);
-        }
-    }
         else if ((!strncmp(argv[1], "ipv4_4-status", 13)) ||
-             (!strncmp(argv[1], "ipv4_5-status", 13)))
+                 (!strncmp(argv[1], "ipv4_5-status", 13)) ||
+                 (!strncmp(argv[1], "ipv4_6-status", 13)))
         {
                 if (argc > 2)
                 {
@@ -512,22 +501,30 @@ int main(int argc, char *argv[])
                                 }
                         }
 
-                        snprintf(buf, sizeof(buf), "ipv4_%d-lower", l_iL3Inst);
-                        sysevent_get(g_iSyseventfd, g_tSysevent_token, buf,
-                                     l_cL2Inst, sizeof(l_cL2Inst));
-                        l_iL2Inst = atoi(l_cL2Inst);
-                        snprintf(buf, sizeof(buf), "dhcp_server_%d-ipv4async", l_iL2Inst);
-                        sysevent_get(g_iSyseventfd, g_tSysevent_token,
-                                     buf, l_cL2Inst, sizeof(l_cL2Inst));
-                        if (l_cL2Inst[0] != '\0')
+                        if (l_iL3Inst == 6)
                         {
-                                #if !defined (FEATURE_RDKB_DHCP_MANAGER)
-                                lan_status_change("lan_not_restart");
-                                #else
-                                //Setting an event to start dhcp server with brlan1 as code is moved to CcspDHCPMgr component
-                                //Further modifications will be taken care later
-                                sysevent_set(g_iSyseventfd, g_tSysevent_token, "dhcp_server-start", "lan_not_restart", 0);
-                                #endif
+                                ipv4_status(l_iL3Inst, argv[2]);
+                        }
+
+                        if (l_iL3Inst != 6)
+                        {
+                                snprintf(buf, sizeof(buf), "ipv4_%d-lower", l_iL3Inst);
+                                sysevent_get(g_iSyseventfd, g_tSysevent_token, buf,
+                                             l_cL2Inst, sizeof(l_cL2Inst));
+                                l_iL2Inst = atoi(l_cL2Inst);
+                                snprintf(buf, sizeof(buf), "dhcp_server_%d-ipv4async", l_iL2Inst);
+                                sysevent_get(g_iSyseventfd, g_tSysevent_token,
+                                             buf, l_cL2Inst, sizeof(l_cL2Inst));
+                                if (l_cL2Inst[0] != '\0')
+                                {
+                                        #if !defined (FEATURE_RDKB_DHCP_MANAGER)
+                                        lan_status_change("lan_not_restart");
+                                        #else
+                                        //Setting an event to start dhcp server with brlan1 as code is moved to CcspDHCPMgr component
+                                        //Further modifications will be taken care later
+                                        sysevent_set(g_iSyseventfd, g_tSysevent_token, "dhcp_server-start", "lan_not_restart", 0);
+                                        #endif
+                                }
                         }
                 }
                 else
