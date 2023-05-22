@@ -1531,6 +1531,24 @@ int prepare_dhcp_conf (char *input)
         fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-option=vendor:WNXE12AWR,43,tag=123\n");
         fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-option=vendor:SE401,43,tag=123\n");
         fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-option=vendor:WNXL11BWL,43,tag=123\n");
+
+        // Set dnsmasq tag for XLE as "extender".
+        fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-vendorclass=set:extender,WNXL11BWL\n");
+
+        // Add DHCP option 2 (timeoffset) for clients with tag "extender"
+        char l_cTime_Offset[50] = {0};
+        FILE *fp = popen("dmcli eRT retv Device.Time.TimeOffset", "r");
+        if (fp)
+        {
+            fgets(l_cTime_Offset, sizeof(l_cTime_Offset), fp);
+            pclose(fp);
+
+            if (strlen(l_cTime_Offset))
+            {
+                fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-option=tag:extender, option:time-offset,%s\n", l_cTime_Offset);
+            }
+        }
+
 #endif 
 	if ((NULL == input) || 
 		((NULL != input) && (strncmp(input, "dns_only", 8)))) //not dns_only case
