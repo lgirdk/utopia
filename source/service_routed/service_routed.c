@@ -155,6 +155,20 @@ typedef enum DeviceMode {
     DEVICE_MODE_ROUTER = 0,
     DEVICE_MODE_EXTENDER
 }DeviceMode;
+
+int GetDeviceNetworkMode()
+{
+    char buf[8] = {0};
+    int deviceMode = DEVICE_MODE_EXTENDER;
+    memset(buf,0,sizeof(buf));
+    if (0 == syscfg_get(NULL, "Device_Mode", buf, sizeof(buf)))
+    {
+        deviceMode = atoi(buf);       
+    }
+
+    return deviceMode;
+
+}
 #endif
 
 static int fw_restart(struct serv_routed *sr)
@@ -1019,23 +1033,17 @@ static int gen_zebra_conf(int sefd, token_t setok)
                         fprintf(fp, "   ipv6 nd prefix %s %s %s\n", prefix, valid_lft, preferred_lft);
 			//LTE-1322
 #ifdef RDKB_EXTENDER_ENABLED
-			char buf[8] = {0}, prefix_primary[64];
-                        int deviceMode = -1;
-                        memset(buf,0,sizeof(buf));
-                        if ( 0 == syscfg_get(NULL, "Device_Mode", buf, sizeof(buf)))
-			{
-				deviceMode = atoi(buf);
-                                if ( DEVICE_MODE_ROUTER == deviceMode )
-                                {
-					memset(prefix_primary,0,sizeof(prefix_primary));
-                         	           sysevent_get(sefd, setok, "ipv6_prefix_primary", prefix_primary, sizeof(prefix_primary));
-					if( strlen(prefix_primary) > 0)
-					{
-						fprintf(fp, "   ipv6 nd prefix %s 0 0\n", prefix_primary);
-					}	
-				}
-					    
-                         }
+                        int deviceMode = GetDeviceNetworkMode();
+                        if ( DEVICE_MODE_ROUTER == deviceMode )
+                        {
+                            char prefix_primary[64];
+                            memset(prefix_primary,0,sizeof(prefix_primary));
+                            sysevent_get(sefd, setok, "ipv6_prefix_primary", prefix_primary, sizeof(prefix_primary));
+                            if( strlen(prefix_primary) > 0)
+                            {
+                                fprintf(fp, "   ipv6 nd prefix %s 0 0\n", prefix_primary);
+                            }
+                        }                        
 #endif
                     }
                 }
@@ -1441,6 +1449,22 @@ if(!strncmp(out,"true",strlen(out)))
 
         #endif
 
+#ifdef RDKB_EXTENDER_ENABLED
+        int deviceMode = GetDeviceNetworkMode();
+        if ( DEVICE_MODE_ROUTER == deviceMode )
+        {
+            char lan_prefix_primary[64];
+            memset(cmd,0,sizeof(cmd));
+            memset(lan_prefix_primary,0,sizeof(lan_prefix_primary));
+            rc = sprintf_s(cmd, sizeof(cmd), "%s%s",interface_name,"_ipaddr_v6_primary");
+            sysevent_get(sefd, setok, cmd, lan_prefix_primary, sizeof(lan_prefix_primary));
+            if( strlen(lan_prefix_primary) > 0)
+            {
+                fprintf(fp, "   ipv6 nd prefix %s 0 0\n", lan_prefix_primary);
+            }
+        }
+#endif
+
        	    if (strlen(prefix) != 0)
             {
             	fprintf(fp, "   ipv6 nd prefix %s %s %s\n", prefix, valid_lft, preferred_lft);
@@ -1603,17 +1627,11 @@ static int radv_start(struct serv_routed *sr)
 {
 
 #ifdef RDKB_EXTENDER_ENABLED
-    char buf[8] = {0};
-    int deviceMode = -1;
-    memset(buf,0,sizeof(buf));
-    if ( 0 == syscfg_get(NULL, "Device_Mode", buf, sizeof(buf)))
+    int deviceMode = GetDeviceNetworkMode();
+    if ( DEVICE_MODE_EXTENDER == deviceMode )
     {
-        deviceMode = atoi(buf);
-        if ( DEVICE_MODE_EXTENDER == deviceMode )
-        {
-            fprintf(stderr, "Device is EXT mode , no need of running zebra for radv\n");
-            return -1;
-        }
+        fprintf(stderr, "Device is EXT mode , no need of running zebra for radv\n");
+        return -1;
     }
 #endif
 
