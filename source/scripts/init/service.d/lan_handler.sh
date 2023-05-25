@@ -20,13 +20,13 @@
 
 #######################################################################
 #   Copyright [2014] [Cisco Systems, Inc.]
-# 
+#
 #   Licensed under the Apache License, Version 2.0 (the \"License\");
 #   you may not use this file except in compliance with the License.
 #   You may obtain a copy of the License at
-# 
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 #   Unless required by applicable law or agreed to in writing, software
 #   distributed under the License is distributed on an \"AS IS\" BASIS,
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -123,7 +123,7 @@ find_active_brg_instances(){
 #------------------------------------------------------------------
 
 
-#service_init 
+#service_init
 echo_t "RDKB_SYSTEM_BOOT_UP_LOG : lan_handler called with $1 $2"
 if [ "$1" = "lan-stop" ] && [ "$2" = "NULL" ] ; then
     t2CountNotify "RF_ERROR_LAN_stop"
@@ -159,7 +159,7 @@ case "$1" in
           sysevent set ipv4-down $LAN_INST
           sysevent set ipv4-up $LAN_INST
       fi
-      fi 
+      fi
       ;;
    ipv4_*-status)
         if [ x"up" = x${2} ]; then
@@ -168,7 +168,7 @@ case "$1" in
             RG_MODE=`syscfg get last_erouter_mode`
 
             LAN_IFNAME=`sysevent get ipv4_${INST}-ifname`
-            #if it's ipv4 only, not enable link local 
+            #if it's ipv4 only, not enable link local
             SYSCFG_last_erouter_mode=`syscfg get last_erouter_mode`
             echo "lan_handler.sh last_erouter_mode: $SYSCFG_last_erouter_mode"
 
@@ -243,9 +243,9 @@ case "$1" in
                 then
                     touch $POSTD_START_FILE
                     execute_dir /etc/utopia/post.d/
-                fi  
+                fi
 
-	   elif [ x"ready" != x`sysevent get start-misc` && "$MANUFACTURE" = "Technicolor" ]; then
+	   elif [ x"ready" != x`sysevent get start-misc` -a "$MANUFACTURE" = "Technicolor" ]; then
                #TCH XBx/TCCBR based startup post.d scripts which includes Firewall restart and dhcp start.
                sysevent set lan-status started
                firewall
@@ -253,7 +253,7 @@ case "$1" in
                 then
                     touch $POSTD_START_FILE
                     execute_dir /etc/utopia/post.d/
-                fi  	
+                fi
 	   else
 		echo_t "LAN HANDLER : Triggering DHCP server using LAN status"
                 sysevent set lan-status started
@@ -263,11 +263,11 @@ case "$1" in
             fi
 
             #sysevent set desired_moca_link_state up
-            
+
             #firewall_nfq_handler.sh &
 
             sysevent set lan_start_time $(cut -d. -f1 /proc/uptime)
-                        
+
             if [ "4" = $INST ];then
                 sysevent set ipv4_4_status_configured 1
             fi
@@ -277,7 +277,7 @@ case "$1" in
 	    	DHCP_PROGRESS=`sysevent get dhcp_server-progress`
 			echo_t "LAN HANDLER : DHCP configuration status got is : $DHCP_PROGRESS"
             if [ "2" = "$SYSCFG_last_erouter_mode" ] && [ "x1" != x$DSLITE_ENABLED ]; then
-                sysevent set dhcp_server-stop		    
+                sysevent set dhcp_server-stop
             elif [ "0" != "$SYSCFG_last_erouter_mode" ] && [ "$DHCP_PROGRESS" != "inprogress" ] ; then
 				echo_t "LAN HANDLER : Triggering dhcp start based on last erouter mode"
                 sysevent set dhcp_server-start
@@ -304,7 +304,7 @@ case "$1" in
 
         echo_t "LAN HANDLER : Triggering RDKB_FIREWALL_RESTART after nfqhandler"
 	t2CountNotify "RF_INFO_RDKB_FIREWALL_RESTART"
-        sysevent set firewall-restart 
+        sysevent set firewall-restart
 	if [ -e "/usr/bin/print_uptime" ]; then
 	    /usr/bin/print_uptime "Laninit_complete"
 	fi
@@ -315,7 +315,7 @@ case "$1" in
 	fi
 	t2ValNotify "btime_laninit_split" "$uptime"
      ;;
-   
+
    ipv4-resync)
         LAN_INST=`sysevent get primary_lan_l3net`
         if [ x"$2" = x"$LAN_INST" ]; then
@@ -333,7 +333,7 @@ case "$1" in
         dmcli eRT setv Device.WiFi.Radio.1.X_CISCO_COM_ApplySetting bool 'true' 'true'
 
    ;;
-   
+
    pnm-status | bring-lan)
 	if [ -e "/usr/bin/print_uptime" ]; then
             /usr/bin/print_uptime "Lan_init_start"
@@ -367,7 +367,7 @@ case "$1" in
 			echo_t "RDKB_SYSTEM_BOOT_UP_LOG : INST rerurned null, retrying"
 			INST=`psmcli get dmsb.MultiLAN.PrimaryLAN_l3net`
 		fi
-		
+
 	fi
 	if [ -z "$L2INST" ]
 	    then
@@ -412,7 +412,7 @@ case "$1" in
     #Assuming we have a variable set in system defaults for Multilan enabled build
     MULTILAN_FEATURE=$(syscfg get MULTILAN_FEATURE)
 	if [ "$MULTILAN_FEATURE" = "1" ]; then
-    #This is to check for all the active instances of bridges that are created 
+    #This is to check for all the active instances of bridges that are created
     find_active_brg_instances
 	fi
 
@@ -428,28 +428,28 @@ case "$1" in
                $IOT_SERVICE_PATH/iot_service.sh "up"
             elif [ "$2" = "down" ]
             then
-               $IOT_SERVICE_PATH/iot_service.sh "down"               
+               $IOT_SERVICE_PATH/iot_service.sh "down"
             elif [ "$2" = "bootup" ]
-            then 
+            then
                $IOT_SERVICE_PATH/iot_service.sh "bootup"
             fi
             echo_t "IOT_LOG : lan_handler done with IOT service call"
-            
+
    ;;
-   
+
    lan-restart)
         syscfg_lanip=`syscfg get lan_ipaddr`
         syscfg_lansub=`syscfg get lan_netmask`
         LAN_INST=`sysevent get primary_lan_l3net`
         eval "`psmcli get -e LAN_IP ${IPV4_NV_PREFIX}.${LAN_INST}.$IPV4_NV_IP LAN_SUB ${IPV4_NV_PREFIX}.${LAN_INST}.$IPV4_NV_SUBNET`"
-        
+
         if [ x$syscfg_lanip != x$LAN_IP -o x$syscfg_lansub != x$LAN_SUB ]; then
             psmcli set ${IPV4_NV_PREFIX}.${LAN_INST}.$IPV4_NV_IP $syscfg_lanip ${IPV4_NV_PREFIX}.${LAN_INST}.$IPV4_NV_SUBNET $syscfg_lansub
-            
+
             # TODO check for lan network being up ?
             sysevent set ipv4-resync $LAN_INST
         fi
- 
+
         #handle ipv6 address on brlan0. Because it's difficult to add ipv6 operation in ipv4 process. So just put here as a temporary method
         SYSEVT_lan_ipaddr_v6_prev=`sysevent get lan_ipaddr_v6_prev`
 
@@ -481,7 +481,7 @@ case "$1" in
         LAN_IFNAME=`sysevent get ipv4_${LAN_INST}-ifname`
         sysevent set ipv4-down $LAN_INST
         echo 1 > /proc/sys/net/ipv6/conf/$LAN_IFNAME/disable_ipv6
-        
+
         SYSEVT_lan_ipaddr_v6_prev=`sysevent get lan_ipaddr_v6_prev`
         SYSEVT_lan_prefix_v6=`sysevent get lan_prefix_v6`
         ip -6 addr flush dev $LAN_IFNAME
@@ -490,7 +490,7 @@ case "$1" in
         #monitor will start dibbler
         dibbler-server stop
    ;;
-   
+
    lan-start)
         if [ "$RPI_SPECIFIC" = "rpi" ]; then
              L3Net=`sysevent get primary_lan_l3net`
@@ -503,7 +503,7 @@ case "$1" in
         # TODO call the restart routine
         sysevent set ipv4-up `sysevent get primary_lan_l3net`
    ;;
-   *)   
+   *)
       echo "Usage: service-${SERVICE_NAME} [ ${SERVICE_NAME}-start | ${SERVICE_NAME}-stop | ${SERVICE_NAME}-restart]" > /dev/console
       exit 3
       ;;
