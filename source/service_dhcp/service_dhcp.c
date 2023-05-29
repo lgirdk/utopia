@@ -541,7 +541,7 @@ int main(int argc, char *argv[])
                         fprintf(g_fArmConsoleLog, "Insufficient number of arguments for %s\n", argv[1]);
                 }
 	}
-    else if (!strncmp(argv[1], "ipv4-resync", 11))
+    else if (!strncmp(argv[1], "ipv4-resync", 12))
     {
         resync_instance(atoi(argv[2]));
     }
@@ -650,13 +650,19 @@ int main(int argc, char *argv[])
         remove_tsip_config();
         remove_tsip_asn_config();
     }
-    else if(!strncmp(argv[1], "ipv4-resync_tsip", 16))
+    else if(!strncmp(argv[1], "ipv4-resync_tsip", 17))
     {
-        resync_tsip();
+        if (3 <= argc)
+            resync_tsip(atoi(argv[2]));
+        else
+            fprintf(g_fArmConsoleLog,"Insufficient number of arguments for %s\n", argv[1]);
     }
     else if(!strncmp(argv[1], "ipv4-resync_tsip_asn", 20))
     {
-        resync_tsip_asn();
+        if (3 <= argc)
+            resync_tsip_asn_instance(atoi(argv[2]));
+        else
+            fprintf(g_fArmConsoleLog,"Insufficient number of arguments for %s\n", argv[1]);
     }
     else if(!strncmp(argv[1], "ipv4-resyncAll", 14))
     {
