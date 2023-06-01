@@ -1379,9 +1379,9 @@ int do_mapt_rules_v4(FILE *nat_fp, FILE *filter_fp, FILE *mangle_fp)
             fprintf(nat_fp, "-A %s -o %s -p udp --sport %d:%d -j SNAT --to-source %s:%d-%d\n",MAPT_NAT_IPV4_POST_ROUTING_TABLE, get_current_wan_ifname(), initialPortValue, finalPortValue, ipaddress_str,
                     initialPortValue, finalPortValue);
 #elif defined(NAT46_KERNEL_SUPPORT) || defined (FEATURE_SUPPORT_MAPT_NAT46)
-            fprintf(nat_fp, "-A %s -p tcp -m connlimit --connlimit-upto %d --connlimit-daddr  -j SNAT --to-source %s:%d-%d\n", MAPT_NAT_IPV4_POST_ROUTING_TABLE, finalPortValue - initialPortValue, ipaddress_str, initialPortValue,finalPortValue);
-            fprintf(nat_fp, "-A %s -p udp -m connlimit --connlimit-upto %d --connlimit-daddr  -j SNAT --to-source %s:%d-%d\n", MAPT_NAT_IPV4_POST_ROUTING_TABLE, finalPortValue - initialPortValue, ipaddress_str, initialPortValue,finalPortValue);
-            fprintf(nat_fp, "-A %s -p icmp -m connlimit --connlimit-upto %d --connlimit-daddr  -j SNAT --to-source %s:%d-%d\n", MAPT_NAT_IPV4_POST_ROUTING_TABLE, finalPortValue - initialPortValue, ipaddress_str, initialPortValue,finalPortValue);
+            fprintf(nat_fp, "-A %s -p tcp -m connlimit --connlimit-upto %d --connlimit-daddr-dport -j SNAT --to-source %s:%d-%d\n", MAPT_NAT_IPV4_POST_ROUTING_TABLE, finalPortValue - initialPortValue + 1, ipaddress_str, initialPortValue,finalPortValue);
+            fprintf(nat_fp, "-A %s -p udp -m connlimit --connlimit-upto %d --connlimit-daddr-dport -j SNAT --to-source %s:%d-%d\n", MAPT_NAT_IPV4_POST_ROUTING_TABLE, finalPortValue - initialPortValue + 1, ipaddress_str, initialPortValue,finalPortValue);
+            fprintf(nat_fp, "-A %s -p icmp -m connlimit --connlimit-upto %d --connlimit-daddr-dport -j SNAT --to-source %s:%d-%d\n", MAPT_NAT_IPV4_POST_ROUTING_TABLE, finalPortValue - initialPortValue + 1, ipaddress_str, initialPortValue,finalPortValue);
 #endif //IVI_KERNEL_SUPPORT
         }
 #ifdef IVI_KERNEL_SUPPORT
@@ -12278,6 +12278,8 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
       fprintf(filter_fp, "-I FORWARD -i %s -o %s -j lan2wan\n", LNF_BRIDGE, NAT46_INTERFACE);
       fprintf(filter_fp, "-I FORWARD -i %s -o %s -j wan2lan\n", NAT46_INTERFACE, XHS_BRIDGE);
       fprintf(filter_fp, "-I FORWARD -i %s -o %s -j wan2lan\n", NAT46_INTERFACE, LNF_BRIDGE);
+      // drop map0 loopback traffic 
+      fprintf(filter_fp, "-I FORWARD -i %s -o %s -j DROP\n", NAT46_INTERFACE, NAT46_INTERFACE);
 #endif
    }
 #endif //FEATURE_MAPT
