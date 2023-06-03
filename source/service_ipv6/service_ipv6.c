@@ -119,7 +119,6 @@ bool del_addr6_flg = true;
 #define COSA_DML_DHCPV6C_ADDR_PRETM_SYSEVENT_NAME     "tr_"COSA_DML_DHCPV6_CLIENT_IFNAME"_dhcpv6_client_addr_pretm"
 #define COSA_DML_DHCPV6C_ADDR_VLDTM_SYSEVENT_NAME     "tr_"COSA_DML_DHCPV6_CLIENT_IFNAME"_dhcpv6_client_addr_vldtm"
 
-
 /*erouter topology mode*/
 enum tp_mod {
     TPMOD_UNKNOWN,
@@ -1505,6 +1504,13 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
     FILE *ifd=NULL;
     char *HwAdrrPath = "/sys/class/net/brlan0/address";
     struct stat check_ConfigFile;
+    FILE *responsefd=NULL;
+    char *networkResponse = "/var/tmp/networkresponse.txt";
+    int iresCode = 0;
+    char responseCode[10] = {0};
+    char redirFlag[6] = {0};
+    int isInCaptivePortal = 0;
+    int inWifiCp=0;
 
     sysevent_get(si6->sefd, si6->setok, "ipv6_prefix-divided", evt_val, sizeof(evt_val));
     if (strcmp(evt_val, "ready")) {
@@ -1752,6 +1758,58 @@ OPTIONS:
             }
             if (tag_index >= NELEMS(tag_list)) continue;
 
+            iresCode = 0;
+
+            if((responsefd = fopen(networkResponse, "r")) != NULL)
+            {
+                 if(fgets(responseCode, sizeof(responseCode), responsefd) != NULL)
+                 {
+                     iresCode = atoi(responseCode);
+                 }
+                 fclose(responsefd);
+                 responsefd = NULL;
+            }
+            if(!syscfg_get( NULL, "redirection_flag", redirFlag, sizeof(redirFlag)))
+            {
+                if ((strncmp(redirFlag,"true",4) == 0) && iresCode == 204)
+                {
+                    inWifiCp = 1;
+                    fprintf(stderr, "gen_dibbler_conf -- Box is in captive portal mode \n");
+                }
+                else
+                {
+                    fprintf(stderr, "gen_dibbler_conf -- Box is not in captive portal mode \n");
+                }
+            }
+#if defined (_XB6_PRODUCT_REQ_)
+            char rfCpEnable[6] = {0};
+            char rfCpMode[6] = {0};
+            int inRfCaptivePortal = 0;
+            if(!syscfg_get(NULL, "enableRFCaptivePortal", rfCpEnable, sizeof(rfCpEnable)))
+            {
+                if (strncmp(rfCpEnable,"true",4) == 0)
+                {
+                    if(!syscfg_get(NULL, "rf_captive_portal", rfCpMode,sizeof(rfCpMode)))
+                    {
+                        if (strncmp(rfCpMode,"true",4) == 0)
+                        {
+                            inRfCaptivePortal = 1;
+                            fprintf(stderr, "gen_dibbler_conf -- Box is in RF captive portal mode \n");
+                        }
+                    }
+                }
+            }
+            if((inWifiCp == 1) || (inRfCaptivePortal == 1))
+            {
+                isInCaptivePortal = 1;
+            }
+#else
+            if(inWifiCp == 1)
+            {
+                isInCaptivePortal = 1;
+            }
+#endif
+
             if (opt.pt_client[0]) {
                 if (opt.tag == 23) {//dns
                     char dns_str[256] = {0};
@@ -1787,7 +1845,14 @@ OPTIONS:
 					
                     if (dns_str[0] != '\0') { 
                         format_dibbler_option(dns_str);
-                        fprintf(fp, "     option %s %s\n", tag_list[tag_index].opt_str, dns_str);
+                        if( isInCaptivePortal == 1 )
+                        {
+                            fprintf(fp, "#     option %s %s\n", tag_list[tag_index].opt_str, dns_str);
+                        }
+                        else
+                        {
+                            fprintf(fp, "     option %s %s\n", tag_list[tag_index].opt_str, dns_str);
+                        }
                     }
                 }
                 else if (opt.tag == 24) {//domain
@@ -1795,7 +1860,14 @@ OPTIONS:
                     sysevent_get(si6->sefd, si6->setok, "ipv6_dnssl", domain_str, sizeof(domain_str));
                     if (domain_str[0] != '\0') { 
                         format_dibbler_option(domain_str);
-                        fprintf(fp, "     option %s %s\n", tag_list[tag_index].opt_str, domain_str);
+                        if( isInCaptivePortal == 1 )
+                        {
+                            fprintf(fp, "#     option %s %s\n", tag_list[tag_index].opt_str, domain_str);
+                        }
+                        else
+                        {
+                            fprintf(fp, "     option %s %s\n", tag_list[tag_index].opt_str, domain_str);
+                        }
                     }
                 }
             } else {
