@@ -253,6 +253,9 @@ set_ntp_quicksync_status ()
              QUICK_SYNC_DONE=1
 	     touch /tmp/clock-event
              break
+	  elif [ "$ntpd_exit_code" -eq 127 ]; then
+             echo_t "NTP quick sync not succeeded,PID has terminated or is unknown by the shell" >> $NTPD_LOG_NAME
+	     break
           fi
        else
          retry_timeout=`expr $retry_timeout + 1`
@@ -519,6 +522,7 @@ service_start ()
        kill -9 "`pidof $BIN`" > /dev/null 2>&1
        echo_t "SERVICE_NTPD : Starting NTP Daemon" >> $NTPD_LOG_NAME
        $BIN -c $NTP_CONF_TMP -l $NTPD_LOG_NAME -g
+       ret_val=$? ### To ensure proper ret_val is obtained
    else
        systemctl stop $BIN
 
@@ -553,13 +557,12 @@ service_start ()
 
        echo_t "SERVICE_NTPD : Starting NTP Daemon" >> $NTPD_LOG_NAME
        systemctl start $BIN
-
+       ret_val=$? ### To ensure proper ret_val is obtained
        if [ "$BOX_TYPE" = "HUB4" ] || [ "$BOX_TYPE" = "SR300" ] || [ "$BOX_TYPE" = "SE501" ] || [ "$BOX_TYPE" = "SR213" ] || [ "$BOX_TYPE" = "WNXL11BWL" ]; then
            sysevent set firewall-restart
        fi
    fi
 
-   ret_val=$?
    if [ "$ret_val" -ne 0 ]; then
        echo_t "SERVICE_NTPD : NTP failed to start, retrying" >> $NTPD_LOG_NAME
        if [ "$BOX_TYPE" = "XB3" ]; then
