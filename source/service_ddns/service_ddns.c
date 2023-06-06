@@ -333,6 +333,51 @@ static void serv_ddns_write_status(struct serv_ddns *sdd)
     }
 }
 
+static void
+_get_shell_output (FILE *fp, char *buf, size_t len)
+{
+    if (len > 0)
+        buf[0] = 0;
+    buf = fgets (buf, len, fp);
+    if ((len > 0) && (buf != NULL)) {
+        len = strlen (buf);
+        if ((len > 0) && (buf[len - 1] == '\n'))
+            buf[len - 1] = 0;
+    }
+}
+
+static int
+delete_ddns_clients(void)
+{
+    FILE *cmdfp = NULL;
+    char cmd_buf[16]={0};
+    char sbuf[16]={0};
+    char scmd[64]={0};
+    int nclients=0;
+
+    cmdfp = v_secure_popen("r","dmcli eRT retv Device.DynamicDNS.ClientNumberOfEntries");
+    if(cmdfp) {
+        _get_shell_output (cmdfp, cmd_buf, sizeof(cmd_buf));
+        v_secure_pclose(cmdfp);
+        if ((cmd_buf[0]!=0)) {
+            nclients = atoi(cmd_buf);
+            fprintf(stderr, "Number of ddns clients : %d\n", nclients);
+            for (int idx=0; idx < nclients; ++idx) {
+                sprintf(scmd,"arddnsclient_%d::ins_num",(idx+1));
+                syscfg_get (NULL, scmd, sbuf, sizeof(sbuf));
+                if (sbuf[0]!=0) {
+                    int insnum=atoi(sbuf);
+                    fprintf(stderr, "Delete ddns client insnum:  %d\n", insnum);
+                    v_secure_system("dmcli eRT deltable Device.DynamicDNS.Client.%d.", insnum);
+                } else {
+                    fprintf(stderr, "falied to get ddns client insnum\n");
+                }
+            }
+        }
+    }
+    return nclients;
+}
+
 static int serv_ddns_init(struct serv_ddns *sdd)
 {
     char command[256];
@@ -468,6 +513,17 @@ static int ddns_update_server(struct serv_ddns *sdd)
     int fd;
     char client_password[64 * 3]; /* raw value from syscfg may expand upto 3x if URL encoded */
     FILE *output_file;
+    char ermode[16]={0};
+
+    syscfg_get(NULL, "last_erouter_mode", ermode, sizeof(ermode));
+    if ((ermode[0] != 0) && atoi(ermode) == 2) {
+        fprintf(stderr, "%s: deleting ddns clients \n", __FUNCTION__);
+        int nclnt = delete_ddns_clients();
+        if (nclnt > 0)
+            v_secure_system("dmcli eRT setv Device.DynamicDNS.X_LGI-COM_Enable bool false");
+        ret = -1;
+        goto EXIT;
+    }
 
     if (strcmp(sdd->wan_conf.wan_ipaddr, "0.0.0.0") == 0)
     {
