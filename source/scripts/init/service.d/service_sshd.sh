@@ -93,7 +93,7 @@ get_listen_params() {
         CM_IP4=`ip -4 addr show dev $CMINTERFACE scope global | awk '/inet/{print $2}' | cut -d '/' -f1`
     fi
     if ([ "$BOX_TYPE" = "XB6" -a "$MANUFACTURE" = "Arris" ]); then
-        CM_IP6=`ip -6 addr show dev $CMINTERFACE scope global | awk '/inet/{print $2}' | cut -d '/' -f1 | head -1`
+        CM_IP6=`ip -6 addr show dev $CMINTERFACE | grep -i "scope global dynamic $" | awk '/inet/{print $2}' | cut -d '/' -f1 | head -1`
     fi
     if [ -n "$CM_IP4" ] ; then
         LISTEN_PARAMS="-p [${CM_IP4}]:22"
