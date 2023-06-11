@@ -64,7 +64,7 @@ if [ -z "$NTPD_LOG_NAME" ];then
 NTPD_LOG_NAME=/rdklogs/logs/ntpLog.log
 fi
 NSLOOKUP=nslookup
-
+NTP_SERVER_MODE="DEFAULT"
 #Function to  check if given ntp server supports ipv4 or ipv6 or both
 #returns:
 #1: v4 only
@@ -73,7 +73,6 @@ NSLOOKUP=nslookup
 
 function check_ntp_server_mode()
 {
-    local NTP_MODE
     local ipv4
     local ipv4_support 
     local NTP_SERVER
@@ -92,13 +91,21 @@ function check_ntp_server_mode()
         echo "$NTP_SERVER" | grep -q ".*:.*"
         ret=$?
         if [ $ret -eq 0 ]; then
-            return 2
+            NTP_SERVER_MODE="IPV6_ONLY"
+            return
         else
             ipv4=$(echo "$NTP_SERVER" | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b")
             if [ -n "$ipv4" ]; then
-                return 1
+                NTP_SERVER_MODE="IPV4_ONLY"
+                return
             fi
         fi
+    fi
+
+    if ! which "$NSLOOKUP"  >/dev/null; then
+        echo_t "NTPD Quick sync : $NSLOOKUP utility not present" >> $NTPD_LOG_NAME
+        echo_t "NTPD Quick sync :  Skipping DNS lookup" >> $NTPD_LOG_NAME
+        return
     fi
 
     $NSLOOKUP "$NTP_SERVER" > /tmp/ntp_server_lookup
@@ -126,17 +133,20 @@ function check_ntp_server_mode()
     done < /tmp/ntp_address
 
     if [ "$ipv6_support" = "1" ] && [ "$ipv4_support" = "1" ]; then
-        NTP_MODE=3
+        NTP_SERVER_MODE="IPV4_IPV6"
     elif [ "$ipv4_support" = "1" ]; then
-        NTP_MODE=1
+        NTP_SERVER_MODE="IPV4_ONLY"
     elif [ "$ipv6_support" = "1" ]; then
-        NTP_MODE=2
+        NTP_SERVER_MODE="IPV6_ONLY"
+    else
+        #NTP server is down
+        NTP_SERVER_MODE="ERROR"
     fi
 
     rm -f /tmp/ntp_server_lookup
     rm -f /tmp/ntp_address
 
-    return "$NTP_MODE"
+    return
 }
 
 wan_wait () 
@@ -167,48 +177,45 @@ wan_wait ()
        if [ -n "$WAN_IPv4" ] || [ -n "$WAN_IPv6" ]; then
           if [ "$2" = "quickSync" ];then
           	# Quick Sync Needs an IP and Not Interface As changes in Interface as Quick Sync Runs Causes Errors
-                if [ "$BOX_TYPE" = "SR213" ]; then
-                    check_ntp_server_mode "$SYSCFG_ntp_server1"
-                    NTP_SERVER_MODE=$?
-          	    if [ "$NTP_SERVER_MODE" = "3" ];then
-                        #dual stack mode
-                        echo_t "NTPD Quick sync : NTP server supports IPV4 and IPV6" >> $NTPD_LOG_NAME
-                        if [ -n "$WAN_IPv6" ]; then
-                            echo_t "NTPD Quick sync : Using wan interface IPV6 address $WAN_IPv6" >> $NTPD_LOG_NAME
-          		    WAN_UP=$WAN_IPv6
-                        else
-                            echo_t "NTPD Quick sync : No IPV6 address configured on WAN. Using IPV4 address $WAN_IPv4" >> $NTPD_LOG_NAME
-          		    WAN_UP=$WAN_IPv4
-                        fi
-          	    elif [ "$NTP_SERVER_MODE" = "1" ]; then
-                        #V4 only mode
-                        echo_t "NTPD Quick sync : NTP server supports IPV4 only" >> $NTPD_LOG_NAME
-                        if [ -n "$WAN_IPv4" ]; then
-                            echo_t "NTPD Quick sync : Using wan interface IPV4 address $WAN_IPv4" >> $NTPD_LOG_NAME
-          		    WAN_UP=$WAN_IPv4
-                        else
-                            echo_t "NTPD Quick sync : No IPV4 address configured on WAN" >> $NTPD_LOG_NAME
-                        fi
-          	    elif [ "$NTP_SERVER_MODE" = "2" ]; then
-                        #V6 only mode
-                        echo_t "NTPD Quick sync : NTP server supports IPV6 only" >> $NTPD_LOG_NAME
-                        if [ -n "$WAN_IPv6" ]; then
-                            echo_t "NTPD Quick sync : Using wan interface IPV6 address $WAN_IPv6" >> $NTPD_LOG_NAME
-          		    WAN_UP=$WAN_IPv6
-                        else
-                            echo_t "NTPD Quick sync : No WAN IPV6 configured" >> $NTPD_LOG_NAME
-                        fi
+                check_ntp_server_mode "$SYSCFG_ntp_server1"
+          	if [ "$NTP_SERVER_MODE" = "IPV4_IPV6" ];then
+                    #dual stack mode
+                    echo_t "NTPD Quick sync : NTP server supports IPV4 and IPV6" >> $NTPD_LOG_NAME
+                    if [ -n "$WAN_IPv6" ]; then
+                        echo_t "NTPD Quick sync : Using wan interface IPV6 address $WAN_IPv6" >> $NTPD_LOG_NAME
+          		WAN_UP=$WAN_IPv6
                     else
-                        echo_t "NTPD Quick sync : NTP server DNS lookup failed for URL $SYSCFG_ntp_server1" >> $NTPD_LOG_NAME
-          	    fi
-                else
-                    #Other platforms
-                    if [ -n "$WAN_IPv6" ];then 
+                        echo_t "NTPD Quick sync : No IPV6 address configured on WAN. Using IPV4 address $WAN_IPv4" >> $NTPD_LOG_NAME
+          		WAN_UP=$WAN_IPv4
+                    fi
+          	elif [ "$NTP_SERVER_MODE" = "IPV4_ONLY" ]; then
+                    #V4 only mode
+                    echo_t "NTPD Quick sync : NTP server supports IPV4 only" >> $NTPD_LOG_NAME
+                    if [ -n "$WAN_IPv4" ]; then
+                        echo_t "NTPD Quick sync : Using wan interface IPV4 address $WAN_IPv4" >> $NTPD_LOG_NAME
+          		WAN_UP=$WAN_IPv4
+                    else
+                        echo_t "NTPD Quick sync : No IPV4 address configured on WAN" >> $NTPD_LOG_NAME
+                    fi
+          	elif [ "$NTP_SERVER_MODE" = "IPV6_ONLY" ]; then
+                    #V6 only mode
+                    echo_t "NTPD Quick sync : NTP server supports IPV6 only" >> $NTPD_LOG_NAME
+                    if [ -n "$WAN_IPv6" ]; then
+                        echo_t "NTPD Quick sync : Using wan interface IPV6 address $WAN_IPv6" >> $NTPD_LOG_NAME
           	        WAN_UP=$WAN_IPv6
-          	    else
-          	        WAN_UP=$WAN_IPv4
-          	    fi
-                fi
+                    else
+                        echo_t "NTPD Quick sync : No WAN IPV6 configured" >> $NTPD_LOG_NAME
+                    fi
+          	elif [ "$NTP_SERVER_MODE" = "DEFAULT" ]; then
+                    #If a pltform does not have the uitlity to check DNS, set default values
+                    if [ -n "$WAN_IPv6" ];then
+                        WAN_UP=$WAN_IPv6
+                    else
+                        WAN_UP=$WAN_IPv4
+                    fi
+                else
+                    echo_t "NTPD Quick sync : NTP server DNS lookup failed for URL $SYSCFG_ntp_server1" >> $NTPD_LOG_NAME
+          	fi
           else
           	WAN_UP=$WAN_INTERFACE
           fi
