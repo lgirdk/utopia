@@ -642,9 +642,9 @@ static int start_dhcpv6_client(struct serv_wan *sw)
                     sysevent_set(sw->sefd, sw->setok, "dslite_option64-status", "", 0);
                     fprintf(stderr, "Starting DHCPv6 Client now\n");
 #if defined (FEATURE_RDKB_DHCP_MANAGER)
-                    sysevent_set(sw->sefd, sw->setok, "dhcpv6_client-start", "", 0);
-                    //system("dmcli eRT setv Device.DHCPv6.Client.1.Enable bool true");
-                    fprintf(stderr, "%s  Calling sysevent dhcpv6_client-start , RDKB_WAN_MANAGER Enabled\n",__func__);
+                    //sysevent_set(sw->sefd, sw->setok, "dhcpv6_client-start", "", 0);
+                    system("dmcli eRT setv Device.DHCPv6.Client.1.Enable bool true");
+                    fprintf(stderr, "%s  Enabling DHCPv6 client using TR181\n",__func__);
 #elif defined(CORE_NET_LIB)
                     system("/usr/bin/service_dhcpv6_client dhcpv6_client_service_enable");
                     fprintf(stderr, "%s  Calling service_dhcpv6_client.c with dhcpv6_client_service_enable from service_wan.c\n",__func__);
@@ -927,9 +927,9 @@ static int wan_start(struct serv_wan *sw)
                    sysevent_set(sw->sefd, sw->setok, "wan-status", "starting", 0);
 
 #if defined (FEATURE_RDKB_DHCP_MANAGER)
-                    sysevent_set(sw->sefd, sw->setok, "dhcpv6_client-start", "", 0);
-                    //v_secure_system("dmcli eRT setv Device.DHCPv6.Client.1.Enable bool true");
-                    fprintf(stderr, "%s  Calling sysevent dhcpv6_client-start , RDKB_WAN_MANAGER Enabled\n",__func__);
+                    //sysevent_set(sw->sefd, sw->setok, "dhcpv6_client-start", "", 0);
+                    v_secure_system("dmcli eRT setv Device.DHCPv6.Client.1.Enable bool true");
+                    fprintf(stderr, "%s  Enabling DHCPv6 client using TR181\n",__func__);
 #elif defined(CORE_NET_LIB)
                     v_secure_system("/usr/bin/service_dhcpv6_client dhcpv6_client_service_enable");
                     fprintf(stderr, "%s  Calling service_dhcpv6_client.c with dhcpv6_client_service_enable from service_wan.c\n",__func__);
@@ -1143,9 +1143,9 @@ static int wan_stop(struct serv_wan *sw)
        if (sw->prot == WAN_PROT_DHCP) {
                fprintf(stderr, "Disabling DHCPv6 Client\n");
 #if defined (FEATURE_RDKB_DHCP_MANAGER)
-                    sysevent_set(sw->sefd, sw->setok, "dhcpv6_client-stop", "", 0);
-                    //v_secure_system("dmcli eRT setv Device.DHCPv6.Client.1.Enable bool false");
-                    fprintf(stderr, "%s  Calling sysevent dhcpv6_client-stop , RDKB_WAN_MANAGER Enabled\n",__func__); 
+                    //sysevent_set(sw->sefd, sw->setok, "dhcpv6_client-stop", "", 0);
+                    v_secure_system("dmcli eRT setv Device.DHCPv6.Client.1.Enable bool false");
+                    fprintf(stderr, "%s  Disabling DHCPv6 client using TR181\n",__func__); 
 #elif defined(CORE_NET_LIB)
                     v_secure_system("/usr/bin/service_dhcpv6_client dhcpv6_client_service_disable");
                     fprintf(stderr, "%s  Calling service_dhcpv6_client.c with dhcpv6_client_service_disable from service_wan.c\n",__func__);
@@ -1380,9 +1380,9 @@ static int wan_addr_set(struct serv_wan *sw)
             return -1;
         }
         #else
-        sysevent_set(sw->sefd, sw->setok, "dhcp_client-start", "", 0);
-        //v_secure_system("dmcli eRT setv Device.DHCPv4.Client.1.Enable bool true");
-        fprintf(stderr, "%s  Calling sysevent dhcpv4_client-start, RDKB_WAN_MANAGER Enabled\n", __FUNCTION__);
+        //sysevent_set(sw->sefd, sw->setok, "dhcp_client-start", "", 0);
+        v_secure_system("dmcli eRT setv Device.DHCPv4.Client.1.Enable bool true");
+        fprintf(stderr, "%s  Enabling DHCPv4 client using TR181\n", __FUNCTION__);
         #endif
 
         break;
@@ -1621,9 +1621,9 @@ static int wan_addr_unset(struct serv_wan *sw)
             return -1;
         }
         #else
-        sysevent_set(sw->sefd, sw->setok, "dhcp_client-stop", "", 0);
-        //v_secure_system("dmcli eRT setv Device.DHCPv4.Client.1.Enable bool false");
-        fprintf(stderr, "%s  Calling sysevent dhcpv4_client-stop, RDKB_WAN_MANAGER Enabled\n", __FUNCTION__);
+        //sysevent_set(sw->sefd, sw->setok, "dhcp_client-stop", "", 0);
+        v_secure_system("dmcli eRT setv Device.DHCPv4.Client.1.Enable bool false");
+        fprintf(stderr, "%s  Disabling DHCPv4 client using TR181\n", __FUNCTION__);
         #endif
 
         break;
