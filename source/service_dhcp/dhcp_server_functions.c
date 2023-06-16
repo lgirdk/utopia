@@ -485,10 +485,12 @@ void prepare_dhcp_options_wan_dns()
 {
 	// Since we are not using prepare_dhcp_options fn DHCP_OPTION_STR is always empty
 	char l_cLocalDhcpOpt[32] = {0}, l_cPropagate_Ns[8] = {0}, l_cWan_Dhcp_Dns[255] = {0}; 
-	char *l_cToken = NULL, l_cNs[255] = {""};
+	char *l_cToken = NULL, *l_cToken_r, l_cNs[255] = {""};
 	FILE *l_fLocalDhcpOpt = NULL;
 	errno_t safec_rc = -1;
-	
+	BOOL usingLANAddr = FALSE;
+	int lanIndex = 0;
+
     safec_rc = sprintf_s(l_cLocalDhcpOpt, sizeof(l_cLocalDhcpOpt),"/tmp/dhcp_options%d", getpid());
     if(safec_rc < EOK){
        ERR_CHK(safec_rc);
@@ -512,7 +514,51 @@ void prepare_dhcp_options_wan_dns()
 
         syscfg_get(NULL, "dns_relay_enable", relay_enable, sizeof(relay_enable));
 
-        //OFW-297 and OFW-620: use brlan0 interface ip address as dns server when modem is offline or dns relay is enabled
+    //OFW-297 and OFW-620: use brlanX interface ip address as dns server when modem is offline or dns relay is enabled
+    do {
+        char l_cPools[64], *l_cPoolToken, *l_cPoolToken_r;
+        char l_cDhcpEnabled[8];
+        char l_cLanIpv4Inst[8];
+        char l_cLanIpv4Addr[256];
+        char l_cSysevent_Cmd[32];
+
+        lanIndex++;
+        if (lanIndex == 1)
+        {
+            syscfg_get(NULL, "lan_ipaddr", l_cLanIpv4Addr, sizeof(l_cLanIpv4Addr));
+        }
+        else
+        {
+            if (lanIndex == 2)
+            {
+                sysevent_get(g_iSyseventfd, g_tSysevent_token, "dhcp_server_current_pools", l_cPools, sizeof(l_cPools));
+                if (0 == l_cPools[0])
+                     break;
+                l_cPoolToken = strtok_r(l_cPools, " ", &l_cPoolToken_r);
+            }
+            else
+            {
+                l_cPoolToken = strtok_r(NULL, " ", &l_cPoolToken_r);
+            }
+            if (l_cPoolToken == NULL)
+                break;
+
+            snprintf(l_cSysevent_Cmd, sizeof(l_cSysevent_Cmd), "dhcp_server_%s_enabled", l_cPoolToken);
+            sysevent_get(g_iSyseventfd, g_tSysevent_token, l_cSysevent_Cmd, l_cDhcpEnabled, sizeof(l_cDhcpEnabled));
+            if (strncmp(l_cDhcpEnabled, "TRUE", 4))
+                continue;
+
+            snprintf(l_cSysevent_Cmd, sizeof(l_cSysevent_Cmd), "dhcp_server_%s_ipv4inst", l_cPoolToken);
+            sysevent_get(g_iSyseventfd, g_tSysevent_token, l_cSysevent_Cmd, l_cLanIpv4Inst, sizeof(l_cLanIpv4Inst));
+            if (0 == l_cLanIpv4Inst[0])
+                continue;
+
+            snprintf(l_cSysevent_Cmd, sizeof(l_cSysevent_Cmd), "ipv4_%s-ipv4addr", l_cLanIpv4Inst);
+            sysevent_get(g_iSyseventfd, g_tSysevent_token, l_cSysevent_Cmd, l_cLanIpv4Addr, sizeof(l_cLanIpv4Addr));
+            if (0 == l_cLanIpv4Addr[0])
+                continue;
+        }
+        l_cNs[0] = 0;
 
         if ((strcmp(g_rl_cWanStatus, "stopped") != 0) && (strcmp(relay_enable, "1") != 0))
         {
@@ -523,11 +569,13 @@ void prepare_dhcp_options_wan_dns()
             if (l_cWan_Dhcp_Dns[0] == 0)
             {
                 //In ipv6/ipv6 ds-lite mode, the device is unable to fetch the Wan DHCP DNS, so we fetch default LanIP as default DNS.
-                syscfg_get(NULL, "lan_ipaddr", l_cWan_Dhcp_Dns, sizeof(l_cWan_Dhcp_Dns));
+                usingLANAddr = TRUE;
+                strncpy(l_cWan_Dhcp_Dns, l_cLanIpv4Addr, sizeof(l_cWan_Dhcp_Dns) - 1);
+                l_cWan_Dhcp_Dns[sizeof(l_cWan_Dhcp_Dns) - 1] = 0;
             }
             if (0 != l_cWan_Dhcp_Dns[0])
             {
-                l_cToken = strtok(l_cWan_Dhcp_Dns, " ");
+                l_cToken = strtok_r(l_cWan_Dhcp_Dns, " ", &l_cToken_r);
                 while (l_cToken != NULL)
                 {
                     if (0 != l_cNs[0])
@@ -535,7 +583,7 @@ void prepare_dhcp_options_wan_dns()
                         strcat(l_cNs, ",");
                     }
                     strcat(l_cNs, l_cToken);
-                    l_cToken = strtok(NULL, " ");
+                    l_cToken = strtok_r(NULL, " ", &l_cToken_r);
                 }
                 fprintf(stderr, "l_cNs is:%s\n", l_cNs);
             }
@@ -558,6 +606,7 @@ void prepare_dhcp_options_wan_dns()
                     {
                         strcat(l_cDhcpOptionString, ",");
                         strcat(l_cDhcpOptionString, l_cDnsIpv4Alternate);
+                        usingLANAddr = FALSE;
                     }
                     else
                     {
@@ -571,9 +620,17 @@ void prepare_dhcp_options_wan_dns()
                     {
                         strcpy(l_cDhcpOptionString, l_cNs);
                     }
+                    else
+                    {
+                        usingLANAddr = FALSE;
+                    }
                 }
                 if (l_cDhcpOptionString[0] != 0)
                 {
+                     if (lanIndex > 1)
+                     {
+		         fprintf(l_fLocalDhcpOpt, "tag:%s, ", l_cPoolToken);
+                     }
                      fprintf(l_fLocalDhcpOpt, "option:dns-server, %s\n",l_cDhcpOptionString);
                 }
             }
@@ -581,22 +638,34 @@ void prepare_dhcp_options_wan_dns()
             {
                 if (0 != l_cNs[0])
                 {
+                    if (lanIndex > 1)
+                    {
+                       fprintf(l_fLocalDhcpOpt, "tag:%s, ", l_cPoolToken);
+                    }
                     fprintf(l_fLocalDhcpOpt, "option:dns-server, %s\n", l_cNs);
                 }
                 else
                 {
                     fprintf(stderr, "wan_dhcp_dns is empty, so file:%s will be empty \n", DHCP_OPTIONS_FILE);
+                    usingLANAddr = FALSE;
                 }
             }
 
         }
         else
         {
-		    syscfg_get(NULL, "lan_ipaddr", l_cNs, sizeof(l_cNs));
+		    strncpy(l_cNs, l_cLanIpv4Addr, sizeof(l_cNs) - 1);
+		    l_cNs[sizeof(l_cNs) - 1] = 0;
+		    usingLANAddr = TRUE;
+		    if (lanIndex > 1)
+		    {
+		        fprintf(l_fLocalDhcpOpt, "tag:%s, ", l_cPoolToken);
+		    }
 		    fprintf(l_fLocalDhcpOpt, "option:dns-server, %s\n", l_cNs);
 		    printf("dhcp_server_functions.c Adjust dns-server to lan_ipaddr %s because wan-status is stopped or Relay is enabled!!!!!!!!!!!!!\n",l_cNs);
 		}	
-	remove_file(DHCP_OPTIONS_FILE);
+    } while (usingLANAddr);
+
 	fclose(l_fLocalDhcpOpt);
 	copy_file(l_cLocalDhcpOpt, DHCP_OPTIONS_FILE);
 	remove_file(l_cLocalDhcpOpt);
