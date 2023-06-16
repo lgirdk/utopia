@@ -86,7 +86,9 @@ prepare_resolv_conf () {
          fi
 
          sysevent set wan_dhcp_dns "${WAN_DNS}"
-         sysevent set dhcp_server-restart
+         # sysevent set dhcp_server-restart
+         # Avoiding restart, inorder to honor the running dhcp server (RDKB-49696)
+         sysevent set dhcp_server-start
 
    fi
 
