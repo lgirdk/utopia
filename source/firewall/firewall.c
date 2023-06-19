@@ -13757,6 +13757,8 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
 #if defined(_LG_MV3_)
    //Open port for BFD echo
    fprintf(filter_fp, "-A ipoe_healthcheck -i erouter0 -p udp -m udp --dport 3785 -j ACCEPT\n");
+   fprintf(filter_fp, "-A ipoe_healthcheck -i mg0 -p udp -m udp --dport 3785 -j ACCEPT\n");
+   fprintf(filter_fp, "-A ipoe_healthcheck -i voip0 -p udp -m udp --dport 3785 -j ACCEPT\n");
 #endif
    fprintf(filter_fp, "-A general_input -i %s -p udp -m udp --dport 161 -j xlog_drop_lan2self\n", lan_ifname);
 #if defined (MULTILAN_FEATURE)
