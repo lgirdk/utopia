@@ -1395,6 +1395,12 @@ $dns_override=false
 $EnableOCSPStapling=false
 $EnableOCSPCA=false
 
+#IPoE HC default params
+$IPoE_enable=0
+$IPoE_regular_interval=30
+$IPoE_retry_limit=3
+$IPoE_retry_interval=10
+
 #Defaults for XHFW
 $XHFW_Enable=true
 $XHFW_Status="not activated"
