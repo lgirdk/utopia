@@ -232,6 +232,7 @@ update_dns_conf()
                 sed -i "/$dns_server/d" "$RESOLV_CONF_TMP"
         done
      fi
+         R=""
         for i in $ip_dns; do
          R="${R}nameserver $i
 "
@@ -457,6 +458,9 @@ case "$1" in
         update_v4route
         update_v6route
     ;; 
+    correct_resolve_conf)
+        sync_dns
+    ;;
     dummy_route)
         set_dummy_route
     ;; 
