@@ -301,13 +301,13 @@ static void nethelper_bridgeCreate (char *brname)
     system(cmdBuff);
 
     if (!strcmp(brname, "brlan0")) {
-        char _bridge_mode[8];
-        int bridge_mode = 0;
+        char _last_erouter_mode[8];
+        int last_erouter_mode = 0;
 
-        if (!syscfg_get(NULL, "bridge_mode", _bridge_mode, sizeof(_bridge_mode)))
-            bridge_mode = atoi(_bridge_mode);
+        if (!syscfg_get(NULL, "last_erouter_mode", _last_erouter_mode, sizeof(_last_erouter_mode)))
+            last_erouter_mode = atoi(_last_erouter_mode);
 
-        if (bridge_mode) {
+        if (!last_erouter_mode) {
             /* Disable packet forwarding to ATOM side */
             system("ebtables -t filter -I FORWARD -o l2sd0.100 -j DROP");
             system("ebtables -t filter -I OUTPUT -o l2sd0.100 -j DROP");
