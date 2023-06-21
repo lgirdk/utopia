@@ -101,8 +101,9 @@ set_ebtable_rules() {
     echo 0 > /proc/sys/net/ipv4/conf/l2sd0/arp_ignore
 
     # rules are different in bridge/router mode
-    bridge_mode=`sysevent get bridge_mode`
-    if [ "0" != "$bridge_mode" ] ; then
+    last_erouter_mode=`syscfg get last_erouter_mode`
+
+    if [ "0" = "$last_erouter_mode" ] ; then
         #
         # bridge mode
         #
