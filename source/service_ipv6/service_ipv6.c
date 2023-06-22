@@ -2465,6 +2465,15 @@ static int serv_ipv6_init(struct serv_ipv6 *si6)
         return -1;
 #endif
     }
+    else if (atoi(buf) == 0) { /* bridge mode */
+        char ip6adrbuf[64];
+        // for mv3 erouter0 has v6/v4 address in bridge mode
+        sysevent_get(si6->sefd, si6->setok, "wan6_ipaddr", ip6adrbuf, sizeof(ip6adrbuf));
+        if (ip6adrbuf[0] != 0) {
+            fprintf(fp_v6_dbg, "%s: bridge mode with v6 addr on erouter0, add default route on erouter0.\n", __FUNCTION__);
+            v_secure_system("ip -6 route add default dev erouter0");
+        }
+    }
 
     sysevent_get(si6->sefd, si6->setok, "ipv6_prefix", si6->mso_prefix, sizeof(si6->mso_prefix));
     if (strlen(si6->mso_prefix))
