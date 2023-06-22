@@ -37,6 +37,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <stdarg.h>
 #include <dirent.h>
 #include <netinet/in.h>
@@ -73,35 +74,32 @@ int vsystem(const char *fmt, ...)
 
 int sysctl_iface_set(const char *path, const char *ifname, const char *content)
 {
-    /* _sysctl(2) is not encouraged to use, write /proc/sys directly
-     * also avoid to use sysctl(3) or echo for performance */
-    FILE *fp;
-    char file[256];
+    char buf[128];
+    char *filename;
+    size_t len;
+    int fd;
 
-    if (ifname)
-        snprintf(file, sizeof(file), path, ifname);
+    if (ifname) {
+        snprintf(buf, sizeof(buf), path, ifname);
+        filename = buf;
+    }
     else
-        snprintf(file, sizeof(file), path);
+        filename = path;
 
-    if (strncmp(file, "/proc/sys/", strlen("/proc/sys/") != 0)) {
-        fprintf(stderr, "%s: not /proc/sys/ dir\n", __FUNCTION__);
+    if ((fd = open(filename, O_WRONLY)) < 0) {
+        perror("Failed to open file");
         return -1;
     }
 
-    if ((fp = fopen(file, "wb")) == NULL) {
-        fprintf(stderr, "%s: cannot open file %s\n", __FUNCTION__, file);
+    len = strlen(content);
+    if (write(fd, content, len) != (ssize_t) len) {
+        perror("Failed to write to file");
+        close(fd);
         return -1;
     }
 
-    if (fwrite(content, strlen(content), 1, fp) != 1) {
-        fprintf(stderr, "%s: fail to write %s\n", __FUNCTION__, content);
-        fclose(fp);
-        return -1;
-    }
+    close(fd);
 
-    fclose(fp);
-
-    //fprintf(stderr, "%s: file %s content %s\n", __FUNCTION__, file, content);
     return 0;
 }
 
