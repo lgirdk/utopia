@@ -165,8 +165,6 @@ int prepare_ipv4_rule_ex_mode(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE 
    fprintf(filter_fp, "-A INPUT -i brebhaul -m pkttype ! --pkt-type unicast -j ACCEPT\n");
 #endif
 
-   do_ssh_IpAccessTable(filter_fp, "22", AF_INET, cellular_ifname);
-
    fprintf(filter_fp, "-A xlog_accept_wan2lan -j ACCEPT\n");
 
    // allow mesh wan and mesh bridge private ip range
@@ -328,7 +326,6 @@ int prepare_ipv6_rule_ex_mode(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE 
    fprintf(filter_fp, "-A INPUT -i %s -p tcp -m tcp --dport 22 -j SSH_FILTER\n",cellular_ifname);
 
    filter_ipv6_icmp_limit_rules(filter_fp);
-   do_ssh_IpAccessTable(filter_fp, "22", AF_INET6, cellular_ifname);
 
    fprintf(filter_fp, "-A  FORWARD -i %s -o %s -j ACCEPT\n",mesh_wan_ifname,cellular_ifname);
    fprintf(filter_fp, "-A  FORWARD -i %s -o %s -j ACCEPT\n",cellular_ifname,mesh_wan_ifname);
