@@ -570,13 +570,25 @@ int main(int argc, char *argv[])
     }
 	else if (!strncmp(argv[1], "lan-start", 9))
 	{
-		sysevent_get(g_iSyseventfd, g_tSysevent_token, 
+		char l_cBridgeMode[2]={0};
+		sysevent_get(g_iSyseventfd, g_tSysevent_token,
+                         "bridge_mode", l_cBridgeMode, sizeof(l_cBridgeMode));
+
+		if(l_cBridgeMode[0] > '0')
+		{
+		     fprintf(stderr,"Device is in bridge mode");
+
+		}
+		else
+		{
+			sysevent_get(g_iSyseventfd, g_tSysevent_token,
 					 "primary_lan_l3net", l_cL3Inst, 
 					 sizeof(l_cL3Inst));	
 
-		l_iL3Inst = atoi(l_cL3Inst);
-		fprintf(stderr, "Calling ipv4_up with L3 Instance:%d\n", l_iL3Inst);
-		sysevent_set(g_iSyseventfd, g_tSysevent_token, "ipv4-up", l_cL3Inst, 0);
+		     l_iL3Inst = atoi(l_cL3Inst);
+		     fprintf(stderr, "Calling ipv4_up with L3 Instance:%d\n", l_iL3Inst);
+		     sysevent_set(g_iSyseventfd, g_tSysevent_token, "ipv4-up", l_cL3Inst, 0);
+		}
 	}
 	//service_ipv4.sh related
 	else if(!strncmp(argv[1], "ipv4-up", 7)) 
