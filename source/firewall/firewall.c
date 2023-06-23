@@ -587,11 +587,6 @@ static int lan_access_set_proto(FILE *fp,const char *port, const char *interface
 static int do_wpad_isatap_blockv4(FILE *fp);
 static int do_wpad_isatap_blockv6(FILE *fp);
 
-int prepare_rabid_rules(FILE *filter_fp, FILE *mangle_fp, ip_ver_t ver);
-int prepare_rabid_rules_v2020Q3B(FILE *filter_fp, FILE *mangle_fp, ip_ver_t ver);
-int prepare_rabid_rules_for_mapt(FILE *filter_fp, ip_ver_t ver);
-
-int firewall_lib_init(void *bus_handle, int sysevent_fd, token_t sysevent_token);
 #if defined(CONFIG_KERNEL_NETFILTER_XT_TARGET_CT)
 static int do_lan2wan_helpers(FILE *raw_fp);
 #endif
@@ -7455,12 +7450,10 @@ static int do_remote_access_control(FILE *nat_fp, FILE *filter_fp, int family)
 	if(family == AF_INET6){	
 #if defined(_COSA_BCM_MIPS_) // RDKB-35063
 		checkandblock_remote_access(filter_fp);
-		ethwan_mso_gui_acess_rules(filter_fp,NULL);
 #else
 		if( bEthWANEnable )
 		{
 			checkandblock_remote_access(filter_fp);
-			ethwan_mso_gui_acess_rules(filter_fp,NULL);
 		}
 #endif
 	}
@@ -12937,10 +12930,6 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
     */
    fprintf(mangle_fp, "-A OUTPUT -p gre -j RETURN\n");
 #endif
-   prepare_lnf_internet_rules(mangle_fp,4);
-   prepare_dscp_rule_for_host_mngt_traffic(mangle_fp);
-   prepare_xconf_rules(mangle_fp);
-
 
 #ifdef CONFIG_BUILD_TRIGGER
 #ifndef CONFIG_KERNEL_NF_TRIGGER_SUPPORT
@@ -13201,12 +13190,6 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(filter_fp, ":%s ACCEPT [0:0]\n", "FORWARD");
    fprintf(filter_fp, ":%s ACCEPT [0:0]\n", "OUTPUT");
 
-#if !(defined(_COSA_INTEL_XB3_ARM_) || defined(_COSA_BCM_MIPS_))
-    prepare_rabid_rules(filter_fp, mangle_fp, IP_V4);
-#else
-    prepare_rabid_rules_v2020Q3B(filter_fp, mangle_fp, IP_V4);
-#endif
-
 #ifdef INTEL_PUMA7
    //Avoid blocking packets at the Intel NIL layer
    fprintf(filter_fp, "-A FORWARD -i a-mux -j ACCEPT\n");
@@ -13405,8 +13388,6 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
       }
    }
 
-   do_openPorts(filter_fp);
-
    fprintf(filter_fp, ":%s - [0:0]\n", "LOG_SSH_DROP");
    fprintf(filter_fp, ":%s - [0:0]\n", "SSH_FILTER");
 
@@ -13474,15 +13455,9 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(filter_fp, "-A INPUT -i %s -m state --state ESTABLISHED,RELATED -p udp --dport 123 -j ACCEPT \n", get_current_wan_ifname());
    fprintf(filter_fp, "-A INPUT -i %s  -m state --state NEW -p udp --dport 123 -j DROP \n",get_current_wan_ifname());
    
-   // Video Analytics Firewall rule to allow port 58081 only from LAN interface
-   do_OpenVideoAnalyticsPort (filter_fp);
-   
    // Create iptable chain to ratelimit remote management(8080, 8181) packets
    do_webui_rate_limit(filter_fp);
        
-#if !defined(_COSA_INTEL_XB3_ARM_)
-   filterPortMap(filter_fp);
-#endif
 #if defined(_COSA_BCM_ARM_) && !defined(_PLATFORM_RASPBERRYPI_) && !defined(_PLATFORM_TURRIS_)
    fprintf(filter_fp, "-A INPUT -s 172.31.255.40/32 -p tcp -m tcp --dport 9000 -j ACCEPT\n");
    fprintf(filter_fp, "-A INPUT -s 172.31.255.40/32 -p udp -m udp --dport 9000 -j ACCEPT\n");
@@ -13673,18 +13648,10 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    }
 #endif
 #endif /*_HUB4_PRODUCT_REQ_*/
-   /* if(isProdImage) {
-       do_ssh_IpAccessTable(filter_fp, "22", AF_INET, ecm_wan_ifname);
-   } else {
-       fprintf(filter_fp, "-A SSH_FILTER -j ACCEPT\n");
-   } */   
-#if !defined(_PLATFORM_RASPBERRYPI_) && !defined(_PLATFORM_TURRIS_)
-   do_ssh_IpAccessTable(filter_fp, "22", AF_INET, ecm_wan_ifname);
-#else
+
+#if defined(_PLATFORM_RASPBERRYPI_) || defined(_PLATFORM_TURRIS_)
     fprintf(filter_fp, "-A SSH_FILTER -j ACCEPT\n");
 #endif
-
-   do_snmp_IpAccessTable(filter_fp, AF_INET);
 
 #ifdef INTEL_PUMA7
 
@@ -13797,8 +13764,6 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
        fprintf(filter_fp, "-I FORWARD -i %s -o %s -j DROP\n", NAT46_INTERFACE, NAT46_INTERFACE);
    }
 #endif
-
-   do_forwardPorts(filter_fp);
 
    // RDKB-4826 - IOT rules for DHCP
    char iot_enabled[20];
@@ -14974,8 +14939,6 @@ static int prepare_enabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *na
    do_ipflooddetectv4(filter_fp);
    do_icmpflooddetectv4(filter_fp);
 
-   prepare_rabid_rules_for_mapt(filter_fp, IP_V4);
-
 #if defined(FEATURE_RDKB_INTER_DEVICE_MANAGER)
    prepare_idm_firewall(filter_fp);
 #endif
@@ -15061,13 +15024,6 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
     */
    fprintf(mangle_fp, "-A OUTPUT -p gre -j RETURN\n");
 #endif
-
-   //RDKB-54847: lld dscp rules and dscp 8 rule needs to be present for pseudo bridge mode
-   prepare_lld_dscp_rules(mangle_fp);
-   prepare_dscp_rule_for_host_mngt_traffic(mangle_fp);
-
-   //zqiu: RDKB-5686: xconf rule should work for pseudo bridge mode
-   prepare_xconf_rules(mangle_fp);
 
 #ifdef CONFIG_BUILD_TRIGGER
 #ifndef CONFIG_KERNEL_NF_TRIGGER_SUPPORT
@@ -15737,11 +15693,6 @@ static void do_ipv6_sn_filter(FILE* fp) {
 	}
 	//RDKB-10248: IPv6 Entries issue in ip neigh show 2. Bring back TOS mirroring 
 
-#if !defined(_PLATFORM_IPQ_)
-	prepare_dscp_rule_for_host_mngt_traffic(fp);
-	prepare_xconf_rules(fp);
-#endif
-
 #ifdef _COSA_INTEL_XB3_ARM_
         fprintf(fp, "-A PREROUTING -i %s -p tcp -m tcp ! --tcp-flags FIN,SYN,RST,ACK SYN -m conntrack --ctstate NEW -j DROP\n",current_wan_ifname);
         fprintf(fp, "-A PREROUTING -i %s -p tcp -m tcp ! --tcp-flags FIN,SYN,RST,ACK SYN -m conntrack --ctstate NEW -j DROP\n",ecm_wan_ifname);
@@ -16176,25 +16127,12 @@ int prepare_ipv6_firewall(const char *fw_file, char* strBlockTimeCmd)
          do_ipv6_nat_table(nat_fp);
       #endif
 
-  	if ( bEthWANEnable )
-  	{
-      	  ethwan_mso_gui_acess_rules(NULL,mangle_fp);                      
-  	}
     do_ipv6_UIoverWAN_filter(mangle_fp);
 
-#if defined(_COSA_BCM_MIPS_) // RDKB-35063
-	ethwan_mso_gui_acess_rules(NULL,mangle_fp);
-#endif
-	
         do_ipv6_filter_table(filter_fp);
 
 	do_wpad_isatap_blockv6(filter_fp);
 
-#if !(defined(_COSA_INTEL_XB3_ARM_) || defined(_COSA_BCM_MIPS_))
-        prepare_rabid_rules(filter_fp, mangle_fp, IP_V6);
-#else
-        prepare_rabid_rules_v2020Q3B(filter_fp, mangle_fp, IP_V6);
-#endif
 	do_parental_control(filter_fp,nat_fp, 6);
 #if defined(SPEED_BOOST_SUPPORTED) && defined(SPEED_BOOST_SUPPORTED_V6)
 	do_speedboost_port_rules(mangle_fp,nat_fp , 6);
@@ -16705,9 +16643,6 @@ static void do_ipv6_filter_table(FILE *fp){
    fprintf(fp, "-A INPUT -i %s -m state --state ESTABLISHED,RELATED -p udp --dport 123 -j ACCEPT \n", get_current_wan_ifname());
    fprintf(fp, "-A INPUT -i %s  -m state --state NEW -p udp --dport 123 -j DROP \n",get_current_wan_ifname());
 
-   // Video Analytics Firewall rule to allow port 58081 only from LAN interface
-   do_OpenVideoAnalyticsPort (fp);
-
 #if defined(_COSA_BCM_ARM_) && (defined(_CBR_PRODUCT_REQ_) || defined(_XB6_PRODUCT_REQ_)) && !defined(_SCER11BEL_PRODUCT_REQ_) 
    /* To avoid open ssh connection to CM IP TCXB6-2879*/
    snprintf(request, 256, "snmpget -cpub -v2c -Ov %s %s", CM_SNMP_AGENT, kOID_cmRemoteIpv6Address);
@@ -16811,8 +16746,6 @@ static void do_ipv6_filter_table(FILE *fp){
 #endif
 
        lan_telnet_ssh(fp, AF_INET6);
-       do_ssh_IpAccessTable(fp, "22", AF_INET6, ecm_wan_ifname);
-       do_snmp_IpAccessTable(fp, AF_INET6);
        do_tr69_whitelistTable(fp, NULL, AF_INET6, current_wan_ifname, bus_handle);
 #if defined (FEATURE_SUPPORT_MAPT_NAT46)
       if (isMAPTReady)
@@ -16823,8 +16756,6 @@ static void do_ipv6_filter_table(FILE *fp){
 #endif
        goto end_of_ipv6_firewall;
    }
-
-   do_openPorts(fp);
 
    fprintf(fp, "-A LOG_FORWARD_DROP -m limit --limit 1/minute -j LOG --log-level %d --log-prefix \"UTOPIA: FW.IPv6 FORWARD drop\"\n",syslog_level);
 #ifdef FEATURE_464XLAT
@@ -17067,15 +16998,6 @@ static void do_ipv6_filter_table(FILE *fp){
         WAN_FAILOVER_SUPPORT_CHECK
         do_remote_access_control(NULL, fp, AF_INET6);
 	WAN_FAILOVER_SUPPORT_CHECk_END
-      /* if(isProdImage) {
-          do_ssh_IpAccessTable(fp, "22", AF_INET6, ecm_wan_ifname);
-      } else {
-          fprintf(fp, "-A SSH_FILTER -j ACCEPT\n");
-      } */
-      do_ssh_IpAccessTable(fp, "22", AF_INET6, ecm_wan_ifname);
-
-       do_snmp_IpAccessTable(fp, AF_INET6);
-
 
       // Development override
       if (isDevelopmentOverride) {
@@ -17266,8 +17188,6 @@ v6GPFirewallRuleNext:
 #endif
       // Logging and rejecting politely (rate limiting anyway)
       fprintf(fp, "-A INPUT -j LOG_INPUT_DROP \n");
-
-      do_forwardPorts(fp);
 
       //Adding rule for XB6 ARRISXB6-3348 and TCXB6-2262
 #if defined(INTEL_PUMA7) || defined(_COSA_BCM_ARM_) || defined(_PLATFORM_TURRIS_) || defined(_COSA_QCA_ARM_)
@@ -18427,8 +18347,6 @@ static int service_init (int argc, char **argv)
 
    prepare_globals_from_configuration();
 
-   firewall_lib_init(bus_handle, sysevent_fd, sysevent_token);
-
 ret_err:
 FIREWALL_DEBUG("Exiting firewall service_init()\n");
    return rc;
@@ -18994,8 +18912,6 @@ int error;
 	  }
        return rc;
    }
-
-   update_rabid_features_status();
 
    switch (event) {
    case SERVICE_EV_START:
