@@ -41,7 +41,7 @@
 ################################################################################
 
 # Version of the database.
-$$Version=18
+$$Version=19
 
 #-------------------------------------------------------------------
 #     sysevent namespace
@@ -494,9 +494,9 @@ $ddns_password=none
 
 # ntp_server is the name of the ntp server we should use
 $ntp_enabled=0
-#$ntp_server1=0.pool.ntp.org
-#$ntp_server2=1.pool.ntp.org
-#$ntp_server3=2.pool.ntp.org
+$$ntp_server1=
+$$ntp_server2=
+$$ntp_server3=
 # dynamic ntp servers
 # if we get ntp_servers from dhcp client then they will be added to sysevent
 #@dhcpc_ntp_server1=
