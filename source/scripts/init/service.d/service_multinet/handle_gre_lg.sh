@@ -204,6 +204,17 @@ create_tunnel () {
 
     sysevent set gre_current_endpoint $1
     sysevent set if_${2}-status $IF_READY
+
+    #We need to make sure Community hotspot Vlan IDs are attached to the bridges
+    #if found not attached , then add the device to bridges.
+    grePresent=$(ifconfig -a | grep "$GRE_IFNAME")
+    if [ -n "$grePresent" ]; then
+	    vlanAdded=$(brctl show brlan2 | grep "$GRE_IFNAME")
+	    if [ "$vlanAdded" = "" ]; then
+		    echo "Gre interface not added $GRE_IFNAME"
+		    brctl addif brlan2 $GRE_IFNAME
+	    fi
+    fi
 }
 
 destroy_tunnel () {
