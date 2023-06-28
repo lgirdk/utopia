@@ -517,7 +517,6 @@ void logPrintMain(char* filename, int line, char *fmt,...);
 #define LNF_BRIDGE  "br106"
 #endif
 
-#define SYSCTL_NF_CONNTRACK_HELPER "/proc/sys/net/netfilter/nf_conntrack_helper"
 #define V4_BLOCKFRAGIPPKT   "v4_BlockFragIPPkts"
 #define V4_PORTSCANPROTECT  "v4_PortScanProtect"
 #define V4_IPFLOODDETECT    "v4_IPFloodDetect"
@@ -1137,6 +1136,28 @@ static BOOL isServiceNeeded()
 }
 #endif
 
+static int _write_sysctl_file(const char *filename, int value)
+{
+    char buf[12];
+    size_t len;
+    int fd;
+
+    if ((fd = open(filename, O_WRONLY)) < 0) {
+        perror("Failed to open file");
+        return -1;
+    }
+
+    len = sprintf(buf, "%d", value);
+    if (write(fd, buf, len) != (ssize_t) len) {
+        perror("Failed to write to file");
+        close(fd);
+        return -1;
+    }
+
+    close(fd);
+
+    return 0;
+}
 
 static int IsValidIPv6Addr(char* ip_addr_string)
 {
@@ -12263,9 +12284,9 @@ static int AutoConntrackHelperDisabled (void)
 
     FIREWALL_DEBUG("Entering AutoConntrackHelperDisabled\n");         
 
-    if ((fp = fopen (SYSCTL_NF_CONNTRACK_HELPER, "r")) == NULL)
+    if ((fp = fopen ("/proc/sys/net/netfilter/nf_conntrack_helper", "r")) == NULL)
     {
-   	FIREWALL_DEBUG("fopen call failed for %s, returning\n" COMMA SYSCTL_NF_CONNTRACK_HELPER);         
+   	FIREWALL_DEBUG("fopen call failed for /proc/sys/net/netfilter/nf_conntrack_helper, returning\n");
         return result;
     }
 
@@ -17663,27 +17684,27 @@ memset(buf,0,200);
  */
 static int do_blockfragippktsv4(FILE *fp)
 {
-    char buf[160];
     int enable = 0;
 
     if (strcasecmp(firewall_level, "None") != 0)
     {
+        char buf[12];
+
         if (syscfg_get(NULL, "v4_BlockFragIPPkts", buf, sizeof(buf)) == 0)
         {
             enable = atoi(buf);
         }
     }
+
     if (enable)
     {
-        system("echo 0 > /proc/sys/net/ipv4/ipfrag_low_thresh ; "
-               "echo 0 > /proc/sys/net/ipv4/ipfrag_high_thresh");
-    } else {
-        snprintf(buf, sizeof(buf),
-                 "echo %d > /proc/sys/net/ipv4/ipfrag_high_thresh ; "
-                 "echo %d > /proc/sys/net/ipv4/ipfrag_low_thresh",
-                 DEFAULT_FRAG_HIGH_THRESH_VALUE,
-                 DEFAULT_FRAG_LOW_THRESH_VALUE);
-        system(buf);
+        _write_sysctl_file("/proc/sys/net/ipv4/ipfrag_low_thresh", 0);
+        _write_sysctl_file("/proc/sys/net/ipv4/ipfrag_high_thresh", 0);
+    }
+    else
+    {
+        _write_sysctl_file("/proc/sys/net/ipv4/ipfrag_high_thresh", DEFAULT_FRAG_HIGH_THRESH_VALUE);
+        _write_sysctl_file("/proc/sys/net/ipv4/ipfrag_low_thresh", DEFAULT_FRAG_LOW_THRESH_VALUE);
     }
 
     return 0;
@@ -17830,7 +17851,6 @@ static void do_icmpflooddetectv4(FILE *fp)
     {
         enable = atoi(query);
     }
-
     if (enable)
     {
         icmpRate = 15;
@@ -17861,11 +17881,12 @@ static void do_icmpflooddetectv4(FILE *fp)
  */
 static int do_blockfragippktsv6(FILE *fp)
 {
-    char buf[160];
     int enable = 0;
 
     if (strcasecmp(firewall_level, "None") != 0)
     {
+        char buf[12];
+
         if (syscfg_get(NULL, "v6_BlockFragIPPkts", buf, sizeof(buf)) == 0)
         {
             enable = atoi(buf);
@@ -17875,15 +17896,13 @@ static int do_blockfragippktsv6(FILE *fp)
     {
         //Blocking fragments is no more part of ip6tables
         //configure frag buffer in kernel to '0' so the frags gets dropped
-        system("echo 0 > /proc/sys/net/netfilter/nf_conntrack_frag6_low_thresh ; "
-               "echo 0 > /proc/sys/net/netfilter/nf_conntrack_frag6_high_thresh");
-    } else {
-        snprintf(buf, sizeof(buf),
-                 "echo %d > /proc/sys/net/netfilter/nf_conntrack_frag6_high_thresh ; "
-                 "echo %d > /proc/sys/net/netfilter/nf_conntrack_frag6_low_thresh",
-                 DEFAULT_FRAG_HIGH_THRESH_VALUE,
-                 DEFAULT_FRAG_LOW_THRESH_VALUE);
-        system(buf);
+        _write_sysctl_file("/proc/sys/net/netfilter/nf_conntrack_frag6_low_thresh", 0);
+        _write_sysctl_file("/proc/sys/net/netfilter/nf_conntrack_frag6_high_thresh", 0);
+    }
+    else
+    {
+        _write_sysctl_file("/proc/sys/net/netfilter/nf_conntrack_frag6_high_thresh", DEFAULT_FRAG_HIGH_THRESH_VALUE);
+        _write_sysctl_file("/proc/sys/net/netfilter/nf_conntrack_frag6_low_thresh", DEFAULT_FRAG_LOW_THRESH_VALUE);
     }
 
     return 0;
