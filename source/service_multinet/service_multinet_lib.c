@@ -54,6 +54,8 @@
 #include "errno.h"
 #include "secure_wrapper.h"
 //#include "nethelper.h"
+#include "util.h"
+
 #define LOCAL_BRLAN1UP_FILE "/tmp/brlan1_up"
 #if defined(MOCA_HOME_ISOLATION)
 #define LOCAL_MOCABR_UP_FILE "/tmp/MoCABridge_up"
@@ -269,7 +271,7 @@ static int nethelper_bridgeCreateUniqueMac(char* brname, int id) {
     }
 
     /* Bring bridge up */
-    v_secure_system("echo 1 > /proc/sys/net/ipv6/conf/%s/autoconf", brname);
+    sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/autoconf", brname, "1");
     MNET_DEBUG("SYSTEM CALL: ifconfig %s up" COMMA brname);
     v_secure_system("ifconfig %s up", brname);
 
@@ -334,12 +336,12 @@ static int nethelper_bridgeDestroy(char* brname) {
 void ConfigureMoCABridge(L2Net l2net)
 {
     v_secure_system("ip link set %s allmulticast on; ifconfig %s "MOCA_BRIDGE_IP ";ip link set %s up",l2net.name, l2net.name,l2net.name);
-    v_secure_system("echo 0 > /proc/sys/net/ipv4/icmp_echo_ignore_broadcasts");
-    v_secure_system("sysctl -w net.ipv4.conf.all.arp_announce=3");
+    sysctl_iface_set("/proc/sys/net/ipv4/icmp_echo_ignore_broadcasts", NULL, "0");
+    sysctl_iface_set("/proc/sys/net/ipv4/conf/all/arp_announce", NULL, "3");
     v_secure_system("ip rule add from all iif brlan10 lookup all_lans");
 
 #if defined(MULTILAN_FEATURE)
-    v_secure_system("echo 0 > /proc/sys/net/ipv4/conf/brlan10/rp_filter");
+    sysctl_iface_set("/proc/sys/net/ipv4/conf/brlan10/rp_filter", NULL, "0");
 #if defined(INTEL_PUMA7)
     v_secure_system("ip rule add from 169.254.0.0/16 iif brlan0 lookup moca");
 #else
@@ -432,8 +434,8 @@ int multinet_bridgeUpInst(int l2netInst, int bFirewallRestart){
         {
            MNET_DEBUG("brlan0 up: disabling multicast_snooping\n")
            v_secure_system("echo 0 > /sys/devices/virtual/net/brlan0/bridge/multicast_snooping");
-           v_secure_system("echo 0 > /proc/sys/net/ipv4/conf/all/rp_filter");
-           v_secure_system("echo 0 > /proc/sys/net/ipv4/conf/brlan0/rp_filter");
+           sysctl_iface_set("/proc/sys/net/ipv4/conf/all/rp_filter", NULL, "0");
+           sysctl_iface_set("/proc/sys/net/ipv4/conf/brlan0/rp_filter", NULL, "0");
         }
 
 #endif
