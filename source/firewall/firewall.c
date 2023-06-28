@@ -513,7 +513,6 @@ void logPrintMain(char* filename, int line, char *fmt,...);
 #define LNF_BRIDGE  "br106"
 #endif
 
-#define SYSCTL_NF_CONNTRACK_HELPER "/proc/sys/net/netfilter/nf_conntrack_helper"
 #define V4_BLOCKFRAGIPPKT   "v4_BlockFragIPPkts"
 #define V4_PORTSCANPROTECT  "v4_PortScanProtect"
 #define V4_IPFLOODDETECT    "v4_IPFloodDetect"
@@ -11492,9 +11491,9 @@ static int AutoConntrackHelperDisabled (void)
 
     FIREWALL_DEBUG("Entering AutoConntrackHelperDisabled\n");         
 
-    if ((fp = fopen (SYSCTL_NF_CONNTRACK_HELPER, "r")) == NULL)
+    if ((fp = fopen ("/proc/sys/net/netfilter/nf_conntrack_helper", "r")) == NULL)
     {
-   	FIREWALL_DEBUG("fopen call failed for %s, returning\n" COMMA SYSCTL_NF_CONNTRACK_HELPER);         
+   	FIREWALL_DEBUG("fopen call failed for /proc/sys/net/netfilter/nf_conntrack_helper, returning\n");
         return result;
     }
 
