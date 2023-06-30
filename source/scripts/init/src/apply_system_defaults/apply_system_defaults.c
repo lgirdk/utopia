@@ -207,7 +207,7 @@ static int set_syscfg (char *name, char *value)
     int force = 0;
     int rc = 0;
 
-    if ((value == NULL) || (value[0] == 0))
+    if (value == NULL)
     {
         return 0;
     }
