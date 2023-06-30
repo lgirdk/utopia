@@ -121,33 +121,33 @@ static int convert = 0;
    }\
 }\
 
-/*
- * Procedure     : trim
- * Purpose       : trims a string
- * Parameters    :
- *    in         : A string to trim
- * Return Value  : The trimmed string
- * Note          : This procedure will change the input sting in situ
- */
-static char *trim(char *in)
-{
-   // trim the front of the string
-   if (NULL == in) {
-      return(NULL);
-   }
-   char *start = in;
-   while(isspace(*start)) {
-      start++;
-   }
-   // trim the end of the string
 
-   char *end = start+strlen(start);
-   end--;
-   while(isspace(*end)) {
-      *end = '\0';
-      end--;
-   }
-   return(start);
+static char *trim (char *in)
+{
+    int len;
+
+    /*
+       Drop leading spaces (although there are not expected to be any).
+    */
+    while (isspace(*in)) {
+        in++;
+    }
+
+    /*
+       Drop trailing spaces (there will always be a newline at the end
+       of lines read by fgets() and trim() is used to remove it).
+    */
+    len = (int) strlen(in);
+    while (len > 0) {
+        if (isspace(in[len - 1])) {
+            in[len - 1] = 0;
+            len--;
+        }
+        else
+            break;
+    }
+
+    return in;
 }
 
 /*
