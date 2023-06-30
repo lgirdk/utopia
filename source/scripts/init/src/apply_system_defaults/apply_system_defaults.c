@@ -130,17 +130,7 @@ static char *trim (char *in)
     return in;
 }
 
-/*
- * Procedure     : parse_line
- * Purpose       : parses a line into a name and a value
- * Parameters    :
- *    in         : the line to parse
- *    name       : on return the name
- *    value      : on return the value
- * Return Value  : 0 if ok -1 if not
- * Note          : This function will change the contents of in
- */
-static int parse_line (char *in, char **name, char **value)
+static int split_line (char *in, char **name, char **value)
 {
    char *tok;
 
@@ -323,7 +313,7 @@ static int check_version (void)
       }
       else if (line[0] == '$')
       {
-         if (parse_line (line + 1, &name, &value) != 0)
+         if (split_line (line + 1, &name, &value) != 0)
          {
             printf("[utopia] [error] check_version failed to parse line (%s)\n", line);
          }
@@ -461,7 +451,7 @@ static int set_syscfg_defaults (void)
       }
       else if (line[0] == '$')
       {
-         if (parse_line (line + 1, &name, &value) != 0)
+         if (split_line (line + 1, &name, &value) != 0)
          {
             printf("[utopia] [error] set_syscfg_defaults failed to parse line (%s)\n", line);
          }
@@ -537,7 +527,7 @@ static int set_sysevent_defaults (void)
       }
       else if (line[0] == '@')
       {
-         if (parse_line (line + 1, &name, &value) != 0)
+         if (split_line (line + 1, &name, &value) != 0)
          {
             printf("[utopia] set_sysevent_defaults failed to parse line (%s)\n", line);
          }
