@@ -229,38 +229,41 @@ static int set_sysevent(char *name, char *value, int flags)
  */
 static int set_syscfg (char *name, char *value) 
 {
-    char get_val[512];
     int force = 0;
-    int rc;
+    int rc = 0;
 
     if ((value == NULL) || (value[0] == 0))
     {
         return 0;
     }
-   
-    //Note to force write if the value does not match and is marked, and increment past the mark.
+
+    /* Check for second $ (ie values defined with $$ prefix) */
     if (name[0] == '$')
     {
-#if ! defined (ALWAYS_CONVERT)
+        name++;
+#if defined (ALWAYS_CONVERT)
+        force = 1;
+#else
         if (convert)
-#endif
             force = 1;
-        name ++;
+#endif
     }
 
     if (force)
     {
-        printf ("[utopia] [init] apply_system_defaults set <$%s, %s> force=1\n", name, value);
+        printf ("[utopia] [init] apply_system_defaults set <$%s, %s> force=%d\n", name, value, force);
         rc = syscfg_set (NULL, name, value);
         syscfg_dirty++;
     }
     else
     {
+        char get_val[512];
+
         syscfg_get (NULL, name, get_val, sizeof(get_val));
 
         if (get_val[0] == 0)
         {
-            printf ("[utopia] [init] apply_system_defaults set <$%s, %s> force=0\n", name, value);
+            printf ("[utopia] [init] apply_system_defaults set <$%s, %s> force=%d\n", name, value, force);
             rc = syscfg_set (NULL, name, value);
             syscfg_dirty++;
         }
@@ -300,7 +303,7 @@ static int handle_version (char* name, char* value)
 static int check_version (void)
 {
    char buf[1024];
-   char *line; 
+   char *line;
    char *name;
    char *value;
    FILE *fp;
@@ -336,13 +339,13 @@ static int check_version (void)
       else if (line[0] == '$')
       {
          if (parse_line (line + 1, &name, &value) != 0)
-	 {
-            printf("[utopia] [error] set_defaults failed to set syscfg (%s)\n", line);
+         {
+            printf("[utopia] [error] check_version failed to parse line (%s)\n", line);
          }
-	 else
-	 { 
+         else
+         {
             if (handle_version (trim(name), trim(value)))
-	    {
+            {
                 break;
             }
          }
@@ -374,7 +377,7 @@ static int check_version (void)
 static int set_syscfg_defaults (void)
 {
    char buf[1024];
-   char *line; 
+   char *line;
    char *name;
    char *value;
    FILE *fp;
@@ -394,7 +397,7 @@ static int set_syscfg_defaults (void)
     * If the default is for a sysevent tuple, then name must be preceeded with a @
     * If the first character in the line is # then the line will be ignored
     */
-   
+
    while (fgets (buf, sizeof(buf), fp) != NULL)
    {
       line = trim (buf);
@@ -410,11 +413,11 @@ static int set_syscfg_defaults (void)
       else if (line[0] == '$')
       {
          if (parse_line (line + 1, &name, &value) != 0)
-	 {
-            printf("[utopia] [error] set_syscfg_defaults failed to set syscfg (%s)\n", line);
+         {
+            printf("[utopia] [error] set_syscfg_defaults failed to parse line (%s)\n", line);
          }
-	 else
-	 { 
+         else
+         {
             set_syscfg(trim(name), trim(value));
          }
       }
@@ -429,7 +432,7 @@ static int set_syscfg_defaults (void)
       }
    }
 
-   fclose (fp); 
+   fclose (fp);
 
    return 0;
 }
@@ -444,7 +447,7 @@ static int set_syscfg_defaults (void)
 static int set_sysevent_defaults (void)
 {
    char buf[1024];
-   char *line; 
+   char *line;
    char *name;
    char *value;
    FILE *fp;
@@ -464,7 +467,7 @@ static int set_sysevent_defaults (void)
     * If the default is for a sysevent tuple, then name must be preceeded with a @
     * If the first character in the line is # then the line will be ignored
     */
-   
+
    while (fgets (buf, sizeof(buf), fp) != NULL)
    {
       line = trim (buf);
@@ -484,11 +487,11 @@ static int set_sysevent_defaults (void)
       else if (line[0] == '@')
       {
          if (parse_line (line + 1, &name, &value) != 0)
-	 {
-            printf("[utopia] set_sysevent_defaults failed to set sysevent (%s)\n", line);
+         {
+            printf("[utopia] set_sysevent_defaults failed to parse line (%s)\n", line);
          }
-	 else
-	 {
+         else
+         {
             char *val = trim(value);
             char *flagstr;
             int flags = 0x00000000;
@@ -502,7 +505,7 @@ static int set_sysevent_defaults (void)
                   flags = strtol(flagstr, NULL, 16);
                   break;
                }
-            } 
+            }
             set_sysevent(trim(name), val, flags);
          }
       }
@@ -534,7 +537,8 @@ static int set_defaults(void)
 
    set_syscfg_defaults();
    set_sysevent_defaults();
-   return(0);
+
+   return 0;
 }
 
 static char *json_file_parse (char *path)
