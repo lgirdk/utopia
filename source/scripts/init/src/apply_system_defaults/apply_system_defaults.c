@@ -234,9 +234,19 @@ static int set_syscfg (char *name, char *value)
     {
         char get_val[512];
 
-        syscfg_get (NULL, name, get_val, sizeof(get_val));
+        rc = syscfg_get (NULL, name, get_val, sizeof(get_val));
 
-        if (get_val[0] == 0)
+        /*
+           There are 3 possible results from syscfg_get():
+
+             1) The previous value is set to a non-empty string : get_val[0] will be non-zero and rc will be 0
+             2) The previous value is set to an empty string    : get_val[0] will be 0 and rc will be 0
+             3) The previous value is not set                   : get_val[0] will be 0 and rc will be -1
+
+           Only set a new value here (ie when force is 0) in case 3.
+        */
+
+        if (rc != 0)
         {
             printf ("[utopia] [init] apply_system_defaults set <$%s, %s> force=%d\n", name, value, force);
             rc = syscfg_set (NULL, name, value);
@@ -245,7 +255,6 @@ static int set_syscfg (char *name, char *value)
         else
         {
             printf ("[utopia] [init] syscfg_get <$%s, %s>\n", name, get_val);
-            rc = 0;
         }
     }
 
