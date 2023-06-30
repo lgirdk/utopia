@@ -1526,7 +1526,7 @@ $smart_wifi_hide=0
 
 $ssam_enable=0
 $ssam_maxstartdelay=30
-$$ssam_provisionedenv=
+$ssam_provisionedenv=
 $ssam_provisioningmodel=1
 $ssam_signingkeyid=0
 $ssam_updaterenable=0
