@@ -81,6 +81,7 @@ static int   syscfg_dirty;
 #define SE_NAME "system_default_set"
 
 static int global_fd = 0;
+static token_t global_id;
 
 /*
    By default the variable "convert" will be set if $Version is found in
@@ -102,9 +103,6 @@ static int global_fd = 0;
 //Flag to indicate a db conversion is necessary
 static int convert = 0;
 #endif
-
-// we can use one global id for sysevent because we are single threaded
-token_t global_id;
 
 #if defined (_CBR_PRODUCT_REQ_) || defined (_XB6_PRODUCT_REQ_)
         #define LOG_FILE "/rdklogs/logs/Consolelog.txt.0"
