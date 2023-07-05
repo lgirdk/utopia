@@ -104,13 +104,14 @@ static token_t global_id;
 static int convert = 0;
 #endif
 
+#define RETRY_COUNT 3
+
 #if defined (_CBR_PRODUCT_REQ_) || defined (_XB6_PRODUCT_REQ_)
         #define LOG_FILE "/rdklogs/logs/Consolelog.txt.0"
 #else
 	#define LOG_FILE "/rdklogs/logs/ArmConsolelog.txt.0"
 #endif
 
-#define RETRY_COUNT 60
 #define APPLY_PRINT(fmt ...)   {\
    FILE *logfp = fopen ( LOG_FILE , "a+");\
    if (logfp)\
@@ -1750,11 +1751,6 @@ static int compare_partner_json_param (char *partner_nvram_bs_obj, char *partner
 
    return 0;
 }
-
-#ifdef RETRY_COUNT
-#undef RETRY_COUNT
-#endif
-#define RETRY_COUNT 3
 
 static int apply_partnerId_default_values (char *data, char *PartnerID)
 {
