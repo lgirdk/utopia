@@ -44,7 +44,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <getopt.h>
 #include <ctype.h>
 #include <arpa/inet.h>
 #include <syscfg/syscfg.h>
@@ -70,13 +69,9 @@
 #define PARTNER_DEFAULT_MIGRATE_FOR_NEW_PSM_MEMBER  	"/tmp/.apply_partner_defaults_new_psm_member"
 
 #define PARTNER_ID_LEN 64
-static char default_file[1024];
 
-// The sysevent server is local 
-#define SE_WELL_KNOWN_IP    "127.0.0.1"
-static short server_port;
-static char  server_ip[19];
 static int   syscfg_dirty;
+
 #define DEFAULT_FILE "/etc/utopia/system_defaults"
 #define SE_NAME "system_default_set"
 
@@ -319,11 +314,11 @@ static int check_version (void)
    char *value;
    FILE *fp;
 
-   fp = fopen (default_file, "r");
+   fp = fopen (DEFAULT_FILE, "r");
 
    if (fp == NULL)
    {
-      printf ("[utopia] no system default file (%s) found\n", default_file);
+      printf ("[utopia] no system default file (%s) found\n", DEFAULT_FILE);
       return -1;
    }
 
@@ -393,11 +388,11 @@ static int set_syscfg_defaults (void)
    char *value;
    FILE *fp;
 
-   fp = fopen (default_file, "r");
+   fp = fopen (DEFAULT_FILE, "r");
 
    if (fp == NULL)
    {
-      printf ("[utopia] no system default file (%s) found\n", default_file);
+      printf ("[utopia] no system default file (%s) found\n", DEFAULT_FILE);
       return -1;
    }
 
@@ -463,11 +458,11 @@ static int set_sysevent_defaults (void)
    char *value;
    FILE *fp;
 
-   fp = fopen (default_file, "r");
+   fp = fopen (DEFAULT_FILE, "r");
 
    if (fp == NULL)
    {
-      printf ("[utopia] no system default file (%s) found\n", default_file);
+      printf ("[utopia] no system default file (%s) found\n", DEFAULT_FILE);
       return -1;
    }
 
@@ -548,67 +543,6 @@ static int set_defaults(void)
 
    set_syscfg_defaults();
    set_sysevent_defaults();
-   return(0);
-}
-
-static void printhelp(char *name)
-{
-    printf ("Usage %s --file default_file --port syseventd_port --ip syseventd_ip --help command params\n", name);
-}
-
-/*
- * Procedure     : parse_command_line
- * Purpose       : if any command line args then apply them
- * Parameters    :
- * Return Value  : 0 if ok, -1 if not
- */
-static int parse_command_line (int argc, char **argv)
-{
-   int c;
-   while (1) {
-      int option_index = 0;
-      static struct option long_options[] = {
-         {"file", 1, 0, 'f'},
-         {"port", 1, 0, 'p'},
-         {"ip", 1, 0, 'd'},
-         {"help", 0, 0, 'h'},
-         {0, 0, 0, 0}
-      };
-
-      // optstring has a leading : to stop debug output
-      // f takes an argument
-      // p takes an argument
-      // i takes an argument
-      // h takes no argument
-      c = getopt_long (argc, argv, ":f:p:i:h", long_options, &option_index);
-      if (c == -1) {
-         break;
-      }
-
-      switch (c) {
-         case 'f':
-            snprintf(default_file, sizeof(default_file), "%s", optarg);
-            break;
-        
-         case 'p':
-            server_port = htons(atoi(optarg));
-            break;
-
-         case 'i':
-            snprintf(server_ip, sizeof(server_ip), "%s", optarg);
-            break;
-
-         case 'h':
-         case '?':
-            printhelp(argv[0]);
-            exit(0);
-            break;
-
-         default:
-            printhelp(argv[0]);
-            break;
-      }
-   }
    return(0);
 }
 
@@ -2553,16 +2487,10 @@ int main( int argc, char **argv )
    int retryCount = RETRY_COUNT;
 
    t2_init("apply_system_defaults");
-   //Fill basic contents
-   server_port = SE_SERVER_WELL_KNOWN_PORT;
-
-   snprintf( server_ip, sizeof( server_ip ), "%s", SE_WELL_KNOWN_IP );
-   snprintf( default_file, sizeof( default_file ), "%s", DEFAULT_FILE );
 
    syscfg_dirty = 0;
 
-   parse_command_line(argc, argv);
-   while ( retryCount && ((global_fd = sysevent_open(server_ip, server_port, SE_VERSION, SE_NAME, &global_id)) <= 0 ))
+   while ( retryCount && ((global_fd = sysevent_open("127.0.0.1", SE_SERVER_WELL_KNOWN_PORT, SE_VERSION, SE_NAME, &global_id)) <= 0 ))
    {
       struct timeval t;
 
@@ -2584,7 +2512,7 @@ int main( int argc, char **argv )
 		APPLY_PRINT("[Utopia] Retrying sysevent open\n");
 
 		global_fd=0;
-	   	global_fd = sysevent_open(server_ip, server_port, SE_VERSION, SE_NAME, &global_id);
+	   	global_fd = sysevent_open("127.0.0.1", SE_SERVER_WELL_KNOWN_PORT, SE_VERSION, SE_NAME, &global_id);
 		APPLY_PRINT("[Utopia] Global fd after retry is %d\n",global_fd);	
 
 		if ( global_fd <= 0)
