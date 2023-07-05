@@ -22,6 +22,8 @@ AM_CFLAGS = -I$(top_srcdir)/source/include \
             -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/dbus-1.0 \
 	    -I${PKG_CONFIG_SYSROOT_DIR}$(libdir)/dbus-1.0/include
 
+AM_CFLAGS += -Wall
+
 AM_LDFLAGS = $(top_builddir)/source/services/lib/libsrvmgr.la \
              $(top_builddir)/source/sysevent/lib/libsysevent.la \
              $(top_builddir)/source/syscfg/lib/libsyscfg.la \
