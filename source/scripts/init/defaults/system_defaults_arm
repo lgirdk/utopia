@@ -81,9 +81,6 @@ $$Version=17
 @MeshRemoteWANInterface_UlaAddr=fd01:1010:b066:798e:3465:bfff:fe1a:8f46/64
 @MeshWanInterface_UlaPref=fd01:1010:b066:798e::/64
 
-# current hostname is taken from syscfg
-@hostname=$hostname
-
 # current usb device state (inserted/removed)
 #@usb_device_state=removed
 #@usb_device_mount_pt=none
