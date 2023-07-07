@@ -690,7 +690,9 @@ case "$1" in
   ipv6_connection_state)
       if [ "$BOX_TYPE" = "HUB4" ] || [ "$BOX_TYPE" = "SR300" ] || [ "$BOX_TYPE" = "SE501" ] || [ "$BOX_TYPE" = "WNXL11BWL" ] || [ "$BOX_TYPE" = "SR213" ]; then
          NTPD_PROCESS=`pidof $BIN`
-         if [ -n "$NTPD_PROCESS" ];then
+         NTP_STATUS=`syscfg get ntp_status`
+         #SKYH4-6932: When IPv6 comes up after ipv4, IPv6 listners won't be added and hence with ipv6 only ntp servers, we will have time syncing problems. So checking time sync status along with ntpd process, if time  isn't  synced there will conf update and ntpd restart.
+         if [ $NTP_STATUS == 3 ] && [ -n "$NTPD_PROCESS" ];then
              echo_t "SERVICE_NTPD : ntp process is already running and pid is = $NTPD_PROCESS" >> $NTPD_LOG_NAME
          else
              WAN_IPV6_STATUS=`sysevent get ipv6_connection_state`
