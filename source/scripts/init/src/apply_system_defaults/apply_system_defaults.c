@@ -2484,7 +2484,7 @@ int main( int argc, char **argv )
    char  PartnerID[ PARTNER_ID_LEN+255 ]  = { 0 };
    int   isNeedToApplyPartnersDefault = 1;
    int   isMigrationReq = 0;
-   int retryCount = RETRY_COUNT;
+   int retryCount = RETRY_COUNT + 1;
 
    t2_init("apply_system_defaults");
 
@@ -2505,19 +2505,6 @@ int main( int argc, char **argv )
       select(0, NULL, NULL, NULL, &t);
 
       retryCount--;
-   }
-
-   if ( global_fd <= 0 )
-   {		
-		APPLY_PRINT("[Utopia] Retrying sysevent open\n");
-
-		global_fd=0;
-	   	global_fd = sysevent_open("127.0.0.1", SE_SERVER_WELL_KNOWN_PORT, SE_VERSION, SE_NAME, &global_id);
-		APPLY_PRINT("[Utopia] Global fd after retry is %d\n",global_fd);	
-
-		if ( global_fd <= 0)
-		APPLY_PRINT("[Utopia] Retrying sysevent open also failed %d\n",global_fd);
-	
    }
 
    set_defaults();
