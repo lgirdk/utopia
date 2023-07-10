@@ -194,7 +194,7 @@ service_start ()
       if [ "$BOX_TYPE" == "HUB4" ]; then
 	      addCron "51 * * * *  sh /etc/utopia/service.d/handle_log_monitor_pause.sh &"
               #To monitor endpoint failure every 15 minutes
-              echo "*/15 * * * * /etc/sky/monitor_voice_endpoint.sh" >> $CRONTAB_FILE
+              echo "*/15 3-4 * * *  /etc/sky/monitor_voice_endpoint.sh" >> $CRONTAB_FILE
       fi
  
       # Logging current chain mask value of 2G - runs on 1st minute of every 12th hour - only for 3941 box
