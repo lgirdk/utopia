@@ -872,6 +872,7 @@ static char guest_network_mask[20];
 #endif
 
 static int ppFlushNeeded = 0;
+static int firewallPartialRestart = 0;
 #ifdef _HUB4_PRODUCT_REQ_
 static int isProdImage = 0;
 #endif
@@ -3139,6 +3140,12 @@ static int prepare_globals_from_configuration(void)
        ppFlushNeeded  = 0;
    } else {
        ppFlushNeeded  = 1;
+   }
+
+   temp[0] = '\0';
+   sysevent_get(sysevent_fd, sysevent_token, "firewall-restart", temp, sizeof(temp));
+   if ('\0' != temp[0]) {
+       firewallPartialRestart = 1;
    }
 
    temp[0] = '\0';
@@ -18237,8 +18244,26 @@ static int service_start (char* strBlockTimeCmd)
 #endif
        sysevent_set(sysevent_fd, sysevent_token, "pp_flush", "0", 0);
    }
+   // if firewallPartialRestart set to 1, conntrack flush only Lan subnet.
+   if (firewallPartialRestart == 1)
+   {
+       char ipv6_subnet[128];
+       // Flush only NAT-related entries
+       system("conntrack -D -f ipv4 --src-nat");
 
-   v_secure_system("conntrack -F");
+       // get ipv6 subnet
+       ipv6_subnet[0] = '\0';
+       syscfg_get(NULL, "ipv6_prefix", ipv6_subnet, sizeof(ipv6_subnet));
+       if (ipv6_subnet[0] != '\0')
+       {
+           v_secure_system("conntrack -D -s %s -f ipv6", ipv6_subnet);
+       }
+       FIREWALL_DEBUG("Conntrack flush only Lan subnet related\n");
+   }
+   else {
+       FIREWALL_DEBUG("Total conntrack flush\n");
+       system("conntrack -F");
+   }
 
    sysevent_set(sysevent_fd, sysevent_token, "firewall-status", "started", 0);
    ulogf(ULOG_FIREWALL, UL_INFO, "started %s service", service_name);
