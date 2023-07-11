@@ -259,6 +259,7 @@ set_ntp_quicksync_status ()
              sysevent set ntp_time_sync 1
              QUICK_SYNC_DONE=1
 	     touch /tmp/clock-event
+             echo_t "DEBUG : clock-event file created in /tmp. Time Sync is successful. Xconf is good to start" >> $NTPD_LOG_NAME
              break
 	  elif [ "$ntpd_exit_code" -eq 127 ]; then
              echo_t "NTP quick sync not succeeded,PID has terminated or is unknown by the shell" >> $NTPD_LOG_NAME
@@ -289,6 +290,7 @@ set_ntp_driftsync_status ()
            syscfg set ntp_status 3
            sysevent set ntp_time_sync 1
 	   touch /tmp/clock-event
+           echo_t "DEBUG : clock-event file created in /tmp. Time Sync is successful. Xconf is good to start" >> $NTPD_LOG_NAME
            #Set FirstUseDate in Syscfg if this is the first time we are doing a successful NTP Sych
            DEVICEFIRSTUSEDATE=`syscfg get device_first_use_date`
            if [ -z "$DEVICEFIRSTUSEDATE" ] || [ "0" = "$DEVICEFIRSTUSEDATE" ]; then
