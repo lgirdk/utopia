@@ -936,6 +936,7 @@ $Adv_WSDisAnaRFCEnable=1
 $Adv_AdvSecOTMRFCEnable=1
 $Adv_AdvSecUserSpaceRFCEnable=0
 $Adv_WifiDataCollectionRFCEnable=0
+$Adv_LevlRFCEnable=0
 $Adv_AdvSecCujoTracerRFCEnable=0
 $Adv_AdvSecCujoTelemetryRFCEnable=0
 $Adv_RaptrRFCEnable=1
