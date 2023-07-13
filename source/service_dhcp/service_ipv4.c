@@ -25,6 +25,7 @@
 #include "syscfg/syscfg.h"
 #include "lan_handler.h"
 #include "print_uptime.h"
+#include  "safec_lib_common.h"
 #include <telemetry_busmessage_sender.h>
 #include "safec_lib_common.h"
 #include <arpa/inet.h>
@@ -255,7 +256,7 @@ void remove_tsip_config()
     {
 		if (l_cpPsm_Get != NULL)
 		{
-			strncpy(l_cNv_Tsip_Enable, l_cpPsm_Get, sizeof(l_cNv_Tsip_Enable));
+			strcpy_s(l_cNv_Tsip_Enable, sizeof(l_cNv_Tsip_Enable), l_cpPsm_Get); // CID 258264: Buffer not null terminated (BUFFER_SIZE)
         	Ansc_FreeMemory_Callback(l_cpPsm_Get);
 	        l_cpPsm_Get = NULL;
 		}
@@ -277,7 +278,7 @@ void remove_tsip_config()
 	{
 		if (l_cpPsm_Get != NULL)
 	    {
-    	    strncpy(l_cNvTsip_IpAddr, l_cpPsm_Get, sizeof(l_cNvTsip_IpAddr));
+    	    strcpy_s(l_cNvTsip_IpAddr, sizeof(l_cNvTsip_IpAddr), l_cpPsm_Get); // CID 258264: Buffer not null terminated (BUFFER_SIZE)
 	        Ansc_FreeMemory_Callback(l_cpPsm_Get);
     	    l_cpPsm_Get = NULL;
 		}
@@ -460,8 +461,7 @@ void remove_tsip_asn_config()
 				{
 					if(l_cpPsm_Get != NULL)
 					{
-    	        		strncpy(l_cNv_Tsip_Asn_Subnet, l_cpPsm_Get,
-								sizeof(l_cNv_Tsip_Asn_Subnet));
+    	        		strcpy_s(l_cNv_Tsip_Asn_Subnet, sizeof(l_cNv_Tsip_Asn_Subnet), l_cpPsm_Get); // CID 258277: Buffer not null terminated (BUFFER_SIZE)
 
 	        	        Ansc_FreeMemory_Callback(l_cpPsm_Get);
     	        	    l_cpPsm_Get = NULL;
@@ -531,7 +531,7 @@ void sync_tsip ()
     {
 		if (l_cpPsm_Get != NULL)
 		{
-			strncpy(l_cNv_Tsip_Enable, l_cpPsm_Get, sizeof(l_cNv_Tsip_Enable));
+			strcpy_s(l_cNv_Tsip_Enable, sizeof(l_cNv_Tsip_Enable), l_cpPsm_Get); // CID 162994: Buffer not null terminated (BUFFER_SIZE)
         	Ansc_FreeMemory_Callback(l_cpPsm_Get);
 	        l_cpPsm_Get = NULL;
 		}
@@ -553,7 +553,7 @@ void sync_tsip ()
 	{
 		if (l_cpPsm_Get != NULL)
 	    {
-    	    strncpy(l_cNvTsip_IpAddr, l_cpPsm_Get, sizeof(l_cNvTsip_IpAddr));
+    	    strcpy_s(l_cNvTsip_IpAddr, sizeof(l_cNvTsip_IpAddr), l_cpPsm_Get); // CID 162994: Buffer not null terminated (BUFFER_SIZE) 
 	        Ansc_FreeMemory_Callback(l_cpPsm_Get);
     	    l_cpPsm_Get = NULL;
 		}
@@ -743,8 +743,7 @@ void sync_tsip_asn ()
 				{
 					if(l_cpPsm_Get != NULL)
 					{
-    	        		strncpy(l_cNv_Tsip_Asn_Subnet, l_cpPsm_Get, 
-								sizeof(l_cNv_Tsip_Asn_Subnet));
+    	        		strcpy_s(l_cNv_Tsip_Asn_Subnet, sizeof(l_cNv_Tsip_Asn_Subnet), l_cpPsm_Get); // CID 163592: Buffer not null terminated (BUFFER_SIZE)
 
 	        	        Ansc_FreeMemory_Callback(l_cpPsm_Get);
     	        	    l_cpPsm_Get = NULL; 
@@ -818,7 +817,7 @@ void resync_tsip(int tsip_enable)
     {
 		if (l_cpPsm_Get != NULL)
 		{
-			strncpy(l_cNv_Tsip_Enable, l_cpPsm_Get, sizeof(l_cNv_Tsip_Enable));
+			strcpy_s(l_cNv_Tsip_Enable, sizeof(l_cNv_Tsip_Enable), l_cpPsm_Get ); // CID 258270 : Buffer not null terminated (BUFFER_SIZE)
         	Ansc_FreeMemory_Callback(l_cpPsm_Get);
 	        l_cpPsm_Get = NULL;
 		}
@@ -840,7 +839,7 @@ void resync_tsip(int tsip_enable)
 	{
 		if (l_cpPsm_Get != NULL)
 	    {
-    	    strncpy(l_cNvTsip_IpAddr, l_cpPsm_Get, sizeof(l_cNvTsip_IpAddr));
+    	    strcpy_s(l_cNvTsip_IpAddr, sizeof(l_cNvTsip_IpAddr), l_cpPsm_Get); // CID 258270 : Buffer not null terminated (BUFFER_SIZE)
 	        Ansc_FreeMemory_Callback(l_cpPsm_Get);
     	    l_cpPsm_Get = NULL;
 		}
@@ -983,7 +982,7 @@ void resync_tsip_asn()
     {
         if (l_cpPsm_Get != NULL)
         {
-            strncpy(l_cNv_Tsip_asn_Enable, l_cpPsm_Get, sizeof(l_cNv_Tsip_asn_Enable));
+            strcpy_s(l_cNv_Tsip_asn_Enable, sizeof(l_cNv_Tsip_asn_Enable), l_cpPsm_Get); // CID 258266: Buffer not null terminated (BUFFER_SIZE)
             Ansc_FreeMemory_Callback(l_cpPsm_Get);
             l_cpPsm_Get = NULL;
         }
@@ -1174,7 +1173,7 @@ void resync_tsip_asn_instance(int instance)
 			return;
 		}
 		fprintf(g_fArmConsoleLog, "l_cpPsm_Get %s \n",l_cpPsm_Get);
-		strncpy(l_cNv_Tsip_Asn_Subnet, l_cpPsm_Get,sizeof(l_cNv_Tsip_Asn_Subnet));
+		strcpy_s(l_cNv_Tsip_Asn_Subnet, sizeof(l_cNv_Tsip_Asn_Subnet), l_cpPsm_Get); // CID 338866: Buffer not null terminated (BUFFER_SIZE)
 		Ansc_FreeMemory_Callback(l_cpPsm_Get);
 		l_cpPsm_Get = NULL;
 

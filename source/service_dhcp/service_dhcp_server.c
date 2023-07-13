@@ -34,6 +34,7 @@
 #include "safec_lib_common.h"
 #include "secure_wrapper.h"
 #include "lan_handler.h"
+#include  "safec_lib_common.h"
 
 #define THIS        "/usr/bin/service_dhcp"
 #define BIN			"dnsmasq"
@@ -1058,7 +1059,8 @@ void resync_to_nonvol(char *RemPools)
         }
         if (match_found == 0)
         {
-            strncpy(tmp_buff[tmp_cnt++],REM_POOLS[iter],2);
+            strcpy_s(tmp_buff[tmp_cnt], sizeof(tmp_buff[tmp_cnt]), REM_POOLS[iter]); // CID 258259 : Buffer not null terminated (BUFFER_SIZE)
+            tmp_cnt++;
         }
     }
     memset(REM_POOLS,0,sizeof(REM_POOLS[0][0])*15*2);
@@ -1197,7 +1199,8 @@ void resync_to_nonvol(char *RemPools)
 	    }
 	    if (match_found == 0)
 	    {
-	        strncpy(tmp_buff[tmp_cnt++],CURRENT_POOLS[iter],2);
+	        strcpy_s(tmp_buff[tmp_cnt], sizeof(tmp_buff[tmp_cnt]), CURRENT_POOLS[iter]); // CID 258259 : Buffer not null terminated (BUFFER_SIZE)
+	        tmp_cnt++;
 	    }
     }
     memset(CURRENT_POOLS,0,sizeof(CURRENT_POOLS[0][0])*15*2);
@@ -1217,7 +1220,8 @@ void resync_to_nonvol(char *RemPools)
 	    }
 	    if (match_found == 0)
 	    {
-	        strncpy(tmp_buff[tmp_cnt++],CURRENT_POOLS[iter],2);
+	        strcpy_s(tmp_buff[tmp_cnt], sizeof(tmp_buff[tmp_cnt]), CURRENT_POOLS[iter]); // CID 258259 : Buffer not null terminated (BUFFER_SIZE)
+	        tmp_cnt++;
 	    }
     }
 

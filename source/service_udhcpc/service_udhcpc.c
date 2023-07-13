@@ -71,6 +71,7 @@
 #include <telemetry_busmessage_sender.h>
 #include <stdint.h>
 #include "secure_wrapper.h"
+#include  "safec_lib_common.h"
 
 #ifdef FEATURE_SUPPORT_ONBOARD_LOGGING
 #include <rdk_debug.h>
@@ -196,8 +197,11 @@ static char *GetDeviceProperties (char *param)
             out_val[strcspn(out_val, "\r\n")] = 0; // Strip off any carriage returns
 
             valPtr = strchr(out_val, '=');
+	    if (valPtr) // CID 334778 : Dereference null return value (NULL_RETURNS)
+	    {
             valPtr++;
             break;
+	    }
         }
     }
     fclose(fp1);
@@ -1176,13 +1180,13 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
 
     if ((env = getenv(DHCP_INTERFACE_NAME)) != NULL)
     {
-        strncpy(dhcpv4_data->dhcpcInterface, env, sizeof(dhcpv4_data->dhcpcInterface));
+        strcpy_s (dhcpv4_data->dhcpcInterface, sizeof(dhcpv4_data->dhcpcInterface), env); // CID 187457: Buffer not null terminated (BUFFER_SIZE)
     }
 
     /** DHCP server id */
     if ((env = getenv(DHCP_SERVER_ID)) != NULL)
     {
-        strncpy(dhcpv4_data->dhcpServerId, env, sizeof(dhcpv4_data->dhcpServerId));
+        strcpy_s(dhcpv4_data->dhcpServerId, sizeof(dhcpv4_data->dhcpServerId), env); // CID 187457: Buffer not null terminated (BUFFER_SIZE)
     }
     else
     {
@@ -1192,7 +1196,7 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
     /** DHCP State */
     if (pinfo->input_option != NULL)
     {
-        strncpy(dhcpv4_data->dhcpState, pinfo->input_option, sizeof(dhcpv4_data->dhcpState));
+        strcpy_s(dhcpv4_data->dhcpState, sizeof(dhcpv4_data->dhcpState), pinfo->input_option ); // CID 187457: Buffer not null terminated (BUFFER_SIZE)
     }
     else
     {
@@ -1206,7 +1210,7 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
         /** IP */
         if ((env = getenv(DHCP_IP_ADDRESS)) != NULL)
         {
-            strncpy(dhcpv4_data->ip, env, sizeof(dhcpv4_data->ip));
+            strcpy_s(dhcpv4_data->ip, sizeof(dhcpv4_data->ip), env); // CID 187457: Buffer not null terminated (BUFFER_SIZE)
         }
         else
         {
@@ -1216,7 +1220,7 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
         /** Subnet mask. */
         if ((env = getenv(DHCP_SUBNET)) != NULL)
         {
-            strncpy(dhcpv4_data->mask, env, sizeof(dhcpv4_data->mask));
+            strcpy_s(dhcpv4_data->mask, sizeof(dhcpv4_data->mask), env); // CID 187457: Buffer not null terminated (BUFFER_SIZE)
         }
         else
         {
@@ -1226,7 +1230,7 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
         /** Gateway. */
         if (pinfo->router != NULL)
         {
-            strncpy(dhcpv4_data->gateway, pinfo->router, sizeof(dhcpv4_data->gateway));
+            strcpy_s(dhcpv4_data->gateway, sizeof(dhcpv4_data->gateway), pinfo->router); // CID 187457: Buffer not null terminated (BUFFER_SIZE)
         }
         else
         {
@@ -1246,13 +1250,13 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
             tok = strtok (dns, " ");
             if (tok)
             {
-                strncpy(dhcpv4_data->dnsServer, tok, sizeof(dhcpv4_data->dnsServer));
+                strcpy_s(dhcpv4_data->dnsServer, sizeof(dhcpv4_data->dnsServer), tok); // CID 187457: Buffer not null terminated (BUFFER_SIZE)
             }
             /** dnsserver2 */
             tok = strtok(NULL, " ");
             if (tok)
             {
-                strncpy(dhcpv4_data->dnsServer1, tok, sizeof(dhcpv4_data->dnsServer1));
+                strcpy_s(dhcpv4_data->dnsServer1, sizeof(dhcpv4_data->dnsServer1), tok); // CID 187457: Buffer not null terminated (BUFFER_SIZE)
             }
         }
         else
@@ -1301,7 +1305,7 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
         /** TimeZone. */
         if ((env = getenv(DHCP_TIMEZONE)) != NULL)
         {
-            strncpy(dhcpv4_data->timeZone, env, sizeof(dhcpv4_data->timeZone));
+            strcpy_s(dhcpv4_data->timeZone, sizeof(dhcpv4_data->timeZone), env); // CID 187457: Buffer not null terminated (BUFFER_SIZE)
         }
         else
         {

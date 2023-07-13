@@ -75,6 +75,7 @@
 #include <utctx/utctx_api.h>
 #include <utapi/utapi.h>
 
+#include  "safec_lib_common.h"
 #include "pal_upnp_device.h"
 #include "pal_kernel.h"
 #include "igd_platform_independent_inf.h"
@@ -322,7 +323,7 @@ main( IN INT32 argc,
         snprintf(DESC_DOC_NAME, sizeof(DESC_DOC_NAME), "IGDdevicedesc_%s.xml", argv[1]);
         snprintf(DESC_DOC_PATH, sizeof(DESC_DOC_PATH), DEFAULT_WEB_DIR"/%s", DESC_DOC_NAME);
         
-        strncpy(igd_upnp_interface, argv[1], sizeof(igd_upnp_interface));
+        strcpy_s(igd_upnp_interface, sizeof(igd_upnp_interface), argv[1]); // CID 189745: Buffer not null terminated (BUFFER_SIZE)
 #ifdef PAL_LOG_ENABLE
         printf("Starting log_router_transmitter!!\n");
         system("./pal_log_router_transmitter &");//to start log transmitter

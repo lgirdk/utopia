@@ -941,6 +941,7 @@ static int handle_get_unique_request(const int fd, const token_t who, se_iterate
    se_buffer    value_buf;
    unsigned int value_buf_size = sizeof(value_buf) - (sizeof(se_msg_hdr)+sizeof(se_iterate_get_reply_msg)+4);
    se_buffer    subject_buf;
+   memset(subject_buf,'\0', sizeof(subject_buf)); // CID 281851: Uninitialized scalar variable (UNINIT)
    unsigned int subject_buf_size = sizeof(subject_buf) - (sizeof(se_msg_hdr)+sizeof(se_iterate_get_reply_msg)+4);
 
    char *value;

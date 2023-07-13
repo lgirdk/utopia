@@ -88,7 +88,7 @@ static void include_netInst(PL2Net net) {
 
 static void exclude_netInst(PL2Net net) {
     char liveNetBuf[300];
-    char outBuf[300];
+    char outBuf[300] = {'\0'}; // CID 67863: Uninitialized scalar variable (UNINIT)
     char* buf = NULL;
     char* save = NULL;
     char* tok = NULL;

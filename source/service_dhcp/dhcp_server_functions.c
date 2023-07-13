@@ -795,7 +795,10 @@ void UpdateConfigListintoConfFile(FILE *l_fLocal_Dhcp_ConfFile)
             char confInterface[32] = {0};
             char confDhcprange[128] = {0};
             char * token = strtok(dynConfChange, "|");
-            strncpy(confInterface,token,(sizeof(confInterface)-1));
+            if(token != NULL)
+            {
+                strncpy(confInterface,token,(sizeof(confInterface)-1)); // CID 280986 : Dereference null return value (NULL_RETURNS)
+            }
             while( token != NULL )
             {
                 strncpy(confDhcprange,token,(sizeof(confDhcprange)-1));
@@ -867,8 +870,11 @@ enum interface IsInterfaceExists(char *confTok, char * confInf, int* inst)
             char dynInf[32] = {0};
             if(dynConfChag[0] != '\0' )
             {
-                char * tokenInf = strtok(dynConfChag, "|");
-                strncpy(dynInf,tokenInf,(sizeof(dynInf)-1));
+            	char * tokenInf = strtok(dynConfChag, "|");
+		if (tokenInf) // CID 306239 : Dereference null return value (NULL_RETURNS)
+		{
+                    strncpy(dynInf,tokenInf,(sizeof(dynInf)-1));
+		}
             }
             if (strcmp(infc,dynInf)==0)
             {

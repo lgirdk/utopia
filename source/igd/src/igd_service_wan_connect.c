@@ -77,6 +77,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include  "safec_lib_common.h"
 #include "igd_utility.h"
 #include "utapi.h"
 #include "igd_platform_independent_inf.h"
@@ -233,7 +234,7 @@ LOCAL INT32 _set_connection_type(INOUT struct action_event *event)
     }
 
     // check current connection status
-    strncpy(connectionstatus, event->service->state_variables[ConnectionStatus_index].value, strlen(event->service->state_variables[ConnectionStatus_index].value)+1);
+    strcpy_s(connectionstatus, sizeof(connectionstatus), event->service->state_variables[ConnectionStatus_index].value); // CID 282049: Buffer not null terminated (BUFFER_SIZE)
     RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "current connection status: %s", connectionstatus);
     if ((0 != strcmp(connectionstatus, "Unconfigured")) &&
         (0 != strcmp(connectionstatus, "Disconnected"))) 

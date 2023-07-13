@@ -890,6 +890,7 @@ static int divide_ipv6_prefix(struct serv_ipv6 *si6)
     if(sub_prefix_num == 0)
     {
         fprintf(stderr, "sub prefix num is zero.\n");
+        free(sub_prefixes); // CID 335509 : Resource leak (RESOURCE_LEAK)
         return -1;
     }
     /*break the first sub-prefix to interface prefix for lan interface*/
@@ -930,6 +931,7 @@ static int divide_ipv6_prefix(struct serv_ipv6 *si6)
     if(iface_prefix_num == 0)
     {
         fprintf(stderr, "iface prefix num for each sub-prefix failed.\n");
+	free(sub_prefixes); // CID 335509 : Resource leak (RESOURCE_LEAK)
         return -1;
     }
     /*last set sub-prefix related sysevent*/

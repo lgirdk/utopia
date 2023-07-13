@@ -38,6 +38,7 @@
 #include "time.h"
 #include "safec_lib_common.h"
 #include "secure_wrapper.h"
+#include  "safec_lib_common.h"
 
 #define PROG_NAME       "SERVICE-DSLITE"
 #define ER_NETDEVNAME   "erouter0"
@@ -425,7 +426,7 @@ static int dslite_start (struct serv_dslite *sd)
 
     if (inet_pton (AF_INET6, DSLITE_AFTR, &v6_addr) == 1)   /* IPv6 address format, no need to do DNS resolution */
     {
-        strcpy (resolved_ipv6, DSLITE_AFTR);
+        strcpy_s (resolved_ipv6, sizeof(resolved_ipv6), DSLITE_AFTR); // CID 142880 : Destination buffer too small (STRING_OVERFLOW)
         dnsttl = 0;
     }
     else /* domain format, need to do DNS resolution */
@@ -595,8 +596,8 @@ static int dslite_start (struct serv_dslite *sd)
 static int dslite_stop (struct serv_dslite *sd)
 {
     char val[64];
-    char remote_addr[64];
-    char local_addr[64];
+    char remote_addr[64] = {'\0'}; // CID 321440: Uninitialized scalar variable (UNINIT)
+    char local_addr[64] = {'\0'}; // CID 321438: Uninitialized scalar variable (UNINIT)
     char return_buffer[256];
     FILE *fp = NULL;
 
