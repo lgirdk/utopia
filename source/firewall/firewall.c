@@ -780,6 +780,9 @@ static char iot_primaryAddress[50]; //IOT primary IP address
 static char lan0_ipaddr[20];       // ipv4 address of the lan0 interface used to access web ui in bridge mode
 #endif
 static char rip_enabled[20];      // is rip enabled
+#ifdef FEATURE_STATIC_IPV4
+static char staticIpAdministrativeStatus[12];
+#endif
 static char rip_interface_wan[20];  // if rip is enabled, then is it enabled on the wan interface
 static char brlan_static_enable[20];  // is static ip enabled for /30 and more subnets for rip.
 static char erouter_static_enable[8];  // is erouter0 static ip enabled for rip.
@@ -824,6 +827,9 @@ static int isBridgeMode;
 static int isRFC1918Blocked;
 static int allowOpenPorts;
 static int isRipEnabled;
+#ifdef FEATURE_STATIC_IPV4
+static int staticIpStatus;
+#endif
 static int isRipWanEnabled;
 static int isBrlanStaticEnabled;
 static int isErouterStaticEnabled;
@@ -2831,6 +2837,9 @@ static int prepare_globals_from_configuration(void)
    memset(lan_netmask, 0, sizeof(lan_netmask));
    memset(lan_3_octets, 0, sizeof(lan_3_octets));
    memset(rip_enabled, 0, sizeof(rip_enabled));
+#ifdef FEATURE_STATIC_IPV4   
+   memset(staticIpAdministrativeStatus, 0, sizeof(staticIpAdministrativeStatus));
+#endif   
    memset(rip_interface_wan, 0, sizeof(rip_interface_wan));
    memset(brlan_static_enable, 0, sizeof(brlan_static_enable));
    memset(erouter_static_enable, 0, sizeof(erouter_static_enable));
@@ -2850,6 +2859,9 @@ static int prepare_globals_from_configuration(void)
    //syscfg_get(NULL, "lan_ipaddr", lan_ipaddr, sizeof(lan_ipaddr));
    syscfg_get(NULL, "lan_netmask", lan_netmask, sizeof(lan_netmask)); 
    syscfg_get(NULL, "rip_enabled", rip_enabled, sizeof(rip_enabled)); 
+#ifdef FEATURE_STATIC_IPV4
+   syscfg_get(NULL, "staticipadminstatus", staticIpAdministrativeStatus, sizeof(staticIpAdministrativeStatus));
+#endif
    syscfg_get(NULL, "rip_interface_wan", rip_interface_wan, sizeof(rip_interface_wan));
    syscfg_get(NULL, "brlan_static_ip_enable", brlan_static_enable, sizeof(brlan_static_enable));
    syscfg_get(NULL, "erouter_static_ip_enable", erouter_static_enable, sizeof(erouter_static_enable));
@@ -2949,12 +2961,24 @@ static int prepare_globals_from_configuration(void)
    rfstatus =  isInRFCaptivePortal();
    isCacheActive     = (0 == strcmp("started", transparent_cache_state)) ? 1 : 0;
    isRipEnabled      = (0 == (strcmp("1", rip_enabled))) ? 1 : 0;
+#ifdef FEATURE_STATIC_IPV4
+   staticIpStatus    = (0 == (strcmp("3", staticIpAdministrativeStatus))) ? 1 : 0;
+   isBrlanStaticEnabled   = ((staticIpStatus) && (0 == (strcmp("true", brlan_static_enable)))) ? 1 : 0;
+#else   
    isBrlanStaticEnabled   = ((isRipEnabled) && (0 == (strcmp("true", brlan_static_enable)))) ? 1 : 0;
+#endif   
    isErouterStaticEnabled   = ((isRipEnabled) && (0 == (strcmp("true", erouter_static_enable)))) ? 1 : 0;
    
    isFirewallEnabled = (0 == strcmp("0", firewall_enabled)) ? 0 : 1;
    
    isFirewallEnabledV6 = (0 == strcmp("0", firewall_enabledv6)) ? 0 : 1;
+
+#ifdef FEATURE_STATIC_IPV4
+   if((staticIpStatus) && (0 == (strcmp("true", brlan_static_enable))))
+   {
+       isFirewallEnabled = 0;
+   }
+#endif   
 
 #if defined (FEATURE_MAPT) || defined (FEATURE_SUPPORT_MAPT_NAT46)
    isMAPTReady = isMAPTSet();
@@ -5904,6 +5928,17 @@ static int do_wan_nat_lan_clients(FILE *fp)
   }
 #endif
 
+    char erouter_static_ip[20];
+    if (get_erouter_static_ip(erouter_static_ip, sizeof(erouter_static_ip)))
+    {
+        fprintf(fp, "-A postrouting_towan -s %s/%s -j SNAT --to-source %s\n", lan_ipaddr,lan_netmask,erouter_static_ip);
+    }
+    else if (isBrlanStaticEnabled)
+    {
+        //In the /30 static IP or more, the gateway MUST have NAT disabled on the eRouter WAN interface
+        fprintf(fp, "-A postrouting_towan -s %s/%s -j ACCEPT\n", lan_ipaddr,lan_netmask);
+    }  
+
 #if (defined (_COSA_BCM_ARM_) || defined(_PLATFORM_TURRIS_)) && !defined (_HUB4_PRODUCT_REQ_)
  if(bEthWANEnable || isBridgeMode) // Check is required for TCHXB6 TCHXB7 CBR and not for HUB4
 #else
@@ -5926,17 +5961,6 @@ static int do_wan_nat_lan_clients(FILE *fp)
   }
   else
   {
-      char erouter_static_ip[20];
-      if(get_erouter_static_ip(erouter_static_ip, sizeof(erouter_static_ip)))
-      {
-         fprintf(fp, "-A postrouting_towan -s %s/%s -j SNAT --to-source %s\n", lan_ipaddr,lan_netmask,erouter_static_ip);
-      }
-      else if (isBrlanStaticEnabled)
-      {
-         //In the /30 static IP or more, the gateway MUST have NAT disabled on the eRouter WAN interface
-         fprintf(fp, "-A postrouting_towan -s %s/%s -j ACCEPT\n", lan_ipaddr,lan_netmask);
-      }
-
 #if defined (FEATURE_MAPT) || defined (FEATURE_SUPPORT_MAPT_NAT46)
      if (!isMAPTReady)
      {
