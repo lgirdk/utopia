@@ -477,6 +477,19 @@ static int set_syscfg_defaults (void)
 
    fclose (fp);
 
+   /*
+      NTP server values will be set from DHCP on every reboot (ie values
+      are stored in syscfg for convenience, not because they need to be
+      persistent across reboots). Clear values here to avoid any risk of
+      stale values (e.g. if the number of NTP servers provided by DHCP
+      is fewer that it was on a previous reboot).
+   */
+   syscfg_unset(NULL, "ntp_server1");
+   syscfg_unset(NULL, "ntp_server2");
+   syscfg_unset(NULL, "ntp_server3");
+   syscfg_unset(NULL, "ntp_server4");
+   syscfg_unset(NULL, "ntp_server5");
+
    set_customer_defaults();
 
    return 0;
