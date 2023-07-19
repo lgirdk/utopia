@@ -639,9 +639,11 @@ if [ "$FACTORY_RESET_REASON" = "false" ]; then
             while [ $c1 -le $wanvifdefcount ]
             do
                preVal=`sed -n "/dmsb.wanmanager.if.$c.EnableMAPT/p" $PSM_CUR_XML_CONFIG_FILE_NAME | awk -F "[><]" '{print $3}'`
-               delCmd=`sed -i "/dmsb.wanmanager.if.$c.VirtualInterface.$c1.EnableMAPT/d" $PSM_CUR_XML_CONFIG_FILE_NAME`
-               insCmd=`sed -i '10 i   <Record name="dmsb.wanmanager.if.'$c'.VirtualInterface.'$c1'.EnableMAPT" type="astr">'$preVal'</Record>' $PSM_CUR_XML_CONFIG_FILE_NAME`
-               echo "[utopia][init] Adding EnableMAPT with older WAN version DB value[$preVal]"
+	       if [ "$preVal" != "" ]; then 
+                  delCmd=`sed -i "/dmsb.wanmanager.if.$c.VirtualInterface.$c1.EnableMAPT/d" $PSM_CUR_XML_CONFIG_FILE_NAME`
+                  insCmd=`sed -i '10 i   <Record name="dmsb.wanmanager.if.'$c'.VirtualInterface.'$c1'.EnableMAPT" type="astr">'$preVal'</Record>' $PSM_CUR_XML_CONFIG_FILE_NAME`
+                  echo "[utopia][init] Adding EnableMAPT with older WAN version DB value[$preVal]"
+               fi
 	       (( c1++ ))
             done
          fi
