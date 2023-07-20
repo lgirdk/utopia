@@ -523,6 +523,10 @@ int main(int argc, char *argv[])
                         fprintf(stderr, "Insufficient number of arguments for %s\n", argv[1]);
                 }
 	}
+    else if ((!strncmp(argv[1], "ipv4_6-status", 13)))
+    {
+        sysevent_set(g_iSyseventfd, g_tSysevent_token, "dhcp_server-start", "lan_not_restart", 0);
+    }
     else if (!strncmp(argv[1], "ipv4-resync", 11))
     {
         resync_instance(atoi(argv[2]));
