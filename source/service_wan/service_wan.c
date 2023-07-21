@@ -364,7 +364,7 @@ static int dhcp_parse_vendor_info( char *options, const int length, char *ethWan
             }
 
             //Print the length of the sub-option value
-            rc = sprintf_s(options + opt_len, (length - opt_len), "%02x", strlen(subopt_value));
+            rc = sprintf_s(options + opt_len, (length - opt_len), "%02zx", strlen(subopt_value));
             if(rc < EOK)
             {
                 ERR_CHK(rc);
