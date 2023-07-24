@@ -537,7 +537,7 @@ static int do_portscanprotectv4(FILE *fp);
 static int do_blockfragippktsv6(FILE *fp);
 static int do_portscanprotectv6(FILE *fp);
 static int do_ipflooddetectv6(FILE *fp);
-
+static int lan_access_set_proto(FILE *fp,const char *port, const char *interface);
 
 int prepare_rabid_rules(FILE *filter_fp, FILE *mangle_fp, ip_ver_t ver);
 int prepare_rabid_rules_v2020Q3B(FILE *filter_fp, FILE *mangle_fp, ip_ver_t ver);
@@ -1573,7 +1573,7 @@ void do_webui_rate_limit (FILE *filter_fp)
    FIREWALL_DEBUG("Entering do_webui_rate_limit\n");
    fprintf(filter_fp, ":%s - [0:0]\n", "webui_limit");
    fprintf(filter_fp, "-I webui_limit -m state --state ESTABLISHED,RELATED -j ACCEPT\n");
-   fprintf(filter_fp, "-A webui_limit -p tcp -m tcp  --tcp-flags FIN,SYN,RST,ACK SYN -m limit --limit 4/sec --limit-burst 5 -j ACCEPT\n");
+   fprintf(filter_fp, "-A webui_limit -p tcp -m tcp  --tcp-flags FIN,SYN,RST,ACK SYN -m limit --limit 10/sec --limit-burst 20 -j ACCEPT\n");
    fprintf(filter_fp, "-A webui_limit -m limit --limit 1/sec --limit-burst 1 -j LOG --log-prefix \"WebUI Rate Limited: \" --log-level 6\n");
    fprintf(filter_fp, "-A webui_limit -j DROP\n"); 
    FIREWALL_DEBUG("Exiting do_webui_rate_limit\n");
@@ -6123,6 +6123,19 @@ static int remote_access_set_proto(FILE *filt_fp, FILE *nat_fp, const char *port
          FIREWALL_DEBUG("Exiting remote_access_set_proto\n");    
     return 0;
 }
+static int lan_access_set_proto(FILE *fp,const char *port, const char *interface)
+{
+	if ((0 == strcmp("80", port)) || (0 == strcmp("443", port))) {
+	    fprintf(fp, "-A INPUT -i %s -p tcp -m tcp --dport %s -j webui_limit\n", interface, port);
+	}
+	else
+	{
+	    fprintf(fp, "-A INPUT -i %s -p tcp -m tcp --dport %s -j ACCEPT\n", interface, port);
+	}
+	return 0;
+}
+
+
 
 static void do_container_allow(FILE *pFilter, FILE *pMangle, FILE *pNat, int family)
 {
@@ -12219,6 +12232,10 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
 
    fprintf(filter_fp, "-A INPUT -i lo -m state --state NEW -j ACCEPT\n");
    fprintf(filter_fp, "-A INPUT -j general_input\n");
+   // Rate limiting the webui-access lan side
+   lan_access_set_proto(filter_fp, "80",lan_ifname);
+   lan_access_set_proto(filter_fp, "443",lan_ifname);
+
    // Blocking webui access to unnecessary interfaces
    fprintf(filter_fp, "-A INPUT -p tcp -i %s --match multiport --dport 80,443 -j ACCEPT\n",lan_ifname);
    fprintf(filter_fp, "-A INPUT -p tcp -i %s --match multiport --dport 80,443 -j ACCEPT\n",ecm_wan_ifname);
@@ -13797,6 +13814,9 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
 #endif
    fprintf(filter_fp, "%s\n", ":FORWARD ACCEPT [0:0]");
    fprintf(filter_fp, "%s\n", ":OUTPUT ACCEPT [0:0]");
+   // Rate limiting the webui-access lan side
+   lan_access_set_proto(filter_fp, "80",cmdiag_ifname);
+   lan_access_set_proto(filter_fp, "443",cmdiag_ifname);
    // Blocking webui access to unnecessary interfaces
    fprintf(filter_fp, "-A INPUT -p tcp -i %s --match multiport --dport 80,443 -j ACCEPT\n",lan_ifname);
    fprintf(filter_fp, "-A INPUT -p tcp -i %s --match multiport --dport 80,443 -j ACCEPT\n",ecm_wan_ifname);
@@ -14850,6 +14870,17 @@ static void do_ipv6_filter_table(FILE *fp){
 
    // Create iptable chain to ratelimit remote management packets
    do_webui_rate_limit(fp);
+   // Rate limiting the webui-access lan side
+   if(isBridgeMode)
+   {
+       lan_access_set_proto(fp, "80",cmdiag_ifname);
+       lan_access_set_proto(fp, "443",cmdiag_ifname);
+   }
+   else
+   {
+       lan_access_set_proto(fp, "80",lan_ifname);
+       lan_access_set_proto(fp, "443",lan_ifname);
+   }
    // Blocking webui access to unnecessary interfaces
    fprintf(fp, "-A INPUT -p tcp -i %s --match multiport --dport 80,443 -j ACCEPT\n",lan_ifname);
    fprintf(fp, "-A INPUT -p tcp -i %s --match multiport --dport 80,443 -j ACCEPT\n",ecm_wan_ifname);
@@ -15143,7 +15174,7 @@ static void do_ipv6_filter_table(FILE *fp){
       
       // Allow SSDP 
       fprintf(fp, "-A INPUT -i %s -p udp --dport 1900 -j ACCEPT\n", lan_ifname);
-
+      
       // Normal ports for Management interface
       do_lan2self_by_wanip6(fp);
       fprintf(fp, "-A INPUT -i %s -p tcp -m tcp --dport 80 --tcp-flags FIN,SYN,RST,ACK SYN -m limit --limit 10/sec -j ACCEPT\n", lan_ifname);
