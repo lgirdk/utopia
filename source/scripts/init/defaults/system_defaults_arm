@@ -1450,3 +1450,6 @@ $SWDLDirectEnable=false
 $LatencyMeasure_IPv4Enable=false
 $LatencyMeasure_IPv6Enable=false
 $LatencyMeasure_TCPReportInterval=15
+
+#DeviceType default value
+$DeviceType=TEST
