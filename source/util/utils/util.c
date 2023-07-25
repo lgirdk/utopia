@@ -49,6 +49,10 @@
 #include <net/route.h>
 #include "util.h"
 #include "errno.h"
+#if defined (WIFI_MANAGE_SUPPORTED)
+#include "ccsp_psm_helper.h"
+#define CCSP_SUBSYS "eRT."
+#endif /*WIFI_MANAGE_SUPPORTED*/
 
 int vsystem(const char *fmt, ...)
 {
@@ -316,3 +320,63 @@ int serv_can_stop(int sefd, token_t setok, const char *servname)
  
     return 1;
 }
+
+#if defined (WIFI_MANAGE_SUPPORTED)
+void psmGet(void * bus_handle, char * pParamName, char *pParamValue)
+{
+    char *pVal = NULL;
+    if ((NULL == pParamValue) || (NULL == pParamName) || (NULL == bus_handle))
+        return;
+    if ((PSM_Get_Record_Value2(bus_handle, CCSP_SUBSYS,pParamName, NULL, &pVal) == CCSP_SUCCESS) && (NULL != pVal))
+    {
+        strcpy(pParamValue, pVal);
+        ((CCSP_MESSAGE_BUS_INFO *)bus_handle)->freefunc(pVal);
+        pVal = NULL;
+    }
+}
+
+void updateDhcpPoolData(void * bus_handle, char * pIndex, FILE * pFile)
+{
+    #define BUFF_LEN_64  64
+    #define BUFF_LEN_128 128
+
+    char paramName[BUFF_LEN_64] = {'\0'};
+    char paramVal[BUFF_LEN_64] = {'\0'};
+    char interface[BUFF_LEN_128] = {'\0'};
+    int len = 0;
+
+    if ((NULL == pIndex) || (NULL == pFile) || (NULL == bus_handle))
+        return;
+
+    snprintf(paramName, BUFF_LEN_64,"dmsb.dhcpv4.server.pool.%s.Enable", pIndex);
+    psmGet(bus_handle,paramName, paramVal);
+
+    if (!strncmp(paramVal, "true", 4))
+    {
+        snprintf(paramName,BUFF_LEN_64,MANAGE_WIFI_BRIDGE_NAME, pIndex);
+        psmGet(bus_handle,paramName, paramVal);
+        snprintf(interface, BUFF_LEN_128, "interface=%s\n",paramVal);
+        fprintf(pFile,interface);
+
+        snprintf(paramName, BUFF_LEN_64,"dmsb.dhcpv4.server.pool.%s.MinAddress", pIndex);
+        psmGet(bus_handle,paramName, paramVal);
+        snprintf(interface, BUFF_LEN_128,"dhcp-range=%s,",paramVal);
+        len = strlen(interface);
+
+        snprintf(paramName, BUFF_LEN_64,"dmsb.dhcpv4.server.pool.%s.MaxAddress", pIndex);
+        psmGet(bus_handle,paramName, paramVal);
+        snprintf(interface + len, BUFF_LEN_128 - len,"%s,",paramVal);
+        len = strlen(interface);
+
+        snprintf(paramName, BUFF_LEN_64,"dmsb.dhcpv4.server.pool.%s.SubnetMask", pIndex);
+        psmGet(bus_handle,paramName, paramVal);
+        snprintf(interface + len, BUFF_LEN_128 - len,"%s,",paramVal);
+        len = strlen(interface);
+
+        snprintf(paramName, BUFF_LEN_64,"dmsb.dhcpv4.server.pool.%s.LeaseTime", pIndex);
+        psmGet(bus_handle,paramName, paramVal);
+        snprintf(interface + len, BUFF_LEN_128 - len,"%s\n",paramVal);
+        fprintf(pFile,interface);
+    }
+}
+#endif /*WIFI_MANAGE_SUPPORTED*/

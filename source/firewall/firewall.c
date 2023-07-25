@@ -352,7 +352,7 @@ NOT_DEF:
 #include <sys/file.h>
 #include <sys/mman.h>
 #include "secure_wrapper.h"
-
+#include "util.h"
 
 
 #if defined  (WAN_FAILOVER_SUPPORTED) || defined(RDKB_EXTENDER_ENABLED)
@@ -12242,7 +12242,36 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
       // but dont duplicate
       fprintf(filter_fp, "-A INPUT -i %s -j wan2self\n", default_wan_ifname);
    }
+#if defined (WIFI_MANAGE_SUPPORTED)
+   char aManageWiFiEnabled[8] = {0};
+   syscfg_get(NULL, "Manage_WiFi_Enabled", aManageWiFiEnabled, sizeof(aManageWiFiEnabled));
+   if (!strncmp(aManageWiFiEnabled, "true", 4))
+   {
+       #define BUFF_LEN_64 64
+       #define BUFF_LEN_8 8
+       char paramName[BUFF_LEN_64] = {'\0'};
+       char paramVal[BUFF_LEN_8] = {'\0'};
+       char aV4Addr[BUFF_LEN_64] = {'\0'};
 
+       psmGet(bus_handle, MANAGE_WIFI_PSM_STR, paramVal);
+       if ('\0' != paramVal[0])
+       {
+           snprintf(paramName,BUFF_LEN_64, MANAGE_WIFI_V4_ADDR, paramVal);
+           psmGet(bus_handle,paramName, aV4Addr);
+           snprintf(paramName,BUFF_LEN_64, MANAGE_WIFI_BRIDGE_NAME, paramVal);
+           psmGet(bus_handle,paramName, paramVal);
+           if ('\0' != paramVal[0])
+           {
+               fprintf(filter_fp, "-A INPUT -p tcp -i %s --dport 22 -j DROP\n", paramVal);
+               fprintf(filter_fp, "-A INPUT -d %s/32 -i %s -j ACCEPT\n", aV4Addr,paramVal);
+               fprintf(filter_fp, "-A INPUT -i %s -j lan2self\n", paramVal);
+               fprintf(filter_fp, "-A FORWARD -i %s -o %s -j ACCEPT\n", paramVal,paramVal);
+               fprintf(filter_fp, "-A FORWARD -i %s ! -o %s -j DROP\n", paramVal,current_wan_ifname);
+               fprintf(filter_fp, "-A FORWARD ! -i %s -o %s -j DROP\n",current_wan_ifname,paramVal);
+           }
+       }
+   }
+#endif /*WIFI_MANAGE_SUPPORTED*/
    //Add wan2self restrictions to other wan interfaces
    //ping is allowed to cm and mta inferfaces regardless the firewall level
 #if !defined(_HUB4_PRODUCT_REQ_)
