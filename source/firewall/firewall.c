@@ -15225,7 +15225,7 @@ v6GPFirewallRuleNext:
 #ifdef _COSA_FOR_BCI_
          /* adding forward rule for PD traffic */
          fprintf(fp, "-A FORWARD -s %s -i %s -j ACCEPT\n", prefix, lan_ifname);
-         fprintf(fp, "-A FORWARD -d %s -o %s -j ACCEPT\n", prefix, lan_ifname);
+         fprintf(fp, "-A FORWARD -d %s -o %s -j wan2lan\n", prefix, lan_ifname);
 #endif
          fprintf(fp, "-A FORWARD ! -s %s -i %s -j LOG_FORWARD_DROP\n", prefix, lan_ifname);
          fprintf(fp, "-A FORWARD -s %s -i %s -j LOG_FORWARD_DROP\n", prefix, wan6_ifname);
@@ -15427,6 +15427,9 @@ v6GPFirewallRuleNext:
       // Traffic WAN to LAN
 
       fprintf(fp, "-A wan2lan -m state --state INVALID -j LOG_FORWARD_DROP\n");
+      #ifdef _COSA_FOR_BCI_
+      fprintf(fp, "-A wan2lan -d %s -o %s -m state --state NEW  -j LOG_FORWARD_DROP\n",prefix,lan_ifname);
+      #endif
 
       fprintf(fp, "-A FORWARD -i %s -o %s -j wan2lan\n", wan6_ifname, lan_ifname);
 #if defined (FEATURE_MAPT) || defined (FEATURE_SUPPORT_MAPT_NAT46)
