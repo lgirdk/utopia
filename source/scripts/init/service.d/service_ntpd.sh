@@ -366,12 +366,16 @@ service_start ()
 
    if [ "$SYSCFG_new_ntp_enabled" = "true" ]; then
        if [ "$BOX_TYPE" = "SR300" ] || [ "$BOX_TYPE" = "SR213" ]; then
-            IPV4_CONN_STATE=$(sysevent get ipv4_connection_state)
-            if [ "$IPV4_CONN_STATE" != "up" ]; then
-                SYSCFG_ntp_server1="time.google.com"
-                SYSCFG_ntp_server2="time-e-g.nist.gov"
-                VALID_SEVER="true"
-            fi
+           # Add public NTP server only when MAPT active. Else use Sky NTP servers for SR213/SR300 UK.
+           MAPT_STATS=$(sysevent get mapt_config_flag)
+           if [ "$MAPT_STATUS" = "set" ]; then
+               IPV4_CONN_STATE=$(sysevent get ipv4_connection_state)
+               if [ "$IPV4_CONN_STATE" != "up" ]; then
+                   SYSCFG_ntp_server1="time.google.com"
+                   SYSCFG_ntp_server2="time-e-g.nist.gov"
+                   VALID_SEVER="true"
+               fi
+           fi
         fi
        # Start NTP Config Creation with Multiple Server Setup
        echo_t "SERVICE_NTPD : Creating NTP config with New NTP Enabled" >> $NTPD_LOG_NAME
@@ -430,11 +434,15 @@ service_start ()
        fi
 
         if [ "$BOX_TYPE" = "SR300" ] || [ "$BOX_TYPE" = "SR213" ]; then
-            IPV4_CONN_STATE=$(sysevent get ipv4_connection_state)           
-            if [ "$IPV4_CONN_STATE" != "up" ]; then
-                SYSCFG_ntp_server1="time.google.com"
-                SYSCFG_ntp_server2="time-e-g.nist.gov"
-                VALID_SEVER="true"
+            # Add public NTP server only when MAPT active. Else use Sky NTP servers for SR213/SR300 UK.
+            MAPT_STATS=$(sysevent get mapt_config_flag)
+            if [ "$MAPT_STATUS" = "set" ]; then
+                IPV4_CONN_STATE=$(sysevent get ipv4_connection_state)
+                if [ "$IPV4_CONN_STATE" != "up" ]; then
+                    SYSCFG_ntp_server1="time.google.com"
+                    SYSCFG_ntp_server2="time-e-g.nist.gov"
+                    VALID_SEVER="true"
+                fi
             fi
         fi
 
