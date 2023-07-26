@@ -945,6 +945,13 @@ int greDscp = 44; // Default initialized to 44
 static int do_block_ports(FILE *filter_fp);
 static int isInRFCaptivePortal();
 
+
+#if defined(_WNXL11BWL_PRODUCT_REQ_)
+void  proxy_dns(FILE *nat_fp,int family);
+
+void get_iface_ipaddr_ula(const char* ifname,char* ipaddr, int max_ip_size);
+#endif
+
 #define LOG_BUFF_SIZE 512
 void firewall_log( char* fmt, ...)
 {
@@ -11804,6 +11811,10 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    redirect_dns_to_extender(nat_fp,AF_INET);
 #endif 
 
+#if defined(_WNXL11BWL_PRODUCT_REQ_)
+   proxy_dns(nat_fp,AF_INET);
+#endif
+
 #if defined (_XB6_PRODUCT_REQ_)
    do_ipv4_norf_captiveportalrule (nat_fp);
 #endif
@@ -13053,6 +13064,130 @@ static void prepare_idm_firewall(FILE * filter_fp)
 }
 #endif
 
+#if defined(_WNXL11BWL_PRODUCT_REQ_)
+void get_iface_ipaddr_ula(const char* ifname,char* ipaddr, int max_ip_size)
+{
+   char prefix[128] = {0};
+
+   char cmd[128]= {0};
+   memset(prefix,0,sizeof(prefix));
+      char ipv6_ifaces[128] = {0};
+
+   if (strcmp(ifname,"brlan0") == 0 )
+   {
+      sysevent_get(sysevent_fd, sysevent_token, "ipv6_prefix_ula", prefix, sizeof(prefix));
+   }
+   else
+   {
+      memset(ipv6_ifaces,0,sizeof(ipv6_ifaces));
+      syscfg_get(NULL, "IPv6_Interface", ipv6_ifaces, sizeof(ipv6_ifaces));
+      if(! strstr( ipv6_ifaces, ifname))
+      {
+         return;
+      }
+      memset(cmd,0,sizeof(cmd));
+      snprintf(cmd, sizeof(cmd), "%s%s",ifname,"_ipaddr_v6_ula");
+      sysevent_get(sysevent_fd, sysevent_token, cmd, prefix, sizeof(prefix));
+
+   }
+
+   if (prefix[0] != '\0')
+   {
+      char *token_pref =NULL;
+      token_pref = strtok(prefix,"/");
+      snprintf(ipaddr,max_ip_size,"%s1",token_pref);    
+   }
+   return ;
+
+}
+
+void  proxy_dns(FILE *nat_fp,int family)
+{
+   if  ( (Get_Device_Mode() == ROUTER ) )
+   {
+      char net_query[MAX_QUERY] = {0};
+      char net_resp[MAX_QUERY] = {0};     
+      char inst_resp[MAX_QUERY] = {0};
+      char iot_enabled[20];
+      char if_ipaddr[128] = {0};
+
+      char* tok = NULL ;
+      char* rest = NULL;
+
+         snprintf(net_query, sizeof(net_query), "ipv4-instances");
+         sysevent_get(sysevent_fd, sysevent_token, net_query, inst_resp, sizeof(inst_resp));
+         rest = inst_resp;
+         while ((tok = strtok_r(rest, " ", &rest)))
+         {
+                 memset(net_query,0,sizeof(net_query));
+                 memset(net_resp,0,sizeof(net_resp));
+
+                 snprintf(net_query, sizeof(net_query), "ipv4_%s-status", tok);
+                 sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
+                 if (strcmp("up", net_resp) != 0)
+                     continue;
+
+                 memset(net_query,0,sizeof(net_query));
+
+                 memset(net_resp,0,sizeof(net_resp));
+                 snprintf(net_query, sizeof(net_query), "ipv4_%s-ifname", tok);
+                 sysevent_get(sysevent_fd, sysevent_token, net_query, net_resp, sizeof(net_resp));
+
+                  if (net_resp[0] != '\0' && strlen(net_resp) != 0 )
+                  {
+
+                        memset(if_ipaddr, 0, sizeof(if_ipaddr));
+                        if(family == AF_INET )
+                           snprintf(if_ipaddr,sizeof(if_ipaddr),"%s",get_iface_ipaddr(net_resp));
+                        else if (family == AF_INET6)
+                        {
+                           get_iface_ipaddr_ula(net_resp,if_ipaddr,sizeof(if_ipaddr));
+                        }
+                        if(if_ipaddr[0] != '\0')
+                        {
+                           fprintf(nat_fp, "-A PREROUTING -i %s -p udp --dport 53 -j DNAT --to-destination %s\n",net_resp,if_ipaddr);
+                           fprintf(nat_fp, "-A PREROUTING -i %s -p tcp --dport 53 -j DNAT --to-destination %s\n",net_resp,if_ipaddr);
+                        }
+                  }    
+            }   
+         
+
+         memset(iot_enabled, 0, sizeof(iot_enabled));
+
+         syscfg_get(NULL, "lost_and_found_enable", iot_enabled, sizeof(iot_enabled));
+     
+         if(0==strcmp("true",iot_enabled))
+         {
+            memset(iot_ifName, 0, sizeof(iot_ifName));
+            syscfg_get(NULL, "iot_ifname", iot_ifName, sizeof(iot_ifName));
+            if( strstr( iot_ifName, "l2sd0.106")) {
+                     syscfg_get( NULL, "iot_brname", iot_ifName, sizeof(iot_ifName));
+            }
+
+            if (iot_ifName[0] != '\0' && strlen(iot_ifName) != 0 )
+            {
+               memset(if_ipaddr, 0, sizeof(if_ipaddr));
+               if(family == AF_INET )
+                  snprintf(if_ipaddr,sizeof(if_ipaddr),"%s",get_iface_ipaddr(iot_ifName));
+               else if (family == AF_INET6)
+               {
+                  get_iface_ipaddr_ula(iot_ifName,if_ipaddr,sizeof(if_ipaddr));
+               }
+
+               if(if_ipaddr[0] != '\0')
+               {
+                  fprintf(nat_fp, "-A PREROUTING -i %s -p udp --dport 53 -j DNAT --to-destination %s\n",iot_ifName,if_ipaddr);
+                  fprintf(nat_fp, "-A PREROUTING -i %s -p tcp --dport 53 -j DNAT --to-destination %s\n",iot_ifName,if_ipaddr);           
+               }
+
+            }
+
+         }         
+   }
+
+}
+#endif
+
 #ifdef WAN_FAILOVER_SUPPORTED
 void  redirect_dns_to_extender(FILE *nat_fp,int family)
 {
@@ -14129,6 +14264,10 @@ static void do_ipv6_nat_table(FILE* fp)
 #ifdef WAN_FAILOVER_SUPPORTED
       redirect_dns_to_extender(fp,AF_INET6);
 #endif 
+
+#if defined(_WNXL11BWL_PRODUCT_REQ_)
+   proxy_dns(fp,AF_INET6);
+#endif
 
 #ifdef MULTILAN_FEATURE
    prepare_multinet_prerouting_nat_v6(fp);
