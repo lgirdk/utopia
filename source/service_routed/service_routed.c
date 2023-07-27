@@ -1268,12 +1268,21 @@ static int gen_zebra_conf(int sefd, token_t setok)
 			if( 1 == StaticDNSServersEnabled )
 			{
 				memset( name_servs, 0, sizeof( name_servs ) );
-				syscfg_get(NULL, "dhcpv6spool00::X_RDKCENTRAL_COM_DNSServers", name_servs, sizeof(name_servs));
+#if defined (_HUB4_PRODUCT_REQ_) && !defined (_WNXL11BWL_PRODUCT_REQ_)
+				/* RDKB-50535 send ULA address as DNS address only when lan UNA is enabled */
+				if (ula_enable)
+#endif
+					syscfg_get(NULL, "dhcpv6spool00::X_RDKCENTRAL_COM_DNSServers", name_servs, sizeof(name_servs));
+
 				fprintf(stderr,"%s %d - DNSServersEnabled:%d DNSServers:%s\n", __FUNCTION__, 
 																			   __LINE__,
 																			   StaticDNSServersEnabled,
 																			   name_servs );
-                                if (!strncmp(l_cSecWebUI_Enabled, "true", 4))
+#if defined (_HUB4_PRODUCT_REQ_) && !defined (_WNXL11BWL_PRODUCT_REQ_)
+                                if (!strncmp(l_cSecWebUI_Enabled, "true", 4) && !ula_enable)
+#else
+				if (!strncmp(l_cSecWebUI_Enabled, "true", 4))
+#endif
                                 {
                                     char static_dns[256] = {0};
                                     sysevent_get(sefd, setok, "lan_ipaddr_v6", static_dns, sizeof(static_dns));

@@ -48,15 +48,22 @@
 #include <sysevent/sysevent.h>
 #include "safec_lib_common.h"
 
-#if defined(MULTILAN_FEATURE) || defined(INTEL_PUMA7)
+#if defined(MULTILAN_FEATURE) || defined(INTEL_PUMA7) || defined(_HUB4_PRODUCT_REQ_)
 #include "ccsp_psm_helper.h"
 #include <ccsp_base_api.h>
 #include "ccsp_memory.h"
 #endif
 
+#ifdef _HUB4_PRODUCT_REQ_
+#include "ccsp_dm_api.h"
+#include "ccsp_custom.h"
+#define TRUE 1
+#define FALSE 0
+#endif
+
 #define PROG_NAME       "SERVICE-IPV6"
 
-#if defined(INTEL_PUMA7) || defined(MULTILAN_FEATURE)
+#if defined(INTEL_PUMA7) || defined(MULTILAN_FEATURE) || defined(_HUB4_PRODUCT_REQ_)
 #define CCSP_SUBSYS                 "eRT."
 #define L3_DM_PREFIX                "dmsb.l3net."
 #define L3_DM_IPV6_ENABLE_PREFIX    "IPv6Enable"
@@ -1456,6 +1463,28 @@ static int lan_addr6_unset(struct serv_ipv6 *si6)
     return 0;
 }
 
+#ifdef _HUB4_PRODUCT_REQ_
+static int getLanUlaInfo(int *ula_enable)
+{
+    char  *pUla_enable = NULL;
+
+    if (PSM_Get_Record_Value2(bus_handle,"eRT.","dmsb.lanmanagemententry.lanulaenable", NULL, &pUla_enable) != CCSP_SUCCESS ) {
+        return -1;
+    }
+
+    if ( (pUla_enable != NULL) && strncmp(pUla_enable, "TRUE", 4 ) == 0) {
+        *ula_enable = TRUE;
+    }
+    else {
+        *ula_enable = FALSE;
+    }
+
+    ((CCSP_MESSAGE_BUS_INFO *)bus_handle)->freefunc(pUla_enable);
+
+    return 0;
+}
+#endif
+
 static int format_dibbler_option(char *option)
 {
     if (option == NULL)
@@ -1809,13 +1838,27 @@ OPTIONS:
             if (opt.pt_client[0]) {
                 if (opt.tag == 23) {//dns
                     char dns_str[256] = {0};
+#ifdef _HUB4_PRODUCT_REQ_
+		    int ula_enable = 0;
+		    int result = 0;
+		    result = getLanUlaInfo(&ula_enable);
+		    if(result != 0) {
+			fprintf(stderr, "getLanIpv6Info failed");
+        		return -1;
+		    }
+
+#endif
 
 					/* Static DNS */
 					if( 1 == dhcpv6s_pool_cfg.X_RDKCENTRAL_COM_DNSServersEnabled )	
 					{
 
 						memset( dns_str, 0, sizeof( dns_str ) );
-                                                if (!strncmp(l_cSecWebUI_Enabled, "true", 4))
+#ifdef _HUB4_PRODUCT_REQ_
+                                                if (!strncmp(l_cSecWebUI_Enabled, "true", 4) && (!ula_enable))
+#else
+						if (!strncmp(l_cSecWebUI_Enabled, "true", 4))
+#endif
                                                 {
                                                     char static_dns[256] = {0};
                                                     sysevent_get(si6->sefd, si6->setok, "lan_ipaddr_v6", static_dns, sizeof(static_dns));
@@ -1825,8 +1868,12 @@ OPTIONS:
                                                         strcat(dns_str," ");
                                                     }
                                                 }
-                                                strcat(dns_str,dhcpv6s_pool_cfg.X_RDKCENTRAL_COM_DNSServers);
-                                            
+#ifdef _HUB4_PRODUCT_REQ_
+						/* RDKB-50535 send ULA address as DNS address only when lan UNA is enabled */
+						if(ula_enable)
+#endif
+							strcat(dns_str,dhcpv6s_pool_cfg.X_RDKCENTRAL_COM_DNSServers);
+
 						fprintf(stderr,"%s %d - DNSServersEnabled:%d DNSServers:%s\n", __FUNCTION__, 
 																						  __LINE__,
 																						  dhcpv6s_pool_cfg.X_RDKCENTRAL_COM_DNSServersEnabled,
@@ -2045,7 +2092,7 @@ static int serv_ipv6_restart(struct serv_ipv6 *si6)
 static int serv_ipv6_init(struct serv_ipv6 *si6)
 {
     char buf[16];
-#ifdef MULTILAN_FEATURE
+#if defined(MULTILAN_FEATURE) || defined(_HUB4_PRODUCT_REQ_)
     int ret = 0;
     char* pCfg = CCSP_MSG_BUS_CFG;
 #endif
@@ -2058,7 +2105,7 @@ static int serv_ipv6_init(struct serv_ipv6 *si6)
         return -1;
     }
 
-#ifdef MULTILAN_FEATURE
+#if defined(MULTILAN_FEATURE) || defined(_HUB4_PRODUCT_REQ_)
     ret = CCSP_Message_Bus_Init((char *)service_ipv6_component_id, pCfg, &bus_handle, (CCSP_MESSAGE_BUS_MALLOC)Ansc_AllocateMemory_Callback, Ansc_FreeMemory_Callback);
     if (ret == -1) {
         fprintf(stderr, "%s: DBUS connection failed \n", __FUNCTION__);
@@ -2109,7 +2156,7 @@ static int serv_ipv6_init(struct serv_ipv6 *si6)
 static int serv_ipv6_term(struct serv_ipv6 *si6)
 {
     sysevent_close(si6->sefd, si6->setok);
-#ifdef MULTILAN_FEATURE
+#if defined(MULTILAN_FEATURE) || defined(_HUB4_PRODUCT_REQ_)
     if (bus_handle != NULL) {
         fprintf(stderr, "Closing DBUS connection \n");
         CCSP_Message_Bus_Exit(bus_handle);

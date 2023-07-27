@@ -558,7 +558,8 @@ get_dhcp_option_for_brlan0() {
               NS=`sysevent get wan_dhcp_dns`
               if [ -n "$NS" ] ; then
                   NS=`echo "$NS" | sed "s/ /,/g"`
-	      else
+	      elif [ "$BOX_TYPE" != "HUB4" ] && [ "$BOX_TYPE" != "SR300" ] && [ "$BOX_TYPE" != "SE501" ] && [ "$BOX_TYPE" != "SR213" ]; then
+		  #This change is not needed for SKY products as it is related to camera upgrade issue in TCXB7-4171, TCXB7-4153, RDKB-39631 and it had caused SHARMAN-1609, so adding SKY flags
 	          NS=`cat $RESOLV_CONF | grep nameserver | grep "\." | head -n 2 | cut -d" " -f2`
 		  if [ -n "$NS" ] ; then
                       NS=`echo $NS | sed 's/\( \)\{1,\}/,/g'`
