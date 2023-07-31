@@ -1364,6 +1364,7 @@ static uint32_t hex2dec(char *hex)
 static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_t* pinfo)
 {
     char *env;
+    char mgmt_enabled[8];
 
     if (dhcpv4_data == NULL || pinfo == NULL)
     {
@@ -1540,9 +1541,15 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
             OnboardLog("[%s-%d] Upstreamrate is not available in dhcp ack \n",  __FUNCTION__,__LINE__);
         }
 
-        if ((env = getenv("ntpsrv")) != NULL)
+        syscfg_get(NULL, "management_wan_enabled", mgmt_enabled, sizeof(mgmt_enabled));
+
+        if (strcmp(mgmt_enabled, "1") != 0)
         {
-            strncpy(dhcpv4_data->ntpServer, env, sizeof(dhcpv4_data->ntpServer));
+
+            if ((env = getenv("ntpsrv")) != NULL)
+            {
+                strncpy(dhcpv4_data->ntpServer, env, sizeof(dhcpv4_data->ntpServer));
+            }
         }
 
         if ((env = getenv("domain")) != NULL)
