@@ -1063,10 +1063,10 @@ int Utopia_GetWifiSSIDCfg(UtopiaContext *ctx, int dummyInstanceNum, void *cfg)
                 if(safec_rc < EOK){
                    ERR_CHK(safec_rc);
                 }
+                free(ptr->param_name); /* CID 124859 */
                 UTOPIA_SETNAMED(ctx,UtopiaValue_WLAN_SSID,prefix,tmpBuf);
                 safec_rc = strcpy_s(cfg_t->SSID, sizeof(cfg_t->SSID),tmpBuf);
                 ERR_CHK(safec_rc);
-		free(ptr->param_name); /* CID 124859 */
             }
         }
     }

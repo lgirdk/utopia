@@ -61,7 +61,7 @@ void get_dateanduptime(char *buffer, int *uptime)
     struct 	timeval  tv;
     struct 	tm       *tm;
     struct 	sysinfo info;
-    char 	fmt[ 64 ], buf [64];
+    char 	fmt[ 64 ], buf [64] = {0}; // CID 163102: Uninitialized scalar variable (UNINIT)
     errno_t safec_rc = -1;
 
     sysinfo( &info );
@@ -945,7 +945,7 @@ void lan_restart()
     if ((strncmp(l_cLan_IpAddrv6_prev, l_cLan_IpAddrv6, 64)) && 
 		(0 != l_cLan_IpAddrv6[0]))
     {
-               if ((l_cLan_IpAddrv6_prev != NULL) && (0 != l_cLan_IpAddrv6_prev[0]))
+               if (0 != l_cLan_IpAddrv6_prev[0]) // CID 72922: Array compared against 0 (NO_EFFECT)
 	       {
         	snprintf(l_cSysevent_Cmd, sizeof(l_cSysevent_Cmd),
             	     "-6 %s/64 dev %s valid_lft forever preferred_lft forever", 

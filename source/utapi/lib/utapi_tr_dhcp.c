@@ -926,7 +926,8 @@ int Utopia_GetDhcpV4SPool_SAddressByIndex(UtopiaContext *ctx, unsigned long ulIn
         pSAddr_t->Chaddr[5] = mac[5];
 
         pSAddr_t->Yiaddr.Value = inet_addr(dhcp_static_hosts.host_ip);
-	if(dhcp_static_hosts.client_name != NULL)
+	// CID 185689: Array compared against 0 (NO_EFFECT)
+        if(dhcp_static_hosts.client_name[0] != '\0')
     {
         rc = strcpy_s(pSAddr_t->DeviceName,sizeof(pSAddr_t->DeviceName),dhcp_static_hosts.client_name);
         ERR_CHK(rc);

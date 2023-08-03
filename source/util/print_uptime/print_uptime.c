@@ -50,7 +50,11 @@ int getValueFromDeviceProperties(char *value, int size,char *name)
 		{
 			buf[strcspn(buf, "\r\n")] = 0; // Strip off any carriage returns
 			temp = strstr(buf, "=");
-			temp++;
+			if (!temp) // CID 182370: Dereference null return value (NULL_RETURNS)
+                        {
+                        	continue;
+                        }
+                        temp++;
 			rc = strcpy_s(value, size, temp);
 			if( rc != EOK ){
 				ERR_CHK(rc);

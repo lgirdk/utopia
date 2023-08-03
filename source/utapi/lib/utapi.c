@@ -6013,10 +6013,7 @@ static boolean_t s_parse_dhcp_log_msg (dhcpclientlog_t *dhcp_data, char *dhcp_lo
         switch (dhcp_log_msg[i]) {
         case ' ':
             spaces_seen++;
-            if (spaces_seen >= 3) {
-                break;
-            }
-            break;
+            break; // CID 177297: Identical code for different branches (IDENTICAL_BRANCHES)
         default:
             dhcp_data->timestamp[i] = dhcp_log_msg[i];
             break;

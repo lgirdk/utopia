@@ -234,6 +234,7 @@ int dnsmasq_server_start()
     errno_t safec_rc = -1;
 
     getRFC_Value (dnsOption);
+    dnsOption[sizeof(dnsOption) - 1] = '\0'; // CID 340940 : String not null terminated (STRING_NULL)
     fprintf(g_fArmConsoleLog, "\n%s Adding DNSMASQ Option: %s\n",__FUNCTION__, dnsOption);
     strtok(dnsOption,"\n");
     char l_cXdnsRefacCodeEnable[8] = {0};
@@ -1006,6 +1007,7 @@ void resync_to_nonvol(char *RemPools)
     char asyn[100]={0};
     char l_sAsyncString[120];
     FILE *pipe =NULL;
+    errno_t safec_rc = -1;
     if (RemPools == NULL)
     {
 	pipe = v_secure_popen("r","sysevent get dhcp_server_current_pools");
@@ -1061,7 +1063,8 @@ void resync_to_nonvol(char *RemPools)
         }
         if (match_found == 0)
         {
-            strcpy_s(tmp_buff[tmp_cnt], sizeof(tmp_buff[tmp_cnt]), REM_POOLS[iter]); // CID 258259 : Buffer not null terminated (BUFFER_SIZE)
+            safec_rc = strcpy_s(tmp_buff[tmp_cnt], sizeof(tmp_buff[tmp_cnt]), REM_POOLS[iter]); // CID 258259 : Buffer not null terminated (BUFFER_SIZE)
+	    ERR_CHK(safec_rc);
             tmp_cnt++;
         }
     }
@@ -1201,7 +1204,8 @@ void resync_to_nonvol(char *RemPools)
 	    }
 	    if (match_found == 0)
 	    {
-	        strcpy_s(tmp_buff[tmp_cnt], sizeof(tmp_buff[tmp_cnt]), CURRENT_POOLS[iter]); // CID 258259 : Buffer not null terminated (BUFFER_SIZE)
+	        safec_rc = strcpy_s(tmp_buff[tmp_cnt], sizeof(tmp_buff[tmp_cnt]), CURRENT_POOLS[iter]); // CID 258259 : Buffer not null terminated (BUFFER_SIZE)
+		ERR_CHK(safec_rc);
 	        tmp_cnt++;
 	    }
     }
@@ -1222,7 +1226,8 @@ void resync_to_nonvol(char *RemPools)
 	    }
 	    if (match_found == 0)
 	    {
-	        strcpy_s(tmp_buff[tmp_cnt], sizeof(tmp_buff[tmp_cnt]), CURRENT_POOLS[iter]); // CID 258259 : Buffer not null terminated (BUFFER_SIZE)
+	        safec_rc = strcpy_s(tmp_buff[tmp_cnt], sizeof(tmp_buff[tmp_cnt]), CURRENT_POOLS[iter]); // CID 258259 : Buffer not null terminated (BUFFER_SIZE)
+		ERR_CHK(safec_rc);
 	        tmp_cnt++;
 	    }
     }

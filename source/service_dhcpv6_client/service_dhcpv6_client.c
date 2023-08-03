@@ -184,7 +184,8 @@ void dhcpv6_client_service_start ()
         fprintf(stderr, "SERVICE_DHCP6C : WAN LINK is Down, service_stop\n");
         dhcpv6_client_service_stop();
     }
-    else if (l_cWanIfname == NULL)
+    // CID 282117: Logically dead code (DEADCODE), CID 282114: Array compared against 0 (NO_EFFECT)
+    else if (l_cWanIfname[0] == '\0')
     {
         fprintf(stderr, "SERVICE_DHCP6C : WAN Interface not configured, service_stop\n");
         dhcpv6_client_service_stop();
@@ -401,8 +402,8 @@ void unregister_sysevent_handler(char *service_name, char *event_name)
 
     sysevent_get(g_iSyseventfd, g_tSysevent_token, l_sAsyncSysevent,
                  l_cAsyncId, sizeof(l_cAsyncId));
-
-    if ( l_cAsyncId != NULL)
+    // CID 282115: Array compared against 0 (NO_EFFECT)
+    if ( l_cAsyncId[0] != '\0')
     {
         sysevent_rmnotification(g_iSyseventfd, g_tSysevent_token, l_sAsyncID);
         sysevent_set(g_iSyseventfd, g_tSysevent_token, l_sAsyncSysevent, "", 0);

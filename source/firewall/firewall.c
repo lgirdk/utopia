@@ -2987,15 +2987,17 @@ static int prepare_globals_from_configuration(void)
 
 #if defined(FEATURE_RDKB_INTER_DEVICE_MANAGER)
    memset(idmInterface,0,sizeof(idmInterface));
-    pStr = NULL;
-    rc = PSM_VALUE_GET_STRING(PSM_IDM_INTERFACE_NAME,pStr);
-    if(rc == CCSP_SUCCESS && pStr != NULL){
-        safec_rc = strcpy_s(idmInterface, sizeof(idmInterface),pStr);
-        FIREWALL_DEBUG("PSM_IDM_INTERFACE_NAME is %s\n" COMMA idmInterface);       
-        ERR_CHK(safec_rc);
-        Ansc_FreeMemory_Callback(pStr);
-        pStr = NULL;
-   }
+   pStr = NULL;
+   if(bus_handle != NULL){ // CID 330280: Dereference after null check (FORWARD_NULL)
+       rc = PSM_VALUE_GET_STRING(PSM_IDM_INTERFACE_NAME,pStr);
+       if(rc == CCSP_SUCCESS && pStr != NULL){
+           safec_rc = strcpy_s(idmInterface, sizeof(idmInterface),pStr);
+           FIREWALL_DEBUG("PSM_IDM_INTERFACE_NAME is %s\n" COMMA idmInterface);       
+           ERR_CHK(safec_rc);
+           Ansc_FreeMemory_Callback(pStr);
+           pStr = NULL;
+        }
+    }
 #endif
 
     FIREWALL_DEBUG("Exiting prepare_globals_from_configuration\n");       
@@ -8656,7 +8658,8 @@ static int do_parental_control(FILE *fp,FILE *nat_fp, int iptype) {
 	char buf[8];
 	memset(buf, 0, sizeof(buf));
         syscfg_get( NULL, "X_RDKCENTRAL-COM_AkerEnable", buf, sizeof(buf));
-    	if( buf != NULL )
+	// CID 75054: Array compared against 0 (NO_EFFECT)
+        if( buf[0] != '\0' )
     		{
     		    if (strcmp(buf,"true") == 0)
     		        bCloudEnable = TRUE;
@@ -12983,7 +12986,7 @@ static int do_block_ports(FILE *filter_fp)
 static int prepare_MoCA_bridge_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *filter_fp)
 {
    char *pVal = NULL;
-   char pLan[10], mLan[10];
+   char pLan[10] = {0}, mLan[10] = {0}; // CID 119363: Uninitialized scalar variable (UNINIT), CID 119362: Uninitialized scalar variable (UNINIT)
    int   HomeIsolation_en = 0;
    int retPsm = 0;
    const char *HomeNetIsolation = "dmsb.l2net.HomeNetworkIsolation";

@@ -308,7 +308,8 @@ main( IN INT32 argc,
         char igd_advr_expire[10] = {'\0'};
         int igdAdvrExpire = 0;    /* in seconds */
         UtopiaContext utctx;
-        
+	errno_t safec_rc = -1;
+
         if (argc < 2) {
             printf("IGD needs interface arguement. Failed to start.\n");
             exit(0);
@@ -323,7 +324,8 @@ main( IN INT32 argc,
         snprintf(DESC_DOC_NAME, sizeof(DESC_DOC_NAME), "IGDdevicedesc_%s.xml", argv[1]);
         snprintf(DESC_DOC_PATH, sizeof(DESC_DOC_PATH), DEFAULT_WEB_DIR"/%s", DESC_DOC_NAME);
         
-        strcpy_s(igd_upnp_interface, sizeof(igd_upnp_interface), argv[1]); // CID 189745: Buffer not null terminated (BUFFER_SIZE)
+        safec_rc = strcpy_s(igd_upnp_interface, sizeof(igd_upnp_interface), argv[1]); // CID 189745: Buffer not null terminated (BUFFER_SIZE)
+	ERR_CHK(safec_rc);
 #ifdef PAL_LOG_ENABLE
         printf("Starting log_router_transmitter!!\n");
         system("./pal_log_router_transmitter &");//to start log transmitter

@@ -58,6 +58,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <cjson/cJSON.h>
+#include  "safec_lib_common.h"
 
 #include <telemetry_busmessage_sender.h>
 #define PARTNERS_INFO_FILE  							"/nvram/partners_defaults.json"
@@ -703,6 +704,7 @@ static int GetDevicePropertiesEntry (char *pOutput, int size, char *sDevicePropC
     char 	 buf[ 1024 ] = { 0 },
 	  		*urlPtr 	 = NULL;
     int 	 ret		 = -1;
+    errno_t safec_rc = -1;
 
     // Read the device.properties file 
     fp1 = fopen( "/etc/device.properties", "r" );
@@ -721,8 +723,13 @@ static int GetDevicePropertiesEntry (char *pOutput, int size, char *sDevicePropC
 		 buf[strcspn( buf, "\r\n" )] = 0; // Strip off any carriage returns
 		 // grab content from string(entry)
 		urlPtr = strstr( buf, "=" );
-		urlPtr++;
-		strncpy( pOutput, urlPtr, size );
+                if ( !urlPtr )  // CID 61154: Dereference null return value (NULL_RETURNS)
+                {
+                    continue;
+                }
+                urlPtr++;
+                safec_rc = strcpy_s( pOutput, size, urlPtr );
+                ERR_CHK(safec_rc);
 		ret=0;
 		break;
         }
@@ -811,11 +818,12 @@ static int get_PartnerID (char *PartnerID)
 		{
 			if ( 0 == GetDevicePropertiesEntry( buf, sizeof( buf ),"PARTNER_ID" ) )
 			{
-				if( buf != NULL )
-				{
+				if(buf[0] !=  '\0') // CID 73353: Array compared against 0 (NO_EFFECT)
+                                {
 				    strncpy(PartnerID,buf,strlen(buf));
+				    PartnerID[strlen(buf)] = '\0'; // CID 340497: String not null terminated (STRING_NULL)
 				    APPLY_PRINT("%s - PartnerID from device.properties: %s\n",__FUNCTION__,PartnerID );
-				}
+                                }
 			}
 			else		
 			{
@@ -2510,7 +2518,8 @@ static void getPartnerIdWithRetry(char* buf, char* PartnerID)
                 syscfg_get( NULL, "PartnerID", buf, 64); //CID 59410: Wrong sizeof argument
                 if(buf[0] !=  '\0')
                 {
-                        strncpy( PartnerID, buf , strlen( buf ) );
+                        strncpy( PartnerID, buf , strlen( buf ) ); // CID 339994: String not null terminated (STRING_NULL)
+                        PartnerID[strlen(buf)] = '\0';
                         APPLY_PRINT("%s:partnerId read from syscfg=%s\n",__FUNCTION__,PartnerID);
                         return;
                 }

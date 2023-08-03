@@ -199,6 +199,7 @@ LOCAL INT32 _set_connection_type(INOUT struct action_event *event)
     CHAR *type = NULL;
     CHAR connectionstatus[PAL_UPNP_LINE_SIZE] = {0};
     INT32 rc = -1;
+    errno_t safec_rc = -1;
 
     LOG_ENTER_FUNCTION;
 
@@ -234,7 +235,8 @@ LOCAL INT32 _set_connection_type(INOUT struct action_event *event)
     }
 
     // check current connection status
-    strcpy_s(connectionstatus, sizeof(connectionstatus), event->service->state_variables[ConnectionStatus_index].value); // CID 282049: Buffer not null terminated (BUFFER_SIZE)
+    safec_rc = strcpy_s(connectionstatus, sizeof(connectionstatus), event->service->state_variables[ConnectionStatus_index].value); // CID 282049: Buffer not null terminated (BUFFER_SIZE)
+    ERR_CHK(safec_rc);
     RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "current connection status: %s", connectionstatus);
     if ((0 != strcmp(connectionstatus, "Unconfigured")) &&
         (0 != strcmp(connectionstatus, "Disconnected"))) 

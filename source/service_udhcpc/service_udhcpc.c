@@ -1171,6 +1171,7 @@ static uint32_t hex2dec(char *hex)
 static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_t* pinfo)
 {
     char *env;
+    errno_t safec_rc = -1;
 
     if (dhcpv4_data == NULL || pinfo == NULL)
     {
@@ -1180,13 +1181,15 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
 
     if ((env = getenv(DHCP_INTERFACE_NAME)) != NULL)
     {
-        strcpy_s (dhcpv4_data->dhcpcInterface, sizeof(dhcpv4_data->dhcpcInterface), env); // CID 187457: Buffer not null terminated (BUFFER_SIZE)
+        safec_rc = strcpy_s (dhcpv4_data->dhcpcInterface, sizeof(dhcpv4_data->dhcpcInterface), env); // CID 187457: Buffer not null terminated (BUFFER_SIZE)
+        ERR_CHK(safec_rc);
     }
 
     /** DHCP server id */
     if ((env = getenv(DHCP_SERVER_ID)) != NULL)
     {
-        strcpy_s(dhcpv4_data->dhcpServerId, sizeof(dhcpv4_data->dhcpServerId), env); // CID 187457: Buffer not null terminated (BUFFER_SIZE)
+        safec_rc = strcpy_s(dhcpv4_data->dhcpServerId, sizeof(dhcpv4_data->dhcpServerId), env); // CID 187457: Buffer not null terminated (BUFFER_SIZE)
+        ERR_CHK(safec_rc);
     }
     else
     {
@@ -1196,7 +1199,8 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
     /** DHCP State */
     if (pinfo->input_option != NULL)
     {
-        strcpy_s(dhcpv4_data->dhcpState, sizeof(dhcpv4_data->dhcpState), pinfo->input_option ); // CID 187457: Buffer not null terminated (BUFFER_SIZE)
+        safec_rc = strcpy_s(dhcpv4_data->dhcpState, sizeof(dhcpv4_data->dhcpState), pinfo->input_option ); // CID 187457: Buffer not null terminated (BUFFER_SIZE)
+        ERR_CHK(safec_rc);
     }
     else
     {
@@ -1210,7 +1214,8 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
         /** IP */
         if ((env = getenv(DHCP_IP_ADDRESS)) != NULL)
         {
-            strcpy_s(dhcpv4_data->ip, sizeof(dhcpv4_data->ip), env); // CID 187457: Buffer not null terminated (BUFFER_SIZE)
+            safec_rc = strcpy_s(dhcpv4_data->ip, sizeof(dhcpv4_data->ip), env); // CID 187457: Buffer not null terminated (BUFFER_SIZE)
+            ERR_CHK(safec_rc);
         }
         else
         {
@@ -1220,7 +1225,8 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
         /** Subnet mask. */
         if ((env = getenv(DHCP_SUBNET)) != NULL)
         {
-            strcpy_s(dhcpv4_data->mask, sizeof(dhcpv4_data->mask), env); // CID 187457: Buffer not null terminated (BUFFER_SIZE)
+            safec_rc = strcpy_s(dhcpv4_data->mask, sizeof(dhcpv4_data->mask), env); // CID 187457: Buffer not null terminated (BUFFER_SIZE)
+            ERR_CHK(safec_rc);
         }
         else
         {
@@ -1230,7 +1236,8 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
         /** Gateway. */
         if (pinfo->router != NULL)
         {
-            strcpy_s(dhcpv4_data->gateway, sizeof(dhcpv4_data->gateway), pinfo->router); // CID 187457: Buffer not null terminated (BUFFER_SIZE)
+            safec_rc = strcpy_s(dhcpv4_data->gateway, sizeof(dhcpv4_data->gateway), pinfo->router); // CID 187457: Buffer not null terminated (BUFFER_SIZE)  
+            ERR_CHK(safec_rc);
         }
         else
         {
@@ -1250,13 +1257,15 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
             tok = strtok (dns, " ");
             if (tok)
             {
-                strcpy_s(dhcpv4_data->dnsServer, sizeof(dhcpv4_data->dnsServer), tok); // CID 187457: Buffer not null terminated (BUFFER_SIZE)
+                safec_rc = strcpy_s(dhcpv4_data->dnsServer, sizeof(dhcpv4_data->dnsServer), tok); // CID 187457: Buffer not null terminated (BUFFER_SIZE)
+                ERR_CHK(safec_rc);
             }
             /** dnsserver2 */
             tok = strtok(NULL, " ");
             if (tok)
             {
-                strcpy_s(dhcpv4_data->dnsServer1, sizeof(dhcpv4_data->dnsServer1), tok); // CID 187457: Buffer not null terminated (BUFFER_SIZE)
+                safec_rc = strcpy_s(dhcpv4_data->dnsServer1, sizeof(dhcpv4_data->dnsServer1), tok); // CID 187457: Buffer not null terminated (BUFFER_SIZE)
+                ERR_CHK(safec_rc);
             }
         }
         else
@@ -1305,7 +1314,8 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
         /** TimeZone. */
         if ((env = getenv(DHCP_TIMEZONE)) != NULL)
         {
-            strcpy_s(dhcpv4_data->timeZone, sizeof(dhcpv4_data->timeZone), env); // CID 187457: Buffer not null terminated (BUFFER_SIZE)
+            safec_rc = strcpy_s(dhcpv4_data->timeZone, sizeof(dhcpv4_data->timeZone), env); // CID 187457: Buffer not null terminated (BUFFER_SIZE)
+            ERR_CHK(safec_rc);
         }
         else
         {

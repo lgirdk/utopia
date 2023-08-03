@@ -221,16 +221,16 @@ int prepare_hostname()
 	
    	if (NULL != l_fHosts_File) 
 	{
-   		fprintf(l_fHosts_File, "127.0.0.1       localhost\n");
+         	fprintf(l_fHosts_File, "127.0.0.1       localhost\n");
 		fprintf(l_fHosts_File, "::1             localhost\n");
-                if (NULL != l_clocFqdn)
-                {
-                        if (!strncmp(l_cSecWebUI_Enabled, "true", 4))
-                        {
-                            fprintf(l_fHosts_File, "%s              %s\n", l_cCurLanIP, l_clocFqdn);
-                        }
+                // CID 70466: Array compared against 0 (NO_EFFECT)
+                if ('\0' != l_clocFqdn[0])
+                {  
+                    if (!strncmp(l_cSecWebUI_Enabled, "true", 4))
+                    {
+                        fprintf(l_fHosts_File, "%s              %s\n", l_cCurLanIP, l_clocFqdn);
+                    }
                 }
-
 		//The following lines are desirable for IPv6 capable hosts
    		fprintf(l_fHosts_File, "::1             ip6-localhost ip6-loopback\n");
    		fprintf(l_fHosts_File, "fe00::0         ip6-localnet\n");
@@ -511,7 +511,8 @@ void prepare_dhcp_options_wan_dns()
 					if(safec_rc < EOK){
 						ERR_CHK(safec_rc);
 					}
-					strncpy(l_cNs, pL_cNs, strlen(pL_cNs));
+					safec_rc = strcpy_s(l_cNs, sizeof(l_cNs), pL_cNs); // CID 340903 : String not null terminated (STRING_NULL)
+					ERR_CHK(safec_rc);
 				}
 				else
 				{

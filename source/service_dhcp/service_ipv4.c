@@ -241,6 +241,7 @@ void remove_tsip_config()
 	char l_cSubnet[16] = {0}, l_cSysevent_Cmd[255] = {0}, l_cPsm_Parameter[255] = {0};
         char bcast[INET_ADDRSTRLEN];
         char *l_cpPsm_Get = NULL;
+	errno_t safec_rc = -1;
 
         int l_iCIDR, l_iRet_Val = 0;
 
@@ -256,7 +257,8 @@ void remove_tsip_config()
     {
 		if (l_cpPsm_Get != NULL)
 		{
-			strcpy_s(l_cNv_Tsip_Enable, sizeof(l_cNv_Tsip_Enable), l_cpPsm_Get); // CID 258264: Buffer not null terminated (BUFFER_SIZE)
+		safec_rc = strcpy_s(l_cNv_Tsip_Enable, sizeof(l_cNv_Tsip_Enable), l_cpPsm_Get); // CID 258264: Buffer not null terminated (BUFFER_SIZE)
+		ERR_CHK(safec_rc);
         	Ansc_FreeMemory_Callback(l_cpPsm_Get);
 	        l_cpPsm_Get = NULL;
 		}
@@ -278,7 +280,8 @@ void remove_tsip_config()
 	{
 		if (l_cpPsm_Get != NULL)
 	    {
-    	    strcpy_s(l_cNvTsip_IpAddr, sizeof(l_cNvTsip_IpAddr), l_cpPsm_Get); // CID 258264: Buffer not null terminated (BUFFER_SIZE)
+    	    safec_rc = strcpy_s(l_cNvTsip_IpAddr, sizeof(l_cNvTsip_IpAddr), l_cpPsm_Get); // CID 258264: Buffer not null terminated (BUFFER_SIZE)
+	    ERR_CHK(safec_rc);
 	        Ansc_FreeMemory_Callback(l_cpPsm_Get);
     	    l_cpPsm_Get = NULL;
 		}
@@ -461,7 +464,8 @@ void remove_tsip_asn_config()
 				{
 					if(l_cpPsm_Get != NULL)
 					{
-    	        		strcpy_s(l_cNv_Tsip_Asn_Subnet, sizeof(l_cNv_Tsip_Asn_Subnet), l_cpPsm_Get); // CID 258277: Buffer not null terminated (BUFFER_SIZE)
+    	        		safec_rc = strcpy_s(l_cNv_Tsip_Asn_Subnet, sizeof(l_cNv_Tsip_Asn_Subnet), l_cpPsm_Get); // CID 258277: Buffer not null terminated 
+				ERR_CHK(safec_rc);
 
 	        	        Ansc_FreeMemory_Callback(l_cpPsm_Get);
     	        	    l_cpPsm_Get = NULL;
@@ -515,6 +519,7 @@ void sync_tsip ()
 	char l_cNvTsip_IpSubnet[16] = {0}, l_cNvTsip_Gateway[16] = {0};
 	char l_cSubnet[16] = {0}, l_cSysevent_Cmd[255] = {0}, l_cPsm_Parameter[255] = {0};
         char *l_cpPsm_Get = NULL;
+	errno_t safec_rc = -1;
 
         int l_iCIDR, l_iRet_Val = 0;
 
@@ -531,8 +536,9 @@ void sync_tsip ()
     {
 		if (l_cpPsm_Get != NULL)
 		{
-			strcpy_s(l_cNv_Tsip_Enable, sizeof(l_cNv_Tsip_Enable), l_cpPsm_Get); // CID 162994: Buffer not null terminated (BUFFER_SIZE)
-        	Ansc_FreeMemory_Callback(l_cpPsm_Get);
+		    safec_rc = strcpy_s(l_cNv_Tsip_Enable, sizeof(l_cNv_Tsip_Enable), l_cpPsm_Get); // CID 162994: Buffer not null terminated (BUFFER_SIZE)
+        	    ERR_CHK(safec_rc);
+	        Ansc_FreeMemory_Callback(l_cpPsm_Get);
 	        l_cpPsm_Get = NULL;
 		}
 		else
@@ -553,7 +559,8 @@ void sync_tsip ()
 	{
 		if (l_cpPsm_Get != NULL)
 	    {
-    	    strcpy_s(l_cNvTsip_IpAddr, sizeof(l_cNvTsip_IpAddr), l_cpPsm_Get); // CID 162994: Buffer not null terminated (BUFFER_SIZE) 
+    	        safec_rc = strcpy_s(l_cNvTsip_IpAddr, sizeof(l_cNvTsip_IpAddr), l_cpPsm_Get); // CID 162994: Buffer not null terminated (BUFFER_SIZE) 
+	        ERR_CHK(safec_rc);
 	        Ansc_FreeMemory_Callback(l_cpPsm_Get);
     	    l_cpPsm_Get = NULL;
 		}
@@ -743,7 +750,8 @@ void sync_tsip_asn ()
 				{
 					if(l_cpPsm_Get != NULL)
 					{
-    	        		strcpy_s(l_cNv_Tsip_Asn_Subnet, sizeof(l_cNv_Tsip_Asn_Subnet), l_cpPsm_Get); // CID 163592: Buffer not null terminated (BUFFER_SIZE)
+    	        		safec_rc = strcpy_s(l_cNv_Tsip_Asn_Subnet, sizeof(l_cNv_Tsip_Asn_Subnet), l_cpPsm_Get); // CID 163592: Buffer not null terminated
+				ERR_CHK(safec_rc);
 
 	        	        Ansc_FreeMemory_Callback(l_cpPsm_Get);
     	        	    l_cpPsm_Get = NULL; 
@@ -802,6 +810,7 @@ void resync_tsip(int tsip_enable)
 	char l_cSubnet[16] = {0}, l_cSysevent_Cmd[255] = {0}, l_cPsm_Parameter[255] = {0};
         char *l_cpPsm_Get = NULL;
         char bcast[INET_ADDRSTRLEN];
+	errno_t safec_rc = -1;
 
         int l_iCIDR, l_iRet_Val = 0;
 
@@ -817,7 +826,8 @@ void resync_tsip(int tsip_enable)
     {
 		if (l_cpPsm_Get != NULL)
 		{
-			strcpy_s(l_cNv_Tsip_Enable, sizeof(l_cNv_Tsip_Enable), l_cpPsm_Get ); // CID 258270 : Buffer not null terminated (BUFFER_SIZE)
+			safec_rc = strcpy_s(l_cNv_Tsip_Enable, sizeof(l_cNv_Tsip_Enable), l_cpPsm_Get ); // CID 258270 : Buffer not null terminated (BUFFER_SIZE)
+			ERR_CHK(safec_rc);
         	Ansc_FreeMemory_Callback(l_cpPsm_Get);
 	        l_cpPsm_Get = NULL;
 		}
@@ -839,7 +849,8 @@ void resync_tsip(int tsip_enable)
 	{
 		if (l_cpPsm_Get != NULL)
 	    {
-    	    strcpy_s(l_cNvTsip_IpAddr, sizeof(l_cNvTsip_IpAddr), l_cpPsm_Get); // CID 258270 : Buffer not null terminated (BUFFER_SIZE)
+    	    safec_rc = strcpy_s(l_cNvTsip_IpAddr, sizeof(l_cNvTsip_IpAddr), l_cpPsm_Get); // CID 258270 : Buffer not null terminated (BUFFER_SIZE)
+	    ERR_CHK(safec_rc);
 	        Ansc_FreeMemory_Callback(l_cpPsm_Get);
     	    l_cpPsm_Get = NULL;
 		}
@@ -982,7 +993,8 @@ void resync_tsip_asn()
     {
         if (l_cpPsm_Get != NULL)
         {
-            strcpy_s(l_cNv_Tsip_asn_Enable, sizeof(l_cNv_Tsip_asn_Enable), l_cpPsm_Get); // CID 258266: Buffer not null terminated (BUFFER_SIZE)
+            safec_rc = strcpy_s(l_cNv_Tsip_asn_Enable, sizeof(l_cNv_Tsip_asn_Enable), l_cpPsm_Get); // CID 258266: Buffer not null terminated (BUFFER_SIZE)
+	    ERR_CHK(safec_rc);
             Ansc_FreeMemory_Callback(l_cpPsm_Get);
             l_cpPsm_Get = NULL;
         }
@@ -1063,8 +1075,8 @@ void resync_tsip_asn()
                 {
                     if(l_cpPsm_Get != NULL)
                     {
-                        strncpy(l_cNv_Tsip_Asn_Subnet, l_cpPsm_Get,sizeof(l_cNv_Tsip_Asn_Subnet));
-
+			safec_rc = strcpy_s(l_cNv_Tsip_Asn_Subnet, sizeof(l_cNv_Tsip_Asn_Subnet), l_cpPsm_Get);
+			ERR_CHK(safec_rc);
                         Ansc_FreeMemory_Callback(l_cpPsm_Get);
                         l_cpPsm_Get = NULL;
                     }
@@ -1173,7 +1185,8 @@ void resync_tsip_asn_instance(int instance)
 			return;
 		}
 		fprintf(g_fArmConsoleLog, "l_cpPsm_Get %s \n",l_cpPsm_Get);
-		strcpy_s(l_cNv_Tsip_Asn_Subnet, sizeof(l_cNv_Tsip_Asn_Subnet), l_cpPsm_Get); // CID 338866: Buffer not null terminated (BUFFER_SIZE)
+		safec_rc =  strcpy_s(l_cNv_Tsip_Asn_Subnet, sizeof(l_cNv_Tsip_Asn_Subnet), l_cpPsm_Get); // CID 338866: Buffer not null terminated (BUFFER_SIZE)
+		ERR_CHK(safec_rc);
 		Ansc_FreeMemory_Callback(l_cpPsm_Get);
 		l_cpPsm_Get = NULL;
 
