@@ -406,9 +406,15 @@ service_start ()
        # Set NTP server(s) acquired from DHCP
        dhcpv6_ntp_server=`sysevent get dhcpv6_ntp_server | awk -F' ' '{print $1}'`
        if [ -n "$dhcpv6_ntp_server" ]; then
-           echo "server $dhcpv6_ntp_server minpoll $minpoll maxpoll $maxpoll" >> $NTP_CONF_TMP
-           VALID_SERVER="true"
-           valid_server_count=$((valid_server_count + 1))
+           IFS=',' dhcpv6_array=($dhcpv6_ntp_server)
+           #for now limit only to 3, requirement yet to be created.
+           for ((i=0;i<3;i++)); do
+               if [ -n "${dhcpv6_array[i]}" ]; then
+                   echo "server ${dhcpv6_array[i]} minpoll $minpoll maxpoll $maxpoll" >> $NTP_CONF_TMP
+                   VALID_SERVER="true"
+                   valid_server_count=$((valid_server_count + 1))
+               fi
+           done
        fi
        dhcpv4_ntp_server=`sysevent get dhcpv4_ntp_server | awk -F' ' '{print $1}'`
        if [ -n "$dhcpv4_ntp_server" ]; then
