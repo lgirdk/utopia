@@ -58,10 +58,10 @@ const char* SERVICE_CUSTOM_EVENTS[] = {
 #else
 const char* SERVICE_CUSTOM_EVENTS[] = { 
                                         "gre-restart|/etc/utopia/service.d/service_multinet/handle_gre.sh|"ACTION_FLAG_COLLAPSE_PENDING_QUEUE"|"TUPLE_FLAG_EVENT,
-                                        "gre-forceRestart|/etc/utopia/service.d/service_multinet/handle_gre.sh|"ACTION_FLAG_COLLAPSE_PENDING_QUEUE"|"TUPLE_FLAG_EVENT,
+                                        "gre-forceRestart|/etc/utopia/service.d/service_multinet/handle_gre.sh|NULL|"TUPLE_FLAG_EVENT,
                                         "snmp_subagent-status|/etc/utopia/service.d/service_multinet/handle_gre.sh",
                                         "hotspot-update_bridges|/etc/utopia/service.d/service_multinet/handle_gre.sh|"ACTION_FLAG_COLLAPSE_PENDING_QUEUE"|"TUPLE_FLAG_EVENT,
-                                        "hotspot-restart|/etc/utopia/service.d/service_multinet/handle_gre.sh|"ACTION_FLAG_COLLAPSE_PENDING_QUEUE"|"TUPLE_FLAG_EVENT,
+                                        "hotspot-restart|/etc/utopia/service.d/service_multinet/handle_gre.sh|NULL|"TUPLE_FLAG_EVENT,
                                         "hotspot-update_tcpmss|/etc/utopia/service.d/service_multinet/handle_gre.sh|"ACTION_FLAG_COLLAPSE_PENDING_QUEUE"|"TUPLE_FLAG_EVENT,
 #if defined (_LG_MV2_PLUS_)
                                         "update-vlanID|/etc/utopia/service.d/service_multinet/handle_gre.sh|"ACTION_FLAG_COLLAPSE_PENDING_QUEUE"|"TUPLE_FLAG_EVENT,
