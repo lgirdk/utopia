@@ -1457,8 +1457,10 @@ void load_static_l3 (int l3_inst)
 	char *l_cpPsm_Get = NULL;
 	int l_iRet_Val;
 	BOOL l_bApplyConfig_Res;
+#ifndef MODEM_ONLY_SUPPORT
         int uptime = 0;
 	char buffer[64] = { 0 };
+#endif
 
 	snprintf(l_cPsm_Parameter, sizeof(l_cPsm_Parameter), "dmsb.l3net.%d.V4Addr", l3_inst);
 	l_iRet_Val = PSM_VALUE_GET_STRING(l_cPsm_Parameter, l_cpPsm_Get);
