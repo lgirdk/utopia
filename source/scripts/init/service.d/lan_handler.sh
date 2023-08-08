@@ -415,6 +415,16 @@ case "$1" in
     #This is to check for all the active instances of bridges that are created
     find_active_brg_instances
 	fi
+      
+        # Laninit complete happens as part of the service_dhcp_server.sh itself.Firewall restart happens as part of service_ip4 itself.In the above code we #are setting many sysevents related to LAN hence adding the lan_init complete logs here.Also as oer the logs , we moving to bring the eth interface after this.Hence lan in
+	# compelte can brought in here.
+        if [ "$RPI_SPECIFIC" = "rpi" ]; then
+            if [ -e "/usr/bin/print_uptime" ]; then
+                /usr/bin/print_uptime "Laninit_complete"
+            fi
+        fi
+
+
 
    ;;
 
