@@ -16,4 +16,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ##########################################################################
+if PARTNER_DEFAULT_EXT
+SUBDIRS = execute_dir apply_system_defaults apply_system_defaults_psm
+else
 SUBDIRS = execute_dir apply_system_defaults
+endif

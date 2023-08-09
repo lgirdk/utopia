@@ -2,7 +2,7 @@
 # If not stated otherwise in this file or this component's Licenses.txt
 # file the following copyright and licenses apply:
 #
-# Copyright 2015 RDK Management
+# Copyright 2023 RDK Management
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,6 +22,8 @@ AM_CFLAGS = -I$(top_srcdir)/source/include \
             -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/dbus-1.0 \
 	    -I${PKG_CONFIG_SYSROOT_DIR}$(libdir)/dbus-1.0/include
 
+AM_CFLAGS +=  $(CPPFLAGS) $(DBUS_CFLAGS)
+
 AM_LDFLAGS = $(top_builddir)/source/services/lib/libsrvmgr.la \
              $(top_builddir)/source/sysevent/lib/libsysevent.la \
              $(top_builddir)/source/syscfg/lib/libsyscfg.la \
@@ -30,7 +32,7 @@ AM_LDFLAGS = $(top_builddir)/source/services/lib/libsrvmgr.la \
              $(top_builddir)/source/utctx/lib/libutctx.la \
              -ltelemetry_msgsender \
              -lcjson \
-	     -lccsp_common $(DBUS_LIBS)
+             -lccsp_common $(DBUS_LIBS)
 
 if PLATFORM_HAL_SYNDICATION
 AM_LDFLAGS += "-lhal_platform -lsysevent -lutctx -lutapi -lhal_wifi"
@@ -38,10 +40,7 @@ endif
 
 AM_CPPFLAGS = -I$(top_srcdir)/source/scripts/init/src
 
-bin_PROGRAMS = apply_system_defaults
+bin_PROGRAMS = apply_system_defaults_psm
 
-if PARTNER_DEFAULT_EXT
-apply_system_defaults_SOURCES = apply_system_defaults_syscfg.c ../apply_system_defaults_helper.c
-else
-apply_system_defaults_SOURCES = apply_system_defaults.c
-endif
+apply_system_defaults_psm_SOURCES = apply_system_defaults_psm.c ../apply_system_defaults_helper.c
+

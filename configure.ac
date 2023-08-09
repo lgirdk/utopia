@@ -55,6 +55,8 @@ AM_PROG_LIBTOOL(libtool)
 
 AM_CONDITIONAL([PLATFORM_HAL_SYNDICATION], [test "$PLATFORM_HAL_SYNDICATION" = "yes"])
 
+AM_CONDITIONAL([PARTNER_DEFAULT_EXT], [test "$PARTNER_DEFAULT_EXT" = "yes"])
+
 # Specify ccsp platform (device)
 AC_ARG_WITH([ccsp-platform],
 [AC_HELP_STRING([--with-ccsp-platform={intel_usg,pc,bcm,intel_puma7}],
@@ -200,6 +202,7 @@ AC_CONFIG_FILES(
 	source/scripts/init/c_registration/Makefile
 	source/scripts/init/src/Makefile
 	source/scripts/init/src/apply_system_defaults/Makefile
+        source/scripts/init/src/apply_system_defaults_psm/Makefile
 	source/scripts/init/src/execute_dir/Makefile
 	source/services/Makefile
 	source/services/lib/Makefile
