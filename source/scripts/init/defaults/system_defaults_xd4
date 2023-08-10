@@ -1096,7 +1096,7 @@ $diagMode_LogUploadFrequency=1440
 
 # XSMART or IOT Enable
 $X_RDKCENTRAL-COM_ENABLEIOT=false
-$lost_and_found_enable=true
+$lost_and_found_enable=false
 
 # Webpa Parameters
 $X_RDKCENTRAL-COM_LastRebootReason=unknown
