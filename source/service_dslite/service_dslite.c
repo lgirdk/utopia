@@ -234,7 +234,22 @@ static int get_aftr (struct serv_dslite *sd, char *DSLITE_AFTR, char *dslite_mod
 
     if (strcmp (dslite_mode, "1") == 0) //AFTR got from DCHP mode
     {
-        sysevent_get (sd->sefd, sd->setok, "dslite_dhcpv6_endpointname", DSLITE_AFTR, size_aftr);
+        int count;
+
+        for (count = 0; count < 6; count++)
+        {
+            sysevent_get (sd->sefd, sd->setok, "dslite_dhcpv6_endpointname", DSLITE_AFTR, size_aftr);
+
+            if ((DSLITE_AFTR[0] != 0) && (strcmp(DSLITE_AFTR, "none") != 0))
+            {
+                fprintf (fp_dslt_dbg, "%s: AFTR=%s, Retry count=%d\n", __FUNCTION__, DSLITE_AFTR, count);
+                break;
+            }
+
+            fprintf (fp_dslt_dbg, "%s: Unable to get AFTR, Retry count=%d\n", __FUNCTION__, count);
+            sleep(2);
+        }
+
         retvalue = 1;
     }
     else if (strcmp (dslite_mode, "2") == 0) //AFTR got from static mode
