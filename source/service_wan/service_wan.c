@@ -1022,12 +1022,14 @@ static int wan_start(struct serv_wan *sw)
 
 #endif /*_WAN_MANAGER_ENABLED_*/
 
+#if !defined(_WAN_MANAGER_ENABLED_)
      //Intel Proposed RDKB Generic Bug Fix from XB6 SDK
     /* set current_wan_ifname at wan-start, for all erouter modes */
     if (sw->rtmod != WAN_RTMOD_UNKNOW) {
     	/* set sysevents and trigger for other modules */
     	sysevent_set(sw->sefd, sw->setok, "current_wan_ifname", sw->ifname, 0);
     }
+#endif
 
  #ifndef DSLITE_FEATURE_SUPPORT	
     if (sw->rtmod == WAN_RTMOD_IPV4 || sw->rtmod == WAN_RTMOD_DS)
