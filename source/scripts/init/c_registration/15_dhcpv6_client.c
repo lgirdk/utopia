@@ -44,6 +44,7 @@
 #define SERVICE_NAME "dhcpv6_client"
 #define SERVICE_DEFAULT_HANDLER "/etc/utopia/service.d/service_dhcpv6_client.sh"
 
+#if !defined(_WAN_MANAGER_ENABLED_)
 #if defined(CORE_NET_LIB)
 const char* SERVICE_CUSTOM_EVENTS[] = {
                                         "dhcpv6_client-start|/usr/bin/service_dhcpv6_client",
@@ -72,6 +73,9 @@ const char* SERVICE_CUSTOM_EVENTS[] = {
                                         "lan-status|/etc/utopia/service.d/service_dhcpv6_client.sh",
                                         NULL
                                       };
+#endif
+#else
+const char* SERVICE_CUSTOM_EVENTS[] = { NULL };
 #endif
 
 void srv_register(void) {
