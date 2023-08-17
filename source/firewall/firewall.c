@@ -4946,25 +4946,13 @@ QoSUserDefinedPolicies:
 
          char rule[350];
          char subst[MAX_QUERY];
-         if (0 == proto || 1 ==  proto) {
-            snprintf(rule, sizeof(rule), 
-                      "-A prerouting_qos -p tcp -m tcp --dport %s:%s -j DSCP --set-dscp-class %s",
-                      sdport, edport, class);
-            char  str[MAX_QUERY];
-            snprintf(str, sizeof(str),
-                     "%s", make_substitutions(rule, subst, sizeof(subst)));
-            fprintf(fp, "%s\n", str);
-
+         if (0 == proto || 1 == proto) {
+            snprintf(rule, sizeof(rule), "-A prerouting_qos -p tcp -m tcp --dport %s:%s -j DSCP --set-dscp-class %s", sdport, edport, class);
+            fprintf(fp, "%s\n", make_substitutions(rule, subst, sizeof(subst)));
          }
-
-         if (0 == proto || 2 ==  proto) {
-            snprintf(rule, sizeof(rule), 
-                      "-A prerouting_qos -p udp -m udp --dport %s:%s -j DSCP --set-dscp-class %s",
-                      sdport, edport, class);
-            char  str[MAX_QUERY];
-            snprintf(str, sizeof(str),
-                     "%s", make_substitutions(rule, subst, sizeof(subst)));
-            fprintf(fp, "%s\n", str);
+         if (0 == proto || 2 == proto) {
+            snprintf(rule, sizeof(rule), "-A prerouting_qos -p udp -m udp --dport %s:%s -j DSCP --set-dscp-class %s", sdport, edport, class);
+            fprintf(fp, "%s\n", make_substitutions(rule, subst, sizeof(subst)));
          }
       }
    }
@@ -5230,8 +5218,9 @@ static int do_wan_nat_lan_clients(FILE *fp)
    if (!isNatReady) {
       return(0);
    }
-  char str[MAX_QUERY+2350];
-           FIREWALL_DEBUG("Entering do_wan_nat_lan_clients\n");       
+
+   FIREWALL_DEBUG("Entering do_wan_nat_lan_clients\n");
+
 #ifdef CISCO_CONFIG_TRUE_STATIC_IP
   //do not do SNAT on public ip
   int i;
@@ -5261,23 +5250,19 @@ static int do_wan_nat_lan_clients(FILE *fp)
 #endif
 
 #if (defined (_COSA_BCM_ARM_) || defined(_PLATFORM_TURRIS_)) && !defined (_HUB4_PRODUCT_REQ_)
- if(bEthWANEnable || isBridgeMode) // Check is required for TCHXB6 TCHXB7 CBR and not for HUB4
+  if(bEthWANEnable || isBridgeMode) // Check is required for TCHXB6 TCHXB7 CBR and not for HUB4
 #else
   if(bEthWANEnable)
 #endif
   {/*fix RDKB-21704, SNAT is required only for private IP ranges. */
-  memset(str, 0, sizeof(str));
 #if defined (FEATURE_MAPT) || defined (FEATURE_SUPPORT_MAPT_NAT46)
   if (!isMAPTReady)
 #endif //FEATURE_MAPT
      if(!IS_EMPTY_STRING(natip4))
      {
-         fprintf(fp, "-A postrouting_towan -s 10.0.0.0/8  -j SNAT --to-source %s\n", natip4);
-         memset(str, 0, sizeof(str));
-         fprintf(fp, "-A postrouting_towan -s 192.168.0.0/16  -j SNAT --to-source %s\n", natip4);
-         memset(str, 0, sizeof(str));
-	 fprintf(fp, "-A postrouting_towan -s 172.16.0.0/12  -j SNAT --to-source %s\n", natip4);
-
+         fprintf(fp, "-A postrouting_towan -s 10.0.0.0/8 -j SNAT --to-source %s\n", natip4);
+         fprintf(fp, "-A postrouting_towan -s 192.168.0.0/16 -j SNAT --to-source %s\n", natip4);
+         fprintf(fp, "-A postrouting_towan -s 172.16.0.0/12 -j SNAT --to-source %s\n", natip4);
      }
   }
   else
