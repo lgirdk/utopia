@@ -453,19 +453,16 @@ char cellular_ifname[32];
 #define BRIDGE_MODE_IP_ADDRESS "10.0.0.1"
 #endif
 
-#define IS_EMPTY_STRING(s)    ((s == NULL) || (*s == '\0'))
+#define IS_EMPTY_STRING(s) ((s == NULL) || (*s == '\0'))
 
-#if defined(FEATURE_MAPT) || defined(_HUB4_PRODUCT_REQ_) || defined (FEATURE_SUPPORT_MAPT_NAT46)
-#define IS_EMPTY_STRING(s)    ((s == NULL) || (*s == '\0'))
-#define BUFLEN_64 64
-#define UP "up"
-#define RESET "reset"
-#define RET_OK 0
 #define BUFLEN_8 8
 #define BUFLEN_32 32
-#define SET "set"
+#define BUFLEN_64 64
+#define RET_OK 0
 #define RET_ERR -1
-#endif //FEATURE_MAPT || _HUB4_PRODUCT_REQ_
+#define SET "set"
+#define RESET "reset"
+#define UP "up"
 
 /* HUB4 application specific defines. */
 #ifdef _HUB4_PRODUCT_REQ_
