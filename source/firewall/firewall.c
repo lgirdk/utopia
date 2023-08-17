@@ -5294,9 +5294,9 @@ static int do_wan_nat_lan_clients(FILE *fp)
 #endif //FEATURE_MAPT
      if(!IS_EMPTY_STRING(natip4))
      {
-         fprintf(fp, "-A postrouting_towan -s 10.0.0.0/8  -j SNAT --to-source %s\n", natip4);
-         fprintf(fp, "-A postrouting_towan -s 192.168.0.0/16  -j SNAT --to-source %s\n", natip4);
-	 fprintf(fp, "-A postrouting_towan -s 172.16.0.0/12  -j SNAT --to-source %s\n", natip4);
+         fprintf(fp, "-A postrouting_towan -s 10.0.0.0/8 -j SNAT --to-source %s\n", natip4);
+         fprintf(fp, "-A postrouting_towan -s 192.168.0.0/16 -j SNAT --to-source %s\n", natip4);
+         fprintf(fp, "-A postrouting_towan -s 172.16.0.0/12 -j SNAT --to-source %s\n", natip4);
 
 #if defined (WIFI_MANAGE_SUPPORTED)
 #define BUFF_LEN_64 64
