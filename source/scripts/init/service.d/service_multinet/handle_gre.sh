@@ -937,7 +937,7 @@ case "$1" in
         fi        
  
         curep=`sysevent get gre_current_endpoint`                   
-        if [ x != x$curep -a x$curep != x${2} ] || [ $recover = "true" ]; then
+        if [ x$curep != x${2} ] || [ $recover = "true" ]; then
             destroy_tunnel $GRE_IFNAME                                        
         fi    
 
