@@ -714,8 +714,8 @@ if [ "$FACTORY_RESET_REASON" = "true" ]; then
        if [ -e "/usr/bin/onboarding_log" ]; then
           /usr/bin/onboarding_log "[utopia][init] Detected last reboot reason as WPS-Factory-Reset"
        fi
-       syscfg set X_RDKCENTRAL-COM_LastRebootReason "WPS-Factory-Reset"
-       syscfg set X_RDKCENTRAL-COM_LastRebootCounter "1"
+       #syscfg set X_RDKCENTRAL-COM_LastRebootReason "WPS-Factory-Reset"
+       #syscfg set X_RDKCENTRAL-COM_LastRebootCounter "1"
        rm -f /nvram/WPS_Factory_Reset
     else
        echo "[utopia][init] Detected last reboot reason as factory-reset"
