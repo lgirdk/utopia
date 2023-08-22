@@ -1711,14 +1711,10 @@ static int radv_start(struct serv_routed *sr)
 
 #if defined (_HUB4_PRODUCT_REQ_) && !defined (_WNXL11BWL_PRODUCT_REQ_)
     /*
-     * SKYH4-1765: we do not want to restart the zebra if it is already running,
-     * since restarting zebra will leads clear the current zebra counter.
-     * So we send SIGUSR1 to zebra to notify 'read the updated zebra.conf'
+     *   signal zebra to update configuration
      */
     int pid = is_daemon_running(ZEBRA_PID_FILE, "zebra");
-    char dhcpv6_lease[16] = {0};
-    sysevent_get(sr->sefd, sr->setok, "dhcpv6_lease", dhcpv6_lease, sizeof(dhcpv6_lease));
-    if((pid) && (strncmp(dhcpv6_lease, "expired", sizeof(dhcpv6_lease)) != 0))
+    if(pid)
     {
         kill(pid, SIGUSR1);
         return 0;
@@ -1741,17 +1737,7 @@ static int radv_start(struct serv_routed *sr)
 
 static int radv_stop(struct serv_routed *sr)
 {
-    /*
-     * SKYH4-1765: we do not want to restart the zebra if it is already running,
-     * since restarting zebra will clear the current zebra counter.
-     */
-#if defined(_HUB4_PRODUCT_REQ_)
-    char dhcpv6_lease[16] = {0};
-    sysevent_get(sr->sefd, sr->setok, "dhcpv6_lease", dhcpv6_lease, sizeof(dhcpv6_lease));
-    if((is_daemon_running(ZEBRA_PID_FILE, "zebra")) && (strncmp(dhcpv6_lease, "expired", sizeof(dhcpv6_lease)) != 0))
-#else
     if(is_daemon_running(ZEBRA_PID_FILE, "zebra"))
-#endif
     {
         return 0;
     }
