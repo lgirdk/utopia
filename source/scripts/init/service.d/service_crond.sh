@@ -153,15 +153,10 @@ service_start ()
       echo "*/15 * * * * /bin/sh /usr/ccsp/tad/gui_session_expiry.sh" >> $CRONTAB_FILE 
 
       # Generate Firewall statistics hourly
-      if [ "$BOX_TYPE" = "XB6" -a "$MANUFACTURE" = "Arris" ] || [ "$MODEL_NUM" = "INTEL_PUMA" ] ; then
-      	#Intel Proposed RDKB Generic Bug Fix from XB6 SDK
-      	#Don't Zero iptable Counter
-      	echo "58 * * * * /usr/bin/GenFWLog -nz" >> $CRONTAB_FILE
-      else
-      	echo "58 * * * * /usr/bin/GenFWLog" >> $CRONTAB_FILE
-      fi
+      # Don't Zero iptable Counter
+      echo "58 * * * * /usr/bin/GenFWLog -nz" >> $CRONTAB_FILE
 
-	  # Monitor syscfg DB every 15minutes 
+      # Monitor syscfg DB every 15minutes 
       echo "*/15 * * * * /usr/ccsp/tad/syscfg_recover.sh" >> $CRONTAB_FILE
 
       # Monitor resource_monitor.sh every 5 minutes TCCBR-3288
