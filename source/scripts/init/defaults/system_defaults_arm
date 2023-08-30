@@ -1431,6 +1431,9 @@ $DscpSleepInterval_2=0
 #Ccsp CMagent Docsis linkdown timeout default value is 900sec
 $DocsisLinkDownTimeOut=900
 
+#LLDEnable default value is false
+$LldEnable=false
+
 #GatewayManager factory default values
 $ConfigSyncEnableOnChange=true
 $ConfigSyncInterval=300
