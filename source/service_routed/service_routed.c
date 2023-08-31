@@ -78,6 +78,7 @@ static const char* const service_routed_component_id = "ccsp.routed";
 #define ZEBRA_PID_FILE  "/var/zebra.pid"
 #define RIPD_PID_FILE   "/var/ripd.pid"
 #define ZEBRA_CONF_FILE "/var/zebra.conf"
+#define ZEBRA_LOCK_FILE "/var/zebra.lock"
 
 #if defined (_BWG_PRODUCT_REQ_) || defined (ARRIS_XB3_PLATFORM_CHANGES)
 #define RIPD_CONF_FILE  "/var/ripd.conf"
@@ -1698,6 +1699,7 @@ static int radv_start(struct serv_routed *sr)
 #if defined(_COSA_FOR_BCI_)
     char dhcpv6Enable[8]={0};
 #endif
+    int lock_fd;
     /* XXX: 
      * 1) even IPv4 only zebra should start (ripd need it) !
      * 2) IPv6-only do not use wan-status  */
@@ -1743,6 +1745,17 @@ static int radv_start(struct serv_routed *sr)
 
 #endif 
 
+    lock_fd =  open(ZEBRA_LOCK_FILE, O_RDONLY | O_CREAT, 0666);
+    if (lock_fd < 0) {
+        fprintf(fp_routd_dbg, "%s: fail to create zebra lock file\n", __FUNCTION__);
+        return -1;
+    }
+    if (flock(lock_fd, LOCK_EX) < 0) {
+        if (close(lock_fd) < 0)
+            fprintf(fp_routd_dbg, "%s: fail to close zebra lock file\n", __FUNCTION__);
+        return -1;
+    }
+
     if (gen_zebra_conf(sr->sefd, sr->setok) != 0) {
         fprintf(fp_routd_dbg, "%s: fail to save zebra config\n", __FUNCTION__);
         return -1;
@@ -1775,6 +1788,11 @@ static int radv_start(struct serv_routed *sr)
     v_secure_system("/bin/sh /etc/utopia/service.d/set_ipv6_dns.sh zebra");
     vsystem("zebra -d -f %s -A 127.0.0.1 -i %s", ZEBRA_CONF_FILE, ZEBRA_PID_FILE);
 #endif
+
+    if (flock(lock_fd, LOCK_UN) < 0)
+        fprintf(fp_routd_dbg, "%s: fail to unlock zebra lock file\n", __FUNCTION__);
+    if (close(lock_fd) < 0)
+        fprintf(fp_routd_dbg, "%s: fail to close zebra lock file\n", __FUNCTION__);
 
     return 0;
 }
