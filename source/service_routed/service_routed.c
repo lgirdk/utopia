@@ -50,6 +50,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdbool.h>
+#include <sys/file.h>
 #include <net/if.h>
 #include <signal.h>
 #include "safec_lib_common.h"
