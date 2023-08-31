@@ -140,6 +140,11 @@ fi
 
 echo "400" > /proc/sys/net/netfilter/nf_conntrack_expect_max
 
+if [ "$MODEL_NUM" = "TG4482A" ]; then
+   echo "8192" > /proc/sys/vm/min_free_kbytes
+fi
+
+
 # RDKB-26160
 #echo 4096 > /proc/sys/net/ipv6/neigh/default/gc_thresh1
 #echo 8192 > /proc/sys/net/ipv6/neigh/default/gc_thresh2
