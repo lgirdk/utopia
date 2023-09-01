@@ -1819,6 +1819,20 @@ int prepare_dhcp_conf (char *input)
                         fprintf(g_fArmConsoleLog, "DHCP_SERVER : [brlan113] dhcp-option=brlan113,6,%s\n", l_cWan_Dhcp_Dns);
                 }
 #endif
+#if defined (WIFI_MANAGE_SUPPORTED)
+        #define BUFF_LEN_8 8
+        char aParamVal[BUFF_LEN_8] = {0};
+        syscfg_get(NULL, "Manage_WiFi_Enabled", aParamVal, BUFF_LEN_8);
+        if (!strncmp(aParamVal, "true", 4))
+        {
+            psmGet(g_vBus_handle,MANAGE_WIFI_PSM_STR, aParamVal);
+            if ('\0' != aParamVal[0])
+            {
+                updateDhcpPoolData(g_vBus_handle, aParamVal, l_fLocal_Dhcp_ConfFile);
+            }
+        }
+#endif /*WIFI_MANAGE_SUPPORTED*/
+
 #if defined(_WNXL11BWL_PRODUCT_REQ_)
         fprintf(l_fLocal_Dhcp_ConfFile, "interface=brlan112\n");
         fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-range=169.254.70.5,169.254.70.253,255.255.255.0,infinite\n");

@@ -22,4 +22,8 @@ lib_LTLIBRARIES = libutopiautil.la
 libutopiautil_la_SOURCES = util.c
 
 libutopiautil_la_CPPFLAGS = -I$(top_srcdir)/source/include \
-                            -I$(top_srcdir)/source/util/utils
+                            -I$(top_srcdir)/source/util/utils \
+                             $(DBUS_CFLAGS)
+
+libutopiautil_la_LDFLAGS = -lccsp_common $(DBUS_LIBS)
+

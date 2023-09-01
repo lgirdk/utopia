@@ -757,6 +757,35 @@ UpdateDhcpConfChangeBasedOnEvent()
        fi
 }
 
+updateManageWifiBridgeDetails ()
+{
+    ManageWiFiEnabled=$(syscfg get Manage_WiFi_Enabled)
+    echo "Manage_WiFi_Enabled:$ManageWiFiEnabled"
+
+    ManageWiFiPsmIndex=$(psmcli get dmsb.MultiLAN.ManageWiFi_l3net)
+    echo "Manage Wifi PSM index:$ManageWiFiPsmIndex"
+
+    ManageWiFiBridgeName=$(psmcli get dmsb.l2net.$ManageWiFiPsmIndex.Name)
+    echo "Manage_WiFi_Bridge_Name:$ManageWiFiBridgeName"
+
+    dhcpServerEnabled=$(psmcli get dmsb.dhcpv4.server.pool.$ManageWiFiPsmIndex.Enable)
+    echo "Dhcp_Server_Enabled:$dhcpServerEnabled"
+
+    if [ "$ManageWiFiEnabled" = "true" -a "$dhcpServerEnabled" = "true" ]; then
+        echo "Updating the Manage WiFi bridge details"
+        if [ ! -z $ManageWiFiBridgeName ]; then
+            echo "interface=$ManageWiFiBridgeName" >> $1
+        fi
+        dhcpServerMinAddr=$(psmcli get dmsb.dhcpv4.server.pool.$ManageWiFiPsmIndex.MinAddress)
+        dhcpServerMaxAddr=$(psmcli get dmsb.dhcpv4.server.pool.$ManageWiFiPsmIndex.MaxAddress)
+        dhcpServerSubnetMask=$(psmcli get dmsb.dhcpv4.server.pool.$ManageWiFiPsmIndex.SubnetMask)
+        dhcpServerLeaseTime=$(psmcli get dmsb.dhcpv4.server.pool.$ManageWiFiPsmIndex.LeaseTime)
+        if [ ! -z $dhcpServerMinAddr ] && [ ! -z $dhcpServerMaxAddr ] && [ ! -z $dhcpServerSubnetMask ] && [ ! -z $dhcpServerLeaseTime ] ; then
+            echo "dhcp-range=$dhcpServerMinAddr,$dhcpServerMaxAddr,$dhcpServerSubnetMask,$dhcpServerLeaseTime"
+            echo "dhcp-range=$dhcpServerMinAddr,$dhcpServerMaxAddr,$dhcpServerSubnetMask,$dhcpServerLeaseTime" >> $1
+        fi
+    fi
+}
 #-----------------------------------------------------------------
 # set the dhcp config file which is also the dns forwarders file
 #  Parameters:
@@ -1202,7 +1231,7 @@ fi
             if [ "1" == "$NAMESERVERENABLED" ] && [ -n "$WAN_DHCP_NS" ]; then
                 echo "${PREFIX}""dhcp-option=brlan113,6,$WAN_DHCP_NS" >> $LOCAL_DHCP_CONF
             fi
-            
+            updateManageWifiBridgeDetails $LOCAL_DHCP_CONF
              echo "interface=brebhaul" >> $LOCAL_DHCP_CONF
              echo "dhcp-range=169.254.85.5,169.254.85.253,255.255.255.0,infinite" >> $LOCAL_DHCP_CONF
 

@@ -18,7 +18,7 @@
 ##########################################################################
 AM_CFLAGS = -D_GNU_SOURCE
 AM_CFLAGS += $(PTHREAD_CFLAGS)
-AM_CPPFLAGS = -I$(top_srcdir)/source/include $(DBUS_CFLAGS)
+AM_CPPFLAGS = -I$(top_srcdir)/source/include -I$(top_srcdir)/source/util/utils $(DBUS_CFLAGS)
 AM_LDFLAGS = -lccsp_common -lsecure_wrapper -lnetfilter_queue -lnfnetlink $(DBUS_LIBS) $(PTHREAD_LIBS) -lrt
 
 bin_PROGRAMS = firewall nfq_handler
@@ -32,7 +32,8 @@ nfq_handler_SOURCES = raw_socket_send.c nfq_handler.c
 
 firewall_LDADD = $(top_builddir)/source/syscfg/lib/libsyscfg.la \
                  $(top_builddir)/source/sysevent/lib/libsysevent.la \
-                 $(top_builddir)/source/ulog/libulog.la
+                 $(top_builddir)/source/ulog/libulog.la \
+                 $(top_builddir)/source/util/utils/libutopiautil.la
 
 nfq_handler_LDADD = $(top_builddir)/source/syscfg/lib/libsyscfg.la \
                     $(top_builddir)/source/sysevent/lib/libsysevent.la \
