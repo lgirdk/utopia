@@ -392,6 +392,8 @@ extern int debugLevel;
 int printTime(void);
 void incr_stat_info(stat_id_t id);
 void printStat();
-
+char* getTime();
+char* getUpTime();
+void write_to_file(const char *format, ...);
 
 #endif   // _SYSEVENTD_H_

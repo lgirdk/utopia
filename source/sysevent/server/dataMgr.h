@@ -125,7 +125,7 @@ char *DATA_MGR_get_bin(char *name, char *value_buf, int *buf_size);
  *     0            : Success
  *     !0           : Some error
  */
-int DATA_MGR_set(char *name, char *value, int source, int tid);
+int DATA_MGR_set(char *name, char *value, int source, int tid, token_t who);
 int DATA_MGR_set_bin(char *name, char *value, int value_length, int source, int tid);
 
 /*

@@ -215,5 +215,6 @@ int CLI_MGR_init_clients_table(void);
  */
 int CLI_MGR_deinit_clients_table(void);
 
+char* CLI_MGR_id2name (token_t id);
 
 #endif   // __CLIENTS_MGR_H_

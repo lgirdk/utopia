@@ -340,6 +340,8 @@ static int _eval(char *const prog, const char *const name, const char *const val
          } else {
             pid_t childpid;
             int read_bytes = 0;
+            clock_t start, end;
+            double exec_time;
             if (0 >= (read_bytes = read(fd, &childpid, sizeof(childpid))) ) {
                // the read failed or didnt read anything
                num_tries--;
@@ -376,6 +378,7 @@ static int _eval(char *const prog, const char *const name, const char *const val
                   snprintf(waiting_pid[pid_slot].name, sizeof(waiting_pid[pid_slot].name), "%s <%s,%s>", prog, name, value);
                   int    done = 0;
                   struct timespec sleep_time;
+                  start = clock();
                   while (!done) {
                      done = kill(childpid, 0);
                      if (!done) {
@@ -383,6 +386,15 @@ static int _eval(char *const prog, const char *const name, const char *const val
                         sleep_time.tv_nsec = 100000;
                         nanosleep(&sleep_time, NULL);
                      }
+                  }
+                  end = clock();
+                  exec_time =  ((double) (end - start)) / CLOCKS_PER_SEC;
+                  if (done) {
+                      char *pGetTime = getTime();
+                      char *pGetUpTime = getUpTime();
+                      write_to_file("syseventd_exec->handler: %s | %s | action: %s | name: %s | value: %s | exec_time: %f\n", pGetTime, pGetUpTime, prog, name, (value ? value : "NULL"), exec_time);
+                      free(pGetTime);
+                      free(pGetUpTime);
                   }
                waiting_pid[pid_slot].pid       = 0;
                waiting_pid[pid_slot].mark      = 0;
@@ -710,7 +722,7 @@ static int handle_set_request(const int fd, const token_t who, se_set_msg *msg)
    }
 
    if (!rc) {
-      rc = DATA_MGR_set( subject_str, value_str, source, tid); 
+      rc = DATA_MGR_set( subject_str, value_str, source, tid, who); 
       if (0 != rc) {
          SE_INC_LOG(LISTENER,
             printf("handle_set_request: Call to Data Mgr failed. Reason (%d), %s\n",

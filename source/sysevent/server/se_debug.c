@@ -36,6 +36,9 @@
 #include <sys/time.h>
 #include <time.h>
 #include "syseventd.h"
+#include <stdlib.h>
+#include <stdarg.h>
+#include <unistd.h>
 
 #ifdef SE_SERVER_CODE_DEBUG
 #ifdef NO_PRINTTIME
@@ -117,4 +120,49 @@ void printStat()
     printf("stat_info.worker_main_select_bad_fd = %ld\n", stat_info.worker_main_select_bad_fd);
     printf("stat_info.fork_helper_pipe_read_failure = %ld\n", stat_info.fork_helper_pipe_read_failures);
     pthread_mutex_unlock(&stat_info_mutex);
+}
+
+char* getTime()
+{
+    time_t curr_time;
+    struct tm *timeinfo;
+    char datetime_str[20];
+    char *timestamp = (char*) malloc (30 *sizeof(char));
+
+    time(&curr_time);
+    timeinfo = localtime(&curr_time);
+
+    strftime(datetime_str, sizeof(datetime_str), "%y%m%d-%H:%M:%S", timeinfo);
+
+    snprintf(timestamp, 30, "%s.%06ld", datetime_str, curr_time % 1000000);
+
+    return timestamp;
+}
+
+char* getUpTime()
+{
+    char* time = (char*)malloc(25 * sizeof(char));
+    struct timespec uptime;
+    clock_gettime(CLOCK_MONOTONIC, &uptime);
+    sprintf(time, "%ld.%ld", uptime.tv_sec, uptime.tv_nsec);
+
+    return time;
+}
+
+void write_to_file(const char *format, ...) {
+    if (access("/nvram/sysevent_tracer_enabled", F_OK) == 0) {
+        FILE *log_fp = fopen("/rdklogs/logs/sysevent_tracer.txt", "a+");
+
+        if (log_fp == NULL) {
+            printf("Unable to open the sysevent_tracer file\n");
+            return;
+        }
+
+        va_list args;
+        va_start(args, format);
+        vfprintf(log_fp, format, args);
+        va_end(args);
+
+        fclose(log_fp);
+    }
 }
