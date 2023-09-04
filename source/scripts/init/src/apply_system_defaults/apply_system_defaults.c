@@ -51,7 +51,7 @@
 #include "time.h"
 #include "secure_wrapper.h"
 #include <sys/stat.h>
-#if defined (_XB6_PRODUCT_REQ_) || defined(_HUB4_PRODUCT_REQ_) || defined(_SR300_PRODUCT_REQ_)
+#if defined (_XB6_PRODUCT_REQ_) || defined(_HUB4_PRODUCT_REQ_) || defined(_SR300_PRODUCT_REQ_) || defined(_WNXL11BWL_PRODUCT_REQ_)
 #include "platform_hal.h"
 #endif
 #include <unistd.h>
@@ -676,10 +676,10 @@ static int GetDevicePropertiesEntry (char *pOutput, int size, char *sDevicePropC
 
 static int getFactoryPartnerId (char *pValue)
 {
-#if defined (_XB6_PRODUCT_REQ_) || defined(_HUB4_PRODUCT_REQ_) || defined(_SR300_PRODUCT_REQ_)
+#if defined (_XB6_PRODUCT_REQ_) || defined(_HUB4_PRODUCT_REQ_) || defined(_SR300_PRODUCT_REQ_) || defined(_WNXL11BWL_PRODUCT_REQ_)
 	if(0 == platform_hal_getFactoryPartnerId(pValue))
 	{
-		APPLY_PRINT("%s - %s\n",__FUNCTION__,pValue);
+		APPLY_PRINT("%s:%d - %s\n",__FUNCTION__, __LINE__,pValue);
 		return 0;		 
 	}
 	else
@@ -690,7 +690,7 @@ static int getFactoryPartnerId (char *pValue)
 			APPLY_PRINT(" Retrying for getting partnerID from HAL, Retry Count:%d\n", count + 1);
 			if(0 == platform_hal_getFactoryPartnerId(pValue))
 			{
-				APPLY_PRINT("%s - %s\n",__FUNCTION__,pValue);
+				APPLY_PRINT("%s:%d - %s\n",__FUNCTION__, __LINE__,pValue);
 				return 0;
 			}
 			sleep(3);
