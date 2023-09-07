@@ -1776,7 +1776,8 @@ static int radv_start(struct serv_routed *sr)
         return 0;
     }
 #endif
-    daemon_stop(ZEBRA_PID_FILE, "zebra");
+    vsystem("killall zebra");
+    unlink(ZEBRA_PID_FILE);
 
 #if defined(_COSA_FOR_BCI_)
     syscfg_get(NULL, "dhcpv6s00::serverenable", dhcpv6Enable , sizeof(dhcpv6Enable));
