@@ -174,6 +174,25 @@ void dhcpv6_client_service_start ()
     sysevent_get(g_iSyseventfd, g_tSysevent_token, "bridge_mode", l_cBridgeMode, sizeof(l_cBridgeMode));
     sysevent_get(g_iSyseventfd, g_tSysevent_token, "wan-status", l_cWanState, sizeof(l_cWanState));
 
+    FILE *fp = fopen(DHCPV6_PID_FILE,"r");
+    if (fp != NULL)
+    {
+        fprintf(stderr, "SERVICE_DHCP6C : %s is available\n", DHCPV6_PID_FILE);
+        int pid = -1;
+        pid = pid_of(DHCPV6_BINARY, NULL);
+        if (pid < 0)
+        {
+            fseek (fp, 0, SEEK_END);
+            int size = ftell(fp);
+            if (size != 0)
+            {
+                fprintf(stderr, "SERVICE_DHCP6C : file %s is available and not empty, but processes is not running, triggering dhcpv6_client_service_stop \n", DHCPV6_PID_FILE);
+                dhcpv6_client_service_stop();
+            }
+        }
+        fclose(fp);
+    }
+
     if ((strncmp(l_cLastErouterMode, "2", 1)) && (strncmp(l_cLastErouterMode, "3", 1)))
     {
         fprintf(stderr, "SERVICE_DHCP6C : Non IPv6 Mode, service_stop\n");
