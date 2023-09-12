@@ -1317,3 +1317,7 @@ $DscpSleepInterval_2=0
 
 #Direct Download Enable default value
 $SWDLDirectEnable=false
+
+#DeviceType default value
+$DeviceType=TEST
+
