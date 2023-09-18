@@ -283,15 +283,16 @@ static int msg_receive_internal (int fd, char *replymsg, unsigned int *replymsg_
 
    // read in the constant size se_msg_header
    se_msg_hdr msg_hdr;
-   int recv_bytes = -1;
+   int recv_bytes = -1, retry_count = 0;
    while (-1 == recv_bytes) {
       recv_bytes = read(fd, (void *)&msg_hdr, sizeof(se_msg_hdr));
-      if ( -1 == recv_bytes && EAGAIN != errno && EWOULDBLOCK != errno && EINTR != errno) {
+      if ( -1 == recv_bytes && EAGAIN != errno && EWOULDBLOCK != errno && EINTR != errno && (retry_count != 0)) {
          *error = errno;
          *replymsg_size = 0;
          *who           = TOKEN_NULL;
          return(SE_MSG_NONE);
       }
+      retry_count++;
    }
 
    if (sizeof(se_msg_hdr) != recv_bytes) { 
