@@ -504,6 +504,11 @@ while (retry_count < max_retries) {
     }
 #endif
 
+#if defined(WAN_MANAGER_UNIFICATION_ENABLED) && !defined(FEATURE_RDKB_CONFIGURABLE_WAN_INTERFACE)
+    /* Ipv6 route for backup interface is handled by PAM. Don't add default route for backup interface */
+    if(strcmp(wanIface, "erouter0" ) == 0)
+#endif
+    {
 #if defined (MULTILAN_FEATURE)
     /* Test to see if the default route for erouter0 is not empty and the default
        route for router table is missing before trying to add a new default route
@@ -524,6 +529,8 @@ while (retry_count < max_retries) {
         return -1;
     return 0;
 #endif
+    }
+    return 0;
 }
 
 

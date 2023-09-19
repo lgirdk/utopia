@@ -96,7 +96,6 @@
 #define EVENTS_EROUTER_DS_ENABLED_STR                       "eRouter enabled as Dual Stack"
 #endif
 
-
 #define PROG_NAME       "SERVICE-WAN"
 #define ER_NETDEVNAME "erouter0"
 
@@ -745,6 +744,13 @@ static int wan_start(struct serv_wan *sw)
         }
     }
     #endif
+/*
+ * Wan Interfaces are controlled by RdkWanManager As Part of Unification.
+ */
+#if defined(WAN_MANAGER_UNIFICATION_ENABLED)
+    fprintf(stderr, "%s-%d:Wan Interface Control Moved from Service Wan to RdkWanManager. \n", __FUNCTION__, __LINE__);
+    return 0;
+#endif
 
 #if defined (INTEL_PUMA7)
 	//Intel Proposed RDKB Generic Bug Fix from XB6 SDK
@@ -1078,6 +1084,14 @@ static int wan_stop(struct serv_wan *sw)
 {
     char status[16];
     char buf[16] = {0};
+
+/*
+ * Wan Interfaces are controlled by RdkWanManager As Part of Unification.
+ */
+#if defined(WAN_MANAGER_UNIFICATION_ENABLED)
+    fprintf(stderr, "%s-%d:Wan Interface Control Moved from Service Wan to RdkWanManager. \n", __FUNCTION__, __LINE__);
+    return 0;
+#endif
 
     /* state check */
     sysevent_get(sw->sefd, sw->setok, "wan_service-status", status, sizeof(status));

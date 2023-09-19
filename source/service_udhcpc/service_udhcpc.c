@@ -99,6 +99,14 @@
 #define RESOLV_CONF_TMP "/tmp/resolv_temp.conf"
 #define  BUFSIZE 4196
 
+#define MTA_DHCPV4_PRIMARY_ADDR "MTA_DHCPv4_PrimaryAddress"
+#define MTA_DHCPV4_SECONDARY_ADDR "MTA_DHCPv4_SecondaryAddress"
+#define MTA_DHCPV6_PRIMARY_ADDR "MTA_DHCPv6_PrimaryAddress"
+#define MTA_DHCPV6_SECONDARY_ADDR "MTA_DHCPv6_SecondaryAddress" 
+#define MTA_IP_PREF "MTA_IP_PREF"
+#define DHCP_MTA_OPTION "dhcp_mta_option"
+#define RECEIVED "received"
+
 static int sysevent_fd = -1;
 static token_t sysevent_token;
 #ifndef FEATURE_RDKB_WAN_MANAGER
@@ -216,6 +224,73 @@ static char *GetDeviceProperties (char *param)
     return valPtr;
 }
 
+#if defined (EROUTER_DHCP_OPTION_MTA)
+static void clear_mta_params ()
+{
+    sysevent_set(sysevent_fd, sysevent_token, MTA_DHCPV4_PRIMARY_ADDR, NULL, 0);
+    sysevent_set(sysevent_fd, sysevent_token, MTA_DHCPV4_SECONDARY_ADDR, NULL, 0);
+    sysevent_set(sysevent_fd, sysevent_token, MTA_DHCPV6_PRIMARY_ADDR, NULL, 0);
+    sysevent_set(sysevent_fd, sysevent_token, MTA_DHCPV6_SECONDARY_ADDR, NULL, 0);
+    sysevent_set(sysevent_fd, sysevent_token, MTA_IP_PREF, NULL, 0);
+    sysevent_set(sysevent_fd, sysevent_token, DHCP_MTA_OPTION, NULL, 0);
+}
+
+
+static void set_mta_config ()
+{
+    char *opt122 = getenv("opt122");
+    if (opt122 == NULL)
+    {
+        return;
+    }
+
+    char subop[16] = {0};
+    int len = 0;
+    char buff[128] = {0};
+    bool mta_param_rx = false;
+
+    while(strlen(opt122))
+    {
+        // get sub-option
+        memset (subop, 0, sizeof(subop));
+        memcpy(subop, opt122, 2);
+        opt122 += 2;
+
+        // get length of suboption value
+        memset (buff, 0, sizeof(buff));
+        memcpy(buff, opt122, 2);
+        opt122 += 2;
+
+        len = atoi(buff);
+
+        // get value of the suboption
+        memset (buff, 0, sizeof(buff));
+        memcpy(buff, opt122, len * 2);
+        opt122 += len * 2;
+
+
+        if (atoi(subop) == 1) 
+        {
+            sysevent_set(sysevent_fd, sysevent_token, MTA_DHCPV4_PRIMARY_ADDR, buff, 0);
+            mta_param_rx = true;
+        }
+        else if (atoi(subop) == 2)
+        {
+            sysevent_set(sysevent_fd, sysevent_token, MTA_DHCPV4_SECONDARY_ADDR, buff, 0);
+            mta_param_rx = true;
+        }
+
+    }
+
+    if (mta_param_rx)
+    {
+        sysevent_set(sysevent_fd, sysevent_token, DHCP_MTA_OPTION, RECEIVED, 0);
+    }
+
+}
+
+#endif
+
 static int handle_defconfig (udhcpc_script_t *pinfo)
 {
     int ret = 0;    
@@ -249,6 +324,10 @@ static int handle_defconfig (udhcpc_script_t *pinfo)
          OnboardLog("[%s][%d] Failed to send dhcpv4 data to wanmanager \n", __FUNCTION__,__LINE__);
          return -1;
     }    
+
+#ifdef EROUTER_DHCP_OPTION_MTA
+    clear_mta_params();
+#endif // EROUTER_DHCP_OPTION_MTA
 #else
     
     if (!pinfo)
@@ -869,6 +948,9 @@ static int handle_leasefail (udhcpc_script_t *pinfo)
          OnboardLog("[%s][%d] Failed to send dhcpv4 data to wanmanager \n", __FUNCTION__,__LINE__);
          return -1;
     }
+#ifdef EROUTER_DHCP_OPTION_MTA
+    clear_mta_params();
+#endif // EROUTER_DHCP_OPTION_MTA
 
     return ret;
 }
@@ -924,6 +1006,11 @@ static int handle_wan (udhcpc_script_t *pinfo)
          OnboardLog("[%s][%d] Failed to send dhcpv4 data to wanmanager \n", __FUNCTION__,__LINE__);
          return -1;
     }
+
+#if defined (EROUTER_DHCP_OPTION_MTA)
+    set_mta_config();
+#endif // EROUTER_DHCP_OPTION_MTA
+
     return ret;
 #else
     char router[256];
