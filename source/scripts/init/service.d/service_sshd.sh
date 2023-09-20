@@ -80,21 +80,21 @@ get_listen_params() {
     LISTEN_PARAMS=""
     #Get IPv4 address of wan0
     if [ "$WAN_INTERFACE" =  "$DEFAULT_WAN_INTERFACE" ] ; then
-    CM_IP4=`ip -4 addr show dev wan0 scope global | awk '/inet/{print $2}' | cut -d '/' -f1`
-    #Get IPv6 address of wan0
-    CM_IP6=`ip -6 addr show dev wan0 scope global | awk '/inet/{print $2}' | cut -d '/' -f1`
-   else
+        CM_IP4=`ip -4 addr show dev wan0 scope global | awk '/inet/{print $2}' | cut -d '/' -f1`
+        #Get IPv6 address of wan0
+        CM_IP6=`ip -6 addr show dev wan0 scope global | awk '/inet/{print $2}' | cut -d '/' -f1`
+        if ([ "$BOX_TYPE" = "XB6" -a "$MANUFACTURE" = "Arris" ]); then
+            CM_IP6=`ip -6 addr show dev $CMINTERFACE | grep -i "scope global dynamic $" | awk '/inet/{print $2}' | cut -d '/' -f1 | head -1`
+        fi
+        if ([ "$BOX_TYPE" = "XB6" -a "$MANUFACTURE" = "Arris" ]); then
+            CM_IP4=`ip -4 addr show dev $CMINTERFACE scope global | awk '/inet/{print $2}' | cut -d '/' -f1`
+        fi
+    else
      CM_IP4=`ip -4 addr show dev $WAN_INTERFACE scope global | awk '/inet/{print $2}' | cut -d '/' -f1`
      #Get IPv6 address of wan0
      CM_IP6=`ip -6 addr show dev $WAN_INTERFACE scope global | awk '/inet/{print $2}' | cut -d '/' -f1`
     fi
 
-    if ([ "$BOX_TYPE" = "XB6" -a "$MANUFACTURE" = "Arris" ]); then
-        CM_IP4=`ip -4 addr show dev $CMINTERFACE scope global | awk '/inet/{print $2}' | cut -d '/' -f1`
-    fi
-    if ([ "$BOX_TYPE" = "XB6" -a "$MANUFACTURE" = "Arris" ]); then
-        CM_IP6=`ip -6 addr show dev $CMINTERFACE | grep -i "scope global dynamic $" | awk '/inet/{print $2}' | cut -d '/' -f1 | head -1`
-    fi
     if [ -n "$CM_IP4" ] ; then
         LISTEN_PARAMS="-p [${CM_IP4}]:22"
     fi
