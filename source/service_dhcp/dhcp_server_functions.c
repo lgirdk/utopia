@@ -196,34 +196,6 @@ static int isValidLANIP(const char* ipStr)
         return 1;
 }
 
-#if !defined (_PUMA6_ARM_)
-static void getErouterMacAddress (char *mac)
-{
-    char buf[18];
-    FILE *fp;
-    int i;
-
-    if (((fp = fopen("/sys/class/net/erouter0/address", "r")) != NULL) &&
-        (fgets(buf, sizeof(buf), fp) != NULL) &&
-        (strlen(buf) == 17))
-    {
-        /* Drop ':' chars and convert to upper case */
-        for (i = 0; i < 6; i++) {
-            mac[(i * 2) + 0] = toupper(buf[(i * 3) + 0]);
-            mac[(i * 2) + 1] = toupper(buf[(i * 3) + 1]);
-        }
-        mac[12] = 0;
-    }
-    else {
-        mac[0] = 0;
-    }
-
-    if (fp) {
-        fclose(fp);
-    }
-}
-#endif
-
 int prepare_hostname()
 {
     char l_cCurLanIP[16];
@@ -1646,21 +1618,11 @@ int prepare_dhcp_conf (char *input, void *bus_handle)
         }
 
         /*
-           As an optimisation, avoid calling into data model to fetch value of
-           Device.DeviceInfo.SerialNumber. Unfortunately that means all the device
-           specific logic to determine exactly what the serial number means needs
-           to be duplicated here too...
+           As an optimisation, fetch the serial number directly from the HAL
+           rather than using Device.DeviceInfo.SerialNumber from the data model.
         */
-#if defined (_PUMA6_ARM_)
-        platform_hal_GetCmMacAddress(l_deviceSerialNumber,sizeof(l_deviceSerialNumber));
-#elif defined (_LG_MV3_)
-        if (platform_hal_GetSerialNumber(l_deviceSerialNumber) != 0)
-        {
-            getErouterMacAddress(l_deviceSerialNumber);
-        }
-#else
-        getErouterMacAddress(l_deviceSerialNumber);
-#endif
+
+        platform_hal_GetSerialNumber(l_deviceSerialNumber);
 
         l_iRet_Val = PSM_VALUE_GET_STRING("dmsb.device.deviceinfo.ProductClass", l_psm_get);
         if((l_iRet_Val == CCSP_SUCCESS) && (l_psm_get != NULL))
