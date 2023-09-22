@@ -5296,6 +5296,31 @@ static int do_wan_nat_lan_clients(FILE *fp)
          memset(str, 0, sizeof(str));
 	 fprintf(fp, "-A postrouting_towan -s 172.16.0.0/12  -j SNAT --to-source %s\n", natip4);
 
+#if defined (WIFI_MANAGE_SUPPORTED)
+#define BUFF_LEN_64 64
+#define BUFF_LEN_32 32
+
+         if (true == isManageWiFiEnabled())
+         {
+             char aParamName[BUFF_LEN_64];
+             char aParamVal[BUFF_LEN_32];
+             char aV4Addr[BUFF_LEN_32];
+
+             memset(aParamVal, '\0', sizeof(aParamVal));
+             psmGet(bus_handle, MANAGE_WIFI_PSM_STR, aParamVal);
+             if ('\0' != aParamVal[0])
+             {
+                 snprintf(aParamName,BUFF_LEN_64, MANAGE_WIFI_V4_ADDR, aParamVal);
+                 memset(aV4Addr, '\0', sizeof(aV4Addr));
+                 psmGet(bus_handle,aParamName, aV4Addr);
+                 if ('\0' != aV4Addr[0])
+                 {
+                     snprintf(aParamName,BUFF_LEN_64, "%s/24", aV4Addr);
+                     fprintf(fp, "-A postrouting_towan -s %s -j SNAT --to-source %s\n", aParamName, natip4);
+                 }
+             }
+         }
+#endif /*WIFI_MANAGE_SUPPORTED*/
      }
   }
   else
@@ -12243,34 +12268,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
       fprintf(filter_fp, "-A INPUT -i %s -j wan2self\n", default_wan_ifname);
    }
 #if defined (WIFI_MANAGE_SUPPORTED)
-   char aManageWiFiEnabled[8] = {0};
-   syscfg_get(NULL, "Manage_WiFi_Enabled", aManageWiFiEnabled, sizeof(aManageWiFiEnabled));
-   if (!strncmp(aManageWiFiEnabled, "true", 4))
-   {
-       #define BUFF_LEN_64 64
-       #define BUFF_LEN_8 8
-       char paramName[BUFF_LEN_64] = {'\0'};
-       char paramVal[BUFF_LEN_8] = {'\0'};
-       char aV4Addr[BUFF_LEN_64] = {'\0'};
-
-       psmGet(bus_handle, MANAGE_WIFI_PSM_STR, paramVal);
-       if ('\0' != paramVal[0])
-       {
-           snprintf(paramName,BUFF_LEN_64, MANAGE_WIFI_V4_ADDR, paramVal);
-           psmGet(bus_handle,paramName, aV4Addr);
-           snprintf(paramName,BUFF_LEN_64, MANAGE_WIFI_BRIDGE_NAME, paramVal);
-           psmGet(bus_handle,paramName, paramVal);
-           if ('\0' != paramVal[0])
-           {
-               fprintf(filter_fp, "-A INPUT -p tcp -i %s --dport 22 -j DROP\n", paramVal);
-               fprintf(filter_fp, "-A INPUT -d %s/32 -i %s -j ACCEPT\n", aV4Addr,paramVal);
-               fprintf(filter_fp, "-A INPUT -i %s -j lan2self\n", paramVal);
-               fprintf(filter_fp, "-A FORWARD -i %s -o %s -j ACCEPT\n", paramVal,paramVal);
-               fprintf(filter_fp, "-A FORWARD -i %s ! -o %s -j DROP\n", paramVal,current_wan_ifname);
-               fprintf(filter_fp, "-A FORWARD ! -i %s -o %s -j DROP\n",current_wan_ifname,paramVal);
-           }
-       }
-   }
+   updateManageWiFiRules(bus_handle, current_wan_ifname, filter_fp);
 #endif /*WIFI_MANAGE_SUPPORTED*/
    //Add wan2self restrictions to other wan interfaces
    //ping is allowed to cm and mta inferfaces regardless the firewall level
@@ -13603,6 +13601,16 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    fprintf(filter_fp, ":%s - [0:0]\n", "lan2self_mgmt");
    fprintf(filter_fp, ":%s - [0:0]\n", "xlog_drop_wan2self");
    fprintf(filter_fp, ":%s - [0:0]\n", "xlog_drop_lan2self");
+#if defined (WIFI_MANAGE_SUPPORTED)
+   if (true == isManageWiFiEnabled())
+   {
+       fprintf(filter_fp, ":%s - [0:0]\n", "lan2self");
+       fprintf(filter_fp, ":%s - [0:0]\n", "lan2self_by_wanip");
+       fprintf(filter_fp, ":%s - [0:0]\n", "lanattack");
+       fprintf(filter_fp, ":%s - [0:0]\n", "xlog_drop_lanattack");
+       do_lan2self(filter_fp);
+   }
+#endif /*WIFI_MANAGE_SUPPORTED*/
    //>>DOS
 #ifdef _COSA_INTEL_XB3_ARM_
    fprintf(filter_fp, ":%s - [0:0]\n", "wandosattack");
@@ -13736,6 +13744,10 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
 #if defined (MULTILAN_FEATURE)
    prepare_multinet_disabled_ipv4_firewall(filter_fp);
 #endif
+
+#if defined (WIFI_MANAGE_SUPPORTED)
+   updateManageWiFiRules(bus_handle, current_wan_ifname, filter_fp);
+#endif /*WIFI_MANAGE_SUPPORTED*/
 
    fprintf(filter_fp, "-A INPUT -i %s -j lan2self_mgmt\n", cmdiag_ifname); //lan0 always exist
 
@@ -16789,3 +16801,57 @@ static void wanmgr_get_wan_interface(char *wanInterface)
 }
 #endif
 
+#if defined (WIFI_MANAGE_SUPPORTED)
+#define BUFF_LEN_64 64
+#define BUFF_LEN_8 8
+void updateManageWiFiRules(void * busHandle, char * pCurWanInterface, FILE * filterFp)
+{
+    if ((NULL == busHandle) || (NULL == filterFp))
+    {
+        FIREWALL_DEBUG("busHandle or filterFp is NULL \n");
+        return;
+    }
+
+    if (true == isManageWiFiEnabled())
+    {
+        char aParamName[BUFF_LEN_64];
+        char aParamVal[BUFF_LEN_8];
+        char aV4Addr[BUFF_LEN_64];
+
+        memset(aParamVal, 0, sizeof(aParamVal));
+        psmGet(bus_handle, MANAGE_WIFI_PSM_STR, aParamVal);
+        if ('\0' != aParamVal[0])
+        {
+            snprintf(aParamName,BUFF_LEN_64, MANAGE_WIFI_V4_ADDR, aParamVal);
+            psmGet(bus_handle,aParamName, aV4Addr);
+            snprintf(aParamName,BUFF_LEN_64, MANAGE_WIFI_BRIDGE_NAME, aParamVal);
+            psmGet(bus_handle,aParamName, aParamVal);
+            if ('\0' != aParamVal[0])
+            {
+                fprintf(filterFp, "-A INPUT -p tcp -i %s --dport 22 -j DROP\n", aParamVal);
+                fprintf(filterFp, "-A INPUT -d %s/32 -i %s -j ACCEPT\n", aV4Addr,aParamVal);
+                fprintf(filterFp, "-A INPUT -i %s -j lan2self\n", aParamVal);
+                fprintf(filterFp, "-A FORWARD -i %s -o %s -j ACCEPT\n", aParamVal,aParamVal);
+                if (NULL != pCurWanInterface)
+                {
+                    fprintf(filterFp, "-A FORWARD -i %s ! -o %s -j DROP\n", aParamVal,pCurWanInterface);
+                    fprintf(filterFp, "-A FORWARD ! -i %s -o %s -j DROP\n",pCurWanInterface,aParamVal);
+                }
+            }
+        }
+    }
+}
+
+bool isManageWiFiEnabled(void)
+{
+    char aManageWiFiEnabled[BUFF_LEN_8];
+
+    memset(aManageWiFiEnabled, 0, sizeof(aManageWiFiEnabled));
+    syscfg_get(NULL, "Manage_WiFi_Enabled", aManageWiFiEnabled, sizeof(aManageWiFiEnabled));
+
+    if (!strncmp(aManageWiFiEnabled, "true", 4))
+        return true;
+    else
+        return false;
+}
+#endif /*WIFI_MANAGE_SUPPORTED*/

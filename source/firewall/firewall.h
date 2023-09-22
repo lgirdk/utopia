@@ -105,4 +105,8 @@ int prepare_ipv4_rule_ex_mode(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE 
 int prepare_ipv6_rule_ex_mode(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *filter_fp);
 int isExtProfile();
 #endif
+#if defined (WIFI_MANAGE_SUPPORTED)
+void updateManageWiFiRules(void * busHandle, char * pCurWanInterface, FILE * filterFp);
+bool isManageWiFiEnabled(void);
+#endif/*WIFI_MANAGE_SUPPORTED*/
 #endif

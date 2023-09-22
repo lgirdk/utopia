@@ -1677,7 +1677,10 @@ static int radv_start(struct serv_routed *sr)
     }
 #else
 
-    if (!sr->lan_ready) {
+    char aBridgeMode[8];
+    syscfg_get(NULL, "bridge_mode", aBridgeMode, sizeof(aBridgeMode));
+
+    if ((!strcmp(aBridgeMode, "0")) && (!sr->lan_ready)) {
         fprintf(stderr, "%s: LAN is not ready !\n", __FUNCTION__);
         return -1;
     }
