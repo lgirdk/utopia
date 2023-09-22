@@ -2355,6 +2355,10 @@ static int serv_ipv6_start(struct serv_ipv6 *si6)
     sysevent_set(si6->sefd, si6->setok, "ipv6_prefix-divided", "", 0);
 #endif
     
+    if (atoi(rtmod) == 2) { //ipv6only
+        syscfg_set_commit(NULL, "dynamic_dns_enable", "0");
+    }
+
     /*
      * Update MTU of all the enabled IPv6 instances
      */
