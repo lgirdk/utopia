@@ -1083,7 +1083,7 @@ fi
    #fi
 
    #Option for parsing plume vendor code
-   if [ "$BOX_TYPE" = "XB6" ] || [ "$BOX_TYPE" = "HUB4" ] || [ "$BOX_TYPE" = "SR300" ] || [ "$BOX_TYPE" = "SR213" ]; then
+   if [ "$BOX_TYPE" = "XB6" ] || [ "$BOX_TYPE" = "HUB4" ] || [ "$BOX_TYPE" = "SR300" ] || [ "$BOX_TYPE" = "SR213" ] || [ "$MODEL_NUM" = "CGA4332COM" ]; then
      echo "dhcp-option=vendor:Plume,43,tag=123" >> $LOCAL_DHCP_CONF 
      echo "dhcp-option=vendor:PP203X,43,tag=123" >> $LOCAL_DHCP_CONF
      echo "dhcp-option=vendor:SE401,43,tag=123" >> $LOCAL_DHCP_CONF
@@ -1209,7 +1209,7 @@ fi
 			   echo "${PREFIX}""dhcp-option=l2sd0.4090,6,$WAN_DHCP_NS" >> $LOCAL_DHCP_CONF
 		   fi
 
-        elif [ "$MODEL_NUM" = "CGM4331COM" ] || [ "$MODEL_NUM" = "CGM4981COM" ] || [ "$MODEL_NUM" = "TG4482A" ] || [ "$BOX_TYPE" = "WNXL11BWL" ]; then
+        elif [ "$MODEL_NUM" = "CGM4331COM" ] || [ "$MODEL_NUM" = "CGM4981COM" ] || [ "$MODEL_NUM" = "TG4482A" ] || [ "$BOX_TYPE" = "WNXL11BWL" ] || [ "$MODEL_NUM" = "CGA4332COM" ]; then
             echo "interface=brlan112" >> $LOCAL_DHCP_CONF
             if [ "$BOX_TYPE" = "WNXL11BWL" ]; then
               echo "dhcp-range=169.254.70.5,169.254.70.253,255.255.255.0,infinite" >> $LOCAL_DHCP_CONF
