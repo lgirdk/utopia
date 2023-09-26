@@ -5959,7 +5959,7 @@ static int do_wan_nat_lan_clients(FILE *fp)
     char erouter_static_ip[20];
     if (get_erouter_static_ip(erouter_static_ip, sizeof(erouter_static_ip)))
     {
-        fprintf(fp, "-A postrouting_towan -s %s/%s -j SNAT --to-source %s --random\n", lan_ipaddr,lan_netmask,erouter_static_ip);
+        fprintf(fp, "-A postrouting_towan ! -d 224.0.0.9 -j SNAT --to-source %s --random\n",erouter_static_ip);
     }
     else if (isBrlanStaticEnabled)
     {
