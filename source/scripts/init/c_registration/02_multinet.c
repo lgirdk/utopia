@@ -361,7 +361,7 @@ void srv_register(void) {
    v_secure_system("/etc/utopia/service.d/service_multinet/handle_sw.sh initialize");
 #endif
 #else
-#if !defined(_COSA_BCM_ARM_) || !defined(INTEL_PUMA7) || !defined(_CBR_PRODUCT_REQ_) || defined(_PLATFORM_RASPBERRYPI_)
+#if !defined(_COSA_BCM_ARM_) || !defined(INTEL_PUMA7) || !defined(_CBR_PRODUCT_REQ_) || defined(_PLATFORM_RASPBERRYPI_) || !defined(_COSA_QCA_ARM_)
    v_secure_system("/etc/utopia/service.d/service_multinet/handle_sw.sh initialize");
 #endif
 #endif

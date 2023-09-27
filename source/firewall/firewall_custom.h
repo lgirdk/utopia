@@ -112,7 +112,7 @@ int fw_shm_mutex_close(fw_shm_mutex mutex);
 #define CONFIG_CCSP_LAN_HTTP_ACCESS
 #define CONFIG_CCSP_VPN_PASSTHROUGH
  */
-#if defined (INTEL_PUMA7) || (defined (_COSA_BCM_ARM_) && !defined(_CBR_PRODUCT_REQ_))
+#if defined (INTEL_PUMA7) || (defined (_COSA_BCM_ARM_) && !defined(_CBR_PRODUCT_REQ_)) || defined(_COSA_QCA_ARM_)
 #define CONFIG_CCSP_VPN_PASSTHROUGH
 #endif
 

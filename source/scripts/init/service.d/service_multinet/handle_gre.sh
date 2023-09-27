@@ -265,10 +265,34 @@ create_tunnel () {
         fi
     fi
     ifconfig $2 up
-    if [ ! -f /tmp/.gre_flowmanager_enable ]
+    if [ ! -f /tmp/.gre_flowmanager_enable ] && [ "$BOX_TYPE" != "VNTXER5" ]
     then
           echo addif $2 wan > /proc/driver/flowmgr/cmd
 	  touch /tmp/.gre_flowmanager_enable
+    fi
+    if [ "$BOX_TYPE" = "VNTXER5" ]; then
+	    INST=`psmcli getallinst dmsb.l2net. | tr -d \n | sed ' s/./& /g'`
+	    for i in $INST; do
+		    GRE=`psmcli get dmsb.l2net.$i.Members.Gre | grep $2`
+		    if [ "$GRE" != "" ]; then
+			    ENABLE=`dmcli eRT getv Device.Bridging.Bridge.$i.Enable`
+			    VALUE=`echo "$ENABLE" | grep value | cut -f3 -d : | cut -f2 -d " "`
+			    if [ "$VALUE" != "true" ]; then
+				    continue
+			    else
+				    STAT=`sysevent get multinet_$i-status`
+				    if [[ $STAT != "" ]] && [[ $STAT != "stopped" ]] ; then
+					    sysevent set multinet-syncMembers $i
+					    sysevent set gre_"$i"_inst "1"
+				    else
+					    sysevent set multinet-up $i
+					    sysevent set gre_"$i"_inst "1"
+				    fi
+			    fi
+		    else
+			    continue
+		    fi
+	    done
     fi
     sysevent set gre_current_endpoint $1
     sysevent set if_${2}-status $IF_READY
@@ -279,6 +303,18 @@ destroy_tunnel () {
       touch "/tmp/destroy_tunnel_lock"
    fi
     echo "Destroying tunnel... remote"
+    if [ "$BOX_TYPE" = "VNTXER5" ]; then
+	    INST=`psmcli getallinst dmsb.l2net. | tr -d \n | sed ' s/./& /g'`
+	    for i in $INST; do
+		    STAT=`sysevent get gre_"$i"_inst`
+		    if [ "$STAT" != "1" ] ; then
+			    continue
+		    else
+			    sysevent set gre_"$i"_inst
+			    sysevent set multinet-syncMembers $i
+		    fi
+	    done
+    fi
     #kill `sysevent get dhcpsnoopd_pid`
    if [ "$BOX_TYPE" = "XF3" ] ; then
     echo " destroying $1"
@@ -299,7 +335,7 @@ destroy_tunnel () {
   then
   rm /tmp/.gre_flowmanager_enable
   fi
- 
+
 }
 
 gre_preproc () {
@@ -469,8 +505,10 @@ update_bridge_config () {
             continue
         fi
 
+    if [ "$BOX_TYPE" != "VNTXER5" ]; then
         br_snoop_rule="`sysevent setunique GeneralPurposeFirewallRule " -A FORWARD -o $br -p udp --dport=67:68 -j NFQUEUE --queue-bypass --queue-num $[$br]"`"
         sysevent set gre_${inst}_${br}_snoop_rule "$br_snoop_rule"
+    fi
 
   if [ "$BOX_TYPE" = "XF3" ] ; then
        sleep 5
@@ -864,8 +902,10 @@ case "$1" in
             if [ "$BOX_TYPE" = "XF3" ] ; then
             sleep 5
             fi
-            arpFWrule=`sysevent setunique GeneralPurposeFirewallRule " -I OUTPUT -o $WAN_IF -p icmp --icmp-type 3 -j NFQUEUE --queue-bypass --queue-num $ARP_NFQUEUE"`
-            sysevent set ${inst}_arp_queue_rule "$arpFWrule" > /dev/null
+	    if [ "$BOX_TYPE" != "VNTXER5" ]; then
+		    arpFWrule=`sysevent setunique GeneralPurposeFirewallRule " -I OUTPUT -o $WAN_IF -p icmp --icmp-type 3 -j NFQUEUE --queue-bypass --queue-num $ARP_NFQUEUE"`
+		    sysevent set ${inst}_arp_queue_rule "$arpFWrule" > /dev/null
+	    fi
             if [ "$BOX_TYPE" = "XF3" ] ; then
               sleep 5
             fi
@@ -1081,6 +1121,9 @@ case "$1" in
                 hotspot_down $2
             fi
         else
+	    TUNNEL_EP=`dmcli eRT getv Device.X_COMCAST-COM_GRE.Tunnel.1.PrimaryRemoteEndpoint`
+            curr_tunnel=`echo "$TUNNEL_EP" | grep value | cut -f3 -d : | cut -f2 -d " "`
+            echo "dmcli ip : $curr_tunnel"
             #Enabled
             if [ xstarted = x$hotspot_started ]; then
                 if [ x != x$curr_tunnel ]; then
