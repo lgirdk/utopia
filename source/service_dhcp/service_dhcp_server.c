@@ -46,7 +46,6 @@
 #define RESOLV_CONF "/etc/resolv.conf"
 #define DHCP_CONF   "/var/dnsmasq.conf"
 #define PID_FILE    "/var/run/dnsmasq.pid"
-#define XHS_IF_NAME "brlan1"
 
 #define DEVICE_PROPERTIES "/etc/device.properties"
 #define DHCP_TMP_CONF     "/tmp/dnsmasq.conf.orig"
@@ -1078,34 +1077,6 @@ GW_LAN_REFRESH:
         {
             fclose(fp);
         }
-    // This function is called for brlan0 and brlan1
-    // If brlan1 is available then XHS service is available post all DHCP configuration   
-    if (is_iface_present(XHS_IF_NAME))
-    {   
-        fprintf(stderr, "Xfinityhome service is UP\n");
-        FILE *fp = fopen( "/tmp/xhome_start", "r");
-        if( NULL == fp )
-        {
-            fp = fopen( "/tmp/xhome_start", "w+");
-            if ( NULL == fp)
-            {
-                fprintf(stderr, "File: /tmp/xhome_start creation failed with error:%d\n", errno);
-            }
-            else
-            {
-                fclose(fp);
-            }				
-            print_uptime("boot_to_XHOME_uptime",NULL, NULL);
-        }
-        else
-        {
-            fclose(fp);
-        }
-    }
-    else
-    {   
-        fprintf(stderr, "Xfinityhome service is not UP yet\n");
-    }
 
 	safec_rc = sprintf_s(l_cPmonCmd, sizeof(l_cPmonCmd),"%s setproc dhcp_server %s %s \"%s dhcp_server-restart\"", 
 			PMON, BIN, PID_FILE, THIS);
