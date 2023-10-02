@@ -57,35 +57,19 @@
  * shared memory key unique to syscfg, used to retrieve shmid
  */
 #define SYSCFG_SHM_PROJID    237
-/*
- * shared memory region size - multiple of 4K PAGE_SIZE. 
- * TODO - currently set to 128kb for non XB3 and for XB3 64KB. make it expandable
- */
-#ifdef PAGE_SIZE
-  #ifdef _COSA_INTEL_XB3_ARM_
-    #define SYSCFG_SHM_SIZE      (32*PAGE_SIZE)
-  #else
-    #define SYSCFG_SHM_SIZE      (64*PAGE_SIZE)
-  #endif
-#else
-  #ifdef _COSA_INTEL_XB3_ARM_
-    #define SYSCFG_SHM_SIZE      (32*getpagesize())
-  #else
-    #define SYSCFG_SHM_SIZE      (64*getpagesize())
-  #endif
-#endif
 
+#ifdef PAGE_SIZE
+#define SYSCFG_SHM_SIZE      (64*PAGE_SIZE)
+#else
+#define SYSCFG_SHM_SIZE      (64*getpagesize())
+#endif
 
 #define SYSCFG_STORE_PATH_SZ  128
 
-// Changing default sysconfig size to 100KB for non XB3 platforms
-#ifdef _COSA_INTEL_XB3_ARM_
-	#define DEFAULT_MAX_FILE_SZ   (50*1024)
-	#define LOG_FILE "/rdklogs/logs/ArmConsolelog.txt.0"
-#else
-	#define DEFAULT_MAX_FILE_SZ   (100*1024)
-	#define LOG_FILE "/rdklogs/logs/Consolelog.txt.0"
-#endif
+#define DEFAULT_MAX_FILE_SZ   (100*1024)
+
+#define LOG_FILE "/rdklogs/logs/Consolelog.txt.0"
+
 /*
  * Number of free table buckets
  */
