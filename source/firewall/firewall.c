@@ -9722,38 +9722,44 @@ static int do_lan2wan_misc(FILE *filter_fp)
    }
 
 #if defined(CONFIG_CCSP_VPN_PASSTHROUGH)
-    char query[10] = {'\0'};
     if(isWanReady)
     {
-        if((0==syscfg_get(NULL, "blockipsec::result", query, sizeof(query))) && strcmp(query,"DROP") == 0) {
+        char query[10];
+
+        syscfg_get("blockipsec", "result", query, sizeof(query));
+        if (strcmp(query,"DROP") == 0) {
             fprintf(filter_fp, "-A lan2wan_misc -p udp --dport 500  -j DROP\n");
             fprintf(filter_fp, "-A lan2wan_misc -p udp --dport 4500  -j DROP\n");
         }
-        else if(strcmp(query,"ACCEPT") == 0) {
-                fprintf(filter_fp, "-A lan2wan_misc -p udp --dport 500  -j ACCEPT\n");
-                fprintf(filter_fp, "-A lan2wan_misc -p udp --dport 4500  -j ACCEPT\n");
+        else if (strcmp(query,"ACCEPT") == 0) {
+            fprintf(filter_fp, "-A lan2wan_misc -p udp --dport 500  -j ACCEPT\n");
+            fprintf(filter_fp, "-A lan2wan_misc -p udp --dport 4500  -j ACCEPT\n");
         }
-        query[0] = '\0';
 
-        if((0==syscfg_get(NULL, "blockl2tp::result", query, sizeof(query))) && strcmp(query,"DROP") == 0)
+        syscfg_get("blockl2tp", "result", query, sizeof(query));
+        if (strcmp(query,"DROP") == 0) {
             fprintf(filter_fp, "-A lan2wan_misc -p udp --dport 1701  -j DROP\n");
-        else if(strcmp(query,"ACCEPT") == 0)
-                fprintf(filter_fp, "-A lan2wan_misc -p udp --dport 1701  -j ACCEPT\n");
-        query[0] = '\0';
+        }
+        else if (strcmp(query,"ACCEPT") == 0) {
+            fprintf(filter_fp, "-A lan2wan_misc -p udp --dport 1701  -j ACCEPT\n");
+        }
 
-        if((0==syscfg_get(NULL, "blockpptp::result", query, sizeof(query))) && strcmp(query,"DROP") == 0)
+        syscfg_get("blockpptp", "result", query, sizeof(query));
+        if (strcmp(query,"DROP") == 0) {
             fprintf(filter_fp, "-A lan2wan_misc -p tcp --dport 1723  -j DROP\n");
-        else if(strcmp(query,"ACCEPT") == 0)
-                fprintf(filter_fp, "-A lan2wan_misc -p tcp --dport 1723  -j ACCEPT\n");
-        query[0] = '\0';
+        }
+        else if (strcmp(query,"ACCEPT") == 0) {
+            fprintf(filter_fp, "-A lan2wan_misc -p tcp --dport 1723  -j ACCEPT\n");
+        }
 
-        if((0==syscfg_get(NULL, "blockssl::result", query, sizeof(query))) && strcmp(query,"DROP") == 0){
+        syscfg_get("blockssl", "result", query, sizeof(query));
+        if (strcmp(query,"DROP") == 0) {
             fprintf(filter_fp, "-A lan2wan_misc -p udp --dport 443  -j DROP\n");
             fprintf(filter_fp, "-A lan2wan_misc -p tcp --dport 443  -j DROP\n");
         }
-        else if(strcmp(query,"ACCEPT") == 0){
-                fprintf(filter_fp, "-A lan2wan_misc -p udp --dport 443  -j ACCEPT\n");
-                fprintf(filter_fp, "-A lan2wan_misc -p tcp --dport 443  -j ACCEPT\n");
+        else if(strcmp(query,"ACCEPT") == 0) {
+            fprintf(filter_fp, "-A lan2wan_misc -p udp --dport 443  -j ACCEPT\n");
+            fprintf(filter_fp, "-A lan2wan_misc -p tcp --dport 443  -j ACCEPT\n");
         }
     }
 #endif
