@@ -45,11 +45,8 @@ CCSPPATH="/usr/ccsp"
 ls /tmp/pam_initialized* > /tmp/pam_init_status
 
 source $UTOPIA_PATH/log_capture_path.sh
+source /etc/device.properties
 
-if [ -f /etc/device.properties ]
-then
-    source /etc/device.properties
-fi
 dmesg -n 5
 
 TR69TLVFILE="/nvram/TLVData.bin"
