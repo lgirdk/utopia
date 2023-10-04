@@ -94,6 +94,8 @@ static char           sysevent_ip[19];
 #define MAX_SYSCFG_ENTRIES 256  // a failsafe to make sure we dont count ridiculously high in the case of data corruption
 #define DEFAULT_MINS 3
 
+#define PERIODIC_CHECK_SECS 5
+
 /*
  ***********************************************************************************
  * Procedure : printhelp
@@ -377,6 +379,33 @@ static int start_forwarding(const int id)
 }
 
 /*
+ ********************************************************************************
+ *  Procedure  : is_trigger_rule_deleted
+ *  Purpose    : checks if trigger rule deleted
+ *  Parameters :
+ *      id  : the id of the active trigger
+ *  Return Value :
+ *      0           : trigger rule exists
+ *      1           : trigger rule deleted
+ ********************************************************************************
+ */
+static int is_trigger_rule_deleted (int id)
+{
+   char namespace[16];
+   char query[16];
+
+   snprintf(namespace, sizeof(namespace), "prt_%d", id);
+
+   syscfg_get(namespace, "enabled", query, sizeof(query));
+
+   if ((query[0] == 0) || (strcmp(query, "0") == 0)) {
+      return 1;
+   }
+
+   return 0;
+}
+
+/*
  ================================================================================
  =  Procedure    : update_quanta
  =  Purpose      : decrement all quanta by a given amount and if necessary remove triggers
@@ -395,7 +424,7 @@ static int update_quanta(const long secs)
 
    for (i=0 ; i<high_trigger ; i++) {
       if (0 < (left = (trigger_info[i]).quanta)) {
-         if (0 >= (left-secs)) {
+         if (0 >= (left-secs) || (trigger_info[i].active && is_trigger_rule_deleted(i+1))) {
             (trigger_info[i]).quanta = 0;
             stop_forwarding(i+1); // trigger id is idx+1
             restart_firewall = 1;
@@ -684,7 +713,7 @@ static int main_loop(int queue_fd)
          waitsecs = timeout.tv_sec = timeout.tv_usec = 0;
          rc = select(max_fd, &rd_set, NULL, NULL, NULL);
       } else {
-         waitsecs = timeout.tv_sec = secs;
+         waitsecs = timeout.tv_sec = (secs > PERIODIC_CHECK_SECS) ? PERIODIC_CHECK_SECS : secs;
          timeout.tv_usec = 0;
          rc = select(max_fd, &rd_set, NULL, NULL, &timeout);
       }
