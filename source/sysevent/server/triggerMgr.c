@@ -76,7 +76,7 @@
 #include <unistd.h>
 #include "syseventd.h"
 #include "libsysevent_internal.h"
-
+#include "clientsMgr.h"
 
 static int TRIGGER_MGR_inited = 0;
 static int  next_trigger_id   = 1;  // dont assign 0
@@ -597,11 +597,21 @@ static int execute_trigger_actions(const trigger_t *tr, const char* const name, 
                se_msg_hdr *msghdr = (se_msg_hdr *) (&(list[idx]));
 
                if (ACTION_TYPE_EXT_FUNCTION == action->action_type) {
+                  char *pGetTime = getTime();
+                  char *pGetUpTime = getUpTime();
+                  write_to_file("syseventd->syseventd_exec: %s | %s | event: %s | value: %s | action: %s\n", pGetTime, pGetUpTime, name, (value ? value : "NULL"), action->action);
+                  free(pGetTime);
+                  free(pGetUpTime);
                   int rc = prepare_action_type_function_msg(*bufptr, tr->trigger_id, action, name, value);
                   if (0 != rc) {
                      continue;
                   }
                } else if (ACTION_TYPE_MESSAGE == action->action_type) {
+                  char *pGetTime = getTime();
+                  char *pGetUpTime = getUpTime();
+                  write_to_file("syseventd->client: %s | %s | %s | event: %s | value: %s\n", CLI_MGR_id2name(action->owner), pGetTime, pGetUpTime, name, (value ? value : "NULL"));
+                  free(pGetTime);
+                  free(pGetUpTime);
                   int rc = prepare_action_type_message_msg(*bufptr, tr->trigger_id, action, name, value, source, tid);
                   if (0 != rc) {
                      continue;
@@ -676,6 +686,11 @@ static int execute_trigger_actions(const trigger_t *tr, const char* const name, 
          if (0 != action->used) {
             if (ACTION_TYPE_EXT_FUNCTION == action->action_type) {
                if (0 != trigger_communication_fd_writer_end) {
+                  char *pGetTime = getTime();
+                  char *pGetUpTime = getUpTime();
+                  write_to_file("syseventd->syseventd_exec: %s | %s | event: %s | value: %s | action: %s \n", pGetTime, pGetUpTime, name, (value ? value : "NULL"), action->action);
+                  free(pGetTime);
+                  free(pGetUpTime);
                   se_buffer send_msg_buffer;
                   if (0 == prepare_action_type_function_msg(send_msg_buffer, tr->trigger_id, action, name, value)) {
                      SE_INC_LOG(MUTEX,
@@ -713,6 +728,12 @@ static int execute_trigger_actions(const trigger_t *tr, const char* const name, 
                }
             } else if (ACTION_TYPE_MESSAGE == action->action_type) {
                if (0 != trigger_communication_fd_writer_end) {
+                  char *pGetTime = getTime();
+                  char *pGetUpTime = getUpTime();
+                  write_to_file("syseventd->client: %s | %s | %s | event: %s | value: %s \n", CLI_MGR_id2name(action->owner), pGetTime, pGetUpTime, name, (value ? value : "NULL"));
+                  free(pGetTime);
+                  free(pGetUpTime);
+
                   se_buffer send_msg_buffer;
 
                   if (0 == prepare_action_type_message_msg(send_msg_buffer, tr->trigger_id, action, name, value, source, tid)) {

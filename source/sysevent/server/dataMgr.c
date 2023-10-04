@@ -75,6 +75,7 @@
 #endif
 #include <ulog/ulog.h>
 #include "secure_wrapper.h"
+#include "clientsMgr.h"
 
 // data manager inited 
 static int DATA_MGR_inited = 0;
@@ -939,7 +940,7 @@ int DATA_MGR_show(char *file)
  * if that tid = 0, then a tid is assigned
  * if that tid != tid, then the tid is overwritten by tid
  */
-int DATA_MGR_set(char *name, char *value, int source, int tid)
+int DATA_MGR_set(char *name, char *value, int source, int tid, token_t who)
 {
 
    if (!DATA_MGR_inited) {
@@ -982,6 +983,12 @@ int DATA_MGR_set(char *name, char *value, int source, int tid)
       pthread_mutex_unlock(&global_data_elements.mutex);
       return(ERR_SYSTEM);
    }
+
+   char *pGetTime = getTime();
+   char *pGetUpTime = getUpTime();
+   write_to_file("client->syseventd: %s | %s | %s | event: %s | old_value: %s | new_value: %s\n", CLI_MGR_id2name(who), pGetTime, pGetUpTime, name, (element->value ? element->value : "NULL"), (value ? value : "NULL"));
+   free(pGetTime);
+   free(pGetUpTime);
 
    /*
     * If the tuple is set write once read many, and is already set then
