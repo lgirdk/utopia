@@ -216,7 +216,7 @@ if [ -x /usr/bin/db_mig ]; then
    echo_t "[utopia][init] db_mig = $DB_MIG_COMPLETE"
 fi
 
-queries="factory_reset PartnerID_FR UpdateNvram lan_ipaddr lan_netmask lost_and_found_enable iot_ifname iot_dhcp_start iot_dhcp_end iot_netmask ForwardSSH unit_activated lan_ifname cmdiag_ifname ecm_wan_ifname nat_udp_timeout nat_tcp_timeout nat_icmp_timeout lan_ethernet_physical_ifnames"
+queries="factory_reset UpdateNvram lan_ipaddr lan_netmask lost_and_found_enable iot_ifname iot_dhcp_start iot_dhcp_end iot_netmask ForwardSSH unit_activated lan_ifname cmdiag_ifname ecm_wan_ifname nat_udp_timeout nat_tcp_timeout nat_icmp_timeout lan_ethernet_physical_ifnames"
 get_utctx_val "$queries"
 
 if [ -f $SYSCFG_OLDBKUP_FILE ];then
@@ -256,10 +256,6 @@ SYSCFG_FR_VAL=$SYSCFG_factory_reset
 if [ "$FACTORY_RESET_RGWIFI" = "$SYSCFG_FR_VAL" ]; then
    echo_t "[utopia][init] Performing factory reset"
 
-SYSCFG_PARTNER_FR=$SYSCFG_PartnerID_FR
-if [ "1" = "$SYSCFG_PARTNER_FR" ]; then
-   echo_t "[utopia][init] Performing factory reset due to PartnerID change"
-fi
 # Remove log file first because it need get log file path from syscfg   
    /usr/sbin/log_handle.sh reset
    syscfg_destroy -f
