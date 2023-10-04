@@ -1735,6 +1735,7 @@ static int load_from_file (const char *fname)
 static int backup_file (const char *bkupFile, const char *localFile)
 {
    int fd_from = open(localFile, O_RDONLY);
+   char tmpFile[32] = "/nvram/syscfg_tmp.db_XXXXXX";
    int rc=0;
   if(fd_from < 0)
   {
@@ -1756,8 +1757,7 @@ static int backup_file (const char *bkupFile, const char *localFile)
         close(fd_from);
         return -1;
   }
-
-  int fd_to = open(bkupFile, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+  int fd_to = mkstemp (tmpFile);
   if(fd_to < 0)
   {
     	ulog_error(ULOG_SYSTEM, UL_SYSCFG, "creat sys call failed during db backup");
@@ -1798,12 +1798,15 @@ static int backup_file (const char *bkupFile, const char *localFile)
   if(close(fd_to) < 0) {
         fd_to = -1;
     	ulog_error(ULOG_SYSTEM, UL_SYSCFG, "closing file descriptor failed during db backup");
-
   	close(fd_from);
         return -1;
   }
   close(fd_from);
-
+  if(rename(tmpFile,bkupFile) != 0 )
+  {
+      ulog_error(ULOG_SYSTEM, UL_SYSCFG, "renaming to bkupFile failed during db backup");
+      return -1;
+  }
   /* Success! */
   return 0;
 }
@@ -1856,7 +1859,7 @@ static int commit_to_file (const char *fname)
 		}
    	}
    }
-
+#ifndef _LG_OFW_
    ret = access(SYSCFG_NEW_FILE, F_OK);
    if ( ret == 0 ) {
  	  ret=backup_file(SYSCFG_NEW_FILE,fname);
@@ -1872,5 +1875,6 @@ static int commit_to_file (const char *fname)
 	        }
    	  }
    }
+#endif
    return 0;
 }
