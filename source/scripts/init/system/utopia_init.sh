@@ -216,14 +216,8 @@ if [ -x /usr/bin/db_mig ]; then
    echo_t "[utopia][init] db_mig = $DB_MIG_COMPLETE"
 fi
 
-queries="lan_domain factory_reset PartnerID_FR UpdateNvram lan_ipaddr lan_netmask lost_and_found_enable iot_ifname iot_dhcp_start iot_dhcp_end iot_netmask ForwardSSH unit_activated lan_ifname cmdiag_ifname ecm_wan_ifname nat_udp_timeout nat_tcp_timeout nat_icmp_timeout lan_ethernet_physical_ifnames"
+queries="factory_reset PartnerID_FR UpdateNvram lan_ipaddr lan_netmask lost_and_found_enable iot_ifname iot_dhcp_start iot_dhcp_end iot_netmask ForwardSSH unit_activated lan_ifname cmdiag_ifname ecm_wan_ifname nat_udp_timeout nat_tcp_timeout nat_icmp_timeout lan_ethernet_physical_ifnames"
 get_utctx_val "$queries"
-
-if [ "$SYSCFG_lan_domain" = "utopia.net" ]; then
-   echo_t "[utopia][init] Setting lan domain to NULL"
-   syscfg set lan_domain ""
-   syscfg commit
-fi
 
 if [ -f $SYSCFG_OLDBKUP_FILE ];then
 	rm -rf $SYSCFG_OLDBKUP_FILE
