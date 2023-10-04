@@ -46,12 +46,6 @@ ls /tmp/pam_initialized* > /tmp/pam_init_status
 
 source $UTOPIA_PATH/log_capture_path.sh
 
-echo_t "*******************************************************************"
-echo_t "*                                                                  "
-echo_t "* Copyright 2014 Cisco Systems, Inc.                               "
-echo_t "* Licensed under the Apache License, Version 2.0                   "
-echo_t "*******************************************************************"
-
 if [ -f /etc/device.properties ]
 then
     source /etc/device.properties
