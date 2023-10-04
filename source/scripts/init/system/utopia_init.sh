@@ -484,10 +484,10 @@ echo 60 > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_close
 echo 20 > /proc/sys/net/netfilter/nf_conntrack_tcp_timeout_close_wait
 echo 400 > /proc/sys/net/netfilter/nf_conntrack_expect_max
 
-if [ "$BOX_TYPE" = "MV2PLUS" ]; then
-    echo 16384 > /proc/sys/net/netfilter/nf_conntrack_max
-else
+if [ "$BOX_TYPE" = "MV1" ]; then
     echo 8192  > /proc/sys/net/netfilter/nf_conntrack_max
+else
+    echo 16384 > /proc/sys/net/netfilter/nf_conntrack_max
 fi
 
 echo $SYSCFG_nat_udp_timeout > /proc/sys/net/netfilter/nf_conntrack_udp_timeout
