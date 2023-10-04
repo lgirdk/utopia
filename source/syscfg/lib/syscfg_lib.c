@@ -1547,56 +1547,6 @@ static int make_mm_items (syscfg_shm_ctx *ctx, shm_free_table *ft)
     return ct;
 }
 
-/*
- * Advisory read and write lock
- * Note: fd should be opened with RDWR mode
- */
-static void _syscfg_file_lock (int fd)
-{
-    struct flock fl;
-
-    memset(&fl, 0, sizeof(fl));
-
-    fl.l_type = F_WRLCK;
-    fl.l_whence = SEEK_SET;
-    fl.l_start = 0;
-    fl.l_len = 0; // whole file, even if it grows
-    /* CID 70977: Unchecked return value from library */
-    if (fcntl(fd, F_SETLKW, &fl) == -1)
-    {
-	close(fd);
-	return;
-    }
-    fl.l_type = F_RDLCK;
-    fl.l_whence = SEEK_SET;
-    fl.l_start = 0;
-    fl.l_len = 0; // whole file, even if it grows
-    if (fcntl(fd, F_SETLKW, &fl) == -1) {
-        close(fd);
-    }
-}
-
-/*
- * Unlock read and write 
- * Note: fd should be opened with RDWR mode
- */
-static void _syscfg_file_unlock (int fd)
-{
-    struct flock fl;
-
-    memset(&fl, 0, sizeof(fl));
-
-    fl.l_type = F_UNLCK;
-    fl.l_whence = SEEK_SET;
-    fl.l_start = 0;
-    fl.l_len = 0; // whole file, even if it grows
-    /* CID 63229: Unchecked return value from library */
-     if (fcntl(fd, F_SETLKW, &fl) == -1)
-     {
-         close(fd);
-     }
-}
-
 static int load_from_file (const char *fname)
 {
     int fd;
@@ -1646,81 +1596,43 @@ static int load_from_file (const char *fname)
     return 0;
 }
 
-/* Taking backup of file */
-static int backup_file (const char *bkupFile, const char *localFile)
+static int update_file (const char *fname, char *buf, size_t sz)
 {
-   int fd_from = open(localFile, O_RDONLY);
-   int rc=0;
-  if(fd_from < 0)
-  {
-    ulog_error(ULOG_SYSTEM, UL_SYSCFG,"opening localfile failed during db backup");
-    return -1;
-  }
-  struct stat Stat;
-  if(fstat(fd_from, &Stat)<0)
-  {
-    ulog_error(ULOG_SYSTEM, UL_SYSCFG, "fstat call failed during db backup");
+    int fd;
+    char tmpfile[64];
 
-    close(fd_from);
-    return -1;
-  }
-  void *mem = mmap(NULL, Stat.st_size, PROT_READ, MAP_SHARED, fd_from, 0);
-  if(mem == MAP_FAILED)
-  {
-    	ulog_error(ULOG_SYSTEM, UL_SYSCFG, "mmap failed during db backup");
-        close(fd_from);
+    /* Temp file must be within the same filesystem as the destination file */
+
+    if (strncmp(fname, "/nvram/", 7) == 0)
+        snprintf(tmpfile, sizeof(tmpfile), "%ssyscfg_tmp.db_XXXXXX", "/nvram/");
+    else
+        snprintf(tmpfile, sizeof(tmpfile), "%ssyscfg_tmp.db_XXXXXX", "/tmp/");
+
+    fd = mkostemp(tmpfile, O_CLOEXEC);
+
+    if (fd < 0) {
+        ulog_error(ULOG_SYSTEM, UL_SYSCFG, "update_file: mkostemp() failed");
         return -1;
-  }
+    }
 
-  int fd_to = open(bkupFile, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
-  if(fd_to < 0)
-  {
-    	ulog_error(ULOG_SYSTEM, UL_SYSCFG, "creat sys call failed during db backup");
-	rc = munmap(mem,Stat.st_size);
-	if ( rc != 0 ){
-		
-    		ulog_error(ULOG_SYSTEM, UL_SYSCFG, "munmap failed");
-	}
-        close(fd_from);
+    if (write(fd, buf, sz) != sz) {
+        ulog_error(ULOG_SYSTEM, UL_SYSCFG, "update_file: partial write");
+        close(fd);
+        unlink(tmpfile);
         return -1;
-  }
-  ssize_t nwritten = write(fd_to, mem, Stat.st_size);
-  if (msync(mem, Stat.st_size, MS_SYNC)) {
-      ulog_error(ULOG_SYSTEM, UL_SYSCFG, "msync call failed during db backup");
-      fprintf(stderr, "%s msync FAILED, errno:%d\n", __func__, errno);
-  }
+    }
 
-  if(nwritten < Stat.st_size)
-  {
-    	ulog_error(ULOG_SYSTEM, UL_SYSCFG, "write system call failed during db backup");
+    fsync(fd);
+    close(fd);
 
-	rc = munmap(mem,Stat.st_size);
-        if ( rc != 0 ){
+//  ulog_error(ULOG_SYSTEM, UL_SYSCFG, "update_file: rename %s -> %s", tmpfile, fname);
 
-                ulog_error(ULOG_SYSTEM, UL_SYSCFG, "munmap failed");
-        }
-
-	close(fd_from);
-        close(fd_to);
+    if (rename(tmpfile, fname) != 0) {
+        ulog_error(ULOG_SYSTEM, UL_SYSCFG, "update_file: rename() failed");
         return -1;
-  }
+    }
 
-  rc = munmap(mem,Stat.st_size);
-  if ( rc != 0 ){
-       ulog_error(ULOG_SYSTEM, UL_SYSCFG, "munmap failed");
-  }
-
-  if(close(fd_to) < 0) {
-        fd_to = -1;
-    	ulog_error(ULOG_SYSTEM, UL_SYSCFG, "closing file descriptor failed during db backup");
-
-  	close(fd_from);
-        return -1;
-  }
-  close(fd_from);
-
-  /* Success! */
-  return 0;
+    return 0;
 }
 
 /*
@@ -1729,64 +1641,24 @@ static int backup_file (const char *bkupFile, const char *localFile)
  */
 static int commit_to_file (const char *fname)
 {
-    int fd;
-    int i, ct;
-    char buf[2*MAX_ITEM_SZ];
-    int ret=0;
-    syscfg_shm_ctx *ctx = syscfg_ctx;
+    char *buf;
+    size_t sz;
 
-    fd = open(fname, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
-    if (-1 == fd) {
-        return ERR_IO_FILE_OPEN;
+    if ((buf = malloc(SYSCFG_SZ)) == NULL) {
+        ulog_error(ULOG_SYSTEM, UL_SYSCFG, "commit_to_file: malloc() failed");
+        return -1;
     }
-    _syscfg_file_lock(fd);
 
-    shmoff_t entry;
+    sz = _syscfg_getall2(buf, SYSCFG_SZ, 1);
 
-    for (i = 0; i < SYSCFG_HASH_TABLE_SZ; i++) {
-        entry = ctx->ht[i];
-        while (entry) {
-            ct = snprintf(buf, sizeof(buf), "%s=%s\n",
-                          HT_ENTRY_NAME(ctx,entry), HT_ENTRY_VALUE(ctx,entry));
-            write(fd, buf, ct);
-            entry = HT_ENTRY_NEXT(ctx,entry);
-        }
-    }
-    _syscfg_file_unlock(fd);
+//  ulog_error(ULOG_SYSTEM, UL_SYSCFG, "commit_to_file: syscfg_getall2() returned %lu", (unsigned long) sz);
 
-    close(fd);
+    update_file(fname, buf, sz);
 
-   ret = access(SYSCFG_BKUP_FILE, F_OK);
-   if ( ret == 0 ) { 
-   	ret=backup_file(SYSCFG_BKUP_FILE,fname);
-   	if (ret == -1)
-   	{
-    		ulog_error(ULOG_SYSTEM, UL_SYSCFG, "Backing up of syscfg failed");
-		// retrying again to take db back up
-		ret=0;
-        	ret=backup_file(SYSCFG_BKUP_FILE,fname);
-		if ( ret == -1){
-			ulog_error(ULOG_SYSTEM, UL_SYSCFG, "Retry of backing up syscfg also failed");
-	        	return ret;
-		}
-   	}
-   }
+    update_file(SYSCFG_BKUP_FILE, buf, sz);
 
-   ret = access(SYSCFG_NEW_FILE, F_OK);
-   if ( ret == 0 ) {
- 	  ret=backup_file(SYSCFG_NEW_FILE,fname);
-	  if (ret == -1)
-   	  {
-    		ulog_error(ULOG_SYSTEM, UL_SYSCFG, "Backing up of syscfg failed");
-		// retrying again to take db back up
-		ret=0;
-        	ret=backup_file(SYSCFG_NEW_FILE,fname);
-		if ( ret == -1){
-			ulog_error(ULOG_SYSTEM, UL_SYSCFG, "Retry of backing up syscfg also failed");
-	        	return ret;
-	        }
-   	  }
-   }
-   return 0;
+    free(buf);
+
+    return 0;
 }
 
