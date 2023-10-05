@@ -216,7 +216,7 @@ if [ -x /usr/bin/db_mig ]; then
    echo_t "[utopia][init] db_mig = $DB_MIG_COMPLETE"
 fi
 
-queries="factory_reset UpdateNvram lan_ipaddr lan_netmask lost_and_found_enable iot_ifname iot_dhcp_start iot_dhcp_end iot_netmask ForwardSSH unit_activated lan_ifname cmdiag_ifname ecm_wan_ifname nat_udp_timeout nat_tcp_timeout nat_icmp_timeout lan_ethernet_physical_ifnames"
+queries="factory_reset UpdateNvram lan_ipaddr lan_netmask ForwardSSH unit_activated lan_ifname cmdiag_ifname ecm_wan_ifname nat_udp_timeout nat_tcp_timeout nat_icmp_timeout lan_ethernet_physical_ifnames"
 get_utctx_val "$queries"
 
 if [ -f $SYSCFG_OLDBKUP_FILE ];then
@@ -408,23 +408,6 @@ echo "[utopia][init] SEC: Syscfg stored in $SYSCFG_BKUP_FILE"
 lan_ipaddr=$SYSCFG_lan_ipaddr
 lan_netmask=$SYSCFG_lan_netmask
 echo_t "[utopia][init] lan_ipaddr = $lan_ipaddr lan_netmask = $lan_netmask"
-
-lost_and_found_enable=$SYSCFG_lost_and_found_enable
-echo_t "[utopia][init] lost_and_found_enable = $lost_and_found_enable"
-if [ "$lost_and_found_enable" == "true" ]
-then
-    iot_ifname=$SYSCFG_iot_ifname
-    if [ "$iot_ifname" == "l2sd0.106" ]; then
-     echo_t "[utopia][init] changing over to new LnF bridge: br106"
-     syscfg set iot_brname br106
-     syscfg commit
-    fi
-    iot_dhcp_start=$SYSCFG_iot_dhcp_start
-    iot_dhcp_end=$SYSCFG_iot_dhcp_end
-    iot_netmask=$SYSCFG_iot_netmask
-    echo_t "[utopia][init] [DHCPCORRUPT_TRACE] configuring for IOT iot_ifname = $iot_ifname "
-    echo_t "[utopia][init] [DHCPCORRUPT_TRACE] iot_dhcp_start = $iot_dhcp_start iot_dhcp_end=$iot_dhcp_end iot_netmask=$iot_netmask"
-fi
 
 ForwardSSH=$SYSCFG_ForwardSSH
 Log_file="/rdklogs/logs/FirewallDebug.txt"
