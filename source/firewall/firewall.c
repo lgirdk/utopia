@@ -12690,6 +12690,17 @@ static void do_tr69_whitelistTable (FILE *filter_fp, FILE *nat_fp, int family, c
     {
         FIREWALL_DEBUG("CWMP is enabled. ACCEPT TR069 port %s\n" COMMA cwmpPort);
 
+        if (family == AF_INET6)
+        {
+            int retval;
+            char lan_IPv6[INET6_ADDRSTRLEN];
+            memset(lan_IPv6, 0, INET6_ADDRSTRLEN);
+            retval = sysevent_get(sysevent_fd, sysevent_token, "lan_ipaddr_v6", lan_IPv6, sizeof(lan_IPv6));
+            if ((retval == 0) && (lan_IPv6[0] != '\0'))
+            {
+                fprintf(filter_fp, "-A tr69_filter -d %s -i %s -p tcp -m tcp --dport %s -j DROP\n", lan_IPv6, current_wan_ifname, cwmpPort);
+            }
+        }
         if(filter_fp)
         {
 #ifdef USE_WHITELISTED_IP
@@ -16919,6 +16930,7 @@ static void do_ipv6_filter_table(FILE *fp){
       /* adding INPUT rule for DNS LAN traffic */
       {
          char prefix[129];
+         char lan_IPv6[INET6_ADDRSTRLEN];
 
          prefix[0] = 0;
          sysevent_get(sysevent_fd, sysevent_token, "ipv6_prefix", prefix, sizeof(prefix));
@@ -16929,6 +16941,13 @@ static void do_ipv6_filter_table(FILE *fp){
 
          if ((lan_local_ipv6_num == 1) && strlen(lan_local_ipv6[0]) > 0) {
             fprintf(fp, "-A INPUT -d %s -p tcp --dport 53 -i %s -j ACCEPT\n", lan_local_ipv6[0], lan_ifname);
+         }
+
+         memset(lan_IPv6, 0, INET6_ADDRSTRLEN);
+         retval = sysevent_get(sysevent_fd, sysevent_token, "lan_ipaddr_v6", lan_IPv6, sizeof(lan_IPv6));
+         if ((retval == 0) && (lan_IPv6[0] != '\0'))
+         {
+            fprintf(fp, "-A INPUT -d %s -i %s -p tcp -m tcp --dport 53 -j DROP\n", lan_IPv6, current_wan_ifname);
          }
       }
 
