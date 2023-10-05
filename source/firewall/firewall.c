@@ -5969,7 +5969,7 @@ static int do_wan_nat_lan_clients(FILE *fp)
       #ifdef RDKB_EXTENDER_ENABLED
          fprintf(fp, "-A postrouting_towan -j MASQUERADE\n");
       #else
-	     fprintf(fp, "-A postrouting_towan  -j SNAT --to-source %s --random\n", natip4);
+	     fprintf(fp, "-A postrouting_towan ! -s %s -j SNAT --to-source %s --random\n", natip4, natip4);
       #endif
 #if defined (FEATURE_MAPT) || defined (FEATURE_SUPPORT_MAPT_NAT46)
      }
