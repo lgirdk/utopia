@@ -487,6 +487,11 @@ fi
       rm -f /nvram/pcs.bin
       rm -f /nvram/pcs.bin.md5
    fi
+
+    # Remove on factory reset, prioratized schedule pcs.bin and pcs.bin.md5 on all RDKB platforms 
+    rm -f /nvram/pcs-now-priomac.dat
+    rm -f /nvram/pcs-now-priomac.dat.md5
+
    echo "[utopia][init] Retarting syscfg using file store ($SYSCFG_NEW_FILE)"
    touch $SYSCFG_NEW_FILE
    touch $SYSCFG_FILE
