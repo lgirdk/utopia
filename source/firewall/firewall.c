@@ -12979,6 +12979,11 @@ static int do_block_ports(FILE *filter_fp)
          strValue = NULL;
       }
    }
+#ifdef FEATURE_MATTER_ENABLED
+   fprintf(filter_fp, "-A INPUT -i %s -p tcp -m tcp --dport 5540 -j ACCEPT\n", lan_ifname);
+   fprintf(filter_fp, "-A INPUT -i %s -p udp -m udp --dport 5540 -j ACCEPT\n", lan_ifname);
+   fprintf(filter_fp, "-A INPUT -p udp -i %s --dport 5353 -j ACCEPT\n", lan_ifname);
+#endif
    return 0;
 }
 
@@ -14634,12 +14639,6 @@ int prepare_ipv6_firewall(const char *fw_file)
          fprintf(filter_fp, "-I FORWARD -o %s -m state --state INVALID -j DROP\n",current_wan_ifname);
 
    #endif
-
-#ifdef FEATURE_MATTER_ENABLED
-         /* Enable mDNS requests and responses needed for Matter*/
-         fprintf(filter_fp, "-I INPUT 1 -p udp -i brlan0 --sport 5353 -j ACCEPT\n");
-         fprintf(filter_fp, "-I INPUT 1 -p udp -i brlan0 --dport 5353 -j ACCEPT\n");
-#endif
 
 	/*add rules before this*/
 #if !defined(_BWG_PRODUCT_REQ_)
