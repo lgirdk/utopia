@@ -680,7 +680,13 @@ static int GetDevicePropertiesEntry (char *pOutput, int size, char *sDevicePropC
 
 static int getFactoryPartnerId (char *pValue)
 {
-#if defined (_XB6_PRODUCT_REQ_) || defined(_HUB4_PRODUCT_REQ_) || defined(_SR300_PRODUCT_REQ_) || defined(_WNXL11BWL_PRODUCT_REQ_)
+#ifdef XB10_ONLY_SUPPORT
+        strcpy(pValue,"comcast");
+        APPLY_PRINT("%s - %s\n",__FUNCTION__,pValue);
+        printf("##############Partner ID Found %s : \n", pValue);
+
+        return 0;
+#elif defined (_XB6_PRODUCT_REQ_) || defined(_HUB4_PRODUCT_REQ_) || defined(_SR300_PRODUCT_REQ_) || defined(_WNXL11BWL_PRODUCT_REQ_)
 	if(0 == platform_hal_getFactoryPartnerId(pValue))
 	{
 		APPLY_PRINT("%s:%d - %s\n",__FUNCTION__, __LINE__,pValue);
