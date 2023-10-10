@@ -342,24 +342,37 @@ if [ "$SYSCFG_LAN_DOMAIN" == "utopia.net" ]; then
 fi
 
 if [ "$MANUFACTURE" = "Technicolor" ]; then
-    BL_LAST_RESET_REASON=$(hexdump -e '16/1 "%02x" "\n"' /proc/device-tree/bolt/reset-history)
-    BL_LAST_RESET_REASON=${BL_LAST_RESET_REASON:0:8} # Strip everything but first four bytes
+    PROCESS_TRACE_FILE="/nvram/process_trace.log"
+    if [ "$MODEL_NUM" = "CVA601ZCOM" ]; then
+        reboot_type=$(latticecli -n reason | awk '{print $5}')
+        if [ "power_on_reset" == $reboot_type ]; then
+            if [ "unknown" == $(syscfg get X_RDKCENTRAL-COM_LastRebootReason) ] || [ "0" == $(syscfg get X_RDKCENTRAL-COM_LastRebootCounter) ]; then
+                syscfg set X_RDKCENTRAL-COM_LastRebootReason "power-on-reset"
+                syscfg set X_RDKCENTRAL-COM_LastRebootCounter "1"
+            fi
+        elif [ "smc_sw_request" == $reboot_type ] && [ ! -f $PROCESS_TRACE_FILE ]; then
+            syscfg set X_RDKCENTRAL-COM_LastRebootReason "power-restoration"
+            syscfg set X_RDKCENTRAL-COM_LastRebootCounter "1"
+        fi
+    else
+        BL_LAST_RESET_REASON=$(hexdump -e '16/1 "%02x" "\n"' /proc/device-tree/bolt/reset-history)
+        BL_LAST_RESET_REASON=${BL_LAST_RESET_REASON:0:8} # Strip everything but first four bytes
 
-    if [ "00000003" == ${BL_LAST_RESET_REASON} ] || [ "00000001" == ${BL_LAST_RESET_REASON} ]
-    then
-        if [ "unknown" == $(syscfg get X_RDKCENTRAL-COM_LastRebootReason) ] || [ "0" == $(syscfg get X_RDKCENTRAL-COM_LastRebootCounter) ]
-         then
-             syscfg set X_RDKCENTRAL-COM_LastRebootReason "power-on-reset"
-             syscfg set X_RDKCENTRAL-COM_LastRebootCounter "1"
-         fi
+        if [ "00000003" == ${BL_LAST_RESET_REASON} ] || [ "00000001" == ${BL_LAST_RESET_REASON} ]
+        then
+            if [ "unknown" == $(syscfg get X_RDKCENTRAL-COM_LastRebootReason) ] || [ "0" == $(syscfg get X_RDKCENTRAL-COM_LastRebootCounter) ]
+            then
+                syscfg set X_RDKCENTRAL-COM_LastRebootReason "power-on-reset"
+                syscfg set X_RDKCENTRAL-COM_LastRebootCounter "1"
+            fi
+        fi
+        if [ "00002000" == ${BL_LAST_RESET_REASON} ] && [ ! -f $PROCESS_TRACE_FILE ]
+        then
+            syscfg set X_RDKCENTRAL-COM_LastRebootReason "power-restoration"
+            syscfg set X_RDKCENTRAL-COM_LastRebootCounter "1"
+        fi
      fi
-     PROCESS_TRACE_FILE="/nvram/process_trace.log"
-     if [ "00002000" == ${BL_LAST_RESET_REASON} ] && [ ! -f $PROCESS_TRACE_FILE ]
-     then
-         syscfg set X_RDKCENTRAL-COM_LastRebootReason "power-restoration"
-         syscfg set X_RDKCENTRAL-COM_LastRebootCounter "1"
-     fi
-     
+
     RESET_BUTTON_FILE="/nvram/resetdefaults.rdkb"
 
     if [ -f $RESET_BUTTON_FILE ]; then
