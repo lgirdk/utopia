@@ -2053,6 +2053,7 @@ OPTIONS:
             }
             if (tag_index >= NELEMS(tag_list)) continue;
 
+#if !defined(_LG_OFW_)
             if ((responsefd = fopen("/var/tmp/networkresponse.txt", "r")) != NULL)
             {
                 int iresCode = 0;
@@ -2078,6 +2079,7 @@ OPTIONS:
                     fprintf(stderr, "gen_dibbler_conf -- Box is not in captive portal mode \n");
                 }
             }
+#endif
 
 #if defined (_XB6_PRODUCT_REQ_)
             char rfCpEnable[6] = {0};
