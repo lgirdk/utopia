@@ -1713,10 +1713,6 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
     char *HwAdrrPath = "/sys/class/net/brlan0/address";
     struct stat check_ConfigFile;
     FILE *responsefd=NULL;
-    char *networkResponse = "/var/tmp/networkresponse.txt";
-    int iresCode = 0;
-    char responseCode[10] = {0};
-    char redirFlag[6] = {0};
     int isInCaptivePortal = 0;
     int inWifiCp=0;
 
@@ -2054,20 +2050,22 @@ OPTIONS:
             }
             if (tag_index >= NELEMS(tag_list)) continue;
 
-            iresCode = 0;
+            if ((responsefd = fopen("/var/tmp/networkresponse.txt", "r")) != NULL)
+            {
+                int iresCode = 0;
+                char responseCode[10] = {0};
+                char redirFlag[6];
 
-            if((responsefd = fopen(networkResponse, "r")) != NULL)
-            {
-                 if(fgets(responseCode, sizeof(responseCode), responsefd) != NULL)
-                 {
-                     iresCode = atoi(responseCode);
-                 }
-                 fclose(responsefd);
-                 responsefd = NULL;
-            }
-            if(!syscfg_get( NULL, "redirection_flag", redirFlag, sizeof(redirFlag)))
-            {
-                if ((strncmp(redirFlag,"true",4) == 0) && iresCode == 204)
+                if (fgets(responseCode, sizeof(responseCode), responsefd) != NULL)
+                {
+                    iresCode = atoi(responseCode);
+                }
+                fclose(responsefd);
+                responsefd = NULL;
+
+                syscfg_get( NULL, "redirection_flag", redirFlag, sizeof(redirFlag));
+
+                if ((strcmp(redirFlag, "true") == 0) && (iresCode == 204))
                 {
                     inWifiCp = 1;
                     fprintf(stderr, "gen_dibbler_conf -- Box is in captive portal mode \n");
@@ -2077,6 +2075,7 @@ OPTIONS:
                     fprintf(stderr, "gen_dibbler_conf -- Box is not in captive portal mode \n");
                 }
             }
+
 #if defined (_XB6_PRODUCT_REQ_)
             char rfCpEnable[6] = {0};
             char rfCpMode[6] = {0};
