@@ -38,7 +38,6 @@
 #include "time.h"
 #include "safec_lib_common.h"
 #include "secure_wrapper.h"
-#include  "safec_lib_common.h"
 
 #define PROG_NAME       "SERVICE-DSLITE"
 #define ER_NETDEVNAME   "erouter0"
