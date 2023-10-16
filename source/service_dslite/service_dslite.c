@@ -426,8 +426,7 @@ static int dslite_start (struct serv_dslite *sd)
 
     if (inet_pton (AF_INET6, DSLITE_AFTR, &v6_addr) == 1)   /* IPv6 address format, no need to do DNS resolution */
     {
-        safec_rc = strcpy_s (resolved_ipv6, sizeof(resolved_ipv6), DSLITE_AFTR); // CID 142880 : Destination buffer too small (STRING_OVERFLOW)
-	ERR_CHK(safec_rc);
+        snprintf (resolved_ipv6, sizeof(resolved_ipv6), "%s", DSLITE_AFTR);
         dnsttl = 0;
     }
     else /* domain format, need to do DNS resolution */
