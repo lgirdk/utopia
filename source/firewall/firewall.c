@@ -6688,6 +6688,11 @@ int do_wan2self_attack(FILE *fp,char* wan_ip)
 #endif /*_HUB4_PRODUCT_REQ_*/
    fprintf(fp, "-A wanattack -p icmp -j xlog_drop_wanattack\n");
 
+#ifdef _LG_OFW_
+   //Drop icmp type 9, router advertisement message.
+   fprintf(fp, "-A OUTPUT -p icmp -j DROP --icmp-type router-advertisement\n");
+#endif
+
    //TCP SYN Flooding
    fprintf(fp, "-A wanattack -p tcp --syn -m limit --limit 10/s --limit-burst 20 -j RETURN\n");
 #if defined(_COSA_BCM_ARM_) || defined(_HUB4_PRODUCT_REQ_) || defined(_WNXL11BWL_PRODUCT_REQ_) /* ULOG target removed in kernels 3.17+ */
