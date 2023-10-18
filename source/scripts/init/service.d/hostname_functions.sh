@@ -45,6 +45,7 @@ prepare_hostname () {
    HOSTNAME=`syscfg get hostname`
    LAN_IPADDR=`sysevent get current_lan_ipaddr`
    SYSEVT_lan_ipaddr_v6=`sysevent get lan_ipaddr_v6`
+   SYSEVT_lan_ula_v6=`sysevent get lan_ula_address`
    LOCDOMAIN_NAME=`syscfg get SecureWebUI_LocalFqdn`
    SECUREWEBUI_ENABLED=`syscfg get SecureWebUI_Enable`
 
@@ -75,6 +76,10 @@ prepare_hostname () {
            fi
            if [ ! -z "$SYSEVT_lan_ipaddr_v6" ]; then
                echo "$SYSEVT_lan_ipaddr_v6""         ""$LOCDOMAIN_NAME"  >> $HOSTS_FILE
+           fi
+           # For Sky devices the Wan prefix will be removed from brlan0 interface, if WAN disconnected. Using lan_ula_address for SecureWebUI_LocalFqdn
+           if [ ! -z "$SYSEVT_lan_ula_v6" ] && ([ "$BOX_TYPE" != "HUB4" ] ||  [ "$BOX_TYPE" != "SR213" ]); then
+               echo "$SYSEVT_lan_ula_v6""         ""$LOCDOMAIN_NAME"  >> $HOSTS_FILE
            fi
        fi
    fi
