@@ -563,7 +563,8 @@ static int dslite_start (struct serv_dslite *sd)
     {
         sysctl_iface_set ("/proc/sys/net/ipv4/ip_forward", NULL, "1");
 #if defined(_LG_OFW_)
-        system ("/usr/bin/service_dhcp dhcp_server-restart");
+        system ("/usr/bin/service_dhcp dhcp_server-restart" "; "
+                "/etc/utopia/service.d/service_mldproxy.sh mldproxy-restart");
 #endif
     }
     else
@@ -713,6 +714,9 @@ static int dslite_stop (struct serv_dslite *sd)
     if (sd->rtmod == WAN_RTMOD_IPV6)
     {
         sysctl_iface_set ("/proc/sys/net/ipv4/ip_forward", NULL, "0");
+#if defined(_LG_OFW_)
+        system("/etc/utopia/service.d/service_mldproxy.sh mldproxy-restart");
+#endif
     }
     else
     {
