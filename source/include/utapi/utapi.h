@@ -845,6 +845,8 @@ int Utopia_GetStaticRouteTable (int *count, routeStatic_t **out_sroute);
 
 int Utopia_CheckPortTriggerRange(UtopiaContext *ctx, int new_rule_id, int new_start, int new_end, int new_protocol, int is_trigger);
 int Utopia_CheckPortRange(UtopiaContext *ctx, int new_rule_id, int new_start, int new_end, int new_protocol, int is_trigger);
+int Utopia_CheckPortFilterRange (UtopiaContext *ctx, int new_rule_id, int new_start, int new_end, char* new_protocol, int is_filter);
+int Utopia_CheckPortTargetRange(UtopiaContext *ctx, int new_rule_id, int new_start, int new_end, int new_protocol,unsigned long new_ip, int is_trigger);
 
 int Utopia_SetPortForwarding (UtopiaContext *ctx, int count, portFwdSingle_t *fwdinfo);
 int Utopia_GetPortForwarding (UtopiaContext *ctx, int *count, portFwdSingle_t **fwdinfo);
