@@ -3890,6 +3890,180 @@ int _check_single_port_range( UtopiaContext *ctx, int new_rule_id, int new_start
     }
     return 0;
 }
+int _check_port_filter_range(UtopiaContext *ctx, int new_rule_id, int new_start, int new_end, char* new_protocol, int is_filter)
+{
+    if (is_filter != 1)
+    {
+        new_rule_id = 0;
+    }
+    else
+    {
+       if (new_start == 0 || new_end == 0)
+       {
+            return 0;
+       }
+    }
+
+    int count;
+    int i;
+    int ins_num;
+    boolean_t enabled;
+    char tokenbuf[256];
+    int start_port;
+    int end_port;
+    bool skip_protcol_check = false;
+    int ret = 0;
+
+    if (!strcmp(new_protocol,"both") || !strcmp(new_protocol,"All"))
+    {
+        skip_protcol_check = true;
+    }
+
+    Utopia_GetNumberOfV4IpFilter(ctx, &count);
+    for (i = 1; i <= count; i++)
+    {
+        Utopia_GetIndexedInt(ctx, UtopiaValue_LGFW_V4IpFilter_InsNum, i, &ins_num);
+        if (ins_num == new_rule_id)
+        {
+            continue;
+        }
+
+        Utopia_GetIndexedBool(ctx, UtopiaValue_LGFW_V4IpFilter_Enable, i, &enabled);
+        if(enabled == FALSE)
+        {
+            continue;
+        }
+        Utopia_GetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_ProtoType, i, tokenbuf, sizeof(tokenbuf));
+        if (skip_protcol_check || !strcasecmp(tokenbuf, new_protocol) || !strcmp(tokenbuf,"BOTH") || !strcmp(tokenbuf,"All"))
+        {
+            Utopia_GetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_DstStartIp, i, tokenbuf, sizeof(tokenbuf));
+            if (tokenbuf[0] == 0 || !strcmp(tokenbuf,"0.0.0.0"))
+            {
+                Utopia_GetIndexed(ctx, UtopiaValue_LGFW_V4IpFilter_DstEndIp, i, tokenbuf, sizeof(tokenbuf));
+                if (tokenbuf[0] == 0 || !strcmp(tokenbuf,"0.0.0.0"))
+                {
+                    Utopia_GetIndexedInt(ctx, UtopiaValue_LGFW_V4IpFilter_DstStartPort, i, &start_port);
+                    Utopia_GetIndexedInt(ctx, UtopiaValue_LGFW_V4IpFilter_DstEndPort, i, &end_port);
+                    if (PORT_OVER_RANGE(new_start, new_end, start_port,end_port))
+                    {
+                        ret = 1;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    return ret;
+}
+
+int _check_port_internal_range(UtopiaContext *ctx, int new_rule_id, int new_start, int new_end, int new_protocol, UtopiaValue utopia[6], unsigned long new_ip, int is_trigger)
+{
+    int (*get_ruleid_func)(UtopiaContext *ctx, int index);
+    bool check_internal_ip = false;
+
+    if (utopia[5] == UtopiaValue_PortRangeForward || utopia[5] == UtopiaValue_SinglePortForward)
+    {
+        if (utopia[5] == UtopiaValue_SinglePortForward)
+        {
+            get_ruleid_func = s_getportfwd_ruleid;
+        }
+        else
+        {
+            get_ruleid_func = s_getportfwdrange_ruleid;
+        } 
+
+        if (is_trigger == 1)
+        {
+            new_rule_id = 0;
+        }
+        else if (new_ip)
+        {
+            check_internal_ip = true;
+        }
+    }
+    else if (utopia[5] == UtopiaValue_PortRangeTrigger)
+    {
+        get_ruleid_func = s_getporttrigger_ruleid;
+        if (is_trigger == 0)
+        {
+            new_rule_id = 0;
+        }
+    }
+    else
+    {
+        return 1;
+    }
+
+    char tokenbuf[256];
+    int count;
+    int protocol;
+    int start_port;
+    int end_port;
+    int i;
+    boolean_t enabled;
+    char rule_id = 0;
+
+    Utopia_GetInt(ctx, utopia[0], &count);
+    for (i = 1; i <= count; i++)
+    {
+        rule_id = get_ruleid_func(ctx, i);
+        if (rule_id == new_rule_id)
+        {
+            continue;
+        }
+        /* skip port range check if rule is disabled */
+        Utopia_GetIndexedBool(ctx, utopia[1], i, &enabled);
+        if (enabled == FALSE)
+        {
+            continue;
+        }
+
+        Utopia_GetIndexed(ctx, utopia[2], i, tokenbuf, sizeof(tokenbuf));
+        protocol = s_StrToEnum(g_ProtocolMap, tokenbuf);
+
+        if (check_internal_ip)
+        {
+            Utopia_GetIndexed(ctx, utopia[4], i, tokenbuf, sizeof(tokenbuf));
+            if (inet_addr(tokenbuf) != new_ip)
+            {
+                continue;
+            }
+        }
+
+        if (new_protocol == BOTH_TCP_UDP || protocol == BOTH_TCP_UDP || new_protocol == protocol)
+        { 
+            Utopia_GetIndexedInt(ctx, utopia[3], i, &start_port);
+            if (utopia[3] == UtopiaValue_PFR_InternalPort)
+            {
+                int port_size;
+                Utopia_GetIndexedInt(ctx, UtopiaValue_PFR_InternalPortRangeSize, i, &port_size);
+                end_port = start_port + port_size;
+            }
+            else if (utopia[3] == UtopiaValue_SPF_InternalPort)
+            {
+                end_port = start_port;
+            }
+            else
+            {
+                char port_range[32];
+                char *last;
+                *port_range = '\0';
+                Utopia_GetIndexed(ctx, utopia[3], i, port_range, sizeof(port_range));
+                if ('\0' != *port_range &&
+                    NULL != (last = chop_str(port_range,' '))) 
+                {
+                    start_port = atoi(port_range);
+                    end_port = atoi(last);
+                }
+            }
+            if (PORT_OVER_RANGE(new_start, new_end, start_port,end_port))
+            {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
 
 int Utopia_CheckPortRange(UtopiaContext *ctx, int new_rule_id, int new_start, int new_end, int new_protocol, int is_trigger)
 {
@@ -3925,6 +4099,11 @@ int Utopia_CheckPortRange(UtopiaContext *ctx, int new_rule_id, int new_start, in
         return FALSE;
     }
 
+    /* check port filtering destination port */
+    char* protocol = s_EnumToStr(g_ProtocolMap, new_protocol);
+    if (_check_port_filter_range(ctx, new_rule_id, new_start, new_end, protocol,0)){
+       return FALSE;
+    }
 
     return TRUE;
 }
@@ -3943,6 +4122,97 @@ int Utopia_CheckPortTriggerRange(UtopiaContext *ctx, int new_rule_id, int new_st
         return FALSE;
     }
     return TRUE;
+}
+
+int Utopia_CheckPortFilterRange (UtopiaContext *ctx, int new_rule_id, int new_start, int new_end, char* new_protocol, int is_filter)
+{
+    if (_check_port_filter_range(ctx, new_rule_id, new_start, new_end, new_protocol, is_filter))
+    {
+        return FALSE;
+    }
+
+    int protocol = s_StrToEnum(g_ProtocolMap, new_protocol);
+    if ( protocol == -1 && !strcmp (new_protocol, "All"))
+    {
+        protocol = 2; 
+    }
+
+    UtopiaValue utopia[5];
+    /* check range port forwarding port */
+    utopia[0] = UtopiaValue_Firewall_PFRCount;
+    utopia[1] = UtopiaValue_PFR_Enabled;
+    utopia[2] = UtopiaValue_PFR_Protocol;
+    utopia[3] = UtopiaValue_PFR_ExternalPortRange;
+    utopia[4] = UtopiaValue_PortRangeForward;
+    if(_check_port_range(ctx, new_rule_id, new_start, new_end, protocol, utopia, 1))
+    {
+        return FALSE;
+    }
+      
+    /* check single port forwarding port */        
+    utopia[0] = UtopiaValue_Firewall_SPFCount;
+    utopia[1] = UtopiaValue_SPF_Enabled;
+    utopia[2] = UtopiaValue_SPF_Protocol;
+    utopia[3] = UtopiaValue_SPF_ExternalPort;
+    utopia[4] = UtopiaValue_SinglePortForward; 
+    if(_check_single_port_range(ctx, new_rule_id, new_start, new_end, protocol, utopia, 1))
+    {
+        return FALSE;
+    }
+
+    /* check port triggering Forwarding port */
+    utopia[0] = UtopiaValue_Firewall_PRTCount;
+    utopia[1] = UtopiaValue_PRT_Enabled;
+    utopia[2] = UtopiaValue_PRT_ForwardProtocol;
+    utopia[3] = UtopiaValue_PRT_ForwardRange;
+    utopia[4] = UtopiaValue_PortRangeTrigger;
+    if(_check_port_range(ctx, new_rule_id, new_start, new_end, protocol, utopia, 0))
+    {
+        return FALSE;
+    }
+    return TRUE;
+}
+
+int Utopia_CheckPortTargetRange(UtopiaContext *ctx, int new_rule_id, int new_start, int new_end, int new_protocol,unsigned long new_ip, int is_trigger)
+{
+    UtopiaValue utopia[6];
+
+     /* check range port forwarding port */
+    utopia[0] = UtopiaValue_Firewall_PFRCount;
+    utopia[1] = UtopiaValue_PFR_Enabled;
+    utopia[2] = UtopiaValue_PFR_Protocol;
+    utopia[3] = UtopiaValue_PFR_InternalPort;
+    utopia[4] = UtopiaValue_PFR_ToIp;
+    utopia[5] = UtopiaValue_PortRangeForward;
+    if(_check_port_internal_range(ctx, new_rule_id, new_start, new_end, new_protocol, utopia, new_ip, is_trigger))
+    {
+        return FALSE;
+    }
+      
+    /* check single port forwarding port */        
+    utopia[0] = UtopiaValue_Firewall_SPFCount;
+    utopia[1] = UtopiaValue_SPF_Enabled;
+    utopia[2] = UtopiaValue_SPF_Protocol;
+    utopia[3] = UtopiaValue_SPF_InternalPort;
+    utopia[4] = UtopiaValue_SPF_ToIp;
+    utopia[5] = UtopiaValue_SinglePortForward; 
+    if(_check_port_internal_range(ctx, new_rule_id, new_start, new_end, new_protocol, utopia, new_ip, is_trigger))
+    {
+        return FALSE;
+    }
+
+    /* check port triggering Forwarding port */
+    utopia[0] = UtopiaValue_Firewall_PRTCount;
+    utopia[1] = UtopiaValue_PRT_Enabled;
+    utopia[2] = UtopiaValue_PRT_ForwardProtocol;
+    utopia[3] = UtopiaValue_PRT_ForwardRange;
+    utopia[5] = UtopiaValue_PortRangeTrigger;
+    if(_check_port_internal_range(ctx, new_rule_id, new_start, new_end, new_protocol, utopia, new_ip, is_trigger))
+    {
+        return FALSE;
+    }
+    return TRUE;
+
 }
 
 /* CID : 71892 Big parameter passed by value */
