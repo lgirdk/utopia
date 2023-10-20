@@ -258,7 +258,11 @@ void srv_register(void) {
       "multinet-syncMembers|/usr/bin/bridgeUtils|NULL|"TUPLE_FLAG_EVENT,
       "multinet-down|/usr/bin/bridgeUtils|NULL|"TUPLE_FLAG_EVENT,
       "multinet-up|/usr/bin/bridgeUtils|NULL|"TUPLE_FLAG_EVENT,
+#ifdef RDKB_EXTENDER_ENABLED
+      "lnf-setup|/usr/bin/bridgeUtils|NULL|"TUPLE_FLAG_EVENT,
+#else
       "lnf-setup|/usr/bin/bridgeUtils",
+#endif /*RDKB_EXTENDER_ENABLED*/
       "meshbhaul-setup|/usr/bin/bridgeUtils|NULL|"TUPLE_FLAG_EVENT,
       "meshethbhaul-bridge-setup|/usr/bin/bridgeUtils|NULL|"TUPLE_FLAG_EVENT,
       "meshethbhaul-up|/usr/bin/bridgeUtils|NULL|"TUPLE_FLAG_EVENT,
