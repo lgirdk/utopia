@@ -1284,7 +1284,7 @@ $TDKEnable=false
 $CMRouteIsolation_Enable=true
 
 #SHORTS is disabled by default
-$ShortsEnabled=false
+$ShortsEnabled=true
 
 #Collectd Enable default value
 $CollectdEnable=false
