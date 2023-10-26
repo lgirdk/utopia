@@ -793,7 +793,10 @@ void do_extra_pools (FILE *local_dhcpconf_file, char *prefix, unsigned char bDhc
     
 	sysevent_get(g_iSyseventfd, g_tSysevent_token, 
 				 "dhcp_server_current_pools", l_cPools, sizeof(l_cPools));
-
+//Do not use prefix for dhcp_server_current_pools (disabling the DHCPv4 server should not disable the guest network.)
+#ifdef _LG_OFW_
+    strcpy(prefix,"");
+#endif
 	l_cToken = strtok(l_cPools, " ");
 	while(l_cToken != NULL)	
 	{
