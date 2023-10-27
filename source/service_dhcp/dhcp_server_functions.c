@@ -1842,11 +1842,11 @@ int prepare_dhcp_conf (char *input)
 #endif
 #if defined (WIFI_MANAGE_SUPPORTED)
         #define BUFF_LEN_8 8
-        char aParamVal[BUFF_LEN_8] = {0};
-        syscfg_get(NULL, "Manage_WiFi_Enabled", aParamVal, BUFF_LEN_8);
-        if (!strncmp(aParamVal, "true", 4))
+        char aParamVal[BUFF_LEN_8];
+        syscfg_get(NULL, "Manage_WiFi_Enabled", aParamVal, sizeof(aParamVal));
+        if (strcmp(aParamVal, "true") == 0)
         {
-            psmGet(g_vBus_handle,MANAGE_WIFI_PSM_STR, aParamVal, sizeof(aParamVal));
+            psmGet(g_vBus_handle, MANAGE_WIFI_PSM_STR, aParamVal, sizeof(aParamVal));
             if ('\0' != aParamVal[0])
             {
                 updateDhcpPoolData(g_vBus_handle, aParamVal, l_fLocal_Dhcp_ConfFile);

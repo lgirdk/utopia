@@ -5320,16 +5320,14 @@ static int do_wan_nat_lan_clients(FILE *fp)
              char aParamVal[BUFF_LEN_32];
              char aV4Addr[BUFF_LEN_32];
 
-             memset(aParamVal, '\0', sizeof(aParamVal));
              psmGet(bus_handle, MANAGE_WIFI_PSM_STR, aParamVal, sizeof(aParamVal));
              if ('\0' != aParamVal[0])
              {
-                 snprintf(aParamName,BUFF_LEN_64, MANAGE_WIFI_V4_ADDR, aParamVal);
-                 memset(aV4Addr, '\0', sizeof(aV4Addr));
+                 snprintf(aParamName, sizeof(aParamName), MANAGE_WIFI_V4_ADDR, aParamVal);
                  psmGet(bus_handle,aParamName, aV4Addr, sizeof(aV4Addr));
                  if ('\0' != aV4Addr[0])
                  {
-                     snprintf(aParamName,BUFF_LEN_64, "%s/24", aV4Addr);
+                     snprintf(aParamName, sizeof(aParamName), "%s/24", aV4Addr);
                      fprintf(fp, "-A postrouting_towan -s %s -j SNAT --to-source %s\n", aParamName, natip4);
                  }
              }
@@ -16927,13 +16925,12 @@ void updateManageWiFiRules(void * busHandle, char * pCurWanInterface, FILE * fil
         char aParamVal[BUFF_LEN_8];
         char aV4Addr[BUFF_LEN_64];
 
-        memset(aParamVal, 0, sizeof(aParamVal));
         psmGet(bus_handle, MANAGE_WIFI_PSM_STR, aParamVal, sizeof(aParamVal));
         if ('\0' != aParamVal[0])
         {
-            snprintf(aParamName,BUFF_LEN_64, MANAGE_WIFI_V4_ADDR, aParamVal);
-            psmGet(bus_handle,aParamName, aV4Addr, sizeof(aV4Addr));
-            snprintf(aParamName,BUFF_LEN_64, MANAGE_WIFI_BRIDGE_NAME, aParamVal);
+            snprintf(aParamName, sizeof(aParamName), MANAGE_WIFI_V4_ADDR, aParamVal);
+            psmGet(bus_handle, aParamName, aV4Addr, sizeof(aV4Addr));
+            snprintf(aParamName, sizeof(aParamName), MANAGE_WIFI_BRIDGE_NAME, aParamVal);
             psmGet(bus_handle,aParamName, aParamVal, sizeof(aParamVal));
             if ('\0' != aParamVal[0])
             {
