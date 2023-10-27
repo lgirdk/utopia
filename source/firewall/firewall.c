@@ -5323,12 +5323,12 @@ static int do_wan_nat_lan_clients(FILE *fp)
              char aV4Addr[BUFF_LEN_32];
 
              memset(aParamVal, '\0', sizeof(aParamVal));
-             psmGet(bus_handle, MANAGE_WIFI_PSM_STR, aParamVal);
+             psmGet(bus_handle, MANAGE_WIFI_PSM_STR, aParamVal, sizeof(aParamVal));
              if ('\0' != aParamVal[0])
              {
                  snprintf(aParamName,BUFF_LEN_64, MANAGE_WIFI_V4_ADDR, aParamVal);
                  memset(aV4Addr, '\0', sizeof(aV4Addr));
-                 psmGet(bus_handle,aParamName, aV4Addr);
+                 psmGet(bus_handle,aParamName, aV4Addr, sizeof(aV4Addr));
                  if ('\0' != aV4Addr[0])
                  {
                      snprintf(aParamName,BUFF_LEN_64, "%s/24", aV4Addr);
@@ -16923,13 +16923,13 @@ void updateManageWiFiRules(void * busHandle, char * pCurWanInterface, FILE * fil
         char aV4Addr[BUFF_LEN_64];
 
         memset(aParamVal, 0, sizeof(aParamVal));
-        psmGet(bus_handle, MANAGE_WIFI_PSM_STR, aParamVal);
+        psmGet(bus_handle, MANAGE_WIFI_PSM_STR, aParamVal, sizeof(aParamVal));
         if ('\0' != aParamVal[0])
         {
             snprintf(aParamName,BUFF_LEN_64, MANAGE_WIFI_V4_ADDR, aParamVal);
-            psmGet(bus_handle,aParamName, aV4Addr);
+            psmGet(bus_handle,aParamName, aV4Addr, sizeof(aV4Addr));
             snprintf(aParamName,BUFF_LEN_64, MANAGE_WIFI_BRIDGE_NAME, aParamVal);
-            psmGet(bus_handle,aParamName, aParamVal);
+            psmGet(bus_handle,aParamName, aParamVal, sizeof(aParamVal));
             if ('\0' != aParamVal[0])
             {
                 fprintf(filterFp, "-A INPUT -p tcp -i %s --dport 22 -j DROP\n", aParamVal);

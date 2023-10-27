@@ -320,61 +320,60 @@ int serv_can_stop(int sefd, token_t setok, const char *servname)
 }
 
 #if defined (WIFI_MANAGE_SUPPORTED)
-void psmGet(void * bus_handle, char * pParamName, char *pParamValue)
+void psmGet(void *bus_handle, char *pParamName, char *pParamValue, size_t len)
 {
     char *pVal = NULL;
-    if ((NULL == pParamValue) || (NULL == pParamName) || (NULL == bus_handle))
+
+    if ((pParamValue == NULL) || (len == 0))
         return;
+
+    *pParamValue = 0;
+
+    if ((pParamName == NULL) || (bus_handle == NULL))
+        return;
+
     if ((PSM_Get_Record_Value2(bus_handle, CCSP_SUBSYS,pParamName, NULL, &pVal) == CCSP_SUCCESS) && (NULL != pVal))
     {
-        strcpy(pParamValue, pVal);
+        snprintf(pParamValue, len, "%s", pVal);
+
         ((CCSP_MESSAGE_BUS_INFO *)bus_handle)->freefunc(pVal);
-        pVal = NULL;
     }
 }
 
 void updateDhcpPoolData(void * bus_handle, char * pIndex, FILE * pFile)
 {
-    #define BUFF_LEN_64  64
-    #define BUFF_LEN_128 128
-
-    char paramName[BUFF_LEN_64] = {'\0'};
-    char paramVal[BUFF_LEN_64] = {'\0'};
-    char interface[BUFF_LEN_128] = {'\0'};
-    int len = 0;
+    char paramName[64];
+    char paramVal[64];
 
     if ((NULL == pIndex) || (NULL == pFile) || (NULL == bus_handle))
         return;
 
-    snprintf(paramName, BUFF_LEN_64,"dmsb.dhcpv4.server.pool.%s.Enable", pIndex);
-    psmGet(bus_handle,paramName, paramVal);
+    snprintf(paramName, sizeof(paramName), "dmsb.dhcpv4.server.pool.%s.Enable", pIndex);
+    psmGet(bus_handle, paramName, paramVal, sizeof(paramVal));
 
-    if (!strncmp(paramVal, "true", 4))
+    if (strcmp(paramVal, "true") == 0)
     {
-        snprintf(paramName,BUFF_LEN_64,MANAGE_WIFI_BRIDGE_NAME, pIndex);
-        psmGet(bus_handle,paramName, paramVal);
-        snprintf(interface, BUFF_LEN_128, "interface=%s\n",paramVal);
-        fprintf(pFile,interface);
+        char minaddress[64];
+        char maxaddress[64];
+        char subnet[64];
+        char leasetime[64];
 
-        snprintf(paramName, BUFF_LEN_64,"dmsb.dhcpv4.server.pool.%s.MinAddress", pIndex);
-        psmGet(bus_handle,paramName, paramVal);
-        snprintf(interface, BUFF_LEN_128,"dhcp-range=%s,",paramVal);
-        len = strlen(interface);
+        snprintf(paramName, sizeof(paramName), MANAGE_WIFI_BRIDGE_NAME, pIndex);
+        psmGet(bus_handle, paramName, paramVal, sizeof(paramVal));
 
-        snprintf(paramName, BUFF_LEN_64,"dmsb.dhcpv4.server.pool.%s.MaxAddress", pIndex);
-        psmGet(bus_handle,paramName, paramVal);
-        snprintf(interface + len, BUFF_LEN_128 - len,"%s,",paramVal);
-        len = strlen(interface);
+        snprintf(paramName, sizeof(paramName), "dmsb.dhcpv4.server.pool.%s.MinAddress", pIndex);
+        psmGet(bus_handle, paramName, minaddress, sizeof(minaddress));
 
-        snprintf(paramName, BUFF_LEN_64,"dmsb.dhcpv4.server.pool.%s.SubnetMask", pIndex);
-        psmGet(bus_handle,paramName, paramVal);
-        snprintf(interface + len, BUFF_LEN_128 - len,"%s,",paramVal);
-        len = strlen(interface);
+        snprintf(paramName, sizeof(paramName), "dmsb.dhcpv4.server.pool.%s.MaxAddress", pIndex);
+        psmGet(bus_handle, paramName, maxaddress, sizeof(maxaddress));
 
-        snprintf(paramName, BUFF_LEN_64,"dmsb.dhcpv4.server.pool.%s.LeaseTime", pIndex);
-        psmGet(bus_handle,paramName, paramVal);
-        snprintf(interface + len, BUFF_LEN_128 - len,"%s\n",paramVal);
-        fprintf(pFile,interface);
+        snprintf(paramName, sizeof(paramName), "dmsb.dhcpv4.server.pool.%s.SubnetMask", pIndex);
+        psmGet(bus_handle, paramName, subnet, sizeof(subnet));
+
+        snprintf(paramName, sizeof(paramName), "dmsb.dhcpv4.server.pool.%s.LeaseTime", pIndex);
+        psmGet(bus_handle, paramName, leasetime, sizeof(leasetime));
+
+        fprintf(pFile, "interface=%s\ndhcp-range=%s,%s,%s,%s\n", paramVal, minaddress, maxaddress, subnet, leasetime);
     }
 }
 #endif /*WIFI_MANAGE_SUPPORTED*/
