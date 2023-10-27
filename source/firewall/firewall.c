@@ -12241,13 +12241,13 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
        char paramVal[BUFF_LEN_8] = {'\0'};
        char aV4Addr[BUFF_LEN_64] = {'\0'};
 
-       psmGet(bus_handle, MANAGE_WIFI_PSM_STR, paramVal);
+       psmGet(bus_handle, MANAGE_WIFI_PSM_STR, paramVal, sizeof(paramVal));
        if ('\0' != paramVal[0])
        {
            snprintf(paramName,BUFF_LEN_64, MANAGE_WIFI_V4_ADDR, paramVal);
-           psmGet(bus_handle,paramName, aV4Addr);
+           psmGet(bus_handle,paramName, aV4Addr, sizeof(aV4Addr));
            snprintf(paramName,BUFF_LEN_64, MANAGE_WIFI_BRIDGE_NAME, paramVal);
-           psmGet(bus_handle,paramName, paramVal);
+           psmGet(bus_handle, paramName, paramVal, sizeof(paramVal));
            if ('\0' != paramVal[0])
            {
                fprintf(filter_fp, "-A INPUT -p tcp -i %s --dport 22 -j DROP\n", paramVal);
