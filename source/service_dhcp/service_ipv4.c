@@ -224,10 +224,12 @@ void teardown_instance(int l3_inst)
 			if (l3_inst != atoi(l_cToken))
 			{
                 		strncat(l_cActiveInstances,l_cToken,sizeof(l_cActiveInstances) - strlen(l_cActiveInstances) - 1);
+				strcat(l_cActiveInstances, " ");
 			}
             		l_cToken = strtok(NULL, " ");
 	
 		}
+		l_cActiveInstances[strlen(l_cActiveInstances) - 1] = '\0';
 		sysevent_set(g_iSyseventfd, g_tSysevent_token, "ipv4-instances", l_cActiveInstances, 0);	
     }	
 }
