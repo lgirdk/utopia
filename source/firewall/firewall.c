@@ -732,6 +732,9 @@ static char default_wan_ifname[50]; // name of the regular wan interface
 char current_wan_ifname[50]; // name of the ppp interface or the regular wan interface if no ppp
 static char current_dslite_ifname[50];
 #ifdef VMB_MODE
+static BOOL vmb_enabled = FALSE;
+static struct in_addr vmb_framed_route_ip = { 0 };
+static int vmb_framed_route_ip_bits = 0;
 static char current_vmb_gw_ip[20];
 #endif /* VMB_MODE */
 static char ecm_wan_ifname[20];
@@ -2839,6 +2842,42 @@ static int prepare_globals_from_configuration(void)
 
 #ifdef VMB_MODE
    sysevent_get(sysevent_fd, sysevent_token, "vmb_gw_ip", current_vmb_gw_ip, sizeof(current_vmb_gw_ip));
+   {
+      char tunneled_static_ip_enable[20];
+      syscfg_get(NULL, "tunneled_static_ip_enable", tunneled_static_ip_enable, sizeof(tunneled_static_ip_enable));
+      vmb_enabled = strcmp(tunneled_static_ip_enable, "1") ? FALSE : TRUE;
+   }
+   if (vmb_enabled && current_vmb_gw_ip[0])
+   {
+      /* TODO: sysevents instead of parsing the logs? */
+      FILE *logfp;
+      char *ip, *p, linebuf[256];
+
+      logfp = fopen("/tmp/vmb-radius-client/vmbauth.log", "r");
+      if (logfp)
+      {
+         while (fgets(linebuf, sizeof(linebuf), logfp))
+         {
+            if (strncmp(linebuf, "Framed-Route=", 13))
+               continue;
+            ip = linebuf + 13;
+            p = strchr(ip, ' ');
+            if (p)
+               *p = '\0';
+            p = strchr(ip, '/');
+            if (!p)
+               break;
+            *p++ = '\0';
+
+            if (!inet_pton(AF_INET, ip, &vmb_framed_route_ip))
+               break;
+
+            vmb_framed_route_ip_bits = atoi(p);
+            break;
+         }
+         fclose(logfp);
+      }
+   }
 #endif /* VMB_MODE */
    sysevent_get(sysevent_fd, sysevent_token, "transparent_cache_state", transparent_cache_state, sizeof(transparent_cache_state));
    sysevent_get(sysevent_fd, sysevent_token, "byoi_bridge_mode", byoi_bridge_mode, sizeof(byoi_bridge_mode));
@@ -5319,7 +5358,19 @@ if(status_http_ert == 0){
    /* If rip is enabled and erouter has static IP then swap the NAT IP. */
    char temp_natip4[20];
    memcpy(temp_natip4, natip4, sizeof(temp_natip4));
+#ifdef VMB_MODE
+   if (vmb_framed_route_ip_bits == 32 && vmb_framed_route_ip.s_addr)
+   {
+      nat_swapped = 1;
+      strcpy(natip4, inet_ntoa(vmb_framed_route_ip));
+   }
+   else
+   {
+      nat_swapped = get_erouter_static_ip(natip4, sizeof(natip4));
+   }
+#else
    nat_swapped = get_erouter_static_ip(natip4, sizeof(natip4));
+#endif
 
    switch (src_type) {
       case(0):
@@ -5920,10 +5971,6 @@ static int do_raw_table_staticip(FILE *raw_fp)
  */
 static int do_wan_nat_lan_clients(FILE *fp)
 {
-#ifdef VMB_MODE
-   char tunneled_static_ip_enable[20];
-#endif /* VMB_MODE */
-
    if (!isNatReady) {
       return(0);
    }
@@ -6028,47 +6075,20 @@ static int do_wan_nat_lan_clients(FILE *fp)
   // fprintf(fp, "%s\n", str);
 
 #ifdef VMB_MODE
-   syscfg_get(NULL, "tunneled_static_ip_enable", tunneled_static_ip_enable, sizeof(tunneled_static_ip_enable));
-   if(!strcmp(tunneled_static_ip_enable, "1") && current_vmb_gw_ip[0])
+   if (vmb_framed_route_ip_bits && vmb_framed_route_ip.s_addr)
    {
-      /* TODO: sysevents instead of parsing the logs? */
-      FILE *logfp;
-      char *ip, *p, linebuf[256];
-      struct in_addr in_ip;
+      struct in_addr in_ip = vmb_framed_route_ip;
 
-      logfp = fopen("/tmp/vmb-radius-client/vmbauth.log", "r");
-      if (logfp)
+      if (vmb_framed_route_ip_bits == 32)
       {
-         while (fgets(linebuf, sizeof(linebuf), logfp))
-         {
-            if (strncmp(linebuf, "Framed-Route=", 13))
-               continue;
-            ip = linebuf + 13;
-            p = strchr(ip, ' ');
-            if (p)
-               *p = '\0';
-            p = strchr(ip, '/');
-            if (!p)
-               break;
-            *p++ = '\0';
-
-            if (!inet_pton(AF_INET, ip, &in_ip))
-               break;
-
-            if (!strcmp(p, "32"))
-            {
-               fprintf(fp, "-A postrouting_tovmb -m mark --mark 0x0/0x2000 -j SNAT --to-source %s\n", inet_ntoa(in_ip));
-            }
-            else
-            {
-               in_ip.s_addr = htonl(ntohl(in_ip.s_addr) + 1);
-            }
-            fprintf(fp, "-A postrouting_tovmb -m mark --mark 0x2000/0x2000 -d %s -j RETURN\n", current_vmb_gw_ip);
-            fprintf(fp, "-A postrouting_tovmb -m mark --mark 0x2000/0x2000 -j SNAT --to-source %s\n", inet_ntoa(in_ip));
-            break;
-         }
-         fclose(logfp);
+         fprintf(fp, "-A postrouting_tovmb -m mark --mark 0x0/0x2000 -j SNAT --to-source %s\n", inet_ntoa(in_ip));
       }
+      else
+      {
+         in_ip.s_addr = htonl(ntohl(in_ip.s_addr) + 1);
+      }
+      fprintf(fp, "-A postrouting_tovmb -m mark --mark 0x2000/0x2000 -d %s -j RETURN\n", current_vmb_gw_ip);
+      fprintf(fp, "-A postrouting_tovmb -m mark --mark 0x2000/0x2000 -j SNAT --to-source %s\n", inet_ntoa(in_ip));
    }
 #endif /* VMB_MODE */
 
@@ -13146,7 +13166,11 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
 #endif // FEATURE_MAPT
 
 #if !defined(FEATURE_MAPT) || !defined(_HUB4_PRODUCT_REQ_)
+#ifdef VMB_MODE
+   fprintf(nat_fp, "-A PREROUTING -i %s -j prerouting_fromwan_todmz\n", (vmb_framed_route_ip_bits == 32 && vmb_framed_route_ip.s_addr) ? "vmb0" : current_wan_ifname);
+#else
    fprintf(nat_fp, "-A PREROUTING -i %s -j prerouting_fromwan_todmz\n", current_wan_ifname);
+#endif
    fprintf(nat_fp, "-A POSTROUTING -j postrouting_ephemeral\n");
 // This breaks emta DNS routing on XF3. We may need some special rule here.
    fprintf(nat_fp, "-A POSTROUTING -o %s -j postrouting_towan\n", current_wan_ifname);
