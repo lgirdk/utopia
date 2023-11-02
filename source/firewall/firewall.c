@@ -15260,7 +15260,7 @@ static void do_ipv6_filter_table(FILE *fp){
       //fprintf(fp, "-A INPUT -i %s -p udp --dport 161 -j ACCEPT\n", ecm_wan_ifname);
       fprintf(fp, "-A INPUT -i %s -p udp --dport 161 -j DROP\n", current_wan_ifname);
       fprintf(fp, "-A INPUT ! -i %s -p udp --dport 161 -j ACCEPT\n", lan_ifname);
-#if defined(_COSA_BCM_ARM_) || defined(_PLATFORM_TURRIS_)
+#if (defined(_COSA_BCM_ARM_) || defined(_PLATFORM_TURRIS_)) && !defined(MODEM_ONLY_SUPPORT)
 	  //SSH and HTTP port open for IPv6
 	  fprintf(fp, "-I INPUT 42 -p tcp -i privbr --dport 22 -j ACCEPT\n");
 	  fprintf(fp, "-I INPUT 43 -p tcp -i privbr --dport 80 -j ACCEPT\n");
