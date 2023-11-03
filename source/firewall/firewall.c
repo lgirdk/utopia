@@ -15653,7 +15653,10 @@ v6GPFirewallRuleNext:
 
       fprintf(fp, "-A wan2lan -m state --state INVALID -j LOG_FORWARD_DROP\n");
       #ifdef _COSA_FOR_BCI_
-      fprintf(fp, "-A wan2lan -d %s -o %s -m state --state NEW  -j LOG_FORWARD_DROP\n",prefix,lan_ifname);
+      if(prefix[0] != '\0')
+      {
+	fprintf(fp, "-A wan2lan -d %s -o %s -m state --state NEW  -j LOG_FORWARD_DROP\n",prefix,lan_ifname);
+      }
       #endif
 
       fprintf(fp, "-A FORWARD -i %s -o %s -j wan2lan\n", wan6_ifname, lan_ifname);
