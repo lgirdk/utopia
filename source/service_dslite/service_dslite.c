@@ -697,12 +697,14 @@ static int dslite_stop (struct serv_dslite *sd)
         return 0;
     }
 
+#ifndef _WAN_MANAGER_ENABLED_
     if (sd->rtmod != WAN_RTMOD_IPV6)
     {
         //Start WAN IPv4 service
         route_config (sd);
         system ("service_wan dhcp-start");
     }
+#endif
 
     //Restore default gateway route rule
     system ("ip route del default dev " TNL_NETDEVNAME " table erouter");
