@@ -1657,6 +1657,8 @@ int SE_msg_receive (int fd, char *replymsg, unsigned int *replymsg_size, token_t
 {
    int error = 0;
    int msgtype;
+
+   memset((void *)replymsg, 0, (size_t)*replymsg_size);
    msgtype = msg_receive_internal(fd, replymsg, replymsg_size, who, NULL, &error);
    if (SE_MSG_NONE == msgtype) {
 #ifdef RUNTIME_DEBUG
@@ -1698,6 +1700,7 @@ int SE_minimal_blocking_msg_receive (int fd, char *replymsg, unsigned int *reply
    tv.tv_usec=0;
    int error = 0;
    int msgtype;
+   memset((void *)replymsg, 0, (size_t)*replymsg_size);
    msgtype = msg_receive_internal(fd, replymsg, replymsg_size, who, &tv, &error);
    if (SE_MSG_NONE == msgtype) {
 #ifdef RUNTIME_DEBUG
@@ -1867,6 +1870,7 @@ int SE_msg_send_receive (int fd, char *sendmsg, char *replymsg, unsigned int *re
    tv.tv_sec=5;
    tv.tv_usec=0;
 
+   memset((void *)replymsg, 0, (size_t)*replymsg_size);
    msgtype = msg_receive_internal(fd, replymsg, replymsg_size, &who, &tv, &error);
    if (SE_MSG_NONE == msgtype) {
 #ifdef RUNTIME_DEBUG
@@ -1900,6 +1904,7 @@ int SE_msg_send_receive_data (int fd, char *sendmsg, int sendmsg_size, char *rep
    tv.tv_sec=5;
    tv.tv_usec=0;
 
+   memset((void *)replymsg, 0, (size_t)*replymsg_size);
    msgtype = msg_receive_internal(fd, replymsg, replymsg_size, &who, &tv, &error);
    if (SE_MSG_NONE == msgtype) {
 #ifdef RUNTIME_DEBUG
@@ -2781,6 +2786,7 @@ int sysevent_ping_test (int fd, token_t token, struct timeval* tv)
    unsigned int      replymsg_size   = sizeof(reply_msg_buffer);
    int               error = 0;
    int msgtype;
+   memset((void *)&reply_msg_buffer, 0, sizeof(reply_msg_buffer));
    msgtype = msg_receive_internal(fd, reply_msg_buffer, &replymsg_size, &return_token, tv, &error); 
    if (SE_MSG_NONE == msgtype) {
 #ifdef RUNTIME_DEBUG
