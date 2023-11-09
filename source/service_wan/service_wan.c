@@ -407,6 +407,14 @@ static int dhcp_start(struct serv_wan *sw)
 {
     char l_cErouter_Mode[16] = {0}, l_cWan_if_name[16] = {0}, cEthWanMode[8] = {0} ;
     int err = 0;
+    char map_mode[16] = {0};
+
+    sysevent_get(sw->sefd, sw->setok, "map_transport_mode", map_mode, sizeof(map_mode));
+    if (strcmp(map_mode, "MAPT") == 0)
+    {
+        fprintf(stderr, "%s: Do not start dhcpv4 client when mapt is already configured\n", __FUNCTION__);
+        return -1;
+    }
 
     syscfg_get(NULL, "last_erouter_mode", l_cErouter_Mode, sizeof(l_cErouter_Mode));
 
