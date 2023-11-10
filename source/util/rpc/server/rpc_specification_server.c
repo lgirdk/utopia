@@ -18,6 +18,26 @@ executecommand_1_svc(rpc_CommandBuf *argp, struct svc_req *rqstp)
 	//argp->buffer size is 4096
 	char cmdBuf[4110]={0};
   	int counter=0;
+
+#ifdef _PUMA6_ARM_
+	/*
+	   Special case hack to allow running nfq.sh without waiting for output
+	   etc. Don't make this a general case without more in depth review and
+	   tested (e.g. there are existing rpcclient2 calls which try to run
+	   scripts in the background... they probably don't work but suddenly
+	   "fixing" them by checking for " &" at the end of all commands might
+	   cause unexpected consequences).
+	*/
+	if ((strncmp(argp->buffer, "/usr/sbin/nfq.sh ", strlen("/usr/sbin/nfq.sh ")) == 0) &&
+	    ((strlen(argp->buffer) > 3) && (strcmp(argp->buffer + strlen(argp->buffer) - 2, " &") == 0)))
+	{
+		RPC_PRINT("rpcserver - %s, system('%s')\n",__FUNCTION__,argp->buffer);
+		system(argp->buffer);
+		strcpy(output.buffer, "done");
+		return &output;
+	}
+#endif
+
 	snprintf(cmdBuf,sizeof(cmdBuf),"%s 2>&1",argp->buffer);
 	RPC_PRINT("Server received command %s \n",cmdBuf);
 	FILE *cmd = popen(cmdBuf, "r");
