@@ -167,7 +167,12 @@ wan_wait ()
        if [ "$BOX_TYPE" = "HUB4" ] || [ "$BOX_TYPE" = "SR300" ] || [ "$BOX_TYPE" = "SE501" ] || [ "$BOX_TYPE" = "SR213" ] || [ "$BOX_TYPE" = "WNXL11BWL" ]; then
            CURRENT_WAN_IPV6_STATUS=`sysevent get ipv6_connection_state`
            if [ "up" = "$CURRENT_WAN_IPV6_STATUS" ] ; then
-               WAN_IPv6=`ifconfig "$NTPD_IPV6_INTERFACE" | grep inet6 | grep Global | awk '/inet6/{print $3}' | grep -v 'fdd7' | cut -d '/' -f1 | head -n1`
+               ULAprefix=`sysevent get ula_address |cut -d ':' -f1`
+               if [ -z "$ULAprefix" ]; then
+                   WAN_IPv6=`ifconfig "$NTPD_IPV6_INTERFACE" | grep inet6 | grep Global | awk '/inet6/{print $3}' | grep -v 'fdd7' | cut -d '/' -f1 | head -n1`
+                else
+                    WAN_IPv6=`ifconfig "$NTPD_IPV6_INTERFACE" | grep inet6 | grep Global | awk '/inet6/{print $3}' | grep -v 'fdd7' | grep -v "$ULAprefix" | cut -d '/' -f1 | head -n1`
+               fi
                WAN_IPv6_UP=1
 		# SHARMAN-2301
                 #This change is for UK MAP-T SR213. When  NTP servers are IPv4 only and there is no IPv4 WAN IP on the interface we will use $NTPD_IPV6_INTERFACE(currently brlan0) ipv4 ip to sort ntpd daemon socket problems and routing.
