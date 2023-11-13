@@ -13338,6 +13338,16 @@ void  redirect_dns_to_extender(FILE *nat_fp,int family)
    return ;
 }
 #endif
+
+#ifdef LTE_USB_FEATURE_ENABLED
+#define LTE_USB_IFACE_NAME "usb0"
+#define LTE_USB_HTTPS_SERVER_PORT 4550
+static int do_lte_usb_rules_v4(FILE* fp)
+{
+	fprintf(fp, "-I %s -i %s -p tcp --dport %d -j ACCEPT\n", "INPUT", LTE_USB_IFACE_NAME,LTE_USB_HTTPS_SERVER_PORT);
+	return 0;
+}
+#endif // LTE_USB_FEATURE_ENABLED
 /*
  *  Procedure     : prepare_enabled_ipv4_firewall
  *  Purpose       : prepare ipv4 firewall
@@ -13440,6 +13450,10 @@ static int prepare_enabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *na
    do_self_heal_rules_v4(mangle_fp);
 #endif
 #endif //_HUB4_PRODUCT_REQ_
+
+#ifdef LTE_USB_FEATURE_ENABLED
+   do_lte_usb_rules_v4(filter_fp);
+#endif // LTE_USB_FEATURE_ENABLED
 
    //do_multinet_patch(mangle_fp, nat_fp, filter_fp);
 #if defined(MOCA_HOME_ISOLATION)
