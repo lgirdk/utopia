@@ -15272,6 +15272,13 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
 #endif
    }
 
+#ifdef FEATURE_STATIC_IPV4  
+   if(isBrlanStaticEnabled)
+   {
+       fprintf(filter_fp, "-I http2self -i %s -d 192.168.0.1 -j ACCEPT\n", cmdiag_ifname);
+   }
+#endif
+
 #if defined(_COSA_BCM_ARM_) && (defined(_CBR_PRODUCT_REQ_) || defined(_XB6_PRODUCT_REQ_)) 
    if (isBridgeMode)
    {
