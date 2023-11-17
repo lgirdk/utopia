@@ -6012,7 +6012,11 @@ static int do_wan_nat_lan_clients(FILE *fp)
     {
         //In the /30 static IP or more, the gateway MUST have NAT disabled on the eRouter WAN interface
         fprintf(fp, "-A postrouting_towan -s %s/%s -j ACCEPT\n", lan_ipaddr,lan_netmask);
-    }  
+    }
+
+#if (defined(_COSA_BCM_ARM_))
+    fprintf(fp, "-A postrouting_towan -p icmp -j SNAT --to-source %s \n", natip4);
+#endif  
 
 #if (defined (_COSA_BCM_ARM_) || defined(_PLATFORM_TURRIS_)) && !defined (_HUB4_PRODUCT_REQ_)
   if(bEthWANEnable || isBridgeMode) // Check is required for TCHXB6 TCHXB7 CBR and not for HUB4
