@@ -155,6 +155,10 @@ CheckAndReCreateDB()
 }
 
 echo_t "[utopia][init] Starting syscfg using file store ($SYSCFG_BKUP_FILE)"
+
+# remove syscfg tmp files from nvram during bootup
+rm -f /nvram/syscfg_tmp.db_*
+
 if [ -f $SYSCFG_BKUP_FILE ]; then
 
    if [ -f $CUSTOMER_BOOT_CONFIG_FILE ]; then
