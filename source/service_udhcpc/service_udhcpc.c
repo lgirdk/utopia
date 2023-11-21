@@ -884,14 +884,6 @@ static int handle_wan (udhcpc_script_t *pinfo)
         return -1;
     }
 
-#ifndef _LG_MV2_PLUS_
-    if (get_and_pass_acs_info() != 0)
-    {
-        OnboardLog("[%s][%d] Failed to get dhcpv4 acs data from env \n", __FUNCTION__,__LINE__);
-        return -1;
-    }
-#endif
-
     OnboardLog("[%s][%d] Received [%s] event from udhcpc \n", __FUNCTION__,__LINE__,pinfo->input_option);
     int ret = 0;
     ipc_dhcpv4_data_t data;
@@ -903,6 +895,22 @@ static int handle_wan (udhcpc_script_t *pinfo)
          OnboardLog("[%s][%d] Failed to get dhcpv4 data from envoironment \n", __FUNCTION__,__LINE__);
          return -1;
     }
+
+#ifndef _LG_MV2_PLUS_
+
+    char val[8];
+
+    syscfg_get(NULL, "management_wan_enabled", val, sizeof(val));
+
+    if (strcmp(val, "1") != 0 || strcmp(data.dhcpcInterface, "mg0") == 0)
+    {
+        if (get_and_pass_acs_info() != 0)
+        {
+            OnboardLog("[%s][%d] Failed to get dhcpv4 acs data from env \n", __FUNCTION__,__LINE__);
+            return -1;
+        }
+    }
+#endif
 
     /**
      * Print data.
@@ -1547,7 +1555,7 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
 
         syscfg_get(NULL, "management_wan_enabled", mgmt_enabled, sizeof(mgmt_enabled));
 
-        if (strcmp(mgmt_enabled, "1") != 0)
+        if (strcmp(mgmt_enabled, "1") != 0 || strcmp(dhcpv4_data->dhcpcInterface, "mg0") == 0)
         {
 
             if ((env = getenv("ntpsrv")) != NULL)
