@@ -22,11 +22,10 @@
 #include "rpc_client.h"
 #include "rpc_specification.h"
 #include "pthread.h"
-//char rpcServerIp[16] = "192.168.254.254";
+
 #define DEVICE_PROPS_FILE   "/etc/device.properties"
 
-
-int ExecuteCommand(char *cmnd)
+static int ExecuteCommand(char *cmnd)
 {
 	CLIENT *clnt = NULL;
 	struct rpc_CommandBuf commandBuf;
@@ -35,11 +34,11 @@ int ExecuteCommand(char *cmnd)
 	commandBuf.buffer[sizeof(commandBuf.buffer)-1] = '\0';
 	char* errStr;
 	/*bool isconnected = getIsconnectedStatus();
-	if(!isconnected) {	
+	if(!isconnected) {
 		//startRPCThread();
 		return 0;
 	}*/
-	clnt = getClientInstance();  
+	clnt = getClientInstance();
 	if(clnt != NULL) {
 		output=executecommand_1(&commandBuf,clnt);
 		if(output == NULL){
@@ -48,7 +47,7 @@ int ExecuteCommand(char *cmnd)
 			return 0;
 		}
 	}
- 
+
 	 if(output != NULL) {
 	 	printf("\n%s\n",output->buffer);
 	 } else {
@@ -59,14 +58,14 @@ int ExecuteCommand(char *cmnd)
 
 }
 
-int ExeSysCmd(char *cmnd)
+static int ExeSysCmd(char *cmnd)
 {
 	CLIENT *clnt = NULL;
         struct rpc_CommandBuf commandBuf;
 	/* CID 135428: Unbounded source buffer*/
 	strncpy(commandBuf.buffer,cmnd,sizeof(commandBuf.buffer)-1);
 	commandBuf.buffer[sizeof(commandBuf.buffer)-1] = '\0';
-        char* errStr;	
+        char* errStr;
 	int *output = NULL;
 
 	clnt = getClientInstance();
@@ -82,12 +81,11 @@ int ExeSysCmd(char *cmnd)
 	return 1;
 }
 
-int
-main (int argc, char *argv[],char **args)
+int main (int argc, char *argv[])
 {
     char *host;
     int iRet;
-   
+
     FILE *l_fFp = fopen(DEVICE_PROPS_FILE, "r");
     /*CID 68716 : Dereference after null check*/
     if (NULL == l_fFp)
@@ -134,31 +132,27 @@ main (int argc, char *argv[],char **args)
         printf("Provided ip is wrong. ARM ip should be:%s and ATOM ip should be:%s\n", l_cArmArpingIP, l_cAtomArpingIP);
         exit(0);
     }
+
     iRet = initRPC(host);
-    if(iRet == 1) 
-    {
-        if(strcmp(argv[2],"sh") == 0)
-        {
-            if(argv[3] != NULL) 
-                iRet = ExeSysCmd(argv[3]);
-            else
-                iRet = ExecuteCommand(argv[2]);
-            
-            if(iRet == 0) {
-                printf("RPC FAILED while executing the command:%s !!!\n", argv[2]);
-            }
-            exit(0);
-        }
-        iRet = ExecuteCommand(argv[2]);
-        if(iRet == 0) {
-            printf("RPC FAILED while executing the command:%s !!!\n", argv[2]);
-        }
-        exit(0);
-    }
-    else
+
+    if (iRet != 1)
     {
         printf("RPC FAILED while opening socket !!!\n");
         exit(0);
-    }  
-    exit(1);
+    }
+
+    if ((strcmp(argv[2], "sh") == 0) && (argv[3] != NULL))
+    {
+        iRet = ExeSysCmd(argv[3]);
+    }
+    else
+    {
+        iRet = ExecuteCommand(argv[2]);
+    }
+
+    if (iRet == 0) {
+        printf("RPC FAILED while executing the command:%s !!!\n", argv[2]);
+    }
+
+    exit(0);
 }
