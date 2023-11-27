@@ -18109,11 +18109,19 @@ static int do_blockfragippktsv6(FILE *fp)
     {
         //Blocking fragments is no more part of ip6tables
         //configure frag buffer in kernel to '0' so the frags gets dropped
+#ifdef _PUMA6_ARM_
+        _write_sysctl_file("/proc/sys/net/ipv6/ip6frag_low_thresh", 0);
+        _write_sysctl_file("/proc/sys/net/ipv6/ip6frag_high_thresh", 0);
+#endif
         _write_sysctl_file("/proc/sys/net/netfilter/nf_conntrack_frag6_low_thresh", 0);
         _write_sysctl_file("/proc/sys/net/netfilter/nf_conntrack_frag6_high_thresh", 0);
     }
     else
     {
+#ifdef _PUMA6_ARM_
+        _write_sysctl_file("/proc/sys/net/ipv6/ip6frag_high_thresh", DEFAULT_FRAG_HIGH_THRESH_VALUE);
+        _write_sysctl_file("/proc/sys/net/ipv6/ip6frag_low_thresh", DEFAULT_FRAG_LOW_THRESH_VALUE);
+#endif
         _write_sysctl_file("/proc/sys/net/netfilter/nf_conntrack_frag6_high_thresh", DEFAULT_FRAG_HIGH_THRESH_VALUE);
         _write_sysctl_file("/proc/sys/net/netfilter/nf_conntrack_frag6_low_thresh", DEFAULT_FRAG_LOW_THRESH_VALUE);
     }
