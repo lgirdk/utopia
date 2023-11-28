@@ -350,9 +350,6 @@ if [ "$MANUFACTURE" = "Technicolor" ]; then
                 syscfg set X_RDKCENTRAL-COM_LastRebootReason "power-on-reset"
                 syscfg set X_RDKCENTRAL-COM_LastRebootCounter "1"
             fi
-        elif [ "smc_sw_request" == $reboot_type ] && [ ! -f $PROCESS_TRACE_FILE ]; then
-            syscfg set X_RDKCENTRAL-COM_LastRebootReason "power-restoration"
-            syscfg set X_RDKCENTRAL-COM_LastRebootCounter "1"
         fi
     else
         BL_LAST_RESET_REASON=$(hexdump -e '16/1 "%02x" "\n"' /proc/device-tree/bolt/reset-history)
