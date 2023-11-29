@@ -194,6 +194,11 @@ service_start ()
               echo "*/15 3-4 * * *  /etc/sky/monitor_voice_endpoint.sh" >> $CRONTAB_FILE
       fi
  
+      if [ "$BOX_TYPE" == "HUB4" ] || [ "$BOX_TYPE" == "SR213" ]; then
+              #To monitor ntp sync failure every 2 hrs
+              echo "1 */2 * * *  /etc/sky/ntp_health_check.sh" >> $CRONTAB_FILE
+      fi
+
       # Logging current chain mask value of 2G - runs on 1st minute of every 12th hour - only for 3941 box
       MODEL="`grep MODEL_NUM /etc/device.properties | cut -d "=" -f2`"
       if [ -n "$(echo "$MODEL" | grep 3941)" ]; then
