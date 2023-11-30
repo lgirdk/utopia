@@ -141,12 +141,15 @@ read_greInst()
             ENABLED_SSIDS="`cat /tmp/.enabled_hotspot_ssids`"
             rm /tmp/.enabled_hotspot_ssids
         else
-            ENABLED_SSIDS="6 10"
+            get_ssids 1
+            ENABLED_SSIDS="$(echo "$ssids" | tr -s ' ' | sed 's/^ *//;s/ *$//')"
+            echo "Enabled SSIDS: $ENABLED_SSIDS"
         fi
+        count=0
         if [ "$BOX_TYPE" = "TCCBR" ]; then
             set '5 6 9 10 16'
         else
-            set '5 6 9 10 16 19 21'
+            set '5 6 9 10 19 21'
         fi
 
         for i in $@; do
