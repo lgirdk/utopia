@@ -93,14 +93,13 @@ function check_ntp_server_mode()
         ret=$?
         if [ $ret -eq 0 ]; then
             NTP_SERVER_MODE="IPV6_ONLY"
-            return
         else
             ipv4=$(echo "$NTP_SERVER" | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b")
             if [ -n "$ipv4" ]; then
                 NTP_SERVER_MODE="IPV4_ONLY"
-                return
             fi
         fi
+        return
     fi
 
     if ! which "$NSLOOKUP"  >/dev/null; then
@@ -139,9 +138,6 @@ function check_ntp_server_mode()
         NTP_SERVER_MODE="IPV4_ONLY"
     elif [ "$ipv6_support" = "1" ]; then
         NTP_SERVER_MODE="IPV6_ONLY"
-    else
-        #NTP server is down
-        NTP_SERVER_MODE="ERROR"
     fi
 
     rm -f /tmp/ntp_server_lookup
