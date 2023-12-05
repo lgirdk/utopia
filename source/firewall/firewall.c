@@ -13352,11 +13352,18 @@ void  redirect_dns_to_extender(FILE *nat_fp,int family)
 #ifdef LTE_USB_FEATURE_ENABLED
 #define LTE_USB_IFACE_NAME "usb0"
 #define LTE_USB_HTTPS_SERVER_PORT 4550
+#define LTE_FIRMWARE_DOWNLOAD_SERVER_PORT 21616
 static int do_lte_usb_rules_v4(FILE* fp)
 {
 	fprintf(fp, "-I %s -i %s -p tcp --dport %d -j ACCEPT\n", "INPUT", LTE_USB_IFACE_NAME,LTE_USB_HTTPS_SERVER_PORT);
 	return 0;
 }
+static int do_lte_firmware_download_rules_v4(FILE* fp)
+{
+        fprintf(fp, "-I %s -i %s -p tcp --dport %d -j ACCEPT\n", "INPUT", LTE_USB_IFACE_NAME,LTE_FIRMWARE_DOWNLOAD_SERVER_PORT);
+        return 0;
+}
+
 #endif // LTE_USB_FEATURE_ENABLED
 /*
  *  Procedure     : prepare_enabled_ipv4_firewall
@@ -13465,6 +13472,7 @@ static int prepare_enabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *na
 
 #ifdef LTE_USB_FEATURE_ENABLED
    do_lte_usb_rules_v4(filter_fp);
+   do_lte_firmware_download_rules_v4(filter_fp);
 #endif // LTE_USB_FEATURE_ENABLED
 
    //do_multinet_patch(mangle_fp, nat_fp, filter_fp);
