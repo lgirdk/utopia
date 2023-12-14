@@ -457,27 +457,21 @@ read_tunnel_params () {
 update_bridge_config () {
     inst=`sysevent get gre_$1_inst`
     curBridges="`sysevent get gre_${inst}_current_bridges`"
-    
+    #Below vailables are named based on bridge names which holds queue numbers of the bridges. $br will give the bridge name and $[$br] will give below queue numbers
+    brlan2=1 brlan3=2 brlan4=3 brlan5=4 brpublic=45 brpub=45 bropen6g=46 brsecure6g=47
+
     if [ x != x"$curBridges" ]; then
         remove_bridge_config ${inst} "$curBridges"
     fi
     
-    queue=$BASEQUEUE
-    
     for br in $BRIDGES; do
         if [ "$AB_SSID_DELIM" = $br ]; then
-            queue=`expr $queue + 1`
             continue
         fi
-        #changed the queue value for nf queue issue
-        if [ $br = "brpublic" ] || [ $br = "brpub" ] || [ $br = "bropen6g" ]; then
-           queue=45                               
-        fi
-        br_snoop_rule="`sysevent setunique GeneralPurposeFirewallRule " -A FORWARD -o $br -p udp --dport=67:68 -j NFQUEUE --queue-bypass --queue-num $queue"`"
+
+        br_snoop_rule="`sysevent setunique GeneralPurposeFirewallRule " -A FORWARD -o $br -p udp --dport=67:68 -j NFQUEUE --queue-bypass --queue-num $[$br]"`"
         sysevent set gre_${inst}_${br}_snoop_rule "$br_snoop_rule"
-        if [ $queue = "45" ]; then
-            queue=5
-        fi
+
   if [ "$BOX_TYPE" = "XF3" ] ; then
        sleep 5
   fi
