@@ -42,6 +42,7 @@
 #include <sys/types.h>
 #include <sys/reboot.h>
 #include <sys/socket.h>
+#include <sys/sysinfo.h>
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
@@ -1132,26 +1133,17 @@ int Utopia_GetWANConnectionStatus (UtopiaContext *ctx, wanConnectionStatus_t *wa
         // this is a difference between system-uptime from /proc/uptime
         //   and wan_start_time sysevent which got recorded using /proc/uptime value when
         //   wan link came up or restarted
-        char wanup_buf[64], sysup_buf[64];
-        long wan_start_time = 0, sys_uptime = 0;
+        char wanup_buf[64];
     
         sysevent_get(se_fd, se_token, "wan_start_time", wanup_buf, sizeof(wanup_buf));
-        // ulogf(ULOG_CONFIG, UL_UTAPI, "%s: wan_start_time %s", __FUNCTION__, wanup_buf);
+//      ulogf(ULOG_CONFIG, UL_UTAPI, "%s: wan_start_time %s", __FUNCTION__, wanup_buf);
+
         if (strlen(wanup_buf) > 0) {
-            FILE *fp = fopen("/proc/uptime","r");
-            if (fp) {
-                if (fgets(sysup_buf, sizeof(sysup_buf), fp)) {
-                    // ulogf(ULOG_CONFIG, UL_UTAPI, "%s: proc uptime %s", __FUNCTION__, sysup_buf);
-                    char *p = chop_str(sysup_buf, '.');
-                    if (p) {
-                        wan_start_time = atol(wanup_buf);
-                        sys_uptime = atol(sysup_buf);
-                        // ulogf(ULOG_CONFIG, UL_UTAPI, "%s: diff wan start %ld  sys uptime %ld", __FUNCTION__, wan_start_time, sys_uptime);
-                        wan->uptime = sys_uptime - wan_start_time;
-                    }
-                }
-                fclose(fp);
-            }
+            long wan_start_time = atol(wanup_buf);
+            struct sysinfo si;
+            sysinfo(&si);
+//          ulogf(ULOG_CONFIG, UL_UTAPI, "%s: diff wan start %ld  sys uptime %ld", __FUNCTION__, wan_start_time, si.uptime);
+            wan->uptime = si.uptime - wan_start_time;
         }
     }
 
