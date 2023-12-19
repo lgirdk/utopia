@@ -287,7 +287,7 @@ static int handle_defconfig (udhcpc_script_t *pinfo)
 static int save_dhcp_offer (udhcpc_script_t *pinfo)
 {
     char eventname[256];
-    char buf[12];
+    char buf[24];
     struct sysinfo si;
     int result = -1;
     char *interface;
@@ -348,7 +348,7 @@ static int save_dhcp_offer (udhcpc_script_t *pinfo)
         sysevent_set(sysevent_fd, sysevent_token, eventname, pinfo->input_option, 0);
 
     sysinfo(&si);
-    snprintf(buf, sizeof(buf), "%u", si.uptime);
+    snprintf(buf, sizeof(buf), "%ld", si.uptime);
     snprintf(eventname,sizeof(eventname),"ipv4_%s_start_time",interface);
     sysevent_set(sysevent_fd, sysevent_token, eventname, buf, 0);
 
@@ -456,7 +456,7 @@ static int update_dns_tofile (udhcpc_script_t *pinfo)
                 if (strlen(val) <= 0)
                 {
                     char utc_time[64];
-                    char uptime[12];
+                    char uptime[24];
                     struct sysinfo si;
 
                     result = read_cmd_output("date -u", utc_time, sizeof(utc_time));
@@ -466,7 +466,7 @@ static int update_dns_tofile (udhcpc_script_t *pinfo)
                     }
 
                     sysinfo(&si);
-                    snprintf(uptime, sizeof(uptime), "%u", si.uptime);
+                    snprintf(uptime, sizeof(uptime), "%ld", si.uptime);
 
                     printf ("\nuptime %s tok : %s\n", uptime, tok);
                     OnboardLog("DNS_server_IP_changed:%s\n", uptime);

@@ -819,7 +819,7 @@ static int wan_start(struct serv_wan *sw)
     int ret;
     FILE *fp;
     char buffer[64];
-    char uptime[12];
+    char uptime[24];
     struct sysinfo si;
     int time_out = 5;
 
@@ -840,7 +840,7 @@ static int wan_start(struct serv_wan *sw)
     print_uptime("Wan_init_start", NULL, NULL);
 
     sysinfo(&si);
-    OnboardLog("Wan_init_start:%u\n", si.uptime);
+    OnboardLog("Wan_init_start:%ld\n", si.uptime);
 
     #if defined (_BRIDGE_UTILS_BIN_)
 
@@ -1079,7 +1079,7 @@ static int wan_start(struct serv_wan *sw)
         sysevent_set(sw->sefd, sw->setok, "firewall-restart", NULL, 0);
 
     sysinfo(&si);
-    snprintf(uptime, sizeof(uptime), "%u", si.uptime);
+    snprintf(uptime, sizeof(uptime), "%ld", si.uptime);
     OnboardLog("RDKB_FIREWALL_RESTART:%s\n", uptime);
     sysevent_set(sw->sefd, sw->setok, "wan_start_time", uptime, 0);
 
@@ -1112,9 +1112,9 @@ static int wan_start(struct serv_wan *sw)
 #endif
 
     sysinfo(&si);
-    snprintf(uptime, sizeof(uptime), "%u", si.uptime);
+    snprintf(uptime, sizeof(uptime), "%ld", si.uptime);
     OnboardLog("Wan_init_complete:%s\n",uptime);
-    t2_event_d("btime_waninit_split", uptime);	
+    t2_event_d("btime_waninit_split", (int) si.uptime);
 
     /* RDKB-24991 to handle snmpv3 based on wan-status event */
     v_secure_system("sh /lib/rdk/postwanstatusevent.sh &");
@@ -1690,7 +1690,7 @@ static int wan_addr_unset(struct serv_wan *sw)
     sysevent_set(sw->sefd, sw->setok, "firewall-restart", NULL, 0);
 
     sysinfo(&si);
-    OnboardLog("RDKB_FIREWALL_RESTART:%u", si.uptime);
+    OnboardLog("RDKB_FIREWALL_RESTART:%ld", si.uptime);
 
     system("killall -q dns_sync.sh");
     sysevent_set(sw->sefd, sw->setok, "wan-status", "stopped", 0);
@@ -1779,7 +1779,7 @@ static int wan_dhcp_renew(struct serv_wan *sw)
 {
     FILE *fp;
     char pid[10];
-    char uptime[12];
+    char uptime[24];
     struct sysinfo si;
 
     Getdhcpcpidfile(DHCPC_PID_FILE,sizeof(DHCPC_PID_FILE));
@@ -1793,7 +1793,7 @@ static int wan_dhcp_renew(struct serv_wan *sw)
     sysevent_set(sw->sefd, sw->setok, "current_wan_state", "up", 0);
 
     sysinfo(&si);
-    snprintf(uptime, sizeof(uptime), "%u", si.uptime);
+    snprintf(uptime, sizeof(uptime), "%ld", si.uptime);
     sysevent_set(sw->sefd, sw->setok, "wan_start_time", uptime, 0);
 
     return 0;
