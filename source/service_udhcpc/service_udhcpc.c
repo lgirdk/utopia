@@ -364,9 +364,11 @@ static int handle_defconfig (udhcpc_script_t *pinfo)
 static int save_dhcp_offer (udhcpc_script_t *pinfo)
 {
     char eventname[256];
-    char buf[128];
+    char buf[24];
+    struct sysinfo si;
     int result = -1;
     char *interface;
+
     if (!pinfo)
         return -1;
 
@@ -422,14 +424,11 @@ static int save_dhcp_offer (udhcpc_script_t *pinfo)
     if (pinfo->input_option)
         sysevent_set(sysevent_fd, sysevent_token, eventname, pinfo->input_option, 0);
 
+    sysinfo(&si);
+    snprintf(buf, sizeof(buf), "%ld", si.uptime);
     snprintf(eventname,sizeof(eventname),"ipv4_%s_start_time",interface);
-    memset(buf,0,sizeof(buf));
-    result = read_cmd_output("cut -d. -f1 /proc/uptime",buf,sizeof(buf));
-    if (result == 0)
-    {
-        printf("\n %s uptime: %s\n",__FUNCTION__,buf);
-        sysevent_set(sysevent_fd, sysevent_token, eventname, buf, 0);
-    }
+    sysevent_set(sysevent_fd, sysevent_token, eventname, buf, 0);
+
     set_dns_sysevents(pinfo);
     set_router_sysevents(pinfo);
     return 0;
@@ -530,28 +529,29 @@ static int update_dns_tofile (udhcpc_script_t *pinfo)
             snprintf(buf,sizeof(buf),"grep %s /tmp/.ipv4dnsserver",tok);
             memset(val,0,sizeof(val));
             result = read_cmd_output(buf,val,sizeof(val));
-	    printf ("\n result %d grep:%s \n",result,val);
+            printf ("\n result %d grep:%s \n",result,val);
             if (0 == result)
             {
                 if (strlen(val) <= 0)
                 {
                     char utc_time[64];
-                    char uptime[64];                
-		    result = read_cmd_output("date -u",utc_time,sizeof(utc_time));
+                    char uptime[24];
+                    struct sysinfo si;
+
+                    result = read_cmd_output("date -u", utc_time, sizeof(utc_time));
                     if (result < 0)
                     {
                         printf ("\n [date -u] cmd failed\n");            
                     }
-                    result = read_cmd_output("cut -d. -f1 /proc/uptime", uptime, sizeof(uptime));
-	            if (0 == result)
-                    {
-                        printf ("\nuptime  %s tok : %s\n",uptime,tok);
-			OnboardLog("DNS_server_IP_changed:%s\n",uptime);
-                        t2_event_s("bootuptime_dnsIpChanged_split", uptime);
-                        v_secure_system("echo %s DNS_server_IP_changed:%s >> "CONSOLE_LOG_FILE,utc_time,uptime);
-                        v_secure_system("echo %s >> /tmp/.ipv4dnsserver",tok);
-                    }
 
+                    sysinfo(&si);
+                    snprintf(uptime, sizeof(uptime), "%ld", si.uptime);
+
+                    printf ("\nuptime %s tok : %s\n", uptime, tok);
+                    OnboardLog("DNS_server_IP_changed:%s\n", uptime);
+                    t2_event_s("bootuptime_dnsIpChanged_split", uptime);
+                    v_secure_system("echo %s DNS_server_IP_changed:%s >> " CONSOLE_LOG_FILE, utc_time, uptime);
+                    v_secure_system("echo %s >> /tmp/.ipv4dnsserver", tok);
                 }
             }
             tok = strtok(NULL, " ");

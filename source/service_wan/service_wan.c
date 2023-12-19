@@ -568,34 +568,6 @@ int checkFileExists(const char *fname)
     return 0;
 }
 
-void get_dateanduptime(char *buffer, int *uptime)
-{
-    struct 	timeval  tv;
-    struct 	tm       *tm;
-    struct 	sysinfo info;
-    char 	fmt[ 64 ];
-    errno_t   rc = -1;
-
-    sysinfo( &info );
-    gettimeofday( &tv, NULL );
-    
-    tm = localtime( &tv.tv_sec );
-    if (!tm)
-    {
-        buffer[0] = '\0';
-    }
-    else
-    {
-        strftime(fmt, sizeof(fmt), "%y%m%d-%T.%%06u", tm);
-        rc = sprintf_s(buffer, 64, fmt, tv.tv_usec);
-        if(rc < EOK)
-        {
-            ERR_CHK(rc);
-        }
-    }
-    *uptime= info.uptime;
-}
-
 #ifdef DSLITE_FEATURE_SUPPORT
 static int Is_Dslite_Dhcpv6option64_received(struct serv_wan *sw)
 {
@@ -710,14 +682,13 @@ static int wan_start(struct serv_wan *sw)
     char buf[16] = {0};
 
     int ret;
-	int uptime = 0;
-	char buffer[64] = {0};
-    FILE *fp;
-    char line[64] = {0}, *cp;
-    get_dateanduptime(buffer,&uptime);
-    print_uptime("Wan_init_start", NULL, NULL);
-    OnboardLog("Wan_init_start:%d\n",uptime);
+    char uptime[24];
+    struct sysinfo si;
 
+    print_uptime("Wan_init_start", NULL, NULL);
+
+    sysinfo(&si);
+    OnboardLog("Wan_init_start:%ld\n", si.uptime);
 
     #if defined (_BRIDGE_UTILS_BIN_)
 
@@ -1024,31 +995,22 @@ static int wan_start(struct serv_wan *sw)
         printf("%s Triggering RDKB_FIREWALL_RESTART\n",__FUNCTION__);
         t2_event_d("SYS_SH_RDKB_FIREWALL_RESTART", 1);
         sysevent_set(sw->sefd, sw->setok, "firewall-restart", NULL, 0);
-    uptime = 0;
-     memset(buffer,0,sizeof(buffer));
-    get_dateanduptime(buffer,&uptime);
-    OnboardLog("RDKB_FIREWALL_RESTART:%d\n",uptime);
+
+    sysinfo(&si);
+    snprintf(uptime, sizeof(uptime), "%ld", si.uptime);
+    OnboardLog("RDKB_FIREWALL_RESTART:%s\n", uptime);
+    sysevent_set(sw->sefd, sw->setok, "wan_start_time", uptime, 0);
 
     printf("Network Response script called to capture network response\n ");
     /*Network Response captured ans stored in /var/tmp/network_response.txt*/
-    if ((fp = fopen("/proc/uptime", "rb")) != NULL)
-    {
-    
-        memset(line,0,sizeof(line));
-        if (fgets(line, sizeof(line), fp) != NULL) {
-            if ((cp = strchr(line, '.')) != NULL)
-                *cp = '\0';
-            sysevent_set(sw->sefd, sw->setok, "wan_start_time", line, 0);
-        }
-        fclose(fp);
-    }
+
 #if defined (INTEL_PUMA7)
     //Intel Proposed RDKB Generic Bug Fix from XB6 SDK
     pid = pid_of("sh", "network_response.sh");
     if (pid > 0)
         kill(pid, SIGKILL);	
 #endif
-	
+
     v_secure_system("sh /etc/network_response.sh &");
 
     ret = checkFileExists(WAN_STARTED);
@@ -1064,10 +1026,12 @@ static int wan_start(struct serv_wan *sw)
         t2_event_d("RF_ERROR_wan_restart", 1);
         v_secure_system("/rdklogger/uploadRDKBLogs.sh '' HTTP '' false ");
     }
-    get_dateanduptime(buffer,&uptime);
-	print_uptime("Waninit_complete", NULL, NULL);
-	OnboardLog("Wan_init_complete:%d\n",uptime);
-        t2_event_d("btime_waninit_split", uptime);	
+
+    sysinfo(&si);
+    snprintf(uptime, sizeof(uptime), "%ld", si.uptime);
+    OnboardLog("Wan_init_complete:%s\n",uptime);
+    t2_event_d("btime_waninit_split", (int) si.uptime);
+
     /* RDKB-24991 to handle snmpv3 based on wan-status event */
     v_secure_system("sh /lib/rdk/postwanstatusevent.sh &");
 #if (defined _COSA_INTEL_XB3_ARM_)
@@ -1608,6 +1572,7 @@ static int wan_addr_set(struct serv_wan *sw)
 
 static int wan_addr_unset(struct serv_wan *sw)
 {
+    struct sysinfo si;
 #ifdef WAN_FAILOVER_SUPPORTED
     char bkup_wan_status[16] = {0};
     unsigned int uiNeedstoAvoidIPConfig = 0;
@@ -1681,10 +1646,9 @@ static int wan_addr_unset(struct serv_wan *sw)
     printf("%s Triggering RDKB_FIREWALL_RESTART\n",__FUNCTION__);
     t2_event_d("SYS_SH_RDKB_FIREWALL_RESTART", 1);
     sysevent_set(sw->sefd, sw->setok, "firewall-restart", NULL, 0);
-    int uptime = 0;
-    char buffer[64] = {0};
-    get_dateanduptime(buffer,&uptime);
-    OnboardLog("RDKB_FIREWALL_RESTART:%d\n",uptime);
+
+    sysinfo(&si);
+    OnboardLog("RDKB_FIREWALL_RESTART:%ld", si.uptime);
 
     v_secure_system("killall -q dns_sync.sh");
     sysevent_set(sw->sefd, sw->setok, "wan-status", "stopped", 0);
@@ -1789,7 +1753,8 @@ static int wan_dhcp_renew(struct serv_wan *sw)
 {
     FILE *fp;
     char pid[10];
-    char line[64], *cp;
+    char uptime[24];
+    struct sysinfo si;
 
     Getdhcpcpidfile(DHCPC_PID_FILE,sizeof(DHCPC_PID_FILE));
     if ((fp = fopen(DHCPC_PID_FILE, "rb")) == NULL)
@@ -1801,14 +1766,9 @@ static int wan_dhcp_renew(struct serv_wan *sw)
     fclose(fp);
     sysevent_set(sw->sefd, sw->setok, "current_wan_state", "up", 0);
 
-    if ((fp = fopen("/proc/uptime", "rb")) == NULL)
-        return -1;
-    if (fgets(line, sizeof(line), fp) != NULL) {
-        if ((cp = strchr(line, '.')) != NULL)
-            *cp = '\0';
-        sysevent_set(sw->sefd, sw->setok, "wan_start_time", line, 0);
-    }
-    fclose(fp);
+    sysinfo(&si);
+    snprintf(uptime, sizeof(uptime), "%ld", si.uptime);
+    sysevent_set(sw->sefd, sw->setok, "wan_start_time", uptime, 0);
 
     return 0;
 }
