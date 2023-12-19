@@ -201,7 +201,7 @@ do_start() {
    getConfigFile $DROPBEAR_PARAMS_2
 
    if ([ "$BOX_TYPE" = "XB6" -a "$MANUFACTURE" = "Arris" ] || [ "$MODEL_NUM" = "INTEL_PUMA" ]) ;then
-   	dropbear -E -s -b /etc/sshbanner.txt -a -r $DROPBEAR_PARAMS_1 -r $DROPBEAR_PARAMS_2 $LISTEN_PARAMS -P $PID_FILE 2>$CONSOLEFILE
+   	dropbear -E -s -b /etc/sshbanner.txt -a -r $DROPBEAR_PARAMS_1 -r $DROPBEAR_PARAMS_2 $LISTEN_PARAMS -P $PID_FILE 2>>$CONSOLEFILE
     if [ -z "$LISTEN_PARAMS" ] ; then
         echo_t "[utopia]: dropbear was not started for erouter0 interface with valid params."
     fi
@@ -220,9 +220,9 @@ do_start() {
    else
        if  [ "$MANUFACTURE" = "Technicolor" ]; then
 	  echo dropbear -E -s -K 60 -b /etc/sshbanner.txt ${commandString} -r ${DROPBEAR_PARAMS_1} -r ${DROPBEAR_PARAMS_2} -a -P ${PID_FILE}
-          dropbear -E -s -b /etc/sshbanner.txt $commandString -r $DROPBEAR_PARAMS_1 -r $DROPBEAR_PARAMS_2 -a -P $PID_FILE -K 60 2>$CONSOLEFILE
+          dropbear -E -s -b /etc/sshbanner.txt $commandString -r $DROPBEAR_PARAMS_1 -r $DROPBEAR_PARAMS_2 -a -P $PID_FILE -K 60 2>>$CONSOLEFILE
        else
-   	  dropbear -E -s -b /etc/sshbanner.txt -a -r $DROPBEAR_PARAMS_1 -r $DROPBEAR_PARAMS_2 -p [$CM_IP]:22 -P $PID_FILE 2>$CONSOLEFILE
+   	  dropbear -E -s -b /etc/sshbanner.txt -a -r $DROPBEAR_PARAMS_1 -r $DROPBEAR_PARAMS_2 -p [$CM_IP]:22 -P $PID_FILE 2>>$CONSOLEFILE
        fi
    fi
 
