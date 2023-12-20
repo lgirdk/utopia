@@ -635,6 +635,7 @@ void merger_rule(FILE* fd, int *num){
         free(line);
         line = NULL;
     }
+    if (line) free(line);
     fseek(fd, 0L, SEEK_SET);
 }
 
