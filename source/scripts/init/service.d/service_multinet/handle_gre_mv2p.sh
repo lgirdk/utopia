@@ -522,15 +522,13 @@ create_bridges_interfaces()
     BRIDGEEXITS=`ls /sys/devices/virtual/net/${BRIDGENAME}`
 
     #get wifi interface name
-    WIFI24G=`dmcli eRT retv Device.WiFi.SSID.5.Name`
-    WIFI5G=`dmcli eRT retv Device.WiFi.SSID.6.Name`
+
+    MEMBERS_WIFI=`psmcli get dmsb.l2net.$BRIDGEINST.Members.WiFi`
 
     #Create Bridge
     brctl addbr $BRIDGENAME
     ifconfig $BRIDGENAME up
-    brctl addif $BRIDGENAME $WIFI24G
-    brctl addif $BRIDGENAME $WIFI5G
-
+    brctl addif $BRIDGENAME $MEMBERS_WIFI
     brctl show > /dev/console
 
     #create VLAN
@@ -545,7 +543,7 @@ create_bridges_interfaces()
     fi
 
     nvram set lan2_ifname=$BRIDGENAME
-    nvram set lan2_ifnames="$WIFI24G $WIFI5G"
+    nvram set lan2_ifnames="$MEMBERS_WIFI"
     nvram commit
     hotspot_init_bootup="`sysevent get hotspot_bootup`"
     if [ x = x$hotspot_init_bootup ] ; then
