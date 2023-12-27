@@ -36,7 +36,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "safec_lib_common.h"
-#if defined(_COSA_INTEL_XB3_ARM_) || defined(INTEL_PUMA7)
+#if defined(INTEL_PUMA7)
 #include "ccsp_custom.h"
 #include "ccsp_psm_helper.h"
 #include <ccsp_base_api.h>
@@ -45,10 +45,11 @@
 #if defined(MESH_ETH_BHAUL)
 #include "syscfg/syscfg.h"
 #endif
-#endif /* _COSA_INTEL_XB3_ARM_ */
+#endif
 #if defined(ENABLE_ETH_WAN) || defined(AUTOWAN_ENABLE)
 #include "ccsp_hal_ethsw.h"
 #endif
+
 #ifdef MULTILAN_FEATURE
 char* typeStrings[] = {
     "SW", "Gre", "Link", "Eth", "WiFi", "Moca"
@@ -64,7 +65,7 @@ char* miInterfaceStrings[] = {"sw_5","nmoca0"};
 #endif
 #endif
 
-#if defined(_COSA_INTEL_XB3_ARM_) || defined(INTEL_PUMA7)
+#if defined(INTEL_PUMA7)
 
 static const char* const multinet_component_id = "ccsp.multinet";
 static void* bus_handle = NULL;
@@ -324,7 +325,7 @@ int nv_toggle_ethbhaul_ports(BOOL onOff)
 int nv_get_members(PL2Net net, PMember memberList, int numMembers) 
 {
 
-#if !defined(_COSA_INTEL_XB3_ARM_) && !defined(INTEL_PUMA7)
+#if !defined(INTEL_PUMA7)
 
     int i, j;
     char cmdBuff[1024];
@@ -586,7 +587,7 @@ int nv_get_bridge(int l2netInst, PL2Net net)
 {
     char cmdBuff[128];
 
-#if !defined(_COSA_INTEL_XB3_ARM_) && !defined(INTEL_PUMA7)
+#if !defined(INTEL_PUMA7)
 
     char tmpBuf[8];
     FILE* psmcliOut;
@@ -682,7 +683,8 @@ int nv_get_bridge(int l2netInst, PL2Net net)
 	}  
 
 	net->inst = l2netInst;
-#endif /* !_COSA_INTEL_XB3_ARM_ */
+#endif
+
     return 0;
 }
 
@@ -691,7 +693,7 @@ int nv_get_primary_l2_inst(void)
     int primary_l2_inst = 0;
 
 /* Use to get psm value via dbus instead of psmcli util */
-#if !defined(_COSA_INTEL_XB3_ARM_) && !defined(INTEL_PUMA7)
+#if !defined(INTEL_PUMA7)
     char cmdBuff[512] = {0};
     char valBuff[80] = {0};
     FILE* psmcliOut = NULL;
@@ -727,7 +729,7 @@ int nv_get_primary_l2_inst(void)
          Ansc_FreeMemory_Callback(pStr);
          pStr = NULL;
     } 
-#endif /* !_COSA_INTEL_XB3_ARM_ */
+#endif
 
     return primary_l2_inst;
 }
