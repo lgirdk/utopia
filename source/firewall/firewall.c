@@ -7464,21 +7464,12 @@ static int do_remote_access_control(FILE *nat_fp, FILE *filter_fp, int family)
 #endif
 	}
     //remote management is only available on eCM interface if it is enabled
-#ifdef _COSA_INTEL_XB3_ARM_ 
-   if(family == AF_INET)
-        fprintf(filter_fp, "-A wan2self_mgmt -p tcp -m multiport --dports 21,23,%s,%s -j xlog_drop_wan2self\n", httpport, httpsport);
-    else
-        fprintf(filter_fp, "-A INPUT ! -i %s -p tcp -m multiport --dports 21,23,%s,%s -j DROP\n", isBridgeMode == 0 ? lan_ifname : cmdiag_ifname, httpport, httpsport);
-         FIREWALL_DEBUG("Exiting do_remote_access_control\n");    
-    return 0;
-#else
     if(family == AF_INET)
         fprintf(filter_fp, "-A wan2self_mgmt -p tcp -m multiport --dports 23,%s,%s -j xlog_drop_wan2self\n", httpport, httpsport);
     else
         fprintf(filter_fp, "-A INPUT ! -i %s -p tcp -m multiport --dports 23,%s,%s -j DROP\n", isBridgeMode == 0 ? lan_ifname : cmdiag_ifname, httpport, httpsport);
          FIREWALL_DEBUG("Exiting do_remote_access_control\n");
     return 0;
-#endif
 }
 
 /*
@@ -11960,19 +11951,7 @@ static int prepare_multinet_filter_forward (FILE *filter_fp)
     
     //zqiu: Mesh >>
 #if defined(ENABLE_FEATURE_MESHWIFI)
-#if defined(_COSA_INTEL_XB3_ARM_) // XB3 ARM
-    fprintf(filter_fp, "-A INPUT -i l2sd0.112 -d 169.254.0.0/24 -j ACCEPT\n");
-    fprintf(filter_fp, "-A INPUT -i l2sd0.112 -m pkttype ! --pkt-type unicast -j ACCEPT\n");
-    fprintf(filter_fp, "-A INPUT -i l2sd0.113 -d 169.254.1.0/24 -j ACCEPT\n");
-    fprintf(filter_fp, "-A INPUT -i l2sd0.113 -m pkttype ! --pkt-type unicast -j ACCEPT\n");
-    fprintf(filter_fp, "-A INPUT -i l2sd0.4090 -d 192.168.251.0/24 -j ACCEPT\n");
-    fprintf(filter_fp, "-A INPUT -i l2sd0.4090 -m pkttype ! --pkt-type unicast -j ACCEPT\n");
-    //RDKB-15951
-    fprintf(filter_fp, "-A INPUT -i br403 -d 192.168.245.0/24 -j ACCEPT\n");
-    fprintf(filter_fp, "-A INPUT -i br403 -m pkttype ! --pkt-type unicast -j ACCEPT\n");
-    fprintf(filter_fp, "-A INPUT -i brebhaul -d 169.254.85.0/24 -j ACCEPT\n");
-    fprintf(filter_fp, "-A INPUT -i brebhaul -m pkttype ! --pkt-type unicast -j ACCEPT\n");
-#elif defined(_PUMA6_ARM_)
+#if defined(_PUMA6_ARM_)
     fprintf(filter_fp, "-A INPUT -i l2sd0.112 -d 169.254.0.0/24 -j ACCEPT\n");
     fprintf(filter_fp, "-A INPUT -i l2sd0.112 -m pkttype ! --pkt-type unicast -j ACCEPT\n");
     fprintf(filter_fp, "-A INPUT -i l2sd0.113 -d 169.254.1.0/24 -j ACCEPT\n");
@@ -12937,17 +12916,6 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(mangle_fp, "-A POSTROUTING -j postrouting_qos\n");
    fprintf(mangle_fp, "-A POSTROUTING -j postrouting_lan2lan\n");
 
-#ifdef _COSA_INTEL_XB3_ARM_
-   fprintf(mangle_fp, "-A PREROUTING -i %s -m conntrack --ctstate INVALID -j DROP\n",current_wan_ifname);
-   fprintf(mangle_fp, "-A PREROUTING -i %s -m conntrack --ctstate INVALID -j DROP\n",ecm_wan_ifname);
-   fprintf(mangle_fp, "-A PREROUTING -i %s -m conntrack --ctstate INVALID -j DROP\n",emta_wan_ifname);
-   fprintf(mangle_fp, "-A PREROUTING -i %s -p tcp -m tcp ! --tcp-flags FIN,SYN,RST,ACK SYN -m conntrack --ctstate NEW -j DROP\n",current_wan_ifname);
-   fprintf(mangle_fp, "-A PREROUTING -i %s -p tcp -m tcp ! --tcp-flags FIN,SYN,RST,ACK SYN -m conntrack --ctstate NEW -j DROP\n",ecm_wan_ifname);
-   fprintf(mangle_fp, "-A PREROUTING -i %s -p tcp -m tcp ! --tcp-flags FIN,SYN,RST,ACK SYN -m conntrack --ctstate NEW -j DROP\n",emta_wan_ifname);
-   fprintf(mangle_fp, "-A PREROUTING -i %s -p udp -m conntrack --ctstate NEW -m limit --limit 200/sec --limit-burst 100 -j ACCEPT\n",current_wan_ifname);
-   fprintf(mangle_fp, "-A PREROUTING -i %s -p udp -m conntrack --ctstate NEW -m limit --limit 200/sec --limit-burst 100 -j ACCEPT\n",ecm_wan_ifname);
-   fprintf(mangle_fp, "-A PREROUTING -i %s -p udp -m conntrack --ctstate NEW -m limit --limit 200/sec --limit-burst 100 -j ACCEPT\n",emta_wan_ifname);
-#endif
 #ifdef _LG_OFW_
    fprintf(mangle_fp, "-A OUTPUT -p udp --dport 69  -m conntrack --ctstate NEW -j CONNMARK --set-mark 0x1000/0x1000\n");
 #endif
@@ -12976,9 +12944,6 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
         if(strValue != NULL && strncmp("1", strValue, 1) == 0)
         {
            FIREWALL_DEBUG("Open the port 3799 in WAN interface for RADIUS GreyList Support\n");
-#if defined(_COSA_INTEL_XB3_ARM_)
-           fprintf(nat_fp, "-A PREROUTING -i %s -p udp --dport 3799 -j DNAT --to 192.168.251.254\n",current_wan_ifname);
-#endif
 #if (defined(_XB6_PRODUCT_REQ_) && !defined(_XB7_PRODUCT_REQ_))
 	   fprintf(nat_fp, "-A PREROUTING -i %s -p udp --dport 3799 -j DNAT --to 192.168.147.100\n",current_wan_ifname);
 #endif
@@ -13290,12 +13255,6 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(filter_fp, ":%s - [0:0]\n", "self2lan");
    fprintf(filter_fp, ":%s - [0:0]\n", "self2lan_plugins");
    fprintf(filter_fp, ":%s - [0:0]\n", "moca_isolation");
-   //>>DOS
-#ifdef _COSA_INTEL_XB3_ARM_
-   fprintf(filter_fp, ":%s - [0:0]\n", "wandosattack");
-   fprintf(filter_fp, ":%s - [0:0]\n", "mtadosattack");
-#endif
-   //<<DOS
    fprintf(filter_fp, ":%s - [0:0]\n", "wan2self");
    fprintf(filter_fp, ":%s - [0:0]\n", "wan2self_mgmt");
    fprintf(filter_fp, ":%s - [0:0]\n", "wan2self_ports");
@@ -13364,10 +13323,6 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
        fprintf(filter_fp, "-I http2self -i %s -d %s -j ACCEPT\n", lan_ifname, lan_ipaddr);
 #endif
    }
-#ifdef _COSA_INTEL_XB3_ARM_
-   fprintf(filter_fp, "-A INPUT -p icmp -m state --state ESTABLISHED -m limit --limit 5/sec --limit-burst 10 -j ACCEPT\n");
-   fprintf(filter_fp, "-A INPUT -p icmp -m state --state ESTABLISHED -j DROP\n");
-#endif
 
 
    if (isRipEnabled && isBrlanStaticEnabled)
@@ -13658,22 +13613,6 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    prepare_multinet_filter_input(filter_fp);
    prepare_hotspot_gre_ipv4_rule(filter_fp);
    prepare_ipc_filter(filter_fp);
-
-   //>>DOS
-#ifdef _COSA_INTEL_XB3_ARM_
-   //fprintf(filter_fp, "-I INPUT -i erouter0 -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j wandosattack\n");
-   //fprintf(filter_fp, "-I INPUT -i erouter0 -p udp -m udp -j wandosattack\n");
-   fprintf(filter_fp, "-I INPUT -i wan0 -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j wandosattack\n");
-   fprintf(filter_fp, "-I INPUT -i wan0 -p udp -m udp -j wandosattack\n");
-   fprintf(filter_fp, "-I INPUT -i mta0 -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j mtadosattack\n");
-   fprintf(filter_fp, "-I INPUT -i mta0 -p udp -m udp -j mtadosattack\n");
-   fprintf(filter_fp, "-A wandosattack -p tcp -m tcp --dport 22 -m limit --limit 25/sec --limit-burst 80 -j RETURN\n");
-   fprintf(filter_fp, "-A wandosattack -m limit --limit 25/sec --limit-burst 80 -j ACCEPT\n");
-   fprintf(filter_fp, "-A wandosattack -j DROP\n");
-   fprintf(filter_fp, "-A mtadosattack -m limit --limit 200/sec --limit-burst 100 -j ACCEPT\n");
-   fprintf(filter_fp, "-A mtadosattack -j DROP\n");
-#endif
-   //<<DOS
 
    //fprintf(filter_fp, "-A OUTPUT -m state --state INVALID -j DROP\n");
 
@@ -15033,17 +14972,6 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
 #ifdef DSLITE_FEATURE_SUPPORT  
    add_dslite_mss_clamping(mangle_fp);
 #endif
-#ifdef _COSA_INTEL_XB3_ARM_
-   fprintf(mangle_fp, "-A PREROUTING -i %s -m conntrack --ctstate INVALID -j DROP\n",current_wan_ifname);
-   fprintf(mangle_fp, "-A PREROUTING -i %s -m conntrack --ctstate INVALID -j DROP\n",ecm_wan_ifname);
-   fprintf(mangle_fp, "-A PREROUTING -i %s -m conntrack --ctstate INVALID -j DROP\n",emta_wan_ifname);
-   fprintf(mangle_fp, "-A PREROUTING -i %s -p tcp -m tcp ! --tcp-flags FIN,SYN,RST,ACK SYN -m conntrack --ctstate NEW -j DROP\n",current_wan_ifname);
-   fprintf(mangle_fp, "-A PREROUTING -i %s -p tcp -m tcp ! --tcp-flags FIN,SYN,RST,ACK SYN -m conntrack --ctstate NEW -j DROP\n",ecm_wan_ifname);
-   fprintf(mangle_fp, "-A PREROUTING -i %s -p tcp -m tcp ! --tcp-flags FIN,SYN,RST,ACK SYN -m conntrack --ctstate NEW -j DROP\n",emta_wan_ifname);
-   fprintf(mangle_fp, "-A PREROUTING -i %s -p udp -m conntrack --ctstate NEW -m limit --limit 200/sec --limit-burst 100 -j ACCEPT\n",current_wan_ifname);
-   fprintf(mangle_fp, "-A PREROUTING -i %s -p udp -m conntrack --ctstate NEW -m limit --limit 200/sec --limit-burst 100 -j ACCEPT\n",ecm_wan_ifname);
-   fprintf(mangle_fp, "-A PREROUTING -i %s -p udp -m conntrack --ctstate NEW -m limit --limit 200/sec --limit-burst 100 -j ACCEPT\n",emta_wan_ifname);
-#endif
 #ifdef _LG_OFW_
    fprintf(mangle_fp, "-A OUTPUT -p udp --dport 69  -m conntrack --ctstate NEW -j CONNMARK --set-mark 0x1000/0x1000\n");
 #endif
@@ -15127,12 +15055,6 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    fprintf(filter_fp, ":%s - [0:0]\n", "lan2self_dos_icmp");
 #endif
    //<<UI Access
-   //>>DOS
-#ifdef _COSA_INTEL_XB3_ARM_
-   fprintf(filter_fp, ":%s - [0:0]\n", "wandosattack");
-   fprintf(filter_fp, ":%s - [0:0]\n", "mtadosattack");
-#endif
-   //<<DOS
  
    if (isBridgeMode)
    {
@@ -15211,23 +15133,6 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
        do_remote_access_control(NULL, filter_fp, AF_INET);
        WAN_FAILOVER_SUPPORT_CHECk_END
    }
-
-#ifdef _COSA_INTEL_XB3_ARM_
-   fprintf(filter_fp, "-A INPUT -p icmp -m state --state NEW,ESTABLISHED -m limit --limit 5/sec --limit-burst 10 -j ACCEPT\n");
-   fprintf(filter_fp, "-A INPUT -p icmp -m state --state NEW,ESTABLISHED -j DROP\n");
-#endif
-#ifdef _COSA_INTEL_XB3_ARM_
-   fprintf(filter_fp, "-I INPUT -i wan0 -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j wandosattack\n");
-   fprintf(filter_fp, "-I INPUT -i wan0 -p udp -m udp -j wandosattack\n");
-   fprintf(filter_fp, "-I INPUT -i mta0 -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j mtadosattack\n");
-   fprintf(filter_fp, "-I INPUT -i mta0 -p udp -m udp -j mtadosattack\n");
-   fprintf(filter_fp, "-A wandosattack -p tcp -m tcp --dport 22 -m limit --limit 25/sec --limit-burst 80 -j RETURN\n");
-   fprintf(filter_fp, "-A wandosattack -m limit --limit 25/sec --limit-burst 80 -j ACCEPT\n");
-   fprintf(filter_fp, "-A wandosattack -j DROP\n");
-   fprintf(filter_fp, "-A mtadosattack -m limit --limit 200/sec --limit-burst 100 -j ACCEPT\n");
-   fprintf(filter_fp, "-A mtadosattack -j DROP\n");
-#endif
-   //<<DOS
 
    if(!isBridgeMode) {//brlan0 exists
        fprintf(filter_fp, "-A INPUT -i %s -j lan2self_mgmt\n", lan_ifname);
@@ -15692,11 +15597,6 @@ static void do_ipv6_sn_filter(FILE* fp) {
 	}
 	//RDKB-10248: IPv6 Entries issue in ip neigh show 2. Bring back TOS mirroring 
 
-#ifdef _COSA_INTEL_XB3_ARM_
-        fprintf(fp, "-A PREROUTING -i %s -p tcp -m tcp ! --tcp-flags FIN,SYN,RST,ACK SYN -m conntrack --ctstate NEW -j DROP\n",current_wan_ifname);
-        fprintf(fp, "-A PREROUTING -i %s -p tcp -m tcp ! --tcp-flags FIN,SYN,RST,ACK SYN -m conntrack --ctstate NEW -j DROP\n",ecm_wan_ifname);
-        fprintf(fp, "-A PREROUTING -i %s -p tcp -m tcp ! --tcp-flags FIN,SYN,RST,ACK SYN -m conntrack --ctstate NEW -j DROP\n",emta_wan_ifname);
-#endif
      FIREWALL_DEBUG("Exiting do_ipv6_sn_filter \n"); 
 }
 
@@ -16502,12 +16402,6 @@ static void do_ipv6_filter_table(FILE *fp){
    fprintf(fp, "-I INPUT -j %s\n", IPOE_HEALTHCHECK);
 #endif
 #endif //_HUB4_PRODUCT_REQ_
-   //>>DOS
-#ifdef _COSA_INTEL_XB3_ARM_
-   fprintf(fp, ":%s - [0:0]\n", "wandosattack");
-   fprintf(fp, ":%s - [0:0]\n", "mtadosattack");
-#endif
-   //<<DOS
 
 #if defined (INTEL_PUMA7)
    fprintf(fp, "-I FORWARD -m conntrack --ctdir original -m connbytes --connbytes 0:15 --connbytes-dir original --connbytes-mode packets -j GWMETA --dis-pp\n");
@@ -16582,18 +16476,6 @@ static void do_ipv6_filter_table(FILE *fp){
 
        goto end_of_ipv6_firewall;
    }
-
-#ifdef _COSA_INTEL_XB3_ARM_
-   fprintf(fp, "-I INPUT -i wan0 -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j wandosattack\n");
-   fprintf(fp, "-I INPUT -i wan0 -p udp -m udp -j wandosattack\n");
-   fprintf(fp, "-I INPUT -i mta0 -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j mtadosattack\n");
-   fprintf(fp, "-I INPUT -i mta0 -p udp -m udp -j mtadosattack\n");
-   fprintf(fp, "-A wandosattack -p tcp -m tcp --dport 22 -m limit --limit 25/sec --limit-burst 80 -j RETURN\n");
-   fprintf(fp, "-A wandosattack -m limit --limit 25/sec --limit-burst 80 -j ACCEPT\n");
-   fprintf(fp, "-A wandosattack -j DROP\n");
-   fprintf(fp, "-A mtadosattack -m limit --limit 200/sec --limit-burst 100 -j ACCEPT\n");
-   fprintf(fp, "-A mtadosattack -j DROP\n");
-#endif
 
    do_block_ports(fp);	
    fprintf(fp, ":%s - [0:0]\n", "LOG_SSH_DROP");
