@@ -1554,14 +1554,6 @@ void load_static_l3 (int l3_inst)
 				t2_event_d("SYS_SH_RDKB_FIREWALL_RESTART", 1);
 				sysevent_set(g_iSyseventfd, g_tSysevent_token, "firewall-restart", "", 0);
 		       }
-#if (defined _COSA_INTEL_XB3_ARM_)
-		       if(XHS_INST == l3_inst)
-		       {
-			   fprintf(stderr, "service_ipv4 : ipv4_5-status,calling dhcp_server-restart lan_not_restart event\n");    
-		           sysevent_set(g_iSyseventfd, g_tSysevent_token, "lan_status-dhcp", "started", 0);
-			   sysevent_set(g_iSyseventfd, g_tSysevent_token, "dhcp_server-restart", "lan_not_restart", 0);
-		       }	
-#endif
 
 #if defined CONFIG_SYSTEM_MOCA
 #if !defined (_HUB4_PRODUCT_REQ_) && !defined(_SR300_PRODUCT_REQ_)
