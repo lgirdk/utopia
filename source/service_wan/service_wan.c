@@ -576,7 +576,7 @@ static int dhcp_start(struct serv_wan *sw)
             printf("%s: WAN service not able to get IPv4 configuration"
                    " in 5 lease try\n", __func__);
         }
-#elif (defined _COSA_INTEL_XB3_ARM_) || (defined INTEL_PUMA7)
+#elif defined(INTEL_PUMA7)
         {
                 char options[VENDOR_OPTIONS_LENGTH];
 
