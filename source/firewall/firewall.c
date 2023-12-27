@@ -1021,9 +1021,7 @@ static inline int SET_IPT_PRI_MODULD(char *s){
 
 #define PSM_NAME_SPEEDTEST_SERVER_CAPABILITY "eRT.com.cisco.spvtg.ccsp.tr181pa.Device.IP.Diagnostics.X_RDKCENTRAL-COM_SpeedTest.Server.Capability"
 
-#if defined(FEATURE_SUPPORT_RADIUSGREYLIST) && (defined(_COSA_INTEL_XB3_ARM_) || defined(_XB6_PRODUCT_REQ_) || defined (_XB8_PRODUCT_REQ_) || defined (_CBR2_PRODUCT_REQ_))
 #define PSM_NAME_RADIUS_GREY_LIST_ENABLED "Device.DeviceInfo.X_RDKCENTRAL-COM_RFC.Feature.RadiusGreyList.Enable"
-#endif
 
 #define PSM_CWMP_ENABLE_VALUE "eRT.com.cisco.spvtg.ccsp.tr069pa.Device.ManagementServer.EnableCWMP.Value"
 
@@ -7656,10 +7654,7 @@ static int do_wan2self_ports(FILE *mangle_fp, FILE *nat_fp, FILE *filter_fp)
 
       // we still need to protect against other icmp besides ping
       fprintf(filter_fp, "-A wan2self_ports -p icmp -m limit --limit 1/second -j xlog_accept_wan2self\n");
-//#ifdef _COSA_INTEL_XB3_ARM_
-//      fprintf(filter_fp, "-A wan2self_ports ! -i erouter0 -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -m limit --limit 10/sec --limit-burst 20 -j ACCEPT\n");
-//      fprintf(filter_fp, "-A wan2self_ports ! -i erouter0 -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j DROP\n");
-//#endif
+
       //rule for IGMP(protocol num is 2)
       fprintf(filter_fp, "-A wan2self_ports -p 2 -j %s\n", "xlog_accept_wan2self");
    }
@@ -13036,7 +13031,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(nat_fp, ":%s ACCEPT [0:0]\n", "POSTROUTING");
    fprintf(nat_fp, ":%s ACCEPT [0:0]\n", "OUTPUT");
 
-#if defined(FEATURE_SUPPORT_RADIUSGREYLIST) && (defined(_COSA_INTEL_XB3_ARM_) || defined(_XB6_PRODUCT_REQ_) && !defined(_XB7_PRODUCT_REQ_))
+#if defined(FEATURE_SUPPORT_RADIUSGREYLIST) && defined(_XB6_PRODUCT_REQ_) && !defined(_XB7_PRODUCT_REQ_)
     /*
      *RDKB-33651 :
      *    If RadiusGrayList is enabled/true, Then open port #3799 in WAN interface to pre route RADIUS disconnect
@@ -13050,9 +13045,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
         if(strValue != NULL && strncmp("1", strValue, 1) == 0)
         {
            FIREWALL_DEBUG("Open the port 3799 in WAN interface for RADIUS GreyList Support\n");
-#if (defined(_XB6_PRODUCT_REQ_) && !defined(_XB7_PRODUCT_REQ_))
 	   fprintf(nat_fp, "-A PREROUTING -i %s -p udp --dport 3799 -j DNAT --to 192.168.147.100\n",current_wan_ifname);
-#endif
         }
         else
            FIREWALL_DEBUG("PSM_NAME_RADIUS_GREY_LIST_ENABLED val: %s\n" COMMA strValue);
@@ -13268,9 +13261,6 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
 #if defined(INTEL_PUMA7) || defined (_COSA_BCM_ARM_) || defined(_PLATFORM_TURRIS_) || defined(_COSA_QCA_ARM_)
    fprintf(filter_fp, "-A INPUT -i host0 -s 192.168.147.0/255.255.255.0 -j ACCEPT\n");
    fprintf(filter_fp, "-A OUTPUT -o host0 -d 192.168.147.0/255.255.255.0 -j ACCEPT\n");
-#endif
-#ifdef _COSA_INTEL_XB3_ARM_
-   fprintf(filter_fp, "-A OUTPUT -p icmp -m icmp --icmp-type 3 -j DROP\n");
 #endif
 #if defined(_PUMA6_ARM_)
    fprintf(filter_fp, "-A OUTPUT ! -s %s -p icmp -m icmp --icmp-type 3 -j DROP\n", lan_ipaddr);
@@ -13788,7 +13778,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(filter_fp, "-I FORWARD 3 -i %s -o br403 -j ACCEPT\n", current_wan_ifname);
 #endif
 
-#if defined (INTEL_PUMA7) || (_COSA_INTEL_XB3_ARM_)
+#if defined (INTEL_PUMA7)
    //ARRISXB6-8429
    fprintf(filter_fp, "-I FORWARD -m conntrack --ctdir original -m connbytes --connbytes 0:15 --connbytes-dir original --connbytes-mode packets -j GWMETA --dis-pp\n");
    fprintf(filter_fp, "-I FORWARD -m conntrack --ctdir reply -m connbytes --connbytes 0:15 --connbytes-dir reply --connbytes-mode packets -j GWMETA --dis-pp\n");
@@ -15335,9 +15325,6 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    }
 #endif
 
-#ifdef _COSA_INTEL_XB3_ARM_
-   fprintf(filter_fp, "-A OUTPUT -p icmp -m icmp --icmp-type 3 -j DROP\n");
-#endif
 #if defined(_PUMA6_ARM_)
    if (!isBridgeMode)
        fprintf(filter_fp, "-A OUTPUT ! -s %s -p icmp -m icmp --icmp-type 3 -j DROP\n", lan_ipaddr);
