@@ -61,8 +61,6 @@ char* typeStrings[] = {
 #if defined(MOCA_HOME_ISOLATION) && defined(MULTILAN_FEATURE)
 #if defined(INTEL_PUMA7)
 char* miInterfaceStrings[] = {"sw_5","nmoca0"};
-#elif defined(_COSA_INTEL_XB3_ARM_)
-char* miInterfaceStrings[] = {"sw_5"};
 #endif
 #endif
 
@@ -77,8 +75,6 @@ static void* bus_handle = NULL;
 #define CCSP_BRIDGE_PORT_ETHBHAUL_ALIAS "MeshEthBH"
 #if defined(INTEL_PUMA7)
 #define CCSP_BRIDGE_PORT_XHS_INDEX      2
-#elif defined(_COSA_INTEL_XB3_ARM_)
-#define CCSP_BRIDGE_PORT_XHS_INDEX      4
 #endif
 #if defined(ENABLE_ETH_WAN) || defined(AUTOWAN_ENABLE)
 #define CCSP_BRIDGE_PORT_ETHWAN_INDEX   ETHWAN_DEF_INTF_NUM + 1
