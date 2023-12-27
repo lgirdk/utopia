@@ -87,9 +87,6 @@
 #if defined (INTEL_PUMA7)
 /* Command for clearing CPE table on Puma 7 */
 #define CLEAR_CPE_TABLE_COMMAND "ncpu_exec -e service_bridge.sh clear_cpe_table"
-#elif defined (_COSA_INTEL_XB3_ARM_)
-/* Command for clearing CPE table on Puma 6 */
-#define CLEAR_CPE_TABLE_COMMAND "echo 'LearnFrom=CPE_DYNAMIC' > /proc/net/dbrctl/delalt"
 #endif
 
 #if defined MULTILAN_FEATURE && defined(MESH_ETH_BHAUL)
