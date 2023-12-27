@@ -1495,35 +1495,7 @@ if(!strncmp(out,"true",strlen(out)))
 
                 memset(interface_name,0,sizeof(interface_name));
                 memset(name_servs, 0, sizeof(name_servs));
-                #ifdef _COSA_INTEL_XB3_ARM_
-                char LnFIfName[32] = {0} , LnFBrName[32] = {0} ;
-                syscfg_get( NULL, "iot_ifname", LnFIfName, sizeof(LnFIfName));
-                if( (LnFIfName[0] != '\0' ) && ( strlen(LnFIfName) != 0 ) )
-                {
-                        if (strcmp((const char*)token,LnFIfName) == 0 )
-                        {
-                                syscfg_get( NULL, "iot_brname", LnFBrName, sizeof(LnFBrName));
-                                if( (LnFBrName[0] != '\0' ) && ( strlen(LnFBrName) != 0 ) )
-                                {
-                                        strncpy(interface_name,LnFBrName,sizeof(interface_name)-1);
-                                }
-                                else
-                                {
-                                	strncpy(interface_name,token,sizeof(interface_name)-1);
-                                }
-                        }
-                        else
-                        {
-                        	strncpy(interface_name,token,sizeof(interface_name)-1);
-                        }
-                }
-                else
-                {
                         strncpy(interface_name,token,sizeof(interface_name)-1);
-                }
-                #else
-                        strncpy(interface_name,token,sizeof(interface_name)-1);
-                #endif 
         	fprintf(fp, "interface %s\n", interface_name);
         	fprintf(fp, "   no ipv6 nd suppress-ra\n");
 
