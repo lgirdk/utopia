@@ -1926,57 +1926,6 @@ int prepare_dhcp_conf (char *input, void *bus_handle)
 		fprintf(stderr, "DHCP_SERVER : [l2sd0.113] dhcp-option=l2sd0.113,6,%s\n", l_cWan_Dhcp_Dns);
 	}
 
-#elif defined (_COSA_INTEL_XB3_ARM_)
-   	fprintf(l_fLocal_Dhcp_ConfFile, "interface=l2sd0.112\n");
-	fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-range=169.254.0.5,169.254.0.253,255.255.255.0,infinite\n"); 
-
-	// Add l2sd0.112 custom dns server configuration
-	if( l_bDhcpNs_Enabled && l_bIsValidWanDHCPNs )
-	{
-		fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-option=l2sd0.112,6,%s\n", l_cWan_Dhcp_Dns);
-		fprintf(stderr, "DHCP_SERVER : [l2sd0.112] dhcp-option=l2sd0.112,6,%s\n", l_cWan_Dhcp_Dns);
-	}
-	
-   	fprintf(l_fLocal_Dhcp_ConfFile, "interface=l2sd0.113\n");
-	fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-range=169.254.1.5,169.254.1.253,255.255.255.0,infinite\n"); 
-
-	// Add l2sd0.113 custom dns server configuration
-	if( l_bDhcpNs_Enabled && l_bIsValidWanDHCPNs )
-	{
-		fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-option=l2sd0.113,6,%s\n", l_cWan_Dhcp_Dns);
-		fprintf(stderr, "DHCP_SERVER : [l2sd0.113] dhcp-option=l2sd0.113,6,%s\n", l_cWan_Dhcp_Dns);
-	}
-        
-        // RDKB-15951 Mesh Bhaul vlan address pool
-   	fprintf(l_fLocal_Dhcp_ConfFile, "interface=br403\n");
-	fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-range=192.168.245.2,192.168.245.253,255.255.255.0,infinite\n"); 
-
-	// Add l2sd0.1060 custom dns server configuration
-	if( l_bDhcpNs_Enabled && l_bIsValidWanDHCPNs )
-	{
-		fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-option=br403,6,%s\n", l_cWan_Dhcp_Dns);
-		fprintf(stderr, "DHCP_SERVER : [br403] dhcp-option=br403,6,%s\n", l_cWan_Dhcp_Dns);
-	}
-
-   	fprintf(l_fLocal_Dhcp_ConfFile, "interface=l2sd0.4090\n");
-	fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-range=192.168.251.2,192.168.251.253,255.255.255.0,infinite\n"); 
-
-	// Add l2sd0.4090 custom dns server configuration
-	if( l_bDhcpNs_Enabled && l_bIsValidWanDHCPNs )
-	{
-		fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-option=l2sd0.4090,6,%s\n", l_cWan_Dhcp_Dns);
-		fprintf(stderr, "DHCP_SERVER : [l2sd0.4090] dhcp-option=l2sd0.4090,6,%s\n", l_cWan_Dhcp_Dns);
-	}
- 
-        fprintf(l_fLocal_Dhcp_ConfFile, "interface=brebhaul\n");
-	fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-range=169.254.85.5,169.254.85.253,255.255.255.0,infinite\n");
-
-        if( l_bDhcpNs_Enabled && l_bIsValidWanDHCPNs )
-        {
-                fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-option=brebhaul,6,%s\n", l_cWan_Dhcp_Dns);
-                fprintf(stderr, "DHCP_SERVER : [brebhaul] dhcp-option=brebhaul,6,%s\n", l_cWan_Dhcp_Dns);
-        }
-	
 #elif defined (INTEL_PUMA7) || (defined (_COSA_BCM_ARM_) && !defined(_CBR_PRODUCT_REQ_)) // ARRIS XB6 ATOM, TCXB6 
         fprintf(l_fLocal_Dhcp_ConfFile, "interface=ath12\n");
         fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-range=169.254.0.5,169.254.0.253,255.255.255.0,infinite\n"); 

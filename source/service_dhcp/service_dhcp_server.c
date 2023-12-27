@@ -1364,9 +1364,6 @@ void resync_to_nonvol(char *RemPools)
 		}
 		if(strncmp(asyn,"",1) == 0)
 		{
-			#if (defined _COSA_INTEL_XB3_ARM_)
-			    fprintf(stderr,"\nSERVICE DHCP : skip ipv4async event for xhome in xb3");
-		    #else
 				memset(l_cSystemCmd,0,sizeof(l_cSystemCmd));
                                 snprintf(l_cSystemCmd, sizeof(l_cSystemCmd), "ipv4_%s-status", psm_tmp_buff);
 
@@ -1377,7 +1374,6 @@ void resync_to_nonvol(char *RemPools)
                                 memset(sg_buff,0,sizeof(sg_buff));
                                 snprintf(sg_buff,sizeof(sg_buff),"dhcp_server_%s-ipv4async",LOAD_POOLS[iter]);
                                 sysevent_set(g_iSyseventfd, g_tSysevent_token, sg_buff, l_cSystemCmd, 0);
-			#endif
 		}
 	}
 	memset(sg_buff,0,sizeof(sg_buff));
