@@ -169,6 +169,19 @@ wan_wait ()
            if [ "up" = "$CURRENT_WAN_IPV6_STATUS" ] ; then
                WAN_IPv6=`ifconfig "$NTPD_IPV6_INTERFACE" | grep inet6 | grep Global | awk '/inet6/{print $3}' | grep -v 'fdd7' | cut -d '/' -f1 | head -n1`
                WAN_IPv6_UP=1
+		# SHARMAN-2301
+                #This change is for UK MAP-T SR213. When  NTP servers are IPv4 only and there is no IPv4 WAN IP on the interface we will use $NTPD_IPV6_INTERFACE(currently brlan0) ipv4 ip to sort ntpd daemon socket problems and routing.
+		if [ "$BOX_TYPE" = "SR213" ]; then
+		    MAPT_STATS=$(sysevent get mapt_config_flag)
+		    echo_t "SERVICE_NTPD : MAPT_STATS=$MAPT_STATS"
+		    if [ x"$MAPT_STATS" = x"set" ]; then
+			IPV4_CONN_STATE=$(sysevent get ipv4_connection_state)
+			echo_t "SERVICE_NTPD : IPV4_CONN_STATE=$IPV4_CONN_STATE"
+                        if [ x"$IPV4_CONN_STATE" != x"up" ]; then
+			    WAN_IPv4=`ifconfig "$NTPD_IPV6_INTERFACE" | grep inet\ \addr | cut -d ':' -f2 |cut -d ' ' -f1`
+			fi
+		    fi
+		fi
            fi
        else
            WAN_IPv6=`ifconfig "$WAN_INTERFACE" | grep inet6 | grep Global | awk '/inet6/{print $3}' | cut -d '/' -f1 | head -n1`
@@ -367,18 +380,6 @@ service_start ()
    echo "restrict -6 ::1" >> $NTP_CONF_TMP
 
    if [ "$SYSCFG_new_ntp_enabled" = "true" ]; then
-       if [ "$BOX_TYPE" = "SR300" ] || [ "$BOX_TYPE" = "SR213" ]; then
-           # Add public NTP server only when MAPT active. Else use Sky NTP servers for SR213/SR300 UK.
-           MAPT_STATS=$(sysevent get mapt_config_flag)
-           if [ "$MAPT_STATUS" = "set" ]; then
-               IPV4_CONN_STATE=$(sysevent get ipv4_connection_state)
-               if [ "$IPV4_CONN_STATE" != "up" ]; then
-                   SYSCFG_ntp_server1="time.google.com"
-                   SYSCFG_ntp_server2="time-e-g.nist.gov"
-                   VALID_SEVER="true"
-               fi
-           fi
-        fi
        # Start NTP Config Creation with Multiple Server Setup
        echo_t "SERVICE_NTPD : Creating NTP config with New NTP Enabled" >> $NTPD_LOG_NAME
        if [ -n "$SYSCFG_ntp_server1" ] && [ "$SYSCFG_ntp_server1" != "no_ntp_address" ]; then
@@ -434,19 +435,6 @@ service_start ()
                fi
            fi
        fi
-
-        if [ "$BOX_TYPE" = "SR300" ] || [ "$BOX_TYPE" = "SR213" ]; then
-            # Add public NTP server only when MAPT active. Else use Sky NTP servers for SR213/SR300 UK.
-            MAPT_STATS=$(sysevent get mapt_config_flag)
-            if [ "$MAPT_STATUS" = "set" ]; then
-                IPV4_CONN_STATE=$(sysevent get ipv4_connection_state)
-                if [ "$IPV4_CONN_STATE" != "up" ]; then
-                    SYSCFG_ntp_server1="time.google.com"
-                    SYSCFG_ntp_server2="time-e-g.nist.gov"
-                    VALID_SEVER="true"
-                fi
-            fi
-        fi
 
        # Start NTP Config Creation with Legacy Single Server Setup
        echo_t "SERVICE_NTPD : Creating NTP config" >> $NTPD_LOG_NAME
@@ -510,6 +498,19 @@ service_start ()
    echo "interface ignore wildcard" >> $NTP_CONF_TMP
    echo "interface listen 127.0.0.1" >> $NTP_CONF_TMP
    echo "interface listen ::1" >> $NTP_CONF_TMP
+   #SHARMAN-2301
+   #This change is for UK MAP-T SR213. Since we will not have any of the global IP on WAN interface, We need to add the IPv6 interface (currently brlan0) to the config file
+   if [ "$BOX_TYPE" = "SR213" ]; then
+       MAPT_STATS=$(sysevent get mapt_config_flag)
+       echo_t "SERVICE_NTPD : MAPT_STATS=$MAPT_STATS"
+       if [ x"$MAPT_STATS" = x"set" ]; then
+           IPV4_CONN_STATE=$(sysevent get ipv4_connection_state)
+           echo_t "SERVICE_NTPD : IPV4_CONN_STATE=$IPV4_CONN_STATE"
+           if [ x"$IPV4_CONN_STATE" != x"up" ]; then
+               echo "interface listen $NTPD_IPV6_INTERFACE" >> $NTP_CONF_TMP
+           fi
+       fi
+   fi
 
    if [ -n "$WAN_IP" ]; then
        echo "interface listen $WAN_IP" >> $NTP_CONF_TMP
@@ -686,7 +687,8 @@ case "$1" in
       if [ "started" = "$CURRENT_WAN_STATUS" ] ; then
          if [ "$BOX_TYPE" = "HUB4" ] || [ "$BOX_TYPE" = "SR300" ] || [ "$BOX_TYPE" = "SE501" ] || [ "$BOX_TYPE" = "SR213" ] || [ "$BOX_TYPE" = "WNXL11BWL" ]; then
             NTPD_PROCESS=`pidof $BIN`
-            if [ -n "$NTPD_PROCESS" ];then
+            NTP_STATUS=`syscfg get ntp_status`
+            if [ $NTP_STATUS == 3 ] && [ -n "$NTPD_PROCESS" ];then
                echo_t "SERVICE_NTPD : ntp process is already running and pid is = $NTPD_PROCESS" >> $NTPD_LOG_NAME
             else
                echo_t "SERVICE_NTPD : wan-status calling service_start" >> $NTPD_LOG_NAME
