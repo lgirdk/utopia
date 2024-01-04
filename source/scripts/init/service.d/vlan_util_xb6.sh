@@ -312,20 +312,24 @@ qtn_init(){
         else
             $NCPU_EXEC -e 'ifconfig ndp0 mtu 1600'
         fi
-        $NCPU_EXEC -e 'ifconfig ndp0 mtu 1600'
+# The NCPU_EXEC line below can be removed because it was moved to the
+# else above
+#        $NCPU_EXEC -e 'ifconfig ndp0 mtu 1600'
         # ARRISXB6-6042 workaround to re-enable MTU on wifi driver reload until
         # real fix is available. Set mtu to 1600 on all wifi0.NN interfaces on
         # ARM side.
         if [ "$MODEL_NUM" = "TG3482G" ]; then
+# Don't know why this is here. There are no wifi interfaces on ARM
             $NCPU_EXEC -e ncpu_exec_oem.sh set_wifi_mtu
         else
             $NCPU_EXEC -e "ifconfig | awk '/^wifi0\.[0-9]/ { printf \"ifconfig %s mtu 1600\n\",\$1 | \"sh\"}'"
         fi
         $IP link add ath12 link host0 type vlan id 2012
         $IP link add ath13 link host0 type vlan id 2013
-        $IFCONFIG host0 mtu 1600
-        $IFCONFIG ath12 169.254.0.1 netmask 255.255.255.0 mtu 1600
-        $IFCONFIG ath13 169.254.1.1 netmask 255.255.255.0 mtu 1600
+        # need a conditional so MTU is set to 1582 only for TG3482
+        $IFCONFIG host0 mtu 1582
+        $IFCONFIG ath12 169.254.0.1 netmask 255.255.255.0 mtu 1582
+        $IFCONFIG ath13 169.254.1.1 netmask 255.255.255.0 mtu 1582
     fi
 }
 
