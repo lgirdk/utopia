@@ -386,7 +386,7 @@ int multinet_bridgeUpInst(int l2netInst, int bFirewallRestart){
         if (1 == l2netInst)
         {
            MNET_DEBUG("brlan0 up: disabling multicast_snooping\n")
-           v_secure_system("echo 0 > /sys/devices/virtual/net/brlan0/bridge/multicast_snooping");
+           sysctl_iface_set("/sys/devices/virtual/net/brlan0/bridge/multicast_snooping", NULL, "0");
            sysctl_iface_set("/proc/sys/net/ipv4/conf/all/rp_filter", NULL, "0");
            sysctl_iface_set("/proc/sys/net/ipv4/conf/brlan0/rp_filter", NULL, "0");
         }
