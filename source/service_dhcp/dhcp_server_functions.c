@@ -166,25 +166,26 @@ static int isValidLANIP(const char* ipStr)
         }
 
         sscanf(ipStr, "%d.%d.%d.%d", &octet1, &octet2, &octet3, &octet4);
-
-#ifdef FEATURE_STATIC_IPV4	
         char buf[8];
         syscfg_get(NULL, "brlan_static_ip_enable", buf, sizeof(buf));
         if (strcmp(buf, "true") == 0)
         {
+         
+#ifdef FEATURE_STATIC_IPV4	
             syscfg_get(NULL, "staticipadminstatus", buf, sizeof(buf));
             if (strcmp(buf, "3") == 0)
             {
                 return 1;
             }
-        }
-#endif
-
-        syscfg_get(NULL, "rip_enabled", rip_status, sizeof(rip_status));
-        // TODO : IP Range for RIPv2 might need to handle. Range is specific to CMTS
-        if(atoi(rip_status) == 1)
-        {
+#else
+            syscfg_get(NULL, "rip_enabled", rip_status, sizeof(rip_status));
+            syscfg_get(NULL, "tunneled_static_ip_enable", buf, sizeof(buf));  
+            // TODO : IP Range for RIPv2 might need to handle. Range is specific to CMTS
+            if (atoi(rip_status) == 1 || atoi(buf) == 1)
+            {
                 return 1;
+            }
+#endif
         }
 
         if( ((octet1 != 10) && (octet1 != 172) && (octet1 != 192)) ||
