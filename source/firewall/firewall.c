@@ -3036,8 +3036,10 @@ static int prepare_globals_from_configuration(void)
 #ifdef FEATURE_STATIC_IPV4
    staticIpStatus    = (0 == (strcmp("3", staticIpAdministrativeStatus))) ? 1 : 0;
    isBrlanStaticEnabled   = ((staticIpStatus) && (0 == (strcmp("true", brlan_static_enable)))) ? 1 : 0;
-#else   
-   isBrlanStaticEnabled   = ((isRipEnabled) && (0 == (strcmp("true", brlan_static_enable)))) ? 1 : 0;
+#else
+   char tunneled_static_ip_enable[8]; 
+   syscfg_get(NULL, "tunneled_static_ip_enable", tunneled_static_ip_enable, sizeof(tunneled_static_ip_enable));    
+   isBrlanStaticEnabled   = ((isRipEnabled || !strcmp(tunneled_static_ip_enable, "1")) && (0 == (strcmp("true", brlan_static_enable)))) ? 1 : 0;
 #endif   
    isErouterStaticEnabled   = ((isRipEnabled) && (0 == (strcmp("true", erouter_static_enable)))) ? 1 : 0;
    
