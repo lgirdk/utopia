@@ -1299,7 +1299,7 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
         OnboardLog("[%s-%d] dhcp state is not available in dhcp ack \n",  __FUNCTION__,__LINE__);
     }
 
-    if ( (strcmp(pinfo->input_option, "bound") == 0) || (strcmp(pinfo->input_option, "renew") == 0))
+    if ((strcmp(pinfo->input_option, "bound") == 0) || (strcmp(pinfo->input_option, "renew") == 0) || (strcmp(pinfo->input_option, "invalid_lease") == 0))
     {
         dhcpv4_data->addressAssigned = 1;
         dhcpv4_data->isExpired = 0;
@@ -1328,7 +1328,14 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
         /** Gateway. */
         if (pinfo->router != NULL)
         {
-            safec_rc = strcpy_s(dhcpv4_data->gateway, sizeof(dhcpv4_data->gateway), pinfo->router); // CID 187457: Buffer not null terminated (BUFFER_SIZE)  
+            // Marking the lease as invalid based on the option 43 (MAPT Line customization)
+            if(strcmp(pinfo->input_option, "invalid_lease") == 0){
+                OnboardLog("[%s-%d] invalid lease received set default gw to [0.0.0.0]  \n",  __FUNCTION__,__LINE__);
+                safec_rc = strcpy_s(dhcpv4_data->gateway, sizeof(dhcpv4_data->gateway), "0.0.0.0");
+            }
+            else{
+                safec_rc = strcpy_s(dhcpv4_data->gateway, sizeof(dhcpv4_data->gateway), pinfo->router); // CID 187457: Buffer not null terminated (BUFFER_SIZE)
+            }
             ERR_CHK(safec_rc);
         }
         else
@@ -1543,7 +1550,7 @@ int main(int argc, char *argv[])
     {
         handle_defconfig(&info);
     }
-    else if ((!strcmp (argv[1],"bound")) || (!strcmp (argv[1],"renew")))
+    else if ((!strcmp (argv[1],"bound")) || (!strcmp (argv[1],"renew")) || (!strcmp (argv[1],"invalid_lease")))
     {    
         handle_wan(&info);
     }
