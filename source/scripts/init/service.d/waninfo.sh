@@ -43,3 +43,14 @@ getWanMacInterfaceName()
   fi
   echo "$mac_interface"
 }
+IsGWinWFO()
+{
+  cur_ifname=`sysevent get current_wan_ifname`
+  wan_ifname=`sysevent get wan_ifname`
+  wan_status=0
+
+  if [ "$cur_ifname" != "$wan_ifname" ]; then
+        wan_status=1
+  fi
+  echo "$wan_status" 
+}
