@@ -26,6 +26,7 @@ bin_PROGRAMS = firewall nfq_handler
 firewall_SOURCES = firewall.c firewall_priv.c firewall_interface.c  firewall_ext.c
 if CPC_FIREWALL_ENABLE
 firewall_SOURCES += firewall_lib.c firewall_dsl.c rabid.c
+AM_LDFLAGS += -lrdkconfig
 endif
 
 nfq_handler_SOURCES = raw_socket_send.c nfq_handler.c
