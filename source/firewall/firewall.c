@@ -5981,17 +5981,13 @@ static int do_wan_nat_lan_clients(FILE *fp)
     char erouter_static_ip[20];
     if (get_erouter_static_ip(erouter_static_ip, sizeof(erouter_static_ip)))
     {
-        fprintf(fp, "-A postrouting_towan ! -d 224.0.0.9 -j SNAT --to-source %s --random\n",erouter_static_ip);
+        fprintf(fp, "-A postrouting_towan ! -d 224.0.0.9 -j SNAT --to-source %s\n",erouter_static_ip);
     }
     else if (isBrlanStaticEnabled)
     {
         //In the /30 static IP or more, the gateway MUST have NAT disabled on the eRouter WAN interface
         fprintf(fp, "-A postrouting_towan -s %s/%s -j ACCEPT\n", lan_ipaddr,lan_netmask);
-    }
-
-#if (defined(_COSA_BCM_ARM_))
-    fprintf(fp, "-A postrouting_towan -p icmp -j SNAT --to-source %s \n", natip4);
-#endif  
+    }  
 
 #if (defined (_COSA_BCM_ARM_) || defined(_PLATFORM_TURRIS_)) && !defined (_HUB4_PRODUCT_REQ_)
   if(bEthWANEnable || isBridgeMode) // Check is required for TCHXB6 TCHXB7 CBR and not for HUB4
@@ -6004,9 +6000,9 @@ static int do_wan_nat_lan_clients(FILE *fp)
 #endif //FEATURE_MAPT
      if(!IS_EMPTY_STRING(natip4))
      {
-         fprintf(fp, "-A postrouting_towan -s 10.0.0.0/8 -j SNAT --to-source %s --random\n", natip4);
-         fprintf(fp, "-A postrouting_towan -s 192.168.0.0/16 -j SNAT --to-source %s --random\n", natip4);
-         fprintf(fp, "-A postrouting_towan -s 172.16.0.0/12 -j SNAT --to-source %s --random\n", natip4);
+         fprintf(fp, "-A postrouting_towan -s 10.0.0.0/8 -j SNAT --to-source %s\n", natip4);
+         fprintf(fp, "-A postrouting_towan -s 192.168.0.0/16 -j SNAT --to-source %s\n", natip4);
+         fprintf(fp, "-A postrouting_towan -s 172.16.0.0/12 -j SNAT --to-source %s\n", natip4);
      }
   }
   else
@@ -6018,7 +6014,7 @@ static int do_wan_nat_lan_clients(FILE *fp)
       #ifdef RDKB_EXTENDER_ENABLED
          fprintf(fp, "-A postrouting_towan -j MASQUERADE\n");
       #else
-	     fprintf(fp, "-A postrouting_towan ! -s %s -j SNAT --to-source %s --random\n", natip4, natip4);
+	     fprintf(fp, "-A postrouting_towan  -j SNAT --to-source %s\n", natip4);
       #endif
 #if defined (FEATURE_MAPT) || defined (FEATURE_SUPPORT_MAPT_NAT46)
      }
