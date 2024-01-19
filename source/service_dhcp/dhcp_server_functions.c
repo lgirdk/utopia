@@ -1888,7 +1888,7 @@ int prepare_dhcp_conf (char *input, void *bus_handle)
 	if (strcmp(mesh_enable, "true") == 0)
 	{
 		fprintf(l_fLocal_Dhcp_ConfFile, "interface=wl0.1\n"
-						"dhcp-range=169.254.0.5,169.254.0.253,255.255.255.0,infinite\n");
+						"dhcp-range=169.254.0.10,169.254.0.126,255.255.255.128,infinite\n");
 
 		if (l_bDhcpNs_Enabled && l_bIsValidWanDHCPNs)
 		{
@@ -1897,7 +1897,7 @@ int prepare_dhcp_conf (char *input, void *bus_handle)
 		}
 
 		fprintf(l_fLocal_Dhcp_ConfFile, "interface=wl1.1\n"
-						"dhcp-range=169.254.1.5,169.254.1.253,255.255.255.0,infinite\n");
+						"dhcp-range=169.254.1.10,169.254.1.126,255.255.255.128,infinite\n");
 
 		if (l_bDhcpNs_Enabled && l_bIsValidWanDHCPNs)
 		{
