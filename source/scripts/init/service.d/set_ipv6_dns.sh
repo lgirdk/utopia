@@ -103,7 +103,13 @@ else
     fi
 fi
 
-# Trim trailing spaces (Fixme: are there ever multiple trailing spaces? Or only one?)
+# Trim leading space(s)
+while [ "$ips" != "${ips# }" ]
+do
+    ips="${ips# }"
+done
+
+# Trim trailing space(s)
 while [ "$ips" != "${ips% }" ]
 do
     ips="${ips% }"
