@@ -11901,8 +11901,6 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(mangle_fp, "-A PREROUTING -j %s\n", SELFHEAL);
 #endif
 #endif
-   prepare_lld_dscp_rules(mangle_fp);
-   prepare_dscp_rules_to_prioritized_clnt(mangle_fp,4);
    prepare_lnf_internet_rules(mangle_fp,4);
    prepare_dscp_rule_for_host_mngt_traffic(mangle_fp);
    prepare_xconf_rules(mangle_fp);
@@ -14373,8 +14371,6 @@ static void do_ipv6_sn_filter(FILE* fp) {
 	//RDKB-10248: IPv6 Entries issue in ip neigh show 2. Bring back TOS mirroring 
 
 #if !defined(_PLATFORM_IPQ_)
-	prepare_lld_dscp_rules(fp);
-	prepare_dscp_rules_to_prioritized_clnt(fp,6);
 	prepare_dscp_rule_for_host_mngt_traffic(fp);
 	prepare_xconf_rules(fp);
 #endif
