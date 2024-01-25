@@ -124,6 +124,20 @@ char DHCPC_PID_FILE[100]="";
 #define WFO_ENABLED       "/etc/WFO_enabled"
 
 #define WAN_STARTED "/var/wan_started"
+
+//Network Connectivity check 
+#if defined(FEATURE_TAD_HEALTH_CHECK)
+#define SYSEVENT_NET_CONNECTIVITY_CHECK "network_connectivity_check"
+enum NetworkConnectivityCheck
+{
+    NET_CONNNECTIVITY_CHECK_DISABLED = 0,
+    NET_CONNNECTIVITY_CHECK_ENABLED,
+    NET_CONNNECTIVITY_CHECK_STARTING,
+    NET_CONNNECTIVITY_CHECK_STOPPED,
+    NET_CONNNECTIVITY_CHECK_STARTED,
+};
+#endif
+
 enum wan_prot {
     WAN_PROT_DHCP,
     WAN_PROT_STATIC,
@@ -685,20 +699,38 @@ static int wait_till_dhcpv6_client_reply(struct serv_wan *sw)
 
 static int wan_start(struct serv_wan *sw)
 {
-    char status[16];
 #if defined (_BWG_PRODUCT_REQ_)
     char gw_ip[64];
 #endif
     char buf[16] = {0};
-
     int ret;
     char uptime[24];
     struct sysinfo si;
 
     print_uptime("Wan_init_start", NULL, NULL);
-
     sysinfo(&si);
     OnboardLog("Wan_init_start:%ld\n", si.uptime);
+
+#if defined(FEATURE_TAD_HEALTH_CHECK)
+    char output[16] = {0};
+    enum NetworkConnectivityCheck nConnCheck = 0;
+
+    sysevent_get(sw->sefd, sw->setok, SYSEVENT_NET_CONNECTIVITY_CHECK, output, sizeof(output));
+    nConnCheck = atoi(output);
+    if(!(nConnCheck & NET_CONNNECTIVITY_CHECK_ENABLED) && (nConnCheck != NET_CONNNECTIVITY_CHECK_DISABLED))
+    {
+        fprintf(stderr, "%s-%d: DNS Connectivity Check Enabled, wan-start is not from Wan Manager Policy, Ignore \n", __FUNCTION__, __LINE__);
+        return 0;
+    }
+    if((nConnCheck) && (nConnCheck != NET_CONNNECTIVITY_CHECK_ENABLED))
+    {
+        memset(output, 0, 16);
+        nConnCheck = nConnCheck & (~NET_CONNNECTIVITY_CHECK_ENABLED);
+        sprintf(output, "%d", nConnCheck);
+        sysevent_set(sw->sefd, sw->setok, SYSEVENT_NET_CONNECTIVITY_CHECK, output, 0);
+    }
+    fprintf(stderr, "%s-%d: wan-start, Dns ConnectivityCheck State=%s \n", __FUNCTION__, __LINE__, output);
+#endif
 
     #if defined (_BRIDGE_UTILS_BIN_)
 
@@ -737,7 +769,9 @@ static int wan_start(struct serv_wan *sw)
 	//Intel Proposed RDKB Generic Bug Fix from XB6 SDK
 	int pid = 0;
 #endif
+#if !defined(FEATURE_TAD_HEALTH_CHECK)
     /* state check */
+    char status[16];
     sysevent_get(sw->sefd, sw->setok, "wan_service-status", status, sizeof(status));
     if (strcmp(status, "starting") == 0 || strcmp(status, "started") == 0) {
         fprintf(stderr, "%s: service wan has already %s !\n", __FUNCTION__, status);
@@ -746,7 +780,7 @@ static int wan_start(struct serv_wan *sw)
         fprintf(stderr, "%s: cannot start in status %s !\n", __FUNCTION__, status);
         return -1;
     }
-
+#endif
     /* do start */
     sysevent_set(sw->sefd, sw->setok, "wan_service-status", "starting", 0);
     
@@ -852,7 +886,14 @@ static int wan_start(struct serv_wan *sw)
     /* set current_wan_ifname at wan-start, for all erouter modes */
     if (sw->rtmod != WAN_RTMOD_UNKNOW) {
     	/* set sysevents and trigger for other modules */
-    	sysevent_set(sw->sefd, sw->setok, "current_wan_ifname", sw->ifname, 0);
+#if defined(FEATURE_TAD_HEALTH_CHECK)
+        if((nConnCheck & (1 << (NET_CONNNECTIVITY_CHECK_STARTED - 1))) ||
+           (nConnCheck == NET_CONNNECTIVITY_CHECK_DISABLED) )
+#endif
+        {
+            fprintf(stderr, "%s: current_wan_ifname=%s \n", __FUNCTION__, sw->ifname);
+    	    sysevent_set(sw->sefd, sw->setok, "current_wan_ifname", sw->ifname, 0);
+        }
     }
 
  #ifndef DSLITE_FEATURE_SUPPORT	
@@ -875,7 +916,6 @@ static int wan_start(struct serv_wan *sw)
                 vsystem("route add default dev %s",sw->ifname);
                 }
 #endif
-
                 if (route_config(sw->ifname) != 0) {
                     fprintf(stderr, "%s: route_config error\n", __FUNCTION__);
                     sysevent_set(sw->sefd, sw->setok, "wan_service-status", "error", 0);
@@ -996,22 +1036,42 @@ static int wan_start(struct serv_wan *sw)
     }
     }
 #endif
-
+  
     if (access(POSTD_START_FILE, F_OK) != 0)
     {
-            fprintf(stderr, "[%s] Restarting post.d from service_wan\n", __FUNCTION__);
-            v_secure_system("touch " POSTD_START_FILE "; execute_dir /etc/utopia/post.d/");
+        fprintf(stderr, "[%s] Restarting post.d from service_wan\n", __FUNCTION__);
+        v_secure_system("touch " POSTD_START_FILE "; execute_dir /etc/utopia/post.d/");
     }
 
-    sysevent_set(sw->sefd, sw->setok, "wan_service-status", "started", 0);
-    sysevent_set(sw->sefd, sw->setok, "current_wan_state", "up", 0);
+#if defined(FEATURE_TAD_HEALTH_CHECK)
+    if((nConnCheck & (1 << (NET_CONNNECTIVITY_CHECK_STARTED - 1))) ||
+       (nConnCheck == NET_CONNNECTIVITY_CHECK_DISABLED) )
+    {
+        sysevent_set(sw->sefd, sw->setok, "wan-status", "started", 0);
+    }
+    else if ((nConnCheck & (1 << (NET_CONNNECTIVITY_CHECK_STARTING - 1))) || 
+             (nConnCheck == NET_CONNNECTIVITY_CHECK_ENABLED) )
+    {
+        sysevent_set(sw->sefd, sw->setok, "wan-status", "standby", 0);
+    }
+#else
     sysevent_set(sw->sefd, sw->setok, "wan-status", "started", 0);
+#endif
+
+    sysevent_set(sw->sefd, sw->setok, "wan_service-status", "started", 0);
+
+#if defined(FEATURE_TAD_HEALTH_CHECK)
+    if((nConnCheck & (1 << (NET_CONNNECTIVITY_CHECK_STARTED - 1))) ||
+       (nConnCheck == NET_CONNNECTIVITY_CHECK_DISABLED) )
+#endif
+    {
+        sysevent_set(sw->sefd, sw->setok, "current_wan_state", "up", 0);
 
 #if defined (FEATURE_RDKB_LED_MANAGER_CAPTIVE_PORTAL)
-    char redirFlag[10]={0};
-    char captivePortalEnable[10]={0};
+        char redirFlag[10]={0};
+        char captivePortalEnable[10]={0};
 
-    if (!syscfg_get(NULL, "redirection_flag", redirFlag, sizeof(redirFlag)) && !syscfg_get(NULL, "CaptivePortal_Enable", captivePortalEnable, sizeof(captivePortalEnable))){
+        if (!syscfg_get(NULL, "redirection_flag", redirFlag, sizeof(redirFlag)) && !syscfg_get(NULL, "CaptivePortal_Enable", captivePortalEnable, sizeof(captivePortalEnable))){
 	    if (!strcmp(redirFlag,"true") && !strcmp(captivePortalEnable,"true"))
 	    {
 		    if(sysevent_led_fd != -1)
@@ -1028,64 +1088,65 @@ static int wan_start(struct serv_wan *sw)
                             fprintf(stderr, "%s  Sent IPV4_UP_EVENT to RdkLedManager\n",__func__);
                     }
 	    }
-    }
-    if (sysevent_led_fd != -1)
+        }
+        if (sysevent_led_fd != -1)
 	    sysevent_close(sysevent_led_fd, sysevent_led_token);
 #endif
 
-    fprintf(stderr, "[%s] start firewall fully\n", PROG_NAME);
+        fprintf(stderr, "[%s] start firewall fully\n", PROG_NAME);
+        /*XB6 brlan0 comes up earlier so ned to find the way to restart the firewall
+        IPv6 not yet supported so we can't restart in service routed  because of missing zebra.conf*/
 
-/*XB6 brlan0 comes up earlier so ned to find the way to restart the firewall
- IPv6 not yet supported so we can't restart in service routed  because of missing zebra.conf*/
+	fprintf(stderr, "[%s] start firewall fully\n", PROG_NAME);
         printf("%s Triggering RDKB_FIREWALL_RESTART\n",__FUNCTION__);
         t2_event_d("SYS_SH_RDKB_FIREWALL_RESTART", 1);
         sysevent_set(sw->sefd, sw->setok, "firewall-restart", NULL, 0);
 
-    sysinfo(&si);
-    snprintf(uptime, sizeof(uptime), "%ld", si.uptime);
-    OnboardLog("RDKB_FIREWALL_RESTART:%s\n", uptime);
-    sysevent_set(sw->sefd, sw->setok, "wan_start_time", uptime, 0);
+        sysinfo(&si);
+        snprintf(uptime, sizeof(uptime), "%ld", si.uptime);
+        OnboardLog("RDKB_FIREWALL_RESTART:%s\n", uptime);
+        sysevent_set(sw->sefd, sw->setok, "wan_start_time", uptime, 0);
 
-    printf("Network Response script called to capture network response\n ");
-    /*Network Response captured ans stored in /var/tmp/network_response.txt*/
+        printf("Network Response script called to capture network response\n ");
+        /*Network Response captured ans stored in /var/tmp/network_response.txt*/
 
 #if defined (INTEL_PUMA7)
-    //Intel Proposed RDKB Generic Bug Fix from XB6 SDK
-    pid = pid_of("sh", "network_response.sh");
-    if (pid > 0)
-        kill(pid, SIGKILL);	
+        //Intel Proposed RDKB Generic Bug Fix from XB6 SDK
+        pid = pid_of("sh", "network_response.sh");
+        if (pid > 0)
+            kill(pid, SIGKILL);	
 #endif
+        v_secure_system("sh /etc/network_response.sh &");
 
-    v_secure_system("sh /etc/network_response.sh &");
+        ret = checkFileExists(WAN_STARTED);
+        printf("Check wan started ret is %d\n",ret);
+        if ( 0 == ret )
+        {
+	    v_secure_system("touch /var/wan_started");
+	    print_uptime("boot_to_wan_uptime",NULL, NULL);
+        }
+        else
+        {
+            printf("%s wan_service-status is started again, upload logs\n",__FUNCTION__);
+            t2_event_d("RF_ERROR_wan_restart", 1);
+            v_secure_system("/rdklogger/uploadRDKBLogs.sh '' HTTP '' false ");
+        }
 
-    ret = checkFileExists(WAN_STARTED);
-    printf("Check wan started ret is %d\n",ret);
-    if ( 0 == ret )
-    {
-	v_secure_system("touch /var/wan_started");
-	print_uptime("boot_to_wan_uptime",NULL, NULL);
-    }
-    else
-    {
-        printf("%s wan_service-status is started again, upload logs\n",__FUNCTION__);
-        t2_event_d("RF_ERROR_wan_restart", 1);
-        v_secure_system("/rdklogger/uploadRDKBLogs.sh '' HTTP '' false ");
-    }
+        sysinfo(&si);
+        snprintf(uptime, sizeof(uptime), "%ld", si.uptime);
+        OnboardLog("Wan_init_complete:%s\n",uptime);
+        t2_event_d("btime_waninit_split", (int) si.uptime);
 
-    sysinfo(&si);
-    snprintf(uptime, sizeof(uptime), "%ld", si.uptime);
-    OnboardLog("Wan_init_complete:%s\n",uptime);
-    t2_event_d("btime_waninit_split", (int) si.uptime);
-
-    /* RDKB-24991 to handle snmpv3 based on wan-status event */
-    v_secure_system("sh /lib/rdk/postwanstatusevent.sh &");
+        /* RDKB-24991 to handle snmpv3 based on wan-status event */
+        v_secure_system("sh /lib/rdk/postwanstatusevent.sh &");
 #if (defined _COSA_INTEL_XB3_ARM_)
-    if (cm_isolation_enbld) { 
-       fprintf(stderr, "Dumping Route table cmwan and routing rules\n");   
-       v_secure_system("ip -6 route show table cmwan && "
-                       "ip -6 rule show "); 
-    }
+        if (cm_isolation_enbld) { 
+            fprintf(stderr, "Dumping Route table cmwan and routing rules\n");   
+            v_secure_system("ip -6 route show table cmwan && "
+                            "ip -6 rule show "); 
+        }
 #endif
+    }
     return 0;
 }
 
@@ -1093,6 +1154,26 @@ static int wan_stop(struct serv_wan *sw)
 {
     char status[16];
     char buf[16] = {0};
+#if defined(FEATURE_TAD_HEALTH_CHECK)
+    char output[16] = {0};
+    enum NetworkConnectivityCheck nConnCheck = 0;
+
+    sysevent_get(sw->sefd, sw->setok, SYSEVENT_NET_CONNECTIVITY_CHECK, output, sizeof(output));
+    nConnCheck = atoi(output);
+    if(!(nConnCheck & NET_CONNNECTIVITY_CHECK_ENABLED) && (nConnCheck != NET_CONNNECTIVITY_CHECK_DISABLED))
+    {
+        fprintf(stderr, "%s-%d: DNS Connectivity Check Enabled, wan-stop is not from Wan Manager Policy, Ignore \n", __FUNCTION__, __LINE__);
+        return 0;
+    }
+    if((nConnCheck) && (nConnCheck != NET_CONNNECTIVITY_CHECK_ENABLED))
+    {
+        memset(output, 0, 16);
+        nConnCheck = nConnCheck & (~NET_CONNNECTIVITY_CHECK_ENABLED);
+        sprintf(output, "%d", nConnCheck);
+        sysevent_set(sw->sefd, sw->setok, SYSEVENT_NET_CONNECTIVITY_CHECK, output, 0);
+    }
+    fprintf(stderr, "%s-%d: wan-stop, Dns ConnectivityCheck State=%s \n", __FUNCTION__, __LINE__, output);
+#endif
 
 /*
  * Wan Interfaces are controlled by RdkWanManager As Part of Unification.
@@ -1102,6 +1183,7 @@ static int wan_stop(struct serv_wan *sw)
     return 0;
 #endif
 
+#if !defined(FEATURE_TAD_HEALTH_CHECK)
     /* state check */
     sysevent_get(sw->sefd, sw->setok, "wan_service-status", status, sizeof(status));
     if (strcmp(status, "stopping") == 0 || strcmp(status, "stopped") == 0) {
@@ -1111,7 +1193,7 @@ static int wan_stop(struct serv_wan *sw)
         fprintf(stderr, "%s: cannot start in status %s !\n", __FUNCTION__, status);
         return -1;
     }
- 
+#endif
     /* do stop */
     sysevent_set(sw->sefd, sw->setok, "wan_service-status", "stopping", 0);
 #if (defined _COSA_INTEL_XB3_ARM_)    
@@ -1185,6 +1267,11 @@ static int wan_stop(struct serv_wan *sw)
 
     if (sw->rtmod == WAN_RTMOD_IPV6 || sw->rtmod == WAN_RTMOD_DS) {
        if (sw->prot == WAN_PROT_DHCP) {
+#if defined(FEATURE_TAD_HEALTH_CHECK)
+           if((nConnCheck == NET_CONNNECTIVITY_CHECK_DISABLED) ||
+              (nConnCheck & (1 << (NET_CONNNECTIVITY_CHECK_STOPPED - 1))))
+#endif
+       {
                fprintf(stderr, "Disabling DHCPv6 Client\n");
 #if defined (FEATURE_RDKB_DHCP_MANAGER)
                     v_secure_system("dmcli eRT setv Device.DHCPv6.Client.1.Enable bool false");
@@ -1196,11 +1283,18 @@ static int wan_stop(struct serv_wan *sw)
 #else
                     v_secure_system("/etc/utopia/service.d/service_dhcpv6_client.sh disable");
 #endif
+       }
        } else if (sw->prot == WAN_PROT_STATIC) {
+#if defined(FEATURE_TAD_HEALTH_CHECK)
+           if((nConnCheck == NET_CONNNECTIVITY_CHECK_DISABLED) ||
+              (nConnCheck & (1 << (NET_CONNNECTIVITY_CHECK_STOPPED - 1))) )
+#endif
+           {
                if (wan_static_stop_v6(sw) != 0) {
                        fprintf(stderr, "%s: wan_static_stop_v6 error\n", __FUNCTION__);
                        return -1;
                }
+           }
        }
         if (route_deconfig_v6(sw->ifname) != 0) {
                fprintf(stderr, "%s: route_deconfig_v6 error\n", __FUNCTION__);
@@ -1230,14 +1324,19 @@ static int wan_stop(struct serv_wan *sw)
         }
     }
 
+#if defined(FEATURE_TAD_HEALTH_CHECK)
+    if((nConnCheck == NET_CONNNECTIVITY_CHECK_DISABLED) ||
+       (nConnCheck & (1 << (NET_CONNNECTIVITY_CHECK_STOPPED - 1))) )
+#endif
+    {
 #if !defined(_PLATFORM_IPQ_) && !defined(_WAN_MANAGER_ENABLED_) && !defined(_PROPOSED_BUG_FIX_)
-    if (wan_iface_down(sw) != 0) {
-        fprintf(stderr, "%s: wan_iface_down error\n", __FUNCTION__);
-        sysevent_set(sw->sefd, sw->setok, "wan_service-status", "error", 0);
-        return -1;
-    }
+        if (wan_iface_down(sw) != 0) {
+            fprintf(stderr, "%s: wan_iface_down error\n", __FUNCTION__);
+            sysevent_set(sw->sefd, sw->setok, "wan_service-status", "error", 0);
+            return -1;
+        }
 #endif  /*_PLATFORM_IPQ_ && _WAN_MANAGER_ENABLED_*/
-
+    }
     v_secure_system("rm -rf /tmp/ipv4_renew_dnsserver_restart");
     v_secure_system("rm -rf /tmp/ipv6_renew_dnsserver_restart");
     printf("%s wan_service-status is stopped, take log back up\n",__FUNCTION__);
@@ -1300,39 +1399,55 @@ int SendIoctlToPpDev( unsigned int cmd, void* data)
 #endif
 static int wan_iface_up(struct serv_wan *sw)
 {
-#if 1 // XXX: MOVE these code to IPv6 scripts, why put them in IPv4 service wan ??
+// XXX: MOVE these code to IPv6 scripts, why put them in IPv4 service wan ??
     char proven[64];
     char mtu[16];
 
+#if defined(FEATURE_TAD_HEALTH_CHECK)
+    char output[16] = {0};
+    enum NetworkConnectivityCheck nConnCheck = 0;
+
+    sysevent_get(sw->sefd, sw->setok, SYSEVENT_NET_CONNECTIVITY_CHECK, output, sizeof(output));
+    nConnCheck = atoi(output);
+
+
+#endif
+ 
     switch (sw->rtmod) {
     case WAN_RTMOD_IPV6:
     case WAN_RTMOD_DS:
-        syscfg_get(NULL, "router_adv_provisioning_enable", proven, sizeof(proven));
-        if (atoi(proven) == 1) {
-            sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/disable_ipv6", sw->ifname, "1");
-            sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/accept_ra", sw->ifname, "2");
-            sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/accept_ra_defrtr", sw->ifname, "1");
-            sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/accept_ra_pinfo", sw->ifname, "0");
-#if !defined(INTEL_PUMA7) /* On Puma 7 autoconf enables SLAAC not link-local address */
-            sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/autoconf", sw->ifname, "1");
+#if defined(FEATURE_TAD_HEALTH_CHECK)
+        if((nConnCheck & (1 << (NET_CONNNECTIVITY_CHECK_STARTED - 1))) ||
+           (nConnCheck == NET_CONNNECTIVITY_CHECK_DISABLED) )
 #endif
-            sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/disable_ipv6", sw->ifname, "0");
-        } else {
-            sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/accept_ra", sw->ifname, "0");
-            sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/autoconf", sw->ifname, "0");
-        }
+        {
+            syscfg_get(NULL, "router_adv_provisioning_enable", proven, sizeof(proven));
+            if (atoi(proven) == 1) {
+                sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/disable_ipv6", sw->ifname, "1");
+                sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/accept_ra", sw->ifname, "2");
+                sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/accept_ra_defrtr", sw->ifname, "1");
+                sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/accept_ra_pinfo", sw->ifname, "0");
+#if !defined(INTEL_PUMA7) /* On Puma 7 autoconf enables SLAAC not link-local address */
+                sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/autoconf", sw->ifname, "1");
+#endif
+                sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/disable_ipv6", sw->ifname, "0");
+            } else {
+                sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/accept_ra", sw->ifname, "0");
+                sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/autoconf", sw->ifname, "0");
+            }
 
-        sysctl_iface_set("/proc/sys/net/ipv6/conf/all/forwarding", NULL, "1");
-        sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/forwarding", sw->ifname, "1");
-        sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/forwarding", "wan0", "0");
-        sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/forwarding", "mta0", "0");
+            sysctl_iface_set("/proc/sys/net/ipv6/conf/all/forwarding", NULL, "1");
+            sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/forwarding", sw->ifname, "1");
+            sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/forwarding", "wan0", "0");
+            sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/forwarding", "mta0", "0");
+        }
         break;
     default:
         sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/disable_ipv6", sw->ifname, "1");
         sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/autoconf", sw->ifname, "0");
         break;
     }
-#endif
+
 
     syscfg_get(NULL, "wan_mtu", mtu, sizeof(mtu));
 #ifdef INTEL_PUMA7
@@ -1410,6 +1525,13 @@ static int wan_addr_set(struct serv_wan *sw)
     char lanstatus[10] = {0};
     char brmode[4] = {0};
 
+#if defined(FEATURE_TAD_HEALTH_CHECK)
+    char output[16] = {0};
+    enum NetworkConnectivityCheck nConnCheck = 0;
+
+    sysevent_get(sw->sefd, sw->setok, SYSEVENT_NET_CONNECTIVITY_CHECK, output, sizeof(output));
+    nConnCheck = atoi(output);
+#endif
 
     sysevent_set(sw->sefd, sw->setok, "wan-status", "starting", 0);
 
@@ -1449,168 +1571,182 @@ static int wan_addr_set(struct serv_wan *sw)
      * from Gateway provisioning App. This is done to save the delay in getting
      * the configuration done, and to support the WAN restart functionality.
      */
-    fprintf(stderr, "[%s] start waiting for protocol ...\n", PROG_NAME);
-    for (timo = sw->timo; timo > 0; timo--) {
-        sysevent_get(sw->sefd, sw->setok, "current_ipv4_link_state", state, sizeof(state));
-        if (strcmp(state, "up") == 0)
-            break;
-        sleep(1);
+#if defined(FEATURE_TAD_HEALTH_CHECK)
+    if((nConnCheck & (1 << (NET_CONNNECTIVITY_CHECK_STARTED - 1))) ||
+       (nConnCheck == NET_CONNNECTIVITY_CHECK_DISABLED) )
+#endif
+    {
+        fprintf(stderr, "[%s] start waiting for protocol ...\n", PROG_NAME);
+        for (timo = sw->timo; timo > 0; timo--) {
+            sysevent_get(sw->sefd, sw->setok, "current_ipv4_link_state", state, sizeof(state));
+            if (strcmp(state, "up") == 0)
+                break;
+            sleep(1);
+        }
+        if (timo == 0)
+            fprintf(stderr, "[%s] wait for protocol TIMEOUT !\n", PROG_NAME);
+        else
+            fprintf(stderr, "[%s] wait for protocol SUCCESS !\n", PROG_NAME);
     }
-    if (timo == 0)
-        fprintf(stderr, "[%s] wait for protocol TIMEOUT !\n", PROG_NAME);
-    else
-        fprintf(stderr, "[%s] wait for protocol SUCCESS !\n", PROG_NAME);
-
 #endif /*_PLATFORM_IPQ_ && _WAN_MANAGER_ENABLED_*/
 
-    memset(val, 0 ,sizeof(val));
-    sysevent_get(sw->sefd, sw->setok, "ipv4_wan_subnet", val, sizeof(val));
-    if (strlen(val))
-        sysevent_set(sw->sefd, sw->setok, "current_wan_subnet", val, 0);
-    else
+#if defined(FEATURE_TAD_HEALTH_CHECK)
+    if((nConnCheck & (1 << (NET_CONNNECTIVITY_CHECK_STARTED - 1))) ||
+       (nConnCheck == NET_CONNNECTIVITY_CHECK_DISABLED) )
+#endif
     {
-        do
-       {
-	   count++;
-	   sleep(2);
-   	   sysevent_get(sw->sefd, sw->setok, "ipv4_wan_subnet", val, sizeof(val));
-	   if ( '\0' == val[0] )
-		   printf("ipv4_wan_subnet is NULL, retry count is %d\n",count);
-	   else
-		   printf("ipv4_wan_subnet value is %s, count is %d\n",val,count);
-
-       } while ( 0 == strlen(val) && count < 3 );
-	count=0; 
-    	if (strlen(val))
-		sysevent_set(sw->sefd, sw->setok, "current_wan_subnet", val, 0);
-	else
-	        sysevent_set(sw->sefd, sw->setok, "current_wan_subnet", "255.255.255.0", 0);
-    }
-    
-    memset(val, 0 ,sizeof(val));
-    sysevent_get(sw->sefd, sw->setok, "ipv4_wan_ipaddr", val, sizeof(val));
-    if (strlen(val)){
-        printf("Setting current_wan_ipaddr  %s\n",val);     
-        sysevent_set(sw->sefd, sw->setok, "current_wan_ipaddr", val, 0);
-    }
-    else
-    {
-       printf("Wait for ipv4_wan_ipaddr to get valid ip \n");
-       do
-       {
-           count++;
-	    sleep(2);
-	    sysevent_get(sw->sefd, sw->setok, "ipv4_wan_ipaddr", val, sizeof(val));
-	    if ( '\0' == val[0] )
-		   printf("ipv4_wan_ipaddr is NULL, retry count is %d\n",count);
-	    else
-		   printf("ipv4_wan_ipaddr value is %s, count is %d\n",val,count);
-
-       } while ( 0 == strlen(val) && count < 3 );
-	count=0; 
-        printf("Setting current_wan_ipaddr  %s\n",val);     
-   	if (strlen(val))
-    {
-        sysevent_set(sw->sefd, sw->setok, "current_wan_ipaddr", val, 0);
-    }
-    else
-    {
+        memset(val, 0 ,sizeof(val));
+        sysevent_get(sw->sefd, sw->setok, "ipv4_wan_subnet", val, sizeof(val));
+        if (strlen(val))
+            sysevent_set(sw->sefd, sw->setok, "current_wan_subnet", val, 0);
+        else
+        {
+            do
+            {
+                count++;
+                sleep(2);
+                sysevent_get(sw->sefd, sw->setok, "ipv4_wan_subnet", val, sizeof(val));
+                if ( '\0' == val[0] )
+                    printf("ipv4_wan_subnet is NULL, retry count is %d\n",count);
+                else
+                    printf("ipv4_wan_subnet value is %s, count is %d\n",val,count);
+            }while ( 0 == strlen(val) && count < 3 );
+            count=0; 
+    	    if (strlen(val))
+                sysevent_set(sw->sefd, sw->setok, "current_wan_subnet", val, 0);
+            else
+                sysevent_set(sw->sefd, sw->setok, "current_wan_subnet", "255.255.255.0", 0);
+        }
+        memset(val, 0 ,sizeof(val));
+        sysevent_get(sw->sefd, sw->setok, "ipv4_wan_ipaddr", val, sizeof(val));
+        if (strlen(val)){
+            printf("Setting current_wan_ipaddr  %s\n",val);     
+            sysevent_set(sw->sefd, sw->setok, "current_wan_ipaddr", val, 0);
+        }
+        else
+        {
+            printf("Wait for ipv4_wan_ipaddr to get valid ip \n");
+            do
+            {
+                count++;
+                sleep(2);
+                sysevent_get(sw->sefd, sw->setok, "ipv4_wan_ipaddr", val, sizeof(val));
+                if ( '\0' == val[0] )
+                    printf("ipv4_wan_ipaddr is NULL, retry count is %d\n",count);
+                else
+                    printf("ipv4_wan_ipaddr value is %s, count is %d\n",val,count);
+            } while ( 0 == strlen(val) && count < 3 );
+            count=0; 
+            printf("Setting current_wan_ipaddr  %s\n",val);     
+   	    if (strlen(val))
+            {
+                sysevent_set(sw->sefd, sw->setok, "current_wan_ipaddr", val, 0);
+            }
+            else
+            {
 #ifdef WAN_FAILOVER_SUPPORTED
-        char bkup_wan_status[16] = {0};
-        unsigned int uiNeedstoAvoidIPConfig = 0;
+                char bkup_wan_status[16] = {0};
+                unsigned int uiNeedstoAvoidIPConfig = 0;
 
-        sysevent_get(sw->sefd, sw->setok, "backup-wan-status", bkup_wan_status, sizeof(bkup_wan_status));
+                sysevent_get(sw->sefd, sw->setok, "backup-wan-status", bkup_wan_status, sizeof(bkup_wan_status));
 
-        if(( bkup_wan_status[0] != '\0' ) &&
-           ( strlen(bkup_wan_status) > 0 ) &&
-           ( strcmp(bkup_wan_status,"started") == 0 ))
-        {
-            uiNeedstoAvoidIPConfig = 1;
-        }
+                if(( bkup_wan_status[0] != '\0' ) &&
+                   ( strlen(bkup_wan_status) > 0 ) &&
+                   ( strcmp(bkup_wan_status,"started") == 0 ))
+                {
+                    uiNeedstoAvoidIPConfig = 1;
+                }
 
-        if( 0 == uiNeedstoAvoidIPConfig )
+                if( 0 == uiNeedstoAvoidIPConfig )
 #endif /* * WAN_FAILOVER_SUPPORTED */
+                {
+                    sysevent_set(sw->sefd, sw->setok, "current_wan_ipaddr", "0.0.0.0", 0);
+                }
+            }
+        }
+    }
+
+#if defined(FEATURE_TAD_HEALTH_CHECK)
+    if((nConnCheck & (1 << (NET_CONNNECTIVITY_CHECK_STARTED - 1))) ||
+       (nConnCheck == NET_CONNNECTIVITY_CHECK_DISABLED) )
+#endif
+    {
+        memset(val, 0 ,sizeof(val));
+        syscfg_get(NULL, "dhcp_server_propagate_wan_domain", val, sizeof(val));
+        if (atoi(val) != 1)
+            syscfg_get(NULL, "dhcp_server_propagate_wan_nameserver", val, sizeof(val));
+
+        if (atoi(val) == 1) {
+            //if ((fp = fopen("/var/tmp/lan_not_restart", "wb")) != NULL)
+                //fclose(fp);
+            sysevent_set(sw->sefd, sw->setok, "dhcp_server-restart", "lan_not_restart", 0);
+        }
+#if 1 
+        /* wan-status triggers service_routed, which will restart firewall
+         * this logic are really strange, it means whan lan is ok but "start-misc" is not, 
+         * do not start firewall fully. but "start-misc" means ? 
+         * why not use "lan-status" ? 
+         * It not good idea to trigger other module here, firewall itself should register 
+         * "lan-status" and "wan-status" and determine which part should be launched. 
+        */
+        memset(val, 0 ,sizeof(val));
+        sysevent_get(sw->sefd, sw->setok, "start-misc", val, sizeof(val));
+        sysevent_get(sw->sefd, sw->setok, "current_lan_ipaddr", ipaddr, sizeof(ipaddr));
+
+        sysevent_get(sw->sefd, sw->setok,"bridge_mode", brmode, sizeof(brmode));
+        sysevent_get(sw->sefd, sw->setok,"lan-status", lanstatus, sizeof(lanstatus));
+
+        if (strcmp(val, "ready") != 0 && strlen(ipaddr) && strcmp(ipaddr, "0.0.0.0") != 0)
         {
-            sysevent_set(sw->sefd, sw->setok, "current_wan_ipaddr", "0.0.0.0", 0);
-        }
-    }
-     }
+            fprintf(stderr, "%s: start-misc: %s current_lan_ipaddr %s\n", __FUNCTION__, val, ipaddr);
+            fprintf(stderr, "[%s] start firewall partially\n", PROG_NAME);
+            sysevent_get(sw->sefd, sw->setok, "parcon_nfq_status", val, sizeof(val));
+            if (strcmp(val, "started") != 0)
+            {
+                iface_get_hwaddr(sw->ifname, val, sizeof(val));
+                vsystem("((nfq_handler 4 %s &)&)", val);
+                sysevent_set(sw->sefd, sw->setok, "parcon_nfq_status", "started", 0);
+            }
+    	    /* Should not be executed before wan_service-status is set to started for _PLATFORM_IPQ_ */
 
-    memset(val, 0 ,sizeof(val));
-    syscfg_get(NULL, "dhcp_server_propagate_wan_domain", val, sizeof(val));
-    if (atoi(val) != 1)
-        syscfg_get(NULL, "dhcp_server_propagate_wan_nameserver", val, sizeof(val));
-
-    if (atoi(val) == 1) {
-        //if ((fp = fopen("/var/tmp/lan_not_restart", "wb")) != NULL)
-        //    fclose(fp);
-        sysevent_set(sw->sefd, sw->setok, "dhcp_server-restart", "lan_not_restart", 0);
-    }
-#if 1 // wan-status triggers service_routed, which will restart firewall
-    /* this logic are really strange, it means whan lan is ok but "start-misc" is not, 
-     * do not start firewall fully. but "start-misc" means ? 
-     * why not use "lan-status" ? 
-     *
-     * It not good idea to trigger other module here, firewall itself should register 
-     * "lan-status" and "wan-status" and determine which part should be launched. */
-    memset(val, 0 ,sizeof(val));
-    sysevent_get(sw->sefd, sw->setok, "start-misc", val, sizeof(val));
-    sysevent_get(sw->sefd, sw->setok, "current_lan_ipaddr", ipaddr, sizeof(ipaddr));
-
-    sysevent_get(sw->sefd, sw->setok,"bridge_mode", brmode, sizeof(brmode));
-    sysevent_get(sw->sefd, sw->setok,"lan-status", lanstatus, sizeof(lanstatus));
-
-    if (strcmp(val, "ready") != 0 && strlen(ipaddr) && strcmp(ipaddr, "0.0.0.0") != 0) {
-        fprintf(stderr, "%s: start-misc: %s current_lan_ipaddr %s\n", __FUNCTION__, val, ipaddr);
-        fprintf(stderr, "[%s] start firewall partially\n", PROG_NAME);
-
-        sysevent_get(sw->sefd, sw->setok, "parcon_nfq_status", val, sizeof(val));
-        if (strcmp(val, "started") != 0) {
-            iface_get_hwaddr(sw->ifname, val, sizeof(val));
-            vsystem("((nfq_handler 4 %s &)&)", val);
-            sysevent_set(sw->sefd, sw->setok, "parcon_nfq_status", "started", 0);
-        }
-
-
-    /* Should not be executed before wan_service-status is set to started for _PLATFORM_IPQ_ */
 #if !defined(_PLATFORM_IPQ_) && !defined(_PLATFORM_RASPBERRYPI_) && !defined(_PLATFORM_TURRIS_)
-        #if defined (_XB6_PRODUCT_REQ_) && defined (_COSA_BCM_ARM_)
+#if defined (_XB6_PRODUCT_REQ_) && defined (_COSA_BCM_ARM_)
             v_secure_system("firewall"); 
-        #else
+#else
             // TODO : gw_lan_refresh to be removed from here once udhcpc is made generic to all platforms
             v_secure_system("firewall && gw_lan_refresh"); 
-        #endif
 #endif
-    } else {
-
+#endif
+        }
+        else
+        {
 #if !defined(_COSA_BCM_MIPS_)
-    	sysevent_get(sw->sefd, sw->setok, "misc-ready-from-mischandler",mischandler_ready, sizeof(mischandler_ready));
-    	if(strcmp(mischandler_ready,"true") == 0)
-    	{
-    		//only for first time
-    #if !defined(_PLATFORM_RASPBERRYPI_) && !defined(_PLATFORM_TURRIS_)
-    		fprintf(stderr, "[%s] ready is set from misc handler. Doing gw_lan_refresh\n", PROG_NAME);
-            #if defined (_XB6_PRODUCT_REQ_) && defined (_COSA_BCM_ARM_)
+            sysevent_get(sw->sefd, sw->setok, "misc-ready-from-mischandler",mischandler_ready, sizeof(mischandler_ready));
+    	    if(strcmp(mischandler_ready,"true") == 0)
+    	    {
+                //only for first time
+#if !defined(_PLATFORM_RASPBERRYPI_) && !defined(_PLATFORM_TURRIS_)
+                fprintf(stderr, "[%s] ready is set from misc handler. Doing gw_lan_refresh\n", PROG_NAME);
+#if defined (_XB6_PRODUCT_REQ_) && defined (_COSA_BCM_ARM_)
                 v_secure_system("firewall");
-            #else
+#else
                 // TODO : gw_lan_refresh to be removed from here once udhcpc is made generic to all platforms
                 v_secure_system("firewall && gw_lan_refresh");
-            #endif
-    #endif
-    		sysevent_set(sw->sefd, sw->setok, "misc-ready-from-mischandler", "false", 0);
-    	}
+#endif
+#endif
+                sysevent_set(sw->sefd, sw->setok, "misc-ready-from-mischandler", "false", 0);
+    	    }
 #endif
 
-    }
+        }
 #endif
-
-    sysctl_iface_set("/proc/sys/net/ipv4/ip_forward", NULL, "1");
-    sysevent_set(sw->sefd, sw->setok, "firewall_flush_conntrack", "1", 0);
-
+        sysctl_iface_set("/proc/sys/net/ipv4/ip_forward", NULL, "1");
+        sysevent_set(sw->sefd, sw->setok, "firewall_flush_conntrack", "1", 0);
 #if !defined(_WAN_MANAGER_ENABLED_)
-    fprintf(stderr, "[%s] Synching DNS to ATOM...\n", PROG_NAME);
-    v_secure_system("/etc/utopia/service.d/service_wan/dns_sync.sh &");
+        fprintf(stderr, "[%s] Synching DNS to ATOM...\n", PROG_NAME);
+        v_secure_system("/etc/utopia/service.d/service_wan/dns_sync.sh &");
 #endif /*_WAN_MANAGER_ENABLED_*/
+    }
 
     return 0;
 }
@@ -1623,6 +1759,13 @@ static int wan_addr_unset(struct serv_wan *sw)
     unsigned int uiNeedstoAvoidIPConfig = 0;
 #endif /* * WAN_FAILOVER_SUPPORTED */
 
+#if defined(FEATURE_TAD_HEALTH_CHECK)
+    char output[16] = {0};
+    enum NetworkConnectivityCheck nConnCheck = 0;
+
+    sysevent_get(sw->sefd, sw->setok, SYSEVENT_NET_CONNECTIVITY_CHECK, output, sizeof(output));
+    nConnCheck = atoi(output);
+#endif
     sysevent_set(sw->sefd, sw->setok, "wan-status", "stopping", 0);
     sysevent_set(sw->sefd, sw->setok, "wan-errinfo", NULL, 0);
     char prev_ip[100];
@@ -1657,37 +1800,39 @@ static int wan_addr_unset(struct serv_wan *sw)
     sysevent_set(sw->sefd, sw->setok, "dhcp_mta_option", NULL, 0);
 #endif
 
+
+#if defined(FEATURE_TAD_HEALTH_CHECK)
+    if((nConnCheck == NET_CONNNECTIVITY_CHECK_DISABLED) ||
+       (nConnCheck & (1 << (NET_CONNNECTIVITY_CHECK_STOPPED - 1))) )
+#endif
+    {
 #if !defined(_WAN_MANAGER_ENABLED_)
-    switch (sw->prot) {
-    case WAN_PROT_DHCP:
-        #if !defined (FEATURE_RDKB_DHCP_MANAGER)
-        if (wan_dhcp_stop(sw) != 0) {
-            fprintf(stderr, "%s: wan_dhcp_stop error\n", __FUNCTION__);
+        switch (sw->prot) {
+        case WAN_PROT_DHCP:
+#if !defined (FEATURE_RDKB_DHCP_MANAGER)
+            if (wan_dhcp_stop(sw) != 0) {
+                fprintf(stderr, "%s: wan_dhcp_stop error\n", __FUNCTION__);
+                return -1;
+            }
+#else
+            //sysevent_set(sw->sefd, sw->setok, "dhcp_client-stop", "", 0);
+            v_secure_system("dmcli eRT setv Device.DHCPv4.Client.1.Enable bool false");
+            fprintf(stderr, "%s  Disabling DHCPv4 client using TR181\n", __FUNCTION__);
+#endif
+        break;
+        case WAN_PROT_STATIC:
+            if (wan_static_stop(sw) != 0) {
+                fprintf(stderr, "%s: wan_static_stop error\n", __FUNCTION__);
+                return -1;
+            }
+        break;
+        default:
+            fprintf(stderr, "%s: unknow wan protocol\n", __FUNCTION__);
             return -1;
         }
-        #else
-        //sysevent_set(sw->sefd, sw->setok, "dhcp_client-stop", "", 0);
-        v_secure_system("dmcli eRT setv Device.DHCPv4.Client.1.Enable bool false");
-        fprintf(stderr, "%s  Disabling DHCPv4 client using TR181\n", __FUNCTION__);
-        #endif
-
-        break;
-    case WAN_PROT_STATIC:
-        if (wan_static_stop(sw) != 0) {
-            fprintf(stderr, "%s: wan_static_stop error\n", __FUNCTION__);
-            return -1;
-        }
-
-        break;
-    default:
-        fprintf(stderr, "%s: unknow wan protocol\n", __FUNCTION__);
-        return -1;
-    }
-
-    v_secure_system("ip -4 addr flush dev %s", sw->ifname);
-
+        v_secure_system("ip -4 addr flush dev %s", sw->ifname);
 #endif /*_WAN_MANAGER_ENABLED_*/
-
+    }
     printf("%s Triggering RDKB_FIREWALL_RESTART\n",__FUNCTION__);
     t2_event_d("SYS_SH_RDKB_FIREWALL_RESTART", 1);
     sysevent_set(sw->sefd, sw->setok, "firewall-restart", NULL, 0);

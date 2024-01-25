@@ -507,8 +507,7 @@ while (retry_count < max_retries) {
         strncpy(wanIface, "erouter0", sizeof(wanIface) - 1);
     }
 #endif
-
-#if defined(WAN_MANAGER_UNIFICATION_ENABLED) && !defined(FEATURE_RDKB_CONFIGURABLE_WAN_INTERFACE)
+#if defined(WAN_MANAGER_UNIFICATION_ENABLED) && !defined(FEATURE_RDKB_CONFIGURABLE_WAN_INTERFACE) || defined(FEATURE_TAD_HEALTH_CHECK)
     /* Ipv6 route for backup interface is handled by PAM. Don't add default route for backup interface */
     if(strcmp(wanIface, "erouter0" ) == 0)
 #endif
