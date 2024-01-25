@@ -14472,6 +14472,9 @@ static void do_ipv6_nat_table(FILE* fp)
 			}
 		}
    }
+#ifdef _PLATFORM_RASPBERRYPI_
+   fprintf(fp, "-A POSTROUTING -o %s -j MASQUERADE\n", current_wan_ifname);
+#endif
     FIREWALL_DEBUG("Exiting do_ipv6_nat_table \n");
 }
 
