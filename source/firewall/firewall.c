@@ -11174,13 +11174,13 @@ static int prepare_multinet_filter_forward (FILE *filter_fp)
 #endif
     //<<
 
-      #ifdef GATEWAY_FAILOVER_SUPPORTED
+#if defined (FEATURE_RDKB_INTER_DEVICE_MANAGER) && defined (GATEWAY_FAILOVER_SUPPORTED) 
         if ( idmInterface[0] != '\0'  && (strcmp(idmInterface,"br403") != 0 ) )
         {
             fprintf(filter_fp, "-A INPUT -i %s -d 192.168.245.0/24 -j ACCEPT\n",idmInterface);
             fprintf(filter_fp, "-A INPUT -i %s -m pkttype ! --pkt-type unicast -j ACCEPT\n", idmInterface);
         }
-      #endif
+#endif
 
     inst_resp[0] = 0;
     sysevent_get(sysevent_fd, sysevent_token, "multinet-instances", inst_resp, sizeof(inst_resp));
