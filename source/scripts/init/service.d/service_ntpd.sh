@@ -302,13 +302,8 @@ set_ntp_driftsync_status ()
       retry=1
       while true
       do
-        if [ $WAN_IPv6_UP -eq 1 ]; then
-           sync_status=`ntpq -c rv | grep "stratum"`
-        else
-           sync_status=`ntpq -4 -c rv | grep "stratum"`
-        fi
-
-        if [ -n "$sync_status" ] && [[ "$sync_status" != *"stratum=16"* ]]; then
+        sync_status=`ntpq -c rv | grep "stratum=16"`
+        if [ -z "$sync_status" ]; then
            echo_t "SERVICE_NTPD : ntpd time synced , setting the status" >> $NTPD_LOG_NAME
            syscfg set ntp_status 3
            sysevent set ntp_time_sync 1
