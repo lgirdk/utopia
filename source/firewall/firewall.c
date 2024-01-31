@@ -13746,7 +13746,7 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    fprintf(filter_fp, ":%s - [0:0]\n", "LOG_SSH_DROP");
    fprintf(filter_fp, ":%s - [0:0]\n", "SSH_FILTER");
    fprintf(filter_fp, "-A INPUT -i %s -p tcp -m tcp --dport 22 -j SSH_FILTER\n", ecm_wan_ifname);
-   if (erouterSSHEnable)
+   if (erouterSSHEnable || bEthWANEnable)
        fprintf(filter_fp, "-A INPUT -i %s -p tcp -m tcp --dport 22 -j SSH_FILTER\n",current_wan_ifname);
    fprintf(filter_fp, "-A LOG_SSH_DROP -m limit --limit 1/minute -j LOG --log-level %d --log-prefix \"SSH Connection Blocked:\"\n",syslog_level);
    fprintf(filter_fp, "-A LOG_SSH_DROP -j DROP\n");
