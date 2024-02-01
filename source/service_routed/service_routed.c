@@ -539,7 +539,8 @@ static int route_unset(struct serv_routed *sr)
     char wanIface[64] = {'\0'};
     sysevent_get(sr->sefd, sr->setok, "current_wan_ifname", wanIface, sizeof(wanIface));
     if(wanIface[0] == '\0'){
-        strcpy(wanIface,"erouter0"); // default wan interface
+        /* CID fix : 334257*/
+        strncpy(wanIface, "erouter0", sizeof(wanIface) - 1);
     }
 
 #if defined(CISCO_CONFIG_DHCPV6_PREFIX_DELEGATION) || defined(MULTILAN_FEATURE)
