@@ -500,7 +500,8 @@ while (retry_count < max_retries) {
     char wanIface[64] = {'\0'};
     sysevent_get(sr->sefd, sr->setok, "current_wan_ifname", wanIface, sizeof(wanIface));
     if(wanIface[0] == '\0'){
-        strcpy(wanIface,"erouter0"); // default wan interface
+        /* CID fix : 334256*/
+        strncpy(wanIface, "erouter0", sizeof(wanIface) - 1);
     }
 #endif
 
