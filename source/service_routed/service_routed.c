@@ -670,9 +670,9 @@ static int gen_zebra_conf(int sefd, token_t setok)
                 fptr =fopen("/etc/hosts", "a");
                 if (fptr != NULL)
                 {
-                    if ( loc_ip6 != NULL)
+                    if ( loc_ip6[0] != '\0')
                     {
-                        if (loc_domain != NULL)
+                        if (loc_domain[0] != '\0')
                         {
                             fprintf(fptr, "%s      %s\n",loc_ip6,loc_domain);
                         }
