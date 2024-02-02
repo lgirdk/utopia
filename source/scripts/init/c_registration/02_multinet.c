@@ -318,7 +318,7 @@ void srv_register(void) {
                 for (int j = 0; j <= 10; j++)
                     {
                         snprintf(str[0], 110, "if_wlan%d.%d-status|/usr/bin/bridgeUtils|%s|%s", i, j, ACTION_FLAG_NORMAL, TUPLE_FLAG_EVENT);
-                        sm_register(SERVICE_NAME, SERVICE_DEFAULT_HANDLER, (const char**) str);
+                        sm_register(SERVICE_NAME, NULL, (const char**) str);
                     }
                 free(str[0]);
             #endif
