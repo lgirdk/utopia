@@ -131,7 +131,7 @@ check_IGD_is_up() {
 handle_ipv4_status() {
     
     CUR_IGD_PID=`sysevent get ${SERVICE_NAME}_${1}-pid`
-    if [ x$L3_UP_STATUS = x$2 ] && [ x1 = x`sysevent get ${SERVICE_NAME}_${1}-enabled` ]; then
+    if [ x$L3_UP_STATUS = x$2 ] && [ "TRUE" = "$(sysevent get ${SERVICE_NAME}_${1}-enabled)" ]; then
         if [ "1" = "$SYSCFG_upnp_igd_enabled" -a x = x$CUR_IGD_PID ] ; then
             IGD `sysevent get ipv4_${1}-ifname` &
             sysevent set ${SERVICE_NAME}_${1}-pid $!
