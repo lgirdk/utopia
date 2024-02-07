@@ -653,9 +653,26 @@ service_init ()
     eval "$FOO"
 }
 
+waitForWanInitStatusEvent()
+{
+    echo_t "SERVICE_NTPD : Waiting for wan init completion..."
+    wan_init_complete=1
+    MAX_WAIT_TIME=60
+    counter=0 
+    while [ "$(sysevent get wan-status)" != "started" ] ; do
+        counter=$((counter+1))
+        if [ $counter -ge $MAX_WAIT_TIME ];then
+            echo_t "SERVICE_NTPD : wan status is not started, breaking the loop"
+            wan_init_complete=0 
+            break
+        fi
+        sleep 1
+    done
+
+    return $wan_init_complete;
+}
 
 # service_ntpd.sh Entry
-
 while [ -e ${LOCKFILE} ] ; do
     #See if process is still running
     kill -0 "`cat ${LOCKFILE}`"
@@ -706,9 +723,20 @@ case "$1" in
       fi
       ;;
   current_wan_ifname)
-      echo_t "SERVICE_NTPD : current_wan_ifname calling service_start" >> $NTPD_LOG_NAME
-      service_stop
-      service_start
+      if [ "$BOX_TYPE" = "WNXL11BWL" ];then
+          restart_ntp=1
+          echo_t "SERVICE_NTPD : Received current_wan_ifname event" >> $NTPD_LOG_NAME
+          if [ "started" != "$CURRENT_WAN_STATUS" ] ; then
+                waitForWanInitStatusEvent
+                restart_ntp=$?
+          fi
+          if [ "$restart_ntp" = "1" ];then
+              CURRENT_WAN_STATUS=`sysevent get wan-status`
+              echo_t "SERVICE_NTPD : current_wan_ifname calling service_restart" >> $NTPD_LOG_NAME
+              service_stop
+              service_start 
+          fi
+      fi
       ;;
   ipv6_connection_state)
       if [ "$BOX_TYPE" = "HUB4" ] || [ "$BOX_TYPE" = "SR300" ] || [ "$BOX_TYPE" = "SE501" ] || [ "$BOX_TYPE" = "WNXL11BWL" ] || [ "$BOX_TYPE" = "SR213" ]; then
