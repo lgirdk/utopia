@@ -15165,7 +15165,12 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
 #ifdef FEATURE_STATIC_IPV4  
    if(isBrlanStaticEnabled)
    {
-       fprintf(filter_fp, "-I http2self -i %s -d 192.168.0.1 -j ACCEPT\n", cmdiag_ifname);
+      char query[8];
+      syscfg_get(NULL, "static_ui_enable", query, sizeof(query));
+      if (strcmp(query, "true") == 0)
+      {
+         fprintf(filter_fp, "-I http2self -i %s -d 192.168.0.1 -j ACCEPT\n", cmdiag_ifname);
+      }
    }
 #endif
 
