@@ -607,7 +607,7 @@ static void s_parse_dhcp_lease (char *line, dhcpLANHost_t *client_info)
 {
     char lease[64];
 
-    sscanf(line, "%s %s %s %s %s", 
+    sscanf(line, "%63s %17s %39s %127s %127s", 
            lease,
            client_info->macaddr,
            client_info->ipaddr,
