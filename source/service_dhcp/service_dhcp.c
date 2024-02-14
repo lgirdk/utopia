@@ -141,7 +141,8 @@ void get_device_props()
     {   
         char props[255] = {""};
         memset(props,0,sizeof(props));
-        while(fscanf(l_fFp,"%s", props) != EOF )
+        /*CID 135611 Fix : Calling Risky Function*/
+        while(fscanf(l_fFp,"%254s", props) != EOF )
         {
             char *property = NULL;
             if(NULL != (property = strstr(props, "BOX_TYPE=")))
