@@ -1601,6 +1601,11 @@ $tunneled_static_ip_auth_port=1812
 $tunneled_static_ip_acct_port=1813
 $tunneled_static_ip_interface=1
 
+$tunneled_static_ip_hc_enable=1
+$tunneled_static_ip_hc_ping_count=3
+$tunneled_static_ip_hc_ping_interval=10
+$tunneled_static_ip_hc_trigger_interval=30
+
 $staticipadminstatus=1
 
 $dslite_dhcpv6_opt64_enable_dslite=0
