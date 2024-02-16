@@ -1405,7 +1405,8 @@ BOOL apply_config(int l3_inst, char *staticIpv4Addr, char *staticIpv4Subnet)
 		if (strncmp(l_cLan_IpAddrv6_prev, l_cLan_IpAddrv6, 64))
 	        {
                   fprintf(g_fArmConsoleLog, "%s Assigning primary lan IPv6 address %s\n",__FUNCTION__, l_cLan_IpAddrv6);
-                  if (l_cLan_IpAddrv6_prev != NULL)
+                  /*CID 55169 : Array compared against zero.*/
+				  if (l_cLan_IpAddrv6_prev [0]!= '\0')
                   {    
                      snprintf(l_cSysevent_Cmd, sizeof(l_cSysevent_Cmd),
                          "-6 %s/64 dev %s valid_lft forever preferred_lft forever", 
