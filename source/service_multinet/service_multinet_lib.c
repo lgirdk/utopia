@@ -298,26 +298,6 @@ static void nethelper_bridgeCreate (char *brname)
     system(cmdBuff);
 
     if (!strcmp(brname, "brlan0")) {
-        char _last_erouter_mode[8];
-        int last_erouter_mode = 0;
-
-        if (!syscfg_get(NULL, "last_erouter_mode", _last_erouter_mode, sizeof(_last_erouter_mode)))
-            last_erouter_mode = atoi(_last_erouter_mode);
-
-        if (!last_erouter_mode) {
-            /* Disable packet forwarding to ATOM side */
-            system("ebtables -t filter -I FORWARD -o l2sd0.100 -j DROP");
-            system("ebtables -t filter -I OUTPUT -o l2sd0.100 -j DROP");
-
-            /* Mark multicast packets in mABR SSM address range to be accelerated */
-            sysctl_iface_set("/sys/module/bridge/parameters/br_flood_pp_mark", NULL, "1000");
-            system("ebtables -t nat -A PREROUTING -p IPv4 --ip-dst 232.0.0.0/8 --ip-protocol udp -j mark --mark-set 1000 --mark-target CONTINUE");
-            system("ebtables -t nat -A PREROUTING -p IPv6 --ip6-dst FF38::8000:0000/97 --ip6-protocol udp -j mark --mark-set 1000 --mark-target CONTINUE");
-        } else {
-            /* Disable sending of multicast packets in mABR SSM address range to ethernet clients. ATOM side will do it after m2u conversion */
-            system("ebtables -t filter -I OUTPUT -o l2sd0.200 -p IPv4 --ip-dst 232.0.0.0/8 --ip-protocol udp -j DROP");
-            system("ebtables -t filter -I OUTPUT -o l2sd0.200 -p IPv6 --ip6-dst FF38::8000:0000/97 --ip6-protocol udp -j DROP");
-        }
 
         system("brctl addif brlan0 l2sd0.200");
     }
@@ -430,6 +410,15 @@ int multinet_bridgeUpInst(int l2netInst, int bFirewallRestart){
 #if defined(MULTILAN_FEATURE)
         if (1 == l2netInst)
         {
+            char _last_erouter_mode[8];
+            int last_erouter_mode = 0;
+            if (!syscfg_get(NULL, "last_erouter_mode", _last_erouter_mode, sizeof(_last_erouter_mode)))
+                last_erouter_mode = atoi(_last_erouter_mode);
+            if (last_erouter_mode) {
+                /* Disable sending of multicast packets in mABR SSM address range to ethernet clients. ATOM side will do it after m2u conversion */
+                system("ebtables -t filter -I OUTPUT -o l2sd0.200 -p IPv4 --ip-dst 232.0.0.0/8 --ip-protocol udp -j DROP");
+                system("ebtables -t filter -I OUTPUT -o l2sd0.200 -p IPv6 --ip6-dst FF38::8000:0000/97 --ip6-protocol udp -j DROP");
+            }
            MNET_DEBUG("brlan0 up: disabling multicast_snooping\n")
            sysctl_iface_set("/sys/devices/virtual/net/brlan0/bridge/multicast_snooping", NULL, "0");
            sysctl_iface_set("/proc/sys/net/ipv4/conf/all/rp_filter", NULL, "0");
