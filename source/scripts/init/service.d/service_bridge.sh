@@ -205,6 +205,11 @@ add_ebtable_rule()
     ip addr add $dst_ip/24 dev $cmdiag_if
     ebtables -t nat -A PREROUTING -p ipv4 --ip-dst $cmdiag_ip -j dnat --to-destination $cmdiag_if_mac
     echo 2 > /proc/sys/net/ipv4/conf/wan0/arp_announce
+    ebtables -t filter -I FORWARD -o l2sd0.100 -j DROP
+    ebtables -t filter -I OUTPUT -o l2sd0.100 -j DROP
+    echo 1000 > /sys/module/bridge/parameters/br_flood_pp_mark
+    ebtables -t nat -A PREROUTING -p IPv4 --ip-dst 232.0.0.0/8 --ip-protocol udp -j mark --mark-set 1000 --mark-target CONTINUE
+    ebtables -t nat -A PREROUTING -p IPv6 --ip6-dst FF38::8000:0000/97 --ip6-protocol udp -j mark --mark-set 1000 --mark-target CONTINUE
 }
 
 #--------------------------------------------------------------
@@ -229,6 +234,11 @@ del_ebtable_rule()
     ip addr del $dst_ip/24 dev $cmdiag_if
     ebtables -t nat -D PREROUTING -p ipv4 --ip-dst $cmdiag_ip -j dnat --to-destination $cmdiag_if_mac
     echo 0 > /proc/sys/net/ipv4/conf/wan0/arp_announce
+    ebtables -t filter -D FORWARD -o l2sd0.100 -j DROP
+    ebtables -t filter -D OUTPUT -o l2sd0.100 -j DROP
+    echo 0 > /sys/module/bridge/parameters/br_flood_pp_mark
+    ebtables -t nat -D PREROUTING -p IPv4 --ip-dst 232.0.0.0/8 --ip-protocol udp -j mark --mark-set 1000 --mark-target CONTINUE
+    ebtables -t nat -D PREROUTING -p IPv6 --ip6-dst FF38::8000:0000/97 --ip6-protocol udp -j mark --mark-set 1000 --mark-target CONTINUE
 }
 
 #--------------------------------------------------------------
