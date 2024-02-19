@@ -848,6 +848,8 @@ static BOOL isDefHttpsPortUsed = FALSE ;
  * For simplicity purposes we cap the number of syscfg entries within a
  * specific namespace. This cap is controlled by MAX_SYSCFG_ENTRIES
  */
+#define MAX_PORT 65535
+
 #define MAX_SYSCFG_ENTRIES 128
 
 #define MAX_QUERY 256
@@ -8186,7 +8188,6 @@ static int do_parental_control_allow_trusted(FILE *fp, int iptype, const char* l
       if (rc == 0 && query[0] != '\0') this_iptype = atoi(query);
       if (this_iptype != 6) this_iptype = 4;
 
-      this_iptype == 4 ? ++count_v4 : ++count_v6;
 #if defined(_HUB4_PRODUCT_REQ_) || defined(FEATURE_MAPT)
       /* Add the service rules for V6 table on MAPT line and Dual stack, since this rules were added only for V4, needed for v6 also. 
          As of now 'this_iptype' value is always '4', blocking the rule for v6 */
@@ -8202,6 +8203,7 @@ static int do_parental_control_allow_trusted(FILE *fp, int iptype, const char* l
          rc = syscfg_get(namespace, "mac_addr", mac, sizeof(mac));
          if (rc == 0 && mac[0] != '\0')
          {
+                this_iptype == 4 ? ++count_v4 : ++count_v6;
                 fprintf(fp, "-A %s -m mac --mac-source %s -j RETURN\n", table_name, mac);
          }
 #else
@@ -8218,6 +8220,7 @@ static int do_parental_control_allow_trusted(FILE *fp, int iptype, const char* l
             ret = getmacaddress_fromip(query,iptype,mac,sizeof(mac));
             if ((0 == ret) && (strlen(mac) > 0))
             {
+                this_iptype == 4 ? ++count_v4 : ++count_v6;
                 fprintf(fp, "-A %s -m mac --mac-source %s -j RETURN\n", table_name, mac);
             }
             else
@@ -8236,6 +8239,7 @@ static int do_parental_control_allow_trusted(FILE *fp, int iptype, const char* l
                             ret = getmacaddress_fromip(ipaddress,4,mac,sizeof(mac));
                             if ((0 == ret) && (strlen(mac) > 0))
                             {
+                                ++count_v6;
                                 fprintf(fp, "-A %s -m mac --mac-source %s -j RETURN\n", table_name, mac);
                             }
                         }
@@ -8893,7 +8897,14 @@ static int do_parcon_device_cloud_mgmt(FILE *fp, int iptype, FILE *cron_fp)
    return(0);
 }
 
+static int validate_port(char* port_num)
+{
+   int port = atoi(port_num);
+   if ( port <= 0 || port > MAX_PORT )
+      return -1;
 
+   return 0;
+}
 /*
  * add parental control managed service(ports) rules
  */
@@ -8955,13 +8966,13 @@ static int do_parcon_mgmt_service(FILE *fp, int iptype, FILE *cron_fp)
 
          sdport[0]   = '\0';
          rc = syscfg_get(namespace, "start_port", sdport, sizeof(sdport));
-         if (0 != rc || '\0' == sdport[0]) {
+         if (0 != rc || '\0' == sdport[0] || (0 != validate_port(sdport)) ) {
             continue;
          }
 
          edport[0]   = '\0';
          rc = syscfg_get(namespace, "end_port", edport, sizeof(edport));
-         if (0 != rc || '\0' == edport[0]) {
+         if (0 != rc || '\0' == edport[0] || (0 != validate_port(sdport)) ) {
             continue;
          }
 
@@ -9063,13 +9074,15 @@ static int do_parcon_mgmt_site_keywd(FILE *fp, FILE *nat_fp, int iptype, FILE *c
                 char hexUrl[MAX_URL_LEN * 2 + 32];
                 int host_name_offset = 0;
                 isHttps = 0;
-                if (0 == strncmp(query, "http://", STRLEN_HTTP_URL_PREFIX)) {
+                if (0 == strncasecmp(query, "http://", STRLEN_HTTP_URL_PREFIX)) {
                     host_name_offset = STRLEN_HTTP_URL_PREFIX;
                 }
-                else if (0 == strncmp(query, "https://", STRLEN_HTTPS_URL_PREFIX)) {
+                else if (0 == strncasecmp(query, "https://", STRLEN_HTTPS_URL_PREFIX)) {
                     host_name_offset = STRLEN_HTTPS_URL_PREFIX;
                     isHttps = 1;
                 }
+                else
+                     continue;
                 char *tmp;
                 int is_dnsr_nfq = 1;
                 if(strncmp(query+host_name_offset, "[", 1) == 0){ /* if this is a ipv6 address stop monitor dns */
@@ -9121,12 +9134,14 @@ static int do_parcon_mgmt_site_keywd(FILE *fp, FILE *nat_fp, int iptype, FILE *c
 
                 // Strip http:// or https:// from the beginning of the URL
                 // string so that only the host name is passed in
-                if (0 == strncmp(query, "http://", STRLEN_HTTP_URL_PREFIX)) {
+                if (0 == strncasecmp(query, "http://", STRLEN_HTTP_URL_PREFIX)) {
                     host_name_offset = STRLEN_HTTP_URL_PREFIX;
                 }
-                else if (0 == strncmp(query, "https://", STRLEN_HTTPS_URL_PREFIX)) {
+                else if (0 == strncasecmp(query, "https://", STRLEN_HTTPS_URL_PREFIX)) {
                     host_name_offset = STRLEN_HTTPS_URL_PREFIX;
                 }
+                else
+                    continue;
 
                 char nstdPort[8] = {'\0'};
                 char *pch;
@@ -13756,8 +13771,8 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    fprintf(filter_fp, ":%s - [0:0]\n", "LOG_SSH_DROP");
    fprintf(filter_fp, ":%s - [0:0]\n", "SSH_FILTER");
    fprintf(filter_fp, "-A INPUT -i %s -p tcp -m tcp --dport 22 -j SSH_FILTER\n", ecm_wan_ifname);
-   if (erouterSSHEnable || bEthWANEnable)
-       fprintf(filter_fp, "-A INPUT -i %s -p tcp -m tcp --dport 22 -j SSH_FILTER\n",current_wan_ifname);
+   //if (erouterSSHEnable || bEthWANEnable)
+   fprintf(filter_fp, "-A INPUT -i %s -p tcp -m tcp --dport 22 -j SSH_FILTER\n",current_wan_ifname);
    fprintf(filter_fp, "-A LOG_SSH_DROP -m limit --limit 1/minute -j LOG --log-level %d --log-prefix \"SSH Connection Blocked:\"\n",syslog_level);
    fprintf(filter_fp, "-A LOG_SSH_DROP -j DROP\n");
 
