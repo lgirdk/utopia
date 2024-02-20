@@ -577,8 +577,8 @@ void ipv4_status(int l3_inst, char *status)
     		sysevent_get(g_iSyseventfd, g_tSysevent_token, "lan_prefix_v6", 
 						 l_cLan_PrefixV6, sizeof(l_cLan_PrefixV6));
 			if ((strncmp(l_cLan_IpAddrv6_prev, l_cLan_IpAddrv6, 64)) && (0 != l_cLan_IpAddrv6[0]))
-			{
-                           if (l_cLan_IpAddrv6_prev != NULL)
+			{              /*CID 64415 : Array compared against zero*/
+                           if (l_cLan_IpAddrv6_prev[0] != '\0')
                            {  
     	    	             snprintf(l_cSysevent_Cmd, sizeof(l_cSysevent_Cmd),
         	    	      "-6 %s/64 dev %s valid_lft forever preferred_lft forever", 
