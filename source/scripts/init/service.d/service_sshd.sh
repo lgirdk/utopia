@@ -83,7 +83,12 @@ get_listen_params() {
         CM_IP4=`ip -4 addr show dev wan0 scope global | awk '/inet/{print $2}' | cut -d '/' -f1`
         #Get IPv6 address of wan0
         CM_IP6=`ip -6 addr show dev wan0 scope global | awk '/inet/{print $2}' | cut -d '/' -f1`
-        if ([ "$BOX_TYPE" = "XB6" -a "$MANUFACTURE" = "Arris" ]); then
+        
+        #in dibbler client gobal addr is not added as "dynamic"
+        Dibbler_Client_enabled=`syscfg get dibbler_client_enable_v2`
+        if ([ "$BOX_TYPE" = "XB6" -a "$MANUFACTURE" = "Arris" -a "$Dibbler_Client_enabled" = "true" ]); then
+            CM_IP6=`ip -6 addr show dev $CMINTERFACE | grep -i "scope global" | awk '/inet/{print $2}' | cut -d '/' -f1 | head -1`
+        elif ([ "$BOX_TYPE" = "XB6" -a "$MANUFACTURE" = "Arris" ]); then
             CM_IP6=`ip -6 addr show dev $CMINTERFACE | grep -i "scope global dynamic $" | awk '/inet/{print $2}' | cut -d '/' -f1 | head -1`
         fi
         if ([ "$BOX_TYPE" = "XB6" -a "$MANUFACTURE" = "Arris" ]); then
