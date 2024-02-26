@@ -705,7 +705,7 @@ static char ecm_wan_ifname[20];
 static char emta_wan_ifname[20];
 static char eth_wan_enabled[20];
 static BOOL bEthWANEnable = FALSE;
-static char devicePartnerId[255] = {'\0'};
+//static char devicePartnerId[255] = {'\0'};
 #ifdef WAN_FAILOVER_SUPPORTED
 static char dev_type[20];
 #endif
@@ -1335,7 +1335,7 @@ int do_mapt_rules_v4(FILE *nat_fp, FILE *filter_fp, FILE *mangle_fp)
 
     /* Add PREROUTING rule. */
 #if defined(NAT46_KERNEL_SUPPORT)
-    if (strcmp ( devicePartnerId, "sky-uk") == 0) 
+//  if (strcmp ( devicePartnerId, "sky-uk") == 0)
     {
         fprintf(mangle_fp, "-A PREROUTING -i %s -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss %d\n", NAT46_INTERFACE, NAT46_CLAMP_MSS);
     }
@@ -2589,7 +2589,7 @@ static int prepare_globals_from_configuration(void)
 #ifdef _HUB4_PRODUCT_REQ_
    isProdImage = bIsProductionImage(); 
 #endif
-   getPartnerId ( devicePartnerId ) ;
+// getPartnerId ( devicePartnerId ) ;
    isComcastImage = bIsComcastImage();
    sysevent_get(sysevent_fd, sysevent_token, "wan_ifname", default_wan_ifname, sizeof(default_wan_ifname));
    sysevent_get(sysevent_fd, sysevent_token, "current_wan_ifname", current_wan_ifname, sizeof(current_wan_ifname));
