@@ -954,7 +954,7 @@ static int do_block_ports(FILE *filter_fp);
 static int isInRFCaptivePortal();
 
 
-#if defined(_WNXL11BWL_PRODUCT_REQ_)
+#if defined(_WNXL11BWL_PRODUCT_REQ_) || defined (_SCER11BEL_PRODUCT_REQ_)
 void  proxy_dns(FILE *nat_fp,int family);
 
 void get_iface_ipaddr_ula(const char* ifname,char* ipaddr, int max_ip_size);
@@ -5636,7 +5636,7 @@ static int do_lan2self_by_wanip(FILE *filter_fp, int family)
    fprintf(filter_fp, "-A lan2self_by_wanip -s %s/24 -d 192.168.101.1/32 -j xlog_drop_lan2self\n", lan_ipaddr);
    fprintf(filter_fp, "-A lan2self_by_wanip -s %s/24 -d 169.254.101.1/32 -j xlog_drop_lan2self\n", lan_ipaddr);
    //<<
-#if defined(_WNXL11BWL_PRODUCT_REQ_)
+#if defined(_WNXL11BWL_PRODUCT_REQ_) || defined (_SCER11BEL_PRODUCT_REQ_)
    fprintf(filter_fp, "-A lan2self_by_wanip -s %s/24 -d 169.254.70.254/32 -j xlog_drop_lan2self\n", lan_ipaddr);
    fprintf(filter_fp, "-A lan2self_by_wanip -s %s/24 -d 169.254.71.254/32 -j xlog_drop_lan2self\n", lan_ipaddr);
 #else
@@ -5848,7 +5848,7 @@ int do_wan2self_attack(FILE *fp,char* wan_ip)
     * Log probable DoS attack
     */
    //Smurf attack, actually the below rules are to prevent us from being the middle-man host
-#if defined(_HUB4_PRODUCT_REQ_) || defined(_WNXL11BWL_PRODUCT_REQ_) || defined(_XER5_PRODUCT_REQ_) /* ULOG target removed in kernels 3.17+ */
+#if defined(_HUB4_PRODUCT_REQ_) || defined(_WNXL11BWL_PRODUCT_REQ_) || defined(_XER5_PRODUCT_REQ_) || defined (_SCER11BEL_PRODUCT_REQ_) /* ULOG target removed in kernels 3.17+ */
    fprintf(fp, "-A wanattack -p icmp -m icmp --icmp-type address-mask-request %s -j LOG --log-prefix \"DoS Attack - Smurf Attack\" --log-level 7\n", logRateLimit);
 #elif defined(_PROPOSED_BUG_FIX_)
    if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,17,0))
@@ -5867,7 +5867,7 @@ int do_wan2self_attack(FILE *fp,char* wan_ip)
    fprintf(fp, "-A wanattack -p icmp -m icmp --icmp-type address-mask-request %s -j ULOG --ulog-prefix \"DoS Attack - Smurf Attack\" --ulog-cprange 50\n", logRateLimit);
 #endif /*_HUB4_PRODUCT_REQ_*/
    fprintf(fp, "-A wanattack -p icmp -m icmp --icmp-type address-mask-request -j xlog_drop_wanattack\n");
-#if defined(_HUB4_PRODUCT_REQ_) || defined(_WNXL11BWL_PRODUCT_REQ_) || defined(_XER5_PRODUCT_REQ_) /* ULOG target removed in kernels 3.17+ */
+#if defined(_HUB4_PRODUCT_REQ_) || defined(_WNXL11BWL_PRODUCT_REQ_) || defined(_XER5_PRODUCT_REQ_) || defined (_SCER11BEL_PRODUCT_REQ_) /* ULOG target removed in kernels 3.17+ */
    fprintf(fp, "-A wanattack -p icmp -m icmp --icmp-type timestamp-request %s -j LOG --log-prefix \"DoS Attack - Smurf Attack\" --log-level 7\n", logRateLimit);
 #elif defined(_PROPOSED_BUG_FIX_)
    if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,17,0))
@@ -5889,7 +5889,7 @@ int do_wan2self_attack(FILE *fp,char* wan_ip)
 
    //ICMP Flooding. Mark traffic bit rate > 5/s as attack and limit 6 log entries per hour
    fprintf(fp, "-A wanattack -p icmp -m limit --limit 5/s --limit-burst 10 -j RETURN\n"); //stop traveling the rest of the wanattack chain
-#if defined(_HUB4_PRODUCT_REQ_) || defined(_WNXL11BWL_PRODUCT_REQ_) || defined(_XER5_PRODUCT_REQ_) /* ULOG target removed in kernels 3.17+ */
+#if defined(_HUB4_PRODUCT_REQ_) || defined(_WNXL11BWL_PRODUCT_REQ_) || defined(_XER5_PRODUCT_REQ_) || defined (_SCER11BEL_PRODUCT_REQ_) /* ULOG target removed in kernels 3.17+ */
    fprintf(fp, "-A wanattack -p icmp %s -j LOG --log-prefix \"DoS Attack - ICMP Flooding\" --log-level 7\n", logRateLimit);
 #elif defined(_PROPOSED_BUG_FIX_)
    if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,17,0))
@@ -5911,7 +5911,7 @@ int do_wan2self_attack(FILE *fp,char* wan_ip)
 
    //TCP SYN Flooding
    fprintf(fp, "-A wanattack -p tcp --syn -m limit --limit 10/s --limit-burst 20 -j RETURN\n");
-#if defined(_HUB4_PRODUCT_REQ_) || defined(_WNXL11BWL_PRODUCT_REQ_) || defined(_XER5_PRODUCT_REQ_) /* ULOG target removed in kernels 3.17+ */
+#if defined(_HUB4_PRODUCT_REQ_) || defined(_WNXL11BWL_PRODUCT_REQ_) || defined(_XER5_PRODUCT_REQ_) || defined (_SCER11BEL_PRODUCT_REQ_) /* ULOG target removed in kernels 3.17+ */
    fprintf(fp, "-A wanattack -p tcp --syn %s -j LOG --log-prefix \"DoS Attack - TCP SYN Flooding\" --log-level 7\n", logRateLimit);
 #elif defined(_PROPOSED_BUG_FIX_)
    if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,17,0))
@@ -5935,7 +5935,7 @@ int do_wan2self_attack(FILE *fp,char* wan_ip)
    if(isWanReady) {
        /* Allow multicast packet through */
        fprintf(fp, "-A wanattack -p udp -s %s -d 224.0.0.0/8 -j RETURN\n", wan_ip);
-#if defined(_HUB4_PRODUCT_REQ_) || defined(_WNXL11BWL_PRODUCT_REQ_) || defined(_XER5_PRODUCT_REQ_) /* ULOG target removed in kernels 3.17+ */
+#if defined(_HUB4_PRODUCT_REQ_) || defined(_WNXL11BWL_PRODUCT_REQ_) || defined(_XER5_PRODUCT_REQ_) || defined (_SCER11BEL_PRODUCT_REQ_) /* ULOG target removed in kernels 3.17+ */
        fprintf(fp, "-A wanattack -s %s %s -j LOG --log-prefix \"DoS Attack - LAND Attack\" --log-level 7\n", wan_ip, logRateLimit);
 #elif defined(_PROPOSED_BUG_FIX_)
        if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,17,0))
@@ -9712,7 +9712,7 @@ static int do_multinet_lan2wan_disable (FILE *filter_fp)
 static void do_lan2wan_disable(FILE *filter_fp)
 {
    FIREWALL_DEBUG("Entering do_lan2wan_disable\n");
-#if defined (_WNXL11BWL_PRODUCT_REQ_)
+#if defined (_WNXL11BWL_PRODUCT_REQ_) || defined (_SCER11BEL_PRODUCT_REQ_)
    fprintf(filter_fp, "-A lan2wan_disable -d 169.254.70.0/16 -j DROP\n");
    fprintf(filter_fp, "-A lan2wan_disable -s 169.254.70.0/16 -j DROP\n");
 #else
@@ -11078,7 +11078,7 @@ static int prepare_multinet_filter_forward (FILE *filter_fp)
     fprintf(filter_fp, "-A INPUT -i br403 -m pkttype ! --pkt-type unicast -j ACCEPT\n");
     fprintf(filter_fp, "-A INPUT -i brebhaul -d 169.254.85.0/24 -j ACCEPT\n");
     fprintf(filter_fp, "-A INPUT -i brebhaul -m pkttype ! --pkt-type unicast -j ACCEPT\n");
-#elif defined(_WNXL11BWL_PRODUCT_REQ_)
+#elif defined(_WNXL11BWL_PRODUCT_REQ_) || defined (_SCER11BEL_PRODUCT_REQ_)
     fprintf(filter_fp, "-A INPUT -i brlan112 -d 169.254.70.0/24 -j ACCEPT\n");
     fprintf(filter_fp, "-A INPUT -i brlan112 -m pkttype ! --pkt-type unicast -j ACCEPT\n");
     fprintf(filter_fp, "-A INPUT -i brlan113 -d 169.254.71.0/24 -j ACCEPT\n");
@@ -11888,7 +11888,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    redirect_dns_to_extender(nat_fp,AF_INET);
 #endif 
 
-#if defined(_WNXL11BWL_PRODUCT_REQ_)
+#if defined(_WNXL11BWL_PRODUCT_REQ_) || defined (_SCER11BEL_PRODUCT_REQ_)
    proxy_dns(nat_fp,AF_INET);
 #endif
 
@@ -13152,7 +13152,7 @@ static void prepare_idm_firewall(FILE * filter_fp)
 }
 #endif
 
-#if defined(_WNXL11BWL_PRODUCT_REQ_)
+#if defined(_WNXL11BWL_PRODUCT_REQ_) || defined (_SCER11BEL_PRODUCT_REQ_)
 void get_iface_ipaddr_ula(const char* ifname,char* ipaddr, int max_ip_size)
 {
    char prefix[128] = {0};
@@ -14398,7 +14398,7 @@ static void do_ipv6_nat_table(FILE* fp)
       redirect_dns_to_extender(fp,AF_INET6);
 #endif 
 
-#if defined(_WNXL11BWL_PRODUCT_REQ_)
+#if defined(_WNXL11BWL_PRODUCT_REQ_) || defined (_SCER11BEL_PRODUCT_REQ_)
    proxy_dns(fp,AF_INET6);
 #endif
 
