@@ -909,7 +909,14 @@ void UpdateDhcpConfChangeBasedOnEvent()
     if(confTok[0] != '\0' )
     {
         char * token = strtok(confTok, "|");
-        strncpy(confInface,token,(sizeof(confInface)-1));
+         /*CID  306238 : Dereference null return value */
+         if(token)
+         {
+
+            strncpy(confInface,token,(sizeof(confInface)-1));
+
+         }
+        
     }
     inf= IsInterfaceExists(confToken,confInface,&instance);
     switch(inf){
