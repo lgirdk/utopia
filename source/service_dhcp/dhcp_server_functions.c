@@ -291,7 +291,8 @@ void calculate_dhcp_range (FILE *local_dhcpconf_file, char *prefix)
 		l_iStartAddr_Last_Oct = l_iLastOct;
 		
 		subnet(l_cDhcp_Start, l_cLanNetMask, l_cIpSubnet);
-		if ((l_iStartAddr_Last_Oct < 2 && l_iStartAddr_Last_Oct > 254) &&
+        /*CID 73232 : Logically dead code*/
+		if ((l_iStartAddr_Last_Oct < 2 || l_iStartAddr_Last_Oct > 254) &&
             (strncmp(l_cIpSubnet, l_cLanSubnet, sizeof(l_cIpSubnet))))
 		{
 			fprintf(g_fArmConsoleLog, "Last Octet of DHCP Start Address:%d is not in range", l_iStartAddr_Last_Oct);
@@ -338,7 +339,8 @@ void calculate_dhcp_range (FILE *local_dhcpconf_file, char *prefix)
         l_iEndAddr_Last_Oct = l_iLastOct;
 		
 		subnet(l_cDhcp_End, l_cLanNetMask, l_cIpSubnet);
-        if (l_iEndAddr_Last_Oct < 2 && l_iEndAddr_Last_Oct > 254)
+        /*CID 62684 : Logically dead code*/
+        if (l_iEndAddr_Last_Oct < 2 || l_iEndAddr_Last_Oct > 254)
         {
             fprintf(g_fArmConsoleLog, "Last Octet of DHCP End Address:%d is not in range", l_iEndAddr_Last_Oct);
             l_iEndIpValid = 0;
