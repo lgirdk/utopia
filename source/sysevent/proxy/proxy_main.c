@@ -685,8 +685,9 @@ int main (int argc, char** argv)
              * Set the tuple locally iff it has a value. 
              * Otherwise we could set off an event
              */
-            if (NULL != response && 
-               '\0' != response[0] && 
+            
+            /* CID 62686 : Array compared against 0*/
+            if ('\0' != response[0] && 
                 -1 != local_syseventd.fd) {
                if ( 0 != sysevent_set(local_syseventd.fd,
                                    local_syseventd.token,
