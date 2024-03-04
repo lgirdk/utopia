@@ -944,6 +944,7 @@ $$dhcpv6spool40::PrefixRangeEnd=0:0:0:00f5
 $$dhcpv6spool40::RapidEnable=1
 $$dhcpv6spool40::IANAAmount=255
 $$dhcpv6spool40::optionnumber=2
+$$dhcpv6spool4option0::Tag=23
 # brlan7 end
 
 #CCSP RECOVERY MONITOR
