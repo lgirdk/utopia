@@ -163,7 +163,8 @@ static int deinitialize_system(void)
    }
    if (0 <= remote_syseventd.query_fd) {
       sysevent_close(remote_syseventd.query_fd, remote_syseventd.query_token);
-      remote_syseventd.fd          = -1;
+      /*CID 54105 : Copy-paste error*/
+      remote_syseventd.query_fd          = -1;
    }
    remote_syseventd.token       = 0;
    remote_syseventd.query_token = 0;
