@@ -138,7 +138,8 @@ int ep_get_entity_vid_portMembers(int vid, int entity, char* memberPortNames[], 
 		break;
 	}
         memberPortNames[*numPorts] = buf + offset;
-        offset += sprintf(memberPortNames[*numPorts], "%s", token) + 1;
+        /*CID 61189 : Calling Risky Function*/
+        offset += snprintf(memberPortNames[*numPorts],bufSize-offset, "%s", token) + 1;
         (*numPorts)++;
         
         token = strtok(NULL, " ");
