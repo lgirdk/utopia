@@ -168,6 +168,7 @@ void dhcpv6_client_service_start ()
     sysevent_get(g_iSyseventfd, g_tSysevent_token, "bridge_mode", l_cBridgeMode, sizeof(l_cBridgeMode));
     sysevent_get(g_iSyseventfd, g_tSysevent_token, "wan-status", l_cWanState, sizeof(l_cWanState));
 
+#if !defined(_LG_OFW_)
     FILE *fp = fopen(DHCPV6_PID_FILE,"r");
     if (fp != NULL)
     {
@@ -186,6 +187,7 @@ void dhcpv6_client_service_start ()
         }
         fclose(fp);
     }
+#endif
 
     if ((strncmp(l_cLastErouterMode, "2", 1)) && (strncmp(l_cLastErouterMode, "3", 1)))
     {
