@@ -735,9 +735,9 @@ static int start_dhcpv6_client(struct serv_wan *sw)
                     sysevent_set(sw->sefd, sw->setok, "wan-status", "starting", 0);
                     sysevent_set(sw->sefd, sw->setok, "dslite_option64-status", "", 0);
                     fprintf(fp_wan_dbg, "Starting DHCPv6 Client now\n");
-                    system("dmcli eRT setv Device.DHCPv6.Client.1.Enable bool true");
 #if defined (FEATURE_RDKB_DHCP_MANAGER)
                     //sysevent_set(sw->sefd, sw->setok, "dhcpv6_client-start", "", 0);
+                    system("dmcli eRT setv Device.DHCPv6.Client.1.Enable bool true");
                     fprintf(fp_wan_dbg, "%s  Enabling DHCPv6 client using TR181\n",__func__);
 #elif defined(CORE_NET_LIB)
                     system("/usr/bin/service_dhcpv6_client dhcpv6_client_service_enable");
@@ -996,9 +996,9 @@ static int wan_start(struct serv_wan *sw)
                     /* In IPv6 or dual mode, raise wan-status event here */
                    sysevent_set(sw->sefd, sw->setok, "wan-status", "starting", 0);
 
-                    v_secure_system("dmcli eRT setv Device.DHCPv6.Client.1.Enable bool true");
 #if defined (FEATURE_RDKB_DHCP_MANAGER)
                     //sysevent_set(sw->sefd, sw->setok, "dhcpv6_client-start", "", 0);
+                    v_secure_system("dmcli eRT setv Device.DHCPv6.Client.1.Enable bool true");
                     fprintf(stderr, "%s  Enabling DHCPv6 client using TR181\n",__func__);
 #elif defined(CORE_NET_LIB)
                     v_secure_system("/usr/bin/service_dhcpv6_client dhcpv6_client_service_enable");
@@ -1204,9 +1204,9 @@ static int wan_stop(struct serv_wan *sw)
     if (sw->rtmod == WAN_RTMOD_IPV6 || sw->rtmod == WAN_RTMOD_DS) {
        if (sw->prot == WAN_PROT_DHCP) {
                fprintf(fp_wan_dbg, "Disabling DHCPv6 Client\n");
-               v_secure_system("dmcli eRT setv Device.DHCPv6.Client.1.Enable bool false");
 #if defined (FEATURE_RDKB_DHCP_MANAGER)
                     //sysevent_set(sw->sefd, sw->setok, "dhcpv6_client-stop", "", 0);
+                    v_secure_system("dmcli eRT setv Device.DHCPv6.Client.1.Enable bool false");
                     fprintf(fp_wan_dbg, "%s  Disabling DHCPv6 client using TR181\n",__func__); 
 #elif defined(CORE_NET_LIB)
                     v_secure_system("/usr/bin/service_dhcpv6_client dhcpv6_client_service_disable");
