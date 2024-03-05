@@ -217,7 +217,8 @@ int ep_get_trunkPort_vidMembers(int vid, char* portNames[], int* numPorts, char 
 		break;
 	}
         portNames[*numPorts] = buf + offset;
-        offset += sprintf(portNames[*numPorts], "%s", token) + 1;
+        /*CID 66239 : Calling risky function*/
+        offset += snprintf(portNames[*numPorts],bufSize-offset, "%s", token) + 1;
         (*numPorts)++;
         token = strtok(NULL, " ");
     }
