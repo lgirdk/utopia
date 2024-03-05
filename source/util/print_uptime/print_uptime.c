@@ -180,8 +180,9 @@ void print_uptime(char *uptimeLog, char *bootfile, char *uptime)
            printf("Could not set mode 0666 on %s\n",BOOT_TIME_LOG_FILE);
         }
 	if (NULL != l_fBootLogFile)
-	{
-		while(fscanf(l_fBootLogFile,"%s", l_cLine) != EOF)
+	{  
+		/*CID 164178 : Calling risky function*/
+		while(fscanf(l_fBootLogFile,"%127s", l_cLine) != EOF)
 		{
 			if(NULL != strstr(l_cLine, uptimeLog))
 			{
