@@ -1608,7 +1608,11 @@ int prepare_dhcp_conf (char *input, void *bus_handle)
 
             if( FALSE == l_bDhcpNs_Enabled )
             {
+#ifdef _LG_MV2_PLUS_
+                fprintf(l_fLocal_Dhcp_ConfFile, "resolv-file=%s\n", "/var/tmp/resolv.conf");
+#else
                 fprintf(l_fLocal_Dhcp_ConfFile, "resolv-file=%s\n", RESOLV_CONF);
+#endif
             }
         }
 
