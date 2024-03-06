@@ -40,6 +40,13 @@ RESOLV_CONF="/etc/resolv.conf"
 # set the resolv.conf file
 #-----------------------------------------------------------------
 
+. /etc/device.properties
+# WanManager should handle dhcp server restart and resolv.conf for MV2+
+if [ "$BOX_TYPE" = "MV2PLUS" ]; then
+    sysevent set wanmgr_dns-restart
+    exit
+fi
+
 source /etc/utopia/service.d/service_dhcp_server/dhcp_server_functions.sh
 
 prepare_resolv_conf () {
