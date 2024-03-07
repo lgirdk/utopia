@@ -3051,10 +3051,12 @@ static int prepare_globals_from_configuration(void)
 
 #ifdef FEATURE_STATIC_IPV4
    if((staticIpStatus) && (0 == (strcmp("true", brlan_static_enable))))
+#else
+   if((!strcmp(tunneled_static_ip_enable, "1")) && (0 == (strcmp("true", brlan_static_enable))))
+#endif
    {
        isFirewallEnabled = 0;
    }
-#endif   
 
 #if defined (FEATURE_MAPT) || defined (FEATURE_SUPPORT_MAPT_NAT46)
    isMAPTReady = isMAPTSet();
@@ -15185,6 +15187,11 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
 
 #ifdef FEATURE_STATIC_IPV4  
    if(isBrlanStaticEnabled)
+#else
+   char tunneled_static_ip_enable[8]; 
+   syscfg_get(NULL, "tunneled_static_ip_enable", tunneled_static_ip_enable, sizeof(tunneled_static_ip_enable)); 
+   if((!strcmp(tunneled_static_ip_enable, "1")) && (0 == (strcmp("true", brlan_static_enable))))
+#endif
    {
       char query[8];
       syscfg_get(NULL, "static_ui_enable", query, sizeof(query));
@@ -15193,7 +15200,6 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
          fprintf(filter_fp, "-I http2self -i %s -d 192.168.0.1 -j ACCEPT\n", cmdiag_ifname);
       }
    }
-#endif
 
 #if defined(_COSA_BCM_ARM_) && (defined(_CBR_PRODUCT_REQ_) || defined(_XB6_PRODUCT_REQ_)) 
    if (isBridgeMode)
