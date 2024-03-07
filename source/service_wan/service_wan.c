@@ -1132,6 +1132,11 @@ static int wan_stop(struct serv_wan *sw)
      *                                   = 3 Last running ip mode was Dual stack.
      */
     sysevent_get(sw->sefd, sw->setok, "last_erouter_mode", buf, sizeof(buf));
+    if ( '\0' == buf[0] )
+    {
+        memset(buf,0,sizeof(buf));
+        syscfg_get(NULL, "last_erouter_mode", buf, sizeof(buf));
+    }
     switch (atoi(buf)) {
     case 1:
         sw->rtmod = WAN_RTMOD_IPV4;
@@ -1143,8 +1148,16 @@ static int wan_stop(struct serv_wan *sw)
         sw->rtmod = WAN_RTMOD_DS;
         break;
     default:
-        fprintf(stderr, "%s: unknow RT mode (last_erouter_mode)\n", __FUNCTION__);
-        sw->rtmod = WAN_RTMOD_UNKNOW;
+        if ( '\0' == buf[0] )
+        {
+            fprintf(stderr, "%s: received NULL as (last_erouter_mode), considering erouter mode as default (DS) \n", __FUNCTION__);
+            sw->rtmod = WAN_RTMOD_DS;
+        }
+        else
+        {
+            fprintf(stderr, "%s: unknow RT mode (last_erouter_mode)\n", __FUNCTION__);
+            sw->rtmod = WAN_RTMOD_UNKNOW;     
+        }
         break;
     }
 
