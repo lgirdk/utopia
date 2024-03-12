@@ -11515,6 +11515,7 @@ static void prepare_ipc_filter(FILE *filter_fp) {
 //  make sure rpc channel are not been blocked
     fprintf(filter_fp, "-I OUTPUT -o %s -j ACCEPT\n", "l2sd0.4093");
     fprintf(filter_fp, "-I INPUT -i %s -j ACCEPT\n", "l2sd0.4093");
+    fprintf(filter_fp, "-A INPUT -i lo -p tcp -m tcp --dport 12368 -j ACCEPT\n");
 //zqiu<<
 #endif
 
