@@ -224,7 +224,7 @@ static char *GetDeviceProperties (char *param)
     return valPtr;
 }
 
-#if defined (EROUTER_DHCP_OPTION_MTA)
+#if defined (EROUTER_DHCP_OPTION_MTA) && defined (FEATURE_RDKB_WAN_MANAGER)
 static void clear_mta_params ()
 {
     sysevent_set(sysevent_fd, sysevent_token, MTA_DHCPV4_PRIMARY_ADDR, NULL, 0);
