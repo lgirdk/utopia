@@ -5306,9 +5306,9 @@ static int do_wan_nat_lan_clients(FILE *fp)
 #endif //FEATURE_MAPT
      if(!IS_EMPTY_STRING(natip4))
      {
-         fprintf(fp, "-A postrouting_towan -s 10.0.0.0/8  -j SNAT --to-source %s\n", natip4);
-         fprintf(fp, "-A postrouting_towan -s 192.168.0.0/16  -j SNAT --to-source %s\n", natip4);
-	 fprintf(fp, "-A postrouting_towan -s 172.16.0.0/12  -j SNAT --to-source %s\n", natip4);
+         fprintf(fp, "-A postrouting_towan -s 10.0.0.0/8 -j SNAT --to-source %s\n", natip4);
+         fprintf(fp, "-A postrouting_towan -s 192.168.0.0/16 -j SNAT --to-source %s\n", natip4);
+         fprintf(fp, "-A postrouting_towan -s 172.16.0.0/12 -j SNAT --to-source %s\n", natip4);
 
 #if defined (WIFI_MANAGE_SUPPORTED)
 #define BUFF_LEN_64 64
@@ -8937,9 +8937,8 @@ static int do_parcon_mgmt_service(FILE *fp, int iptype, FILE *cron_fp)
       for (idx = 1; idx <= count; idx++) {
          char namespace[MAX_QUERY];
          snprintf(query, sizeof(query), "ManagedServiceBlock_%d", idx);
-         namespace[0] = '\0';
-         rc = syscfg_get(NULL, query, namespace, sizeof(namespace));
-         if (0 != rc || '\0' == namespace[0]) {
+         syscfg_get(NULL, query, namespace, sizeof(namespace));
+         if ('\0' == namespace[0]) {
             continue;
          }
 
@@ -8952,9 +8951,8 @@ static int do_parcon_mgmt_service(FILE *fp, int iptype, FILE *cron_fp)
          char edport[10];
 
          proto = 0; // 0 is both, 1 is tcp, 2 is udp
-         prot[0] = '\0';
-         rc = syscfg_get(namespace, "proto", prot, sizeof(prot));
-         if (0 != rc || '\0' == prot[0]) {
+         syscfg_get(namespace, "proto", prot, sizeof(prot));
+         if ('\0' == prot[0]) {
             proto = 0;
          } else if (0 == strncasecmp("tcp", prot, 3)) {
             proto = 1;
@@ -8962,15 +8960,13 @@ static int do_parcon_mgmt_service(FILE *fp, int iptype, FILE *cron_fp)
             proto = 2;
          }
 
-         sdport[0]   = '\0';
-         rc = syscfg_get(namespace, "start_port", sdport, sizeof(sdport));
-         if (0 != rc || '\0' == sdport[0] || (0 != validate_port(sdport)) ) {
+         syscfg_get(namespace, "start_port", sdport, sizeof(sdport));
+         if (('\0' == sdport[0]) || (0 != validate_port(sdport))) {
             continue;
          }
 
-         edport[0]   = '\0';
-         rc = syscfg_get(namespace, "end_port", edport, sizeof(edport));
-         if (0 != rc || '\0' == edport[0] || (0 != validate_port(sdport)) ) {
+         syscfg_get(namespace, "end_port", edport, sizeof(edport));
+         if (('\0' == edport[0]) || (0 != validate_port(edport))) {
             continue;
          }
 
