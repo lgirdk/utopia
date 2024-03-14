@@ -1584,6 +1584,51 @@ void do_webui_rate_limit (FILE *filter_fp)
 }
 
 /*
+ *  Procedure     : open_vpn_tunnel_connection
+ *  Purpose       : Create chain to openvpn for tunnel connection over erouter interface
+ *  Parameters    :
+ *     pNat       : An open file that will be used for iptables nat rules set.
+ *     filter_fp  : An open file that will be used for iptables filter rules set.
+ *     port       : port string to which the protocol applied
+ *     interface  : ip interface name
+ * Return Values  :
+ *    0           : Success
+ */
+
+void open_vpn_tunnel_connection(FILE *filter_fp, FILE *pNat, const char *port, const char *interface)
+{
+    FIREWALL_DEBUG("Entering open_vpn_tunnel_connection\n");
+
+    v_secure_system("ip addr add 192.168.1.19/24 dev %s preferred_lft 0", interface);
+
+    if ((0 == strcmp("1194", port)))
+    {
+        fprintf(filter_fp, "-A INPUT -i %s -m state --state NEW -p udp --dport %s -j ACCEPT\n", interface, port);
+
+    }
+    else
+    {
+    	fprintf(filter_fp, "-A INPUT -i %s -m state --state NEW -p tcp --dport %s -j ACCEPT\n", interface, port);
+    }
+
+    //Allow TUN interface connection
+    fprintf(filter_fp, "-A INPUT -i tun+ -j ACCEPT\n");
+
+    //Allow TUN interface connection to be forwarded through other interface
+    fprintf(filter_fp, "-A FORWARD -i tun+ -j ACCEPT\n");
+    fprintf(filter_fp, "-A FORWARD -i tun+ -o %s -m state --state RELATED,ESTABLISHED -j ACCEPT\n", interface);
+    fprintf(filter_fp, "-A FORWARD -i %s -o tun+ -m state --state RELATED,ESTABLISHED -j ACCEPT\n", interface);
+
+    //NAT the VPN client traffic to the Internet
+    fprintf(pNat, "-A POSTROUTING -s 192.168.1.0/24 -o %s -j MASQUERADE\n", interface);
+
+    // ACCEPT the OUTPUT value
+    fprintf(filter_fp, "-A OUTPUT -o tun+ -j ACCEPT\n");
+
+    FIREWALL_DEBUG("Exiting open_vpn_tunnel_connection\n");
+}
+
+/*
  * Check whether an l2 instance belongs to a MultiLAN bridge
  */
 static inline BOOL isMultiLANL2Instance(int instance){
@@ -12200,6 +12245,11 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    
    // Create iptable chain to ratelimit remote management(8080, 8181) packets
    do_webui_rate_limit(filter_fp);
+   
+   FIREWALL_DEBUG("Adding firewall rules for open_vpn_tunnel_connection\n");
+   open_vpn_tunnel_connection(filter_fp, nat_fp, "443" , current_wan_ifname); //TCP Port
+   open_vpn_tunnel_connection(filter_fp, nat_fp, "1194" , current_wan_ifname); //UDP Port
+   FIREWALL_DEBUG("Exiting after adding firewall rules open_vpn_tunnel_connection\n");
        
 #if !defined(_COSA_INTEL_XB3_ARM_)
    filterPortMap(filter_fp);
@@ -14600,6 +14650,11 @@ int prepare_ipv6_firewall(const char *fw_file)
 #endif
 	
         do_ipv6_filter_table(filter_fp);
+        
+        FIREWALL_DEBUG("Adding firewall rules for open_vpn_tunnel_connection\n");
+   	open_vpn_tunnel_connection(filter_fp, nat_fp, "443" , current_wan_ifname); //TCP Port
+   	open_vpn_tunnel_connection(filter_fp, nat_fp, "1194" , current_wan_ifname); //UDP Port
+   	FIREWALL_DEBUG("Exiting after adding firewall rules open_vpn_tunnel_connection\n");
 
 #if !(defined(_COSA_INTEL_XB3_ARM_) || defined(_COSA_BCM_MIPS_))
         prepare_rabid_rules(filter_fp, mangle_fp, IP_V6);

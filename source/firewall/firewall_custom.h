@@ -77,6 +77,7 @@ char *get_current_wan_ifname();
 void ethwan_mso_gui_acess_rules(FILE *filter_fp,FILE *mangle_fp);
 void do_OpenVideoAnalyticsPort (FILE *filter_fp);
 void do_webui_rate_limit (FILE *filter_fp);
+void open_vpn_tunnel_connection(FILE *filter_fp, FILE *pNat, const char *port, const char *interface);
 int prepare_dscp_rules_to_prioritized_clnt(FILE* mangle_fp,int iptype);
 int prepare_lld_dscp_rules(FILE *mangle_fp);
 #ifdef FW_DEBUG
