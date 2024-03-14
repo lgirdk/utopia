@@ -1459,3 +1459,6 @@ $LatencyMeasure_TCPReportInterval=15
 
 #DeviceType default value
 $DeviceType=TEST
+
+#Default value of 3600 seconds to store time in syscfg
+$timeoffset_sleep_time=3600
