@@ -15136,8 +15136,6 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
        fprintf(filter_fp, "-A INPUT ! -i %s -j wan2self_mgmt\n", isBridgeMode == 0 ? lan_ifname : cmdiag_ifname);
 #endif
 
-       // Create iptable chain to ratelimit remote management packets
-       do_webui_rate_limit(filter_fp);
        WAN_FAILOVER_SUPPORT_CHECK
        do_remote_access_control(NULL, filter_fp, AF_INET);
        WAN_FAILOVER_SUPPORT_CHECk_END
@@ -15246,6 +15244,8 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
 #endif
    fprintf(filter_fp, "%s\n", ":FORWARD ACCEPT [0:0]");
    fprintf(filter_fp, "%s\n", ":OUTPUT ACCEPT [0:0]");
+   // Create iptable chain to ratelimit remote management packets
+   do_webui_rate_limit(filter_fp);
    // Rate limiting the webui-access lan side
    lan_access_set_proto(filter_fp, "80",cmdiag_ifname);
    lan_access_set_proto(filter_fp, "443",cmdiag_ifname);
