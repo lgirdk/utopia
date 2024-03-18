@@ -63,18 +63,8 @@ fi
 # Variables needed for captive portal mode : start
 DEFAULT_RESOLV_CONF="/var/default/resolv.conf"
 DEFAULT_CONF_DIR="/var/default"
-XCONF_FILE=/etc/Xconf
 STATIC_URLS_FILE="/etc/static_urls"
 STATIC_DNS_URLS_FILE="/etc/static_dns_urls"
-XCONF_DOWNLOAD_URL="/tmp/xconfdownloadurl"
-XCONF_DEFAULT_URL="https://xconf.xcal.tv/xconf/swu/stb/"
-XFINITY_DEFAULT_URL="http://xfinity.com"
-SPEEDTEST_DEFAULT_URL="http://speedtest.comcast.net"
-XFINITY_RED_DEFAULT_URL="http://my.xfinity.com"
-COMCAST_DEFAULT_URL="www.comcast.com"
-COMCAST_ACTIVATE_URL="https://activate.comcast.com"
-COMCAST_ACTIVATE_URL_2="https://caap-pdca.sys.comcast.net"
-COMCAST_HTTP_URL="http://comcast.com"
 DEFAULT_FILE="/etc/utopia/system_defaults"
 
 # Variables needed for captive portal mode : end
