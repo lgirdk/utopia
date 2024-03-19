@@ -542,7 +542,7 @@ int sm_unregister (const char* srv_name)
              * The tuple containing the async_id existed, so extract the async id for the
              * notification that we want to cancel
              */
-            sscanf(asyncs, "%s %s", trigger_str, action_str);
+            sscanf(asyncs, "%255s %255s", trigger_str, action_str);
             async_id_t async_id;
             async_id.trigger_id = strtoll(trigger_str, NULL, 16);  // strtol truncates on some platforms
             async_id.action_id = strtoll(action_str, NULL, 16);    // strtol truncates on some platforms
