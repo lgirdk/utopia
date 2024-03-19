@@ -36,7 +36,7 @@
 /* _GNU_SOURCE is needed for strchrnul() and program_invocation_short_name */
 
 #define _GNU_SOURCE
-
+#include "secure_wrapper.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -1762,6 +1762,63 @@ static int load_from_file (const char *fname)
     return 0;
 }
 
+/* Taking backup of file without using mmap/munmap */
+static int backup_file (const char *bkupFile, const char *localFile)
+{
+   int fd;
+   ssize_t count;
+   char *buf = NULL;
+   char tmpFile[32] = "/nvram/syscfg_tmp.db_XXXXXX";
+
+   fd = open(localFile, O_RDONLY);
+   if (-1 == fd){
+       ulog_error(ULOG_SYSTEM, UL_SYSCFG,"opening localfile failed during db backup");
+       return -1;
+   }
+   buf = malloc(SYSCFG_SZ);
+   if (NULL == buf) {
+       close(fd);
+       ulog_error(ULOG_SYSTEM, UL_SYSCFG,"malloc  failed during db backup");
+       return -1;
+    }
+
+    //Read from localFile to a buffer
+    count = read(fd, buf, SYSCFG_SZ);
+    close(fd);
+    if (count <= 0)
+    {
+        free(buf);
+        ulog_error(ULOG_SYSTEM, UL_SYSCFG,"read from file to buffer failed");
+        return -1;
+    }
+
+    //Write buffer to a tmp file
+    int fd_to = mkstemp (tmpFile);
+    if(fd_to < 0)
+    {
+        ulog_error(ULOG_SYSTEM, UL_SYSCFG, "mkstemp  call failed during db backup");
+        free(buf);
+        return -1;
+    }
+
+    if(write(fd_to, buf, count) != count)
+    {
+        ulog_error(ULOG_SYSTEM, UL_SYSCFG,"write to backupfile failed during db backup");
+        free(buf);
+        close(fd_to);
+        return -1;
+    }
+    free(buf);
+    close(fd_to);
+    if(rename(tmpFile,bkupFile) != 0 )
+    {
+      ulog_error(ULOG_SYSTEM, UL_SYSCFG, "renaming to bkupFile failed during db backup");
+      return -1;
+    }
+    return 0;
+}
+
+#if 0
 /* Taking backup of file */
 static int backup_file (const char *bkupFile, const char *localFile)
 {
@@ -1841,7 +1898,7 @@ static int backup_file (const char *bkupFile, const char *localFile)
   /* Success! */
   return 0;
 }
-
+#endif
 /*
  * Notes
  *    syscfg space is locked by the caller (for write & commit)
