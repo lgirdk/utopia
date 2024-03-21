@@ -38,8 +38,10 @@ executecommand_1_svc(rpc_CommandBuf *argp, struct svc_req *rqstp)
                    }
 			/*Here destination output.buffer size is 4096.
 			As per safec limitation, it won't copy to the destination buffer , if destination size is more than 4K*/
-			strcat(output.buffer,line);
-                  	counter++;
+
+			/*CID 71638 : Calling Risky function*/       
+			strncat(output.buffer, line, sizeof(output.buffer) - strlen(output.buffer) - 1);
+            counter++;
 		}
 		pclose ( cmd );
 		return &output;
