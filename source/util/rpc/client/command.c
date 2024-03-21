@@ -96,7 +96,9 @@ int main (int argc, char *argv[])
     char l_cArmArpingIP[64] = {""};
     char l_cAtomArpingIP[64] = {""};
     char props[255] = {""};
-    while(fscanf(l_fFp,"%s", props) != EOF)
+
+    /*CID 135526 : Calling Risky Function*/
+    while(fscanf(l_fFp,"%254s", props) != EOF)
     {
          char *property = NULL;
          if((property = strstr(props, "ARM_ARPING_IP=")))
