@@ -223,19 +223,6 @@ int syscfg_unset(const char *ns, const char *name);
 int syscfg_commit();
 
 /*
- * Procedure     : syscfg_is_match
- * Purpose       : Compare the value of an entry from syscfg 
- * Parameters    :   
- *   ns  -  namespace string (optional)
- *   name  - name string, entry to add
- *   out_val  - buffer to store output value string
- *   outbufsz  - output buffer size
- * Return Values :
- *    0 on success, -1 on error
- */
-int syscfg_is_match (const char *ns, const char *name, char *value, unsigned int *out_match);
-
-/*
  * Procedure     : syscfg_getsz
  * Purpose       : Get current & maximum peristent storage size 
  *                 of syscfg content
