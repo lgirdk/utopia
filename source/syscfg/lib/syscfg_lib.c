@@ -297,37 +297,6 @@ int syscfg_unset (const char *ns, const char *name)
 }
 
 /*
- * Procedure     : syscfg_is_match
- * Purpose       : Compare the value of an entry from syscfg 
- * Parameters    :   
- *   ns  -  namespace string (optional)
- *   name  - name string, entry to add
- *   value  - value string to be matched
- *   out_match  - 1 is match, 0 if not
- * Return Values :
- *    0 - success
- *    ERR_xxx - various errors codes dependening on the failure
- */
-int syscfg_is_match (const char *ns, const char *name, char *value, unsigned int *out_match)
-{
-    if (syscfg_initialized == 0) {
-        int rc = syscfg_init_internal();
-        if (rc != 0) {
-            return rc;
-        }
-    }
-
-    char *val = _syscfg_get(ns, name);
-    if (val) {
-        *out_match = (0 == strcmp(val, value)) ? 1 : 0;
-        return 0;
-    } 
-    *out_match = 0;
-    return 0;
-}
-
-
-/*
  * Procedure     : syscfg_getsz
  * Purpose       : Get current & maximum peristent storage size 
  *                 of syscfg content
