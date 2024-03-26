@@ -1182,7 +1182,8 @@ static bool root_is_nfs (void)
     int result = -1;
     char out[128];
     memset(out,0,sizeof(out));
-    result = read_cmd_output("sed -n 's/^[^ ]* \([^ ]*) \([^ ]*) .*$/\1 \2/p' /proc/mounts | grep \"^/ \\(nfs\\|smbfs\\|ncp\\|coda\\)$\"",out,128);
+    //result = read_cmd_output("sed -n 's/^[^ ]* \([^ ]*) \([^ ]*) .*$/\1 \2/p' /proc/mounts | grep \"^/ \\(nfs\\|smbfs\\|ncp\\|coda\\)$\"",out,128);
+    result = read_cmd_output("sed -n 's/^[^ ]* \\([^ ]*\\) \\([^ ]*\\) .*$/\\1 \\2/p' /proc/mounts | grep \"^/ \\(nfs\\|smbfs\\|ncp\\|coda\\)$\"", out, 128);
     if ((0 == result) && (strlen(out) > 0))
         return true;
     return false;
