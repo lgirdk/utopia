@@ -92,19 +92,11 @@ BUTTON_THRESHOLD=15
 FACTORY_RESET_KEY=factory_reset
 FACTORY_RESET_RGWIFI=y
 FACTORY_RESET_WIFI=w
-SYSCFG_MOUNT=/nvram
-SYSCFG_TMP_LOCATION=/tmp
-SYSCFG_FILE=$SYSCFG_TMP_LOCATION/syscfg.db
-SYSCFG_BKUP_FILE=$SYSCFG_MOUNT/syscfg.db
-SYSCFG_OLDBKUP_FILE=$SYSCFG_MOUNT/syscfg_bkup.db
-SYSCFG_ENCRYPTED_PATH=/opt/secure/
-SYSCFG_PERSISTENT_PATH=/opt/secure/data/
-SYSCFG_NEW_FILE=$SYSCFG_PERSISTENT_PATH/syscfg.db
-SYSCFG_NEW_BKUP_FILE=$SYSCFG_PERSISTENT_PATH/syscfg_bkup.db
-PSM_CUR_XML_CONFIG_FILE_NAME="$SYSCFG_TMP_LOCATION/bbhm_cur_cfg.xml"
-PSM_BAK_XML_CONFIG_FILE_NAME="$SYSCFG_MOUNT/bbhm_bak_cfg.xml"
-PSM_TMP_XML_CONFIG_FILE_NAME="$SYSCFG_MOUNT/bbhm_tmp_cfg.xml"
-XDNS_DNSMASQ_SERVERS_CONFIG_FILE_NAME="$SYSCFG_MOUNT/dnsmasq_servers.conf"
+
+PSM_CUR_XML_CONFIG_FILE_NAME="/tmp/bbhm_cur_cfg.xml"
+PSM_BAK_XML_CONFIG_FILE_NAME="/nvram/bbhm_bak_cfg.xml"
+PSM_TMP_XML_CONFIG_FILE_NAME="/nvram/bbhm_tmp_cfg.xml"
+XDNS_DNSMASQ_SERVERS_CONFIG_FILE_NAME="/nvram/dnsmasq_servers.conf"
 FACTORY_RESET_REASON=false
 CUSTOMER_BOOT_CONFIG_FILE="/nvram/bootconfig_custindex"
 
@@ -112,11 +104,11 @@ HOTSPOT_BLOB="/nvram/hotspot_blob"
 HOTSPOT_JSON="/nvram/hotspot.json"
 MWO_PATH="/nvram/mwo"
 
-if [ -d $SYSCFG_ENCRYPTED_PATH ]; then
-       if [ ! -d $SYSCFG_PERSISTENT_PATH ]; then
-               echo "$SYSCFG_PERSISTENT_PATH path not available creating directory and touching $SYSCFG_NEW_FILE file"
-               mkdir $SYSCFG_PERSISTENT_PATH
-               touch $SYSCFG_NEW_FILE
+if [ -d /opt/secure ]; then
+       if [ ! -d /opt/secure/data ]; then
+               echo "/opt/secure/data path not available creating directory and touching /opt/secure/data/syscfg.db file"
+               mkdir /opt/secure/data
+               touch /opt/secure/data/syscfg.db
        fi
 fi
 
@@ -135,7 +127,7 @@ changeFilePermissions() {
 
 CheckAndReCreateDB()
 {
-	NVRAMFullStatus=`df -h $SYSCFG_MOUNT | grep "100%"`
+	NVRAMFullStatus=`df -h /nvram | grep "100%"`
 	if [ -n "$NVRAMFullStatus" ]; then
 		if [ -f "/rdklogger/rdkbLogMonitor.sh" ]
 		then
@@ -143,13 +135,13 @@ CheckAndReCreateDB()
 			  sh /rdklogger/rdkbLogMonitor.sh "remove_old_logbackup"		 
 
 		  	  #Re-create syscfg create again
-			  syscfg_create -f $SYSCFG_FILE
+			  syscfg_create -f /tmp/syscfg.db
 			  if [ $? != 0 ]; then
-				  NVRAMFullStatus=`df -h $SYSCFG_MOUNT | grep "100%"`
+				  NVRAMFullStatus=`df -h /nvram | grep "100%"`
 				  if [ -n "$NVRAMFullStatus" ]; then
 					 echo_t "[utopia][init] NVRAM Full(100%) and below is the dump"
-					 du -h $SYSCFG_MOUNT 
-					 ls -al $SYSCFG_MOUNT	 
+					 du -h /nvram 
+					 ls -al /nvram	 
 				  fi
 			  fi 
 		fi
@@ -161,12 +153,12 @@ if [ -f /usr/rdk/migration-mng/migration-mng ]; then
 	/usr/rdk/migration-mng/migration-mng
 fi
 
-echo_t "[utopia][init] Starting syscfg using file store ($SYSCFG_BKUP_FILE)"
+echo_t "[utopia][init] Starting syscfg using file store (/nvram/syscfg.db)"
 
 # remove syscfg tmp files from nvram during bootup
 rm -f /nvram/syscfg_tmp.db_*
 
-if [ -f $SYSCFG_BKUP_FILE ]; then
+if [ -f /nvram/syscfg.db ]; then
 
    if [ -f $CUSTOMER_BOOT_CONFIG_FILE ]; then
 
@@ -176,11 +168,11 @@ if [ -f $SYSCFG_BKUP_FILE ]; then
       fi
 
       # If Customer index is set via boot config then remove /nvram/syscfg.db
-      echo -n > $SYSCFG_BKUP_FILE
+      echo -n > /nvram/syscfg.db
    fi
 
-   cp $SYSCFG_BKUP_FILE $SYSCFG_FILE
-   syscfg_create -f $SYSCFG_FILE
+   cp /nvram/syscfg.db /tmp/syscfg.db
+   syscfg_create -f /tmp/syscfg.db
    if [ $? != 0 ]; then
 	   CheckAndReCreateDB
    fi
@@ -199,14 +191,14 @@ if [ -f $SYSCFG_BKUP_FILE ]; then
    fi
 
 else
-   echo -n > $SYSCFG_FILE
-   echo -n > $SYSCFG_BKUP_FILE
-   syscfg_create -f $SYSCFG_FILE
+   echo -n > /tmp/syscfg.db
+   echo -n > /nvram/syscfg.db
+   syscfg_create -f /tmp/syscfg.db
    if [ $? != 0 ]; then
         CheckAndReCreateDB
    fi
    #>>zqiu
-   echo_t "[utopia][init] need to reset wifi when($SYSCFG_BKUP_FILE) and ($SYSCFG_NEW_FILE) files are not available"
+   echo_t "[utopia][init] need to reset wifi when(/nvram/syscfg.db) and (/opt/secure/data/syscfg.db) files are not available"
    syscfg set $FACTORY_RESET_KEY $FACTORY_RESET_WIFI
    syscfg commit
    #<<zqiu
@@ -231,14 +223,14 @@ fi
 queries="factory_reset UpdateNvram lan_ipaddr lan_netmask ForwardSSH unit_activated lan_ifname cmdiag_ifname ecm_wan_ifname nat_udp_timeout nat_tcp_timeout nat_icmp_timeout lan_ethernet_physical_ifnames"
 get_utctx_val "$queries"
 
-if [ -f $SYSCFG_OLDBKUP_FILE ];then
-	rm -rf $SYSCFG_OLDBKUP_FILE
+if [ -f /nvram/syscfg_bkup.db ]; then
+	rm -rf /nvram/syscfg_bkup.db
 fi
-if [ -f $SYSCFG_NEW_BKUP_FILE ];then
-	rm -rf $SYSCFG_NEW_BKUP_FILE
+if [ -f /opt/secure/data/syscfg_bkup.db ]; then
+	rm -rf /opt/secure/data/syscfg_bkup.db
 fi
-if [ -f $SYSCFG_NEW_FILE ];then
-	rm -rf $SYSCFG_NEW_FILE
+if [ -f /opt/secure/data/syscfg.db ]; then
+	rm -rf /opt/secure/data/syscfg.db
 fi
 
 # Read reset duration to check if the unit was rebooted by pressing the HW reset button
@@ -289,9 +281,9 @@ if [ "$FACTORY_RESET_RGWIFI" = "$SYSCFG_FR_VAL" ]; then
    rm -f /opt/secure/RFC/tr181store.json
    rm -f /opt/secure/Blocklist_file.txt
    rm -f /nvram/Blocklist_XB3.txt
-   rm -f $SYSCFG_BKUP_FILE
-   rm -f $SYSCFG_FILE
-   rm -f $SYSCFG_NEW_FILE
+   rm -f /nvram/syscfg.db
+   rm -f /tmp/syscfg.db
+   rm -f /opt/secure/data/syscfg.db
    rm -f $PSM_BAK_XML_CONFIG_FILE_NAME
    rm -f $PSM_TMP_XML_CONFIG_FILE_NAME
    rm -f $TR69TLVFILE
@@ -343,10 +335,10 @@ if [ "$FACTORY_RESET_RGWIFI" = "$SYSCFG_FR_VAL" ]; then
    #>>zqiu
    create_wifi_default
    #<<zqiu
-   echo_t "[utopia][init] Retarting syscfg using file store ($SYSCFG_BKUP_FILE)"
-   touch $SYSCFG_FILE
-   touch $SYSCFG_BKUP_FILE
-   syscfg_create -f $SYSCFG_FILE
+   echo_t "[utopia][init] Retarting syscfg using file store (/nvram/syscfg.db)"
+   touch /tmp/syscfg.db
+   touch /nvram/syscfg.db
+   syscfg_create -f /tmp/syscfg.db
    if [ $? != 0 ]; then
 	   CheckAndReCreateDB
    fi
@@ -429,9 +421,9 @@ syseventd
 sleep 1 
 echo_t "[utopia][init] Setting any unset system values to default"
 apply_system_defaults
-changeFilePermissions $SYSCFG_BKUP_FILE 400
+changeFilePermissions /nvram/syscfg.db 400
 
-echo "[utopia][init] SEC: Syscfg stored in $SYSCFG_BKUP_FILE"
+echo "[utopia][init] SEC: Syscfg stored in /nvram/syscfg.db"
 
 #Added log to check the DHCP range corruption after system defaults applied.
 lan_ipaddr=$SYSCFG_lan_ipaddr
