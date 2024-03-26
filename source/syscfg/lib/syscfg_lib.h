@@ -46,9 +46,6 @@
 #define SYSCFG_FILE       "/tmp/syscfg.db"
 #define SYSCFG_BKUP_FILE "/nvram/syscfg.db"
 
-#define SYSCFG_NEW_FILE "/opt/secure/data/syscfg.db"
-#define SYSCFG_NEW_BKUP_FILE "/opt/secure/data/syscfg_bkup.db"
-
 /*
  * Magic number within shared mem superblock for sanity check
  */
