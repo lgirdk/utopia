@@ -154,6 +154,11 @@ CheckAndReCreateDB()
 	fi 
 }
 
+if [ -f /usr/rdk/migration-mng/migration-mng ]; then
+	echo_t "[utopia][init] Starting migration manager"
+	/usr/rdk/migration-mng/migration-mng
+fi
+
 echo_t "[utopia][init] Starting syscfg using file store ($SYSCFG_BKUP_FILE)"
 
 # remove syscfg tmp files from nvram during bootup
