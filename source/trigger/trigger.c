@@ -851,7 +851,10 @@ static int daemon_init(void)
 
    // child
    setsid();   // become session leader
-   chdir("/"); // change working directory
+   /*CID 67363 : Unchecked return value*/
+    if (chdir("/") < 0) { // change working directory
+      printf("Failed to change directory\n");
+   }
 
 
    umask(0);   // clear our file mode creation mask
