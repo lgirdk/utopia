@@ -136,7 +136,7 @@ int syscfg_get(const char *ns, const char *name, char *out_value, int outbufsz);
  * Notes         :
  *    useful for clients to dump the whole syscfg data
  */
-int syscfg_getall(char *buf, int count, int *outsz);
+int syscfg_getall(char *buf, int bufsz, int *outsz);
 
 /*
  * Procedure     : syscfg_set

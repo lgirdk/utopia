@@ -228,6 +228,11 @@ int syscfg_getall (char *buf, int bufsz, int *outsz)
         return ERR_INVALID_PARAM;
     }
 
+    /* smallest possible result is 'a','=','b','\0' */
+    if (bufsz < 4) {
+        return ERR_INVALID_PARAM;
+    }
+
     *outsz = _syscfg_getall(buf, bufsz);
     return 0;
 }
@@ -487,7 +492,7 @@ int syscfg_init (void)
     ctx = NULL;
     rc = syscfg_shm_init(&ctx);
     if (rc || NULL == ctx) {
-	ulog_LOG_Dbg("Error initializing shared memor");
+	ulog_LOG_Dbg("Error initializing shared memory\n");
         return rc;
     }
 
@@ -1142,7 +1147,10 @@ static int _syscfg_getall (char *buf, int bufsz)
     syscfg_shm_ctx *ctx = syscfg_ctx;
     shmoff_t entry;
 
+    buf[0] = 0;
+
     rw_lock(ctx);
+
     for (i = 0; i < SYSCFG_HASH_TABLE_SZ; i++) {
         entry = ctx->ht[i];
         // check if space left for 'name' '=' 'value' + null char
@@ -1152,9 +1160,10 @@ static int _syscfg_getall (char *buf, int bufsz)
             entry = HT_ENTRY_NEXT(ctx,entry);
         }
     }
+
     rw_unlock(ctx);
 
-    return (bufsz - len);
+    return (bufsz - len);   /* size does not include final nul terminator */
 }
 
 
@@ -1246,7 +1255,6 @@ static void *syscfg_shm_create (store_info_t *store_info, int *out_shmid)
     }
     fputs("creating", fp);
     fclose(fp);
-
 
     // get unique key using file path and proj id
     if (-1 == (key= ftok(SYSCFG_SHM_FILE, SYSCFG_SHM_PROJID))) {
@@ -1763,3 +1771,4 @@ static int commit_to_file (const char *fname)
    }
    return 0;
 }
+
