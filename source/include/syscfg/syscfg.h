@@ -63,6 +63,10 @@
 #define ERR_IO_FILE_TOO_BIG   -23
 #define ERR_IO_FILE_WRITE     -24
 
+#ifdef __cplusplus
+extern "C"{
+#endif
+
 /*
  * Procedure     : syscfg_create
  * Purpose       : Create syscfg shared memory and load entries from persistent storage
@@ -244,5 +248,9 @@ int syscfg_is_match (const char *ns, const char *name, char *value, unsigned int
  *    ERR_xxx - various errors codes dependening on the failure
  */
 int syscfg_getsz (long int *used_sz, long int *max_sz);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _SYSCFG_H_ */
