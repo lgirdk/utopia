@@ -965,7 +965,8 @@ static int handle_get_unique_request(const int fd, const token_t who, se_iterate
 
    int value_str_size = NULL == value ? SE_string2size("") :  SE_string2size(value);
    char *subject = subject_buf;
-   int subject_str_size = NULL == subject ? SE_string2size("") :  SE_string2size(subject);
+   /*CID 72868 : Logically dead code*/
+  int subject_str_size = ((subject[0] == '\0') ? SE_string2size("") :  SE_string2size(subject));
 
    // prepare the reply message
    se_buffer reply_msg_buffer;
