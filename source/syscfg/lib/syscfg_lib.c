@@ -1437,7 +1437,7 @@ static void shm_mm_init (syscfg_shm_ctx *ctx)
     ft[6].head = 0; 
 }
 
-int shm_malloc (syscfg_shm_ctx *ctx, int size, shmoff_t *out_offset)
+static int shm_malloc (syscfg_shm_ctx *ctx, int size, shmoff_t *out_offset)
 {
     int i;
     shmoff_t item;
@@ -1475,7 +1475,7 @@ int shm_malloc (syscfg_shm_ctx *ctx, int size, shmoff_t *out_offset)
  * offset is past mm_overhead
  * clear mm_item's data portion before putting back to free list
  */
-void shm_free (syscfg_shm_ctx *ctx, shmoff_t offset)
+static void shm_free (syscfg_shm_ctx *ctx, shmoff_t offset)
 {
     shmoff_t old_head, mmoffset;
     mm_item *item;

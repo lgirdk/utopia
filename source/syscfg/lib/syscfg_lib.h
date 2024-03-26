@@ -196,8 +196,8 @@ typedef struct {
  *   shm_mm_alloc(sz) - will allocate a sz byte chunk closest to the chunk size
  */
 static int make_mm_items (syscfg_shm_ctx *ctx, shm_free_table *ft);
-int shm_malloc (syscfg_shm_ctx *ctx, int size, shmoff_t *out_offset);
-void shm_free (syscfg_shm_ctx *ctx, shmoff_t offset);
+static int shm_malloc (syscfg_shm_ctx *ctx, int size, shmoff_t *out_offset);
+static void shm_free (syscfg_shm_ctx *ctx, shmoff_t offset);
 
 static int   syscfg_shm_init ();
 static void *syscfg_shm_create (store_info_t *store_info, int *out_shmid);
