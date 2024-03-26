@@ -1663,6 +1663,125 @@ static int make_mm_items (syscfg_shm_ctx *ctx, shm_free_table *ft)
     return ct;
 }
 
+static int load_from_file (const char *fname)
+{
+    int fd;
+    ssize_t count;
+    char *inbuf = NULL, *buf = NULL;
+    char *name = NULL, *value = NULL;
+
+    fd = open(fname, O_RDONLY);
+    if (-1 == fd) {
+        return ERR_IO_FILE_OPEN;
+    }
+    inbuf = malloc(SYSCFG_SZ);
+    if (NULL == inbuf) {
+        close(fd); /*RDKB-7135, CID-33110, free unused resources before exit*/
+        return ERR_MEM_ALLOC;
+    }
+
+    count = read(fd, inbuf, SYSCFG_SZ);
+    close(fd);
+
+    if (count <= 0) {
+        free(inbuf);
+        return 1;
+    }
+
+    buf = inbuf;
+    /*CID 135472 String not null terminated */
+    buf[count] = '\0';
+    do {
+        buf = syscfg_parse(buf, &name, &value);
+        if (name && value) {
+            syscfg_set(NULL, name, value);
+            free(name);
+            name = NULL; /*RDKB-7135, CID-33405, set null after free*/
+            free(value);
+            value = NULL; /*RDKB-7135, CID-33137, set null after free*/
+        }
+
+        // skip any special chars leftover
+        if (buf && *buf == '\n') {
+            buf++;
+        }
+    } while (buf);
+
+    free(inbuf);
+
+    return 0;
+}
+
+#if defined (NEW_COMMIT_TO_FILE)
+
+static int update_file (const char *fname, char *buf, size_t sz)
+{
+    int fd;
+    char tmpfile[64];
+
+    /* Temp file must be within the same filesystem as the destination file */
+
+    if (strncmp(fname, "/nvram/", 7) == 0)
+        snprintf(tmpfile, sizeof(tmpfile), "%ssyscfg_tmp.db_XXXXXX", "/nvram/");
+    else
+        snprintf(tmpfile, sizeof(tmpfile), "%ssyscfg_tmp.db_XXXXXX", "/tmp/");
+
+    fd = mkostemp(tmpfile, O_CLOEXEC);
+
+    if (fd < 0) {
+        ulog_error(ULOG_SYSTEM, UL_SYSCFG, "update_file: mkostemp() failed");
+        return -1;
+    }
+
+    if (write(fd, buf, sz) != sz) {
+        ulog_error(ULOG_SYSTEM, UL_SYSCFG, "update_file: partial write");
+        close(fd);
+        unlink(tmpfile);
+        return -1;
+    }
+
+    fsync(fd);
+    close(fd);
+
+    ulog_error(ULOG_SYSTEM, UL_SYSCFG, "update_file: rename %s -> %s", tmpfile, fname);
+
+    if (rename(tmpfile, fname) != 0) {
+        ulog_error(ULOG_SYSTEM, UL_SYSCFG, "update_file: renaming failed");
+        return -1;
+    }
+
+    return 0;
+}
+
+/*
+ * Notes
+ *    syscfg space is locked by the caller (for write & commit)
+ */
+static int commit_to_file (const char *fname)
+{
+    char *buf;
+    size_t sz;
+
+    if ((buf = malloc(SYSCFG_SZ)) == NULL) {
+        ulog_error(ULOG_SYSTEM, UL_SYSCFG, "commit_to_file: malloc() failed");
+        return -1;
+    }
+
+    sz = _syscfg_getall2(buf, SYSCFG_SZ, 1);
+
+    ulog_error(ULOG_SYSTEM, UL_SYSCFG, "commit_to_file: syscfg_getall2() returned %lu", (unsigned long) sz);
+
+    update_file(fname, buf, sz);
+
+    update_file(SYSCFG_BKUP_FILE, buf, sz);
+
+    free(buf);
+
+    return 0;
+}
+
+#else
+
 /*
  * Advisory read and write lock
  * Note: fd should be opened with RDWR mode
@@ -1711,55 +1830,6 @@ static void _syscfg_file_unlock (int fd)
      {
          close(fd);
      }
-}
-
-static int load_from_file (const char *fname)
-{
-    int fd;
-    ssize_t count;
-    char *inbuf = NULL, *buf = NULL;
-    char *name = NULL, *value = NULL;
-
-    fd = open(fname, O_RDONLY);
-    if (-1 == fd) {
-        return ERR_IO_FILE_OPEN;
-    }
-    inbuf = malloc(SYSCFG_SZ);
-    if (NULL == inbuf) {
-        close(fd); /*RDKB-7135, CID-33110, free unused resources before exit*/
-        return ERR_MEM_ALLOC;
-    }
-
-    count = read(fd, inbuf, SYSCFG_SZ);
-    close(fd);
-
-    if (count <= 0) {
-        free(inbuf);
-        return 1;
-    }
-
-    buf = inbuf;
-    /*CID 135472 String not null terminated */
-    buf[count] = '\0';
-    do {
-        buf = syscfg_parse(buf, &name, &value);
-        if (name && value) {
-            syscfg_set(NULL, name, value);
-            free(name);
-            name = NULL; /*RDKB-7135, CID-33405, set null after free*/
-            free(value);
-            value = NULL; /*RDKB-7135, CID-33137, set null after free*/
-        }
-
-        // skip any special chars leftover
-        if (buf && *buf == '\n') {
-            buf++;
-        }
-    } while (buf);
-
-    free(inbuf);
-
-    return 0;
 }
 
 /* Taking backup of file without using mmap/munmap */
@@ -1951,3 +2021,4 @@ static int commit_to_file (const char *fname)
    return 0;
 }
 
+#endif
