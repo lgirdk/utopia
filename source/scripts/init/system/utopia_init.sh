@@ -215,10 +215,6 @@ fi
 queries="factory_reset UpdateNvram lan_ipaddr lan_netmask ForwardSSH unit_activated lan_ifname cmdiag_ifname ecm_wan_ifname nat_udp_timeout nat_tcp_timeout nat_icmp_timeout lan_ethernet_physical_ifnames"
 get_utctx_val "$queries"
 
-if [ -f /nvram/syscfg_bkup.db ]; then
-	rm -rf /nvram/syscfg_bkup.db
-fi
-
 # Read reset duration to check if the unit was rebooted by pressing the HW reset button
 if cat /proc/P-UNIT/status | grep -q "Reset duration from shadow register"; then
    # Note: Only new P-UNIT firmwares and Linux drivers (>= 1.1.x) support this.
