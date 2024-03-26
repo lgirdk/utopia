@@ -185,6 +185,24 @@ int main (int argc, char **argv)
 
         return 0;
     }
+    else if (strcmp(cmd[0], "show2") == 0)
+    {
+        size_t sz;
+        long int used_sz = 0, max_sz = 0;
+        char buf[SYSCFG_SZ];
+
+        if (syscfg_getall2(buf, sizeof(buf), &sz) == 0) {
+            fwrite(buf, 1, sz, stdout);
+        }
+        else {
+            printf("No entries\n");
+        }
+
+        syscfg_getsz(&used_sz, &max_sz);
+        printf("Used: %ld of %ld\n", used_sz, max_sz);
+
+        return 0;
+    }
     else
     {
         syscfg_usage();
