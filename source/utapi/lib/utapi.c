@@ -2605,9 +2605,6 @@ static int s_add_portmapdyn (int index, portMapDyn_t *pmap)
 #else
     snprintf(param, sizeof(param), "portmap_dyn_%d", index);
 	sysevent_set(se_fd, se_token, param, value, 0);
-	ulogf(ULOG_CONFIG, UL_UTAPI, "%s: add entry (index %d): add/overwrite entry param %s value:%s", __FUNCTION__, index, 
-							param,
-							value);
 #endif /* 0 */
 
     return UT_SUCCESS;
