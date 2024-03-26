@@ -366,16 +366,16 @@ if [ -f $CUSTOMER_BOOT_CONFIG_FILE ]; then
     rm -f $CUSTOMER_BOOT_CONFIG_FILE
 fi
 
-if [ -f /usr/ccsp/psm/lg_bbhm_patch.sh ]
-then
-	/usr/ccsp/psm/lg_bbhm_patch.sh /nvram/bbhm_bak_cfg.xml
-fi
-
 #CISCOXB3-6085:Removing current configuration from nvram as a part of PSM migration.
 if [ -f /nvram/bbhm_cur_cfg.xml  ]; then
        mv /nvram/bbhm_cur_cfg.xml $PSM_CUR_XML_CONFIG_FILE_NAME
 elif [ -f $PSM_BAK_XML_CONFIG_FILE_NAME  ]; then	
 	cp -f $PSM_BAK_XML_CONFIG_FILE_NAME $PSM_CUR_XML_CONFIG_FILE_NAME
+fi
+
+if [ -f /usr/ccsp/psm/lg_bbhm_patch.sh ]
+then
+    /usr/ccsp/psm/lg_bbhm_patch.sh $PSM_CUR_XML_CONFIG_FILE_NAME
 fi
 
 #echo_t "[utopia][init] Starting system logging"
