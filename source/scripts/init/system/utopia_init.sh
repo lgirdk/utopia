@@ -103,14 +103,6 @@ CUSTOMER_BOOT_CONFIG_FILE="/nvram/bootconfig_custindex"
 HOTSPOT_BLOB="/nvram/hotspot_blob"
 HOTSPOT_JSON="/nvram/hotspot.json"
 
-if [ -d /opt/secure ]; then
-       if [ ! -d /opt/secure/data ]; then
-               echo "/opt/secure/data path not available creating directory and touching /opt/secure/data/syscfg.db file"
-               mkdir /opt/secure/data
-               touch /opt/secure/data/syscfg.db
-       fi
-fi
-
 changeFilePermissions() {
        if [ -e "$1" ]; then
                filepermission=$(stat -c %a "$1")
@@ -197,7 +189,7 @@ else
         CheckAndReCreateDB
    fi
    #>>zqiu
-   echo_t "[utopia][init] need to reset wifi when(/nvram/syscfg.db) and (/opt/secure/data/syscfg.db) files are not available"
+   echo_t "[utopia][init] need to reset wifi when /nvram/syscfg.db file is not available"
    syscfg set $FACTORY_RESET_KEY $FACTORY_RESET_WIFI
    syscfg commit
    #<<zqiu
@@ -224,12 +216,6 @@ get_utctx_val "$queries"
 
 if [ -f /nvram/syscfg_bkup.db ]; then
 	rm -rf /nvram/syscfg_bkup.db
-fi
-if [ -f /opt/secure/data/syscfg_bkup.db ]; then
-	rm -rf /opt/secure/data/syscfg_bkup.db
-fi
-if [ -f /opt/secure/data/syscfg.db ]; then
-	rm -rf /opt/secure/data/syscfg.db
 fi
 
 # Read reset duration to check if the unit was rebooted by pressing the HW reset button
@@ -273,7 +259,6 @@ if [ "$FACTORY_RESET_RGWIFI" = "$SYSCFG_FR_VAL" ]; then
    rm -f /nvram/Blocklist_XB3.txt
    rm -f /nvram/syscfg.db
    rm -f /tmp/syscfg.db
-   rm -f /opt/secure/data/syscfg.db
    rm -f $PSM_BAK_XML_CONFIG_FILE_NAME
    rm -f $PSM_TMP_XML_CONFIG_FILE_NAME
    rm -f $TR69TLVFILE
