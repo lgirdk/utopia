@@ -1883,21 +1883,27 @@ int Utopia_Set(UtopiaContext* pUtopiaCtx, UtopiaValue ixUtopia, char* pszValue)
 
 int Utopia_SetAll(UtopiaContext* pUtopiaCtx, char* pszBuffer)
 {
-    char pszState[UTOPIA_STATE_SIZE];
+    char* pszState = (char*)malloc(UTOPIA_STATE_SIZE);
+    if(pszState == NULL) 
+    {
+        UTCTX_LOG_ERR1("%s: Memory allocation failed\n", __FUNCTION__);
+        return 0;
+    }
 
     /* First need to do a get all and unset each value */
-    if (s_UtopiaTransact_GetAll(pUtopiaCtx, pszState, sizeof(pszState)) != 0 &&
+    if (s_UtopiaTransact_GetAll(pUtopiaCtx, pszState, UTOPIA_STATE_SIZE) != 0 &&
         s_UtopiaTransact_SetAll(pUtopiaCtx, pszState, 1) != 0 &&
         /* Now, we can do a set all, if the buffer's not null */
         (pszBuffer == 0 ||
          s_UtopiaTransact_SetAll(pUtopiaCtx, pszBuffer, 0) != 0))
     {
+        free(pszState);
         return 1;
     }
     UTCTX_LOG_ERR1("%s: Failed\n", __FUNCTION__);
+    free(pszState);
     return 0;
 }
-
 int Utopia_SetIndexed(UtopiaContext* pUtopiaCtx, UtopiaValue ixUtopia, int iIndex, char* pszValue)
 {
     if (Utopia_IsIndexedConfig(ixUtopia) &&
