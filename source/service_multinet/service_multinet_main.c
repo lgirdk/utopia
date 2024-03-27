@@ -82,7 +82,7 @@ FILE *mnetfp = NULL;
  int handle_lnf_setup(char* argv[], int argc);
  int handle_meshbhaul_setup(char* argv[], int argc);
 #endif
-#if defined(_COSA_INTEL_USG_ARM_) && !defined(INTEL_PUMA7) && !defined(_COSA_BCM_ARM_)
+#if defined(_COSA_INTEL_USG_ARM_) && !defined(INTEL_PUMA7) && !defined(_COSA_BCM_ARM_) && !defined(_COSA_QCA_ARM_)
 void addMeshBhaulVlan();
 void createMeshVlan();
 void addRadiusVlan();
@@ -301,7 +301,7 @@ void multinet_log( char* fmt, ...)
  int set_multicast_mac(char* argv[], int argc)
  {
 	MNET_DEBUG("Setting Multicast MACs early\n")
-#if defined(_COSA_INTEL_USG_ARM_) && !defined(INTEL_PUMA7) && !defined(_COSA_BCM_ARM_)
+#if defined(_COSA_INTEL_USG_ARM_) && !defined(INTEL_PUMA7) && !defined(_COSA_BCM_ARM_) && !defined(_COSA_QCA_ARM_)
 	setMulticastMac();
 #endif
     return 0;
@@ -309,7 +309,7 @@ void multinet_log( char* fmt, ...)
 
  int add_ipc_vlan(char* argv[], int argc)
  {
-#if defined(_COSA_INTEL_USG_ARM_) && !defined(INTEL_PUMA7) && !defined(_COSA_BCM_ARM_)
+#if defined(_COSA_INTEL_USG_ARM_) && !defined(INTEL_PUMA7) && !defined(_COSA_BCM_ARM_) && !defined(_COSA_QCA_ARM_)
     addIpcVlan();
 #endif
     return 0;
@@ -317,7 +317,7 @@ void multinet_log( char* fmt, ...)
 
  int add_radius_vlan(char* argv[], int argc)
  {
-#if defined(_COSA_INTEL_USG_ARM_) && !defined(INTEL_PUMA7) && !defined(_COSA_BCM_ARM_)
+#if defined(_COSA_INTEL_USG_ARM_) && !defined(INTEL_PUMA7) && !defined(_COSA_BCM_ARM_) && !defined(_COSA_QCA_ARM_)
     addRadiusVlan();
 #endif
     return 0;
@@ -325,7 +325,7 @@ void multinet_log( char* fmt, ...)
 
  int create_mesh_vlan(char* argv[], int argc)
  {
-#if defined(_COSA_INTEL_USG_ARM_) && !defined(INTEL_PUMA7) && !defined(_COSA_BCM_ARM_)
+#if defined(_COSA_INTEL_USG_ARM_) && !defined(INTEL_PUMA7) && !defined(_COSA_BCM_ARM_) && !defined(_COSA_QCA_ARM_)
     createMeshVlan();
 #endif
     return 0;
@@ -333,7 +333,7 @@ void multinet_log( char* fmt, ...)
 
  int add_meshbhaul_vlan(char* argv[], int argc)
  {
-#if defined(_COSA_INTEL_USG_ARM_) && !defined(INTEL_PUMA7) && !defined(_COSA_BCM_ARM_)
+#if defined(_COSA_INTEL_USG_ARM_) && !defined(INTEL_PUMA7) && !defined(_COSA_BCM_ARM_) && !defined(_COSA_QCA_ARM_)
     addMeshBhaulVlan();
 #endif
     return 0;

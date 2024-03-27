@@ -3133,7 +3133,7 @@ static int prepare_globals_from_configuration(void)
    fprintf(fp, "-A xlog_accept_wan2lan -j ACCEPT\n");
 
    fprintf(fp, "-A xlog_accept_wan2self -j ACCEPT\n");
-#if !(defined INTEL_PUMA7) && !(defined _COSA_BCM_ARM_) && !defined(_PLATFORM_TURRIS_)
+#if !(defined INTEL_PUMA7) && !(defined _COSA_BCM_ARM_) && !defined(_PLATFORM_TURRIS_) && !defined(_COSA_QCA_ARM_)
    fprintf(fp, "-A xlog_drop_wan2lan -j DROP\n");
 #endif
    fprintf(fp, "-A xlog_drop_wan2self -j DROP\n");
@@ -5848,7 +5848,7 @@ int do_wan2self_attack(FILE *fp,char* wan_ip)
     * Log probable DoS attack
     */
    //Smurf attack, actually the below rules are to prevent us from being the middle-man host
-#if defined(_HUB4_PRODUCT_REQ_) || defined(_WNXL11BWL_PRODUCT_REQ_) /* ULOG target removed in kernels 3.17+ */
+#if defined(_HUB4_PRODUCT_REQ_) || defined(_WNXL11BWL_PRODUCT_REQ_) || defined(_XER5_PRODUCT_REQ_) /* ULOG target removed in kernels 3.17+ */
    fprintf(fp, "-A wanattack -p icmp -m icmp --icmp-type address-mask-request %s -j LOG --log-prefix \"DoS Attack - Smurf Attack\" --log-level 7\n", logRateLimit);
 #elif defined(_PROPOSED_BUG_FIX_)
    if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,17,0))
@@ -5861,13 +5861,13 @@ int do_wan2self_attack(FILE *fp,char* wan_ip)
    }
 #elif defined(_PLATFORM_RASPBERRYPI_) || defined(_PLATFORM_TURRIS_)
    fprintf(fp, "-A wanattack -p icmp -m icmp --icmp-type address-mask-request %s -j LOG --log-prefix \"DoS Attack - Smurf Attack\"\n", logRateLimit);
-#elif defined(_COSA_BCM_ARM_) && (defined(_CBR_PRODUCT_REQ_) || defined(_XB6_PRODUCT_REQ_))  
+#elif defined(_COSA_BCM_ARM_) && (defined(_CBR_PRODUCT_REQ_) || defined(_XB6_PRODUCT_REQ_)) 
    fprintf(fp, "-A wanattack -p icmp -m icmp --icmp-type address-mask-request %s -j NFLOG --nflog-group 2 --nflog-prefix \"DoS Attack - Smurf Attack\" --nflog-size 50\n", logRateLimit);
 #else
    fprintf(fp, "-A wanattack -p icmp -m icmp --icmp-type address-mask-request %s -j ULOG --ulog-prefix \"DoS Attack - Smurf Attack\" --ulog-cprange 50\n", logRateLimit);
 #endif /*_HUB4_PRODUCT_REQ_*/
    fprintf(fp, "-A wanattack -p icmp -m icmp --icmp-type address-mask-request -j xlog_drop_wanattack\n");
-#if defined(_HUB4_PRODUCT_REQ_) || defined(_WNXL11BWL_PRODUCT_REQ_) /* ULOG target removed in kernels 3.17+ */
+#if defined(_HUB4_PRODUCT_REQ_) || defined(_WNXL11BWL_PRODUCT_REQ_) || defined(_XER5_PRODUCT_REQ_) /* ULOG target removed in kernels 3.17+ */
    fprintf(fp, "-A wanattack -p icmp -m icmp --icmp-type timestamp-request %s -j LOG --log-prefix \"DoS Attack - Smurf Attack\" --log-level 7\n", logRateLimit);
 #elif defined(_PROPOSED_BUG_FIX_)
    if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,17,0))
@@ -5889,7 +5889,7 @@ int do_wan2self_attack(FILE *fp,char* wan_ip)
 
    //ICMP Flooding. Mark traffic bit rate > 5/s as attack and limit 6 log entries per hour
    fprintf(fp, "-A wanattack -p icmp -m limit --limit 5/s --limit-burst 10 -j RETURN\n"); //stop traveling the rest of the wanattack chain
-#if defined(_HUB4_PRODUCT_REQ_) || defined(_WNXL11BWL_PRODUCT_REQ_) /* ULOG target removed in kernels 3.17+ */
+#if defined(_HUB4_PRODUCT_REQ_) || defined(_WNXL11BWL_PRODUCT_REQ_) || defined(_XER5_PRODUCT_REQ_) /* ULOG target removed in kernels 3.17+ */
    fprintf(fp, "-A wanattack -p icmp %s -j LOG --log-prefix \"DoS Attack - ICMP Flooding\" --log-level 7\n", logRateLimit);
 #elif defined(_PROPOSED_BUG_FIX_)
    if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,17,0))
@@ -5911,7 +5911,7 @@ int do_wan2self_attack(FILE *fp,char* wan_ip)
 
    //TCP SYN Flooding
    fprintf(fp, "-A wanattack -p tcp --syn -m limit --limit 10/s --limit-burst 20 -j RETURN\n");
-#if defined(_HUB4_PRODUCT_REQ_) || defined(_WNXL11BWL_PRODUCT_REQ_) /* ULOG target removed in kernels 3.17+ */
+#if defined(_HUB4_PRODUCT_REQ_) || defined(_WNXL11BWL_PRODUCT_REQ_) || defined(_XER5_PRODUCT_REQ_) /* ULOG target removed in kernels 3.17+ */
    fprintf(fp, "-A wanattack -p tcp --syn %s -j LOG --log-prefix \"DoS Attack - TCP SYN Flooding\" --log-level 7\n", logRateLimit);
 #elif defined(_PROPOSED_BUG_FIX_)
    if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,17,0))
@@ -5935,7 +5935,7 @@ int do_wan2self_attack(FILE *fp,char* wan_ip)
    if(isWanReady) {
        /* Allow multicast packet through */
        fprintf(fp, "-A wanattack -p udp -s %s -d 224.0.0.0/8 -j RETURN\n", wan_ip);
-#if defined(_HUB4_PRODUCT_REQ_) || defined(_WNXL11BWL_PRODUCT_REQ_) /* ULOG target removed in kernels 3.17+ */
+#if defined(_HUB4_PRODUCT_REQ_) || defined(_WNXL11BWL_PRODUCT_REQ_) || defined(_XER5_PRODUCT_REQ_) /* ULOG target removed in kernels 3.17+ */
        fprintf(fp, "-A wanattack -s %s %s -j LOG --log-prefix \"DoS Attack - LAND Attack\" --log-level 7\n", wan_ip, logRateLimit);
 #elif defined(_PROPOSED_BUG_FIX_)
        if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,17,0))
@@ -10691,7 +10691,7 @@ static int prepare_multinet_postrouting_nat(FILE *nat_fp) {
 
 static void prepare_ipc_filter(FILE *filter_fp) {
                 FIREWALL_DEBUG("Entering prepare_ipc_filter\n"); 	  
-#if !defined (_COSA_BCM_ARM_) && !defined(INTEL_PUMA7) && !defined(_PLATFORM_TURRIS_)
+#if !defined (_COSA_BCM_ARM_) && !defined(INTEL_PUMA7) && !defined(_PLATFORM_TURRIS_) && !defined(_COSA_QCA_ARM_)
     // TODO: fix this hard coding
     fprintf(filter_fp, "-I OUTPUT -o %s -j ACCEPT\n", "l2sd0.500");
     fprintf(filter_fp, "-I INPUT -i %s -j ACCEPT\n", "l2sd0.500");
@@ -11055,7 +11055,7 @@ static int prepare_multinet_filter_forward (FILE *filter_fp)
 #endif /*_HUB4_PRODUCT_REQ_*/
         //fprintf(filter_fp, "-A OUTPUT -o %s -j ACCEPT\n", net_resp);
 
-#if defined (INTEL_PUMA7) || ((defined (_COSA_BCM_ARM_) || defined (_PLATFORM_TURRIS_)) && !defined(_CBR_PRODUCT_REQ_) && !defined(_HUB4_PRODUCT_REQ_))
+#if defined (INTEL_PUMA7) || ((defined (_COSA_BCM_ARM_) || defined (_PLATFORM_TURRIS_) || defined(_COSA_QCA_ARM_)) && !defined(_CBR_PRODUCT_REQ_) && !defined(_HUB4_PRODUCT_REQ_))
         if ( 0 != strncmp( lan_ifname, net_resp, strlen(lan_ifname))) { // block forwarding between bridge
         	fprintf(filter_fp, "-A FORWARD -i %s -o %s -j DROP\n", lan_ifname, net_resp);
         	fprintf(filter_fp, "-A FORWARD -i %s -o %s -j DROP\n", net_resp, lan_ifname);
@@ -11106,7 +11106,7 @@ static int prepare_multinet_filter_forward (FILE *filter_fp)
 
     fprintf(filter_fp, "-A INPUT -i brebhaul -d 169.254.85.0/24 -j ACCEPT\n");
     fprintf(filter_fp, "-A INPUT -i brebhaul -m pkttype ! --pkt-type unicast -j ACCEPT\n");
-#elif defined (INTEL_PUMA7) || (defined (_COSA_BCM_ARM_) && !defined(_CBR_PRODUCT_REQ_) && !defined(_HUB4_PRODUCT_REQ_)) // ARRIS XB6 ATOM, TCXB6
+#elif defined (INTEL_PUMA7) || (defined (_COSA_BCM_ARM_) && !defined(_CBR_PRODUCT_REQ_) && !defined(_HUB4_PRODUCT_REQ_)) || defined(_COSA_QCA_ARM_) // ARRIS XB6 ATOM, TCXB6
     fprintf(filter_fp, "-A INPUT -i ath12 -d 169.254.0.0/24 -j ACCEPT\n");
     fprintf(filter_fp, "-A INPUT -i ath12 -m pkttype ! --pkt-type unicast -j ACCEPT\n");
     fprintf(filter_fp, "-A FORWARD -i ath12 -o erouter0 -j DROP\n");
@@ -11168,7 +11168,7 @@ static int prepare_multinet_filter_forward (FILE *filter_fp)
     fprintf(filter_fp, "-A INPUT -i br403 -s 192.168.245.0/24 -p tcp -m tcp --dport 8883 -j ACCEPT\n");
 #endif
 
-#if defined (INTEL_PUMA7) || ((defined (_COSA_BCM_ARM_) || defined(_PLATFORM_TURRIS_)) && !defined(_CBR_PRODUCT_REQ_) && !defined(_HUB4_PRODUCT_REQ_)) || defined (_CBR2_PRODUCT_REQ_)
+#if defined (INTEL_PUMA7) || ((defined (_COSA_BCM_ARM_) || defined(_PLATFORM_TURRIS_) || defined(_COSA_QCA_ARM_)) && !defined(_CBR_PRODUCT_REQ_) && !defined(_HUB4_PRODUCT_REQ_)) || defined (_CBR2_PRODUCT_REQ_)
     fprintf(filter_fp, "-A INPUT -i br403 -d 192.168.245.0/24 -j ACCEPT\n");
     fprintf(filter_fp, "-A INPUT -i br403 -m pkttype ! --pkt-type unicast -j ACCEPT\n");
 #endif
@@ -12044,7 +12044,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    //Avoid blocking packets at the Intel NIL layer
    fprintf(filter_fp, "-A FORWARD -i a-mux -j ACCEPT\n");
 #endif
-#if defined(INTEL_PUMA7) || defined (_COSA_BCM_ARM_) || defined(_PLATFORM_TURRIS_)
+#if defined(INTEL_PUMA7) || defined (_COSA_BCM_ARM_) || defined(_PLATFORM_TURRIS_) || defined(_COSA_QCA_ARM_)
    fprintf(filter_fp, "-A INPUT -i host0 -s 192.168.147.0/255.255.255.0 -j ACCEPT\n");
    fprintf(filter_fp, "-A OUTPUT -o host0 -d 192.168.147.0/255.255.255.0 -j ACCEPT\n");
 #endif
@@ -12496,7 +12496,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(filter_fp, "-I FORWARD 3 -i %s -o br403 -j ACCEPT\n", current_wan_ifname);
 #endif
 
-#if defined (INTEL_PUMA7) || ((defined (_COSA_BCM_ARM_) || defined(_PLATFORM_TURRIS_)) && !defined(_CBR_PRODUCT_REQ_) && !defined(_HUB4_PRODUCT_REQ_)) || defined (_CBR2_PRODUCT_REQ_)
+#if defined (INTEL_PUMA7) || ((defined (_COSA_BCM_ARM_) || defined(_PLATFORM_TURRIS_) || defined(_COSA_QCA_ARM_)) && !defined(_CBR_PRODUCT_REQ_) && !defined(_HUB4_PRODUCT_REQ_)) || defined (_CBR2_PRODUCT_REQ_)
    fprintf(filter_fp, "-I FORWARD 2 -i br403 -o %s -j ACCEPT\n", current_wan_ifname);
    fprintf(filter_fp, "-I FORWARD 3 -i %s -o br403 -j ACCEPT\n", current_wan_ifname);
 #endif
@@ -12553,7 +12553,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
       //do_lan2wan_IoT_Allow(filter_fp);
       do_wan2lan_IoT_Allow(filter_fp);
 
-#if defined (INTEL_PUMA7) || ((defined (_COSA_BCM_ARM_) || defined(_PLATFORM_TURRIS_)) && !defined(_CBR_PRODUCT_REQ_)) // ARRIS XB6 ATOM, TCXB6
+#if defined (INTEL_PUMA7) || ((defined (_COSA_BCM_ARM_) || defined(_PLATFORM_TURRIS_) || defined(_COSA_QCA_ARM_)) && !defined(_CBR_PRODUCT_REQ_)) // ARRIS XB6 ATOM, TCXB6
       // Block forwarding between bridges.
       fprintf(filter_fp, "-A FORWARD -i %s -o %s -j DROP\n", lan_ifname, iot_ifName);
       fprintf(filter_fp, "-A FORWARD -i %s -o %s -j DROP\n", XHS_IF_NAME, iot_ifName);
@@ -15448,7 +15448,7 @@ v6GPFirewallRuleNext:
       do_forwardPorts(fp);
 
       //Adding rule for XB6 ARRISXB6-3348 and TCXB6-2262
-#if defined(INTEL_PUMA7) || defined(_COSA_BCM_ARM_) || defined(_PLATFORM_TURRIS_)
+#if defined(INTEL_PUMA7) || defined(_COSA_BCM_ARM_) || defined(_PLATFORM_TURRIS_) || defined(_COSA_QCA_ARM_)
       fprintf(fp, "-A FORWARD -i brlan0 -o brlan0 -j lan2wan \n");
 #endif
 

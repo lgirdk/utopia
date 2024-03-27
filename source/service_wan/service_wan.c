@@ -919,7 +919,7 @@ static int wan_start(struct serv_wan *sw)
     if (sw->rtmod == WAN_RTMOD_IPV6 || sw->rtmod == WAN_RTMOD_DS) {
       
 
-            #if defined (_COSA_BCM_ARM_)
+            #if defined (_COSA_BCM_ARM_) || defined (_COSA_QCA_ARM_)
                 // dibbler fails sometime with tentative link local address , adding 5 sec delay
                 sleep(5);
             #endif 

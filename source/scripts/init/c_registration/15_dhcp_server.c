@@ -43,7 +43,7 @@
 
 #define SERVICE_NAME "dhcp_server"
 #define SERVICE_DEFAULT_HANDLER "/etc/utopia/service.d/service_dhcp_server.sh"
-#if defined(_COSA_INTEL_USG_ARM_) && !defined(INTEL_PUMA7) && !defined(_COSA_BCM_ARM_) && !defined(_PLATFORM_IPQ_) && !defined(_PLATFORM_TURRIS_)
+#if defined(_COSA_INTEL_USG_ARM_) && !defined(INTEL_PUMA7) && !defined(_COSA_BCM_ARM_) && !defined(_PLATFORM_IPQ_) && !defined(_PLATFORM_TURRIS_) && !defined(_COSA_QCA_ARM_)
 const char* SERVICE_CUSTOM_EVENTS[] = { 
                                         "syslog-status|/etc/utopia/service.d/service_dhcp_server.sh",
                                         "lan-status|/usr/bin/service_dhcp",
@@ -57,7 +57,7 @@ const char* SERVICE_CUSTOM_EVENTS[] = {
                                         NULL 
                                       };
 #elif defined(CORE_NET_LIB) && \
-        ((defined(_XB6_PRODUCT_REQ_) && !defined (_XB8_PRODUCT_REQ_)) || (defined(_WNXL11BWL_PRODUCT_REQ_)) || \
+        ((defined(_XB6_PRODUCT_REQ_) && !defined (_XB8_PRODUCT_REQ_) && !defined(_XER5_PRODUCT_REQ_)) || (defined(_WNXL11BWL_PRODUCT_REQ_)) || \
          (defined(_CBR_PRODUCT_REQ_) && !defined(_CBR2_PRODUCT_REQ_)))
 const char* SERVICE_CUSTOM_EVENTS[] = {
                                         "syslog-status|/usr/bin/service_dhcp",
