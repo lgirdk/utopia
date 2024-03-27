@@ -66,8 +66,10 @@ const char* SERVICE_CUSTOM_EVENTS[] = {
 #endif
 
 void srv_register(void) {
+   DBG_PRINT("15_hotspot : %s Entry\n", __FUNCTION__);
    sm_register(SERVICE_NAME, SERVICE_DEFAULT_HANDLER, SERVICE_CUSTOM_EVENTS);
    system("modprobe brMtuMod");
+   DBG_PRINT("15_hotspot : %s Exit\n", __FUNCTION__);
 }
 
 #ifdef RDKB_EXTENDER_ENABLED
