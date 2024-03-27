@@ -680,7 +680,7 @@ static int GetDevicePropertiesEntry (char *pOutput, int size, char *sDevicePropC
 
 static int getFactoryPartnerId (char *pValue)
 {
-#if defined(XB10_ONLY_SUPPORT) || defined(_SCER11BEL_PRODUCT_REQ_) 
+#if defined(_SCER11BEL_PRODUCT_REQ_) 
         strcpy(pValue,"comcast");
         APPLY_PRINT("%s - %s\n",__FUNCTION__,pValue);
         printf("##############Partner ID Found %s : \n", pValue);
