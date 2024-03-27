@@ -676,7 +676,9 @@ static void s_parse_arp_cache (char *line, arpHost_t *host_info)
      * Sample line
      *   192.168.1.113 dev br0 lladdr 00:23:32:c8:28:d8 REACHABLE
      */
-    sscanf(line, "%s %s %s %s %s %s", 
+    
+    /*CID fix : 68947*/
+    sscanf(line, "%39s %63s %15s %63s %17s %31s", 
                  host_info->ipaddr,
                  stub,
                  host_info->interface,
