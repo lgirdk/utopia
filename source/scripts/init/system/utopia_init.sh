@@ -155,15 +155,16 @@ if [ -f /nvram/syscfg.db ]; then
    if [ -f $CUSTOMER_BOOT_CONFIG_FILE ]; then
 
       if [ -x /usr/bin/db_mig ]; then
-         # Preserve value of db_migration_complete before removing /nvram/syscfg.db
+         # Preserve value of db_migration_complete before resetting /nvram/syscfg.db
          DB_MIG_COMPLETE=$(grep "db_migration_complete" /nvram/syscfg.db | cut -d "=" -f2)
       fi
 
-      # If Customer index is set via boot config then remove /nvram/syscfg.db
-      echo -n > /nvram/syscfg.db
+      # If Customer index is set via boot config then ignore /nvram/syscfg.db
+      echo -n > /tmp/syscfg.db
+   else
+      cp /nvram/syscfg.db /tmp/syscfg.db
    fi
 
-   cp /nvram/syscfg.db /tmp/syscfg.db
    syscfg_create -f /tmp/syscfg.db
    if [ $? != 0 ]; then
 	   CheckAndReCreateDB
