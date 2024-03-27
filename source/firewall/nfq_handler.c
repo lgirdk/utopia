@@ -517,7 +517,9 @@ int main(int argc, char *argv[])
            fprintf(stderr, "nfq_handler: maxium length of srcMac %s\n", __FUNCTION__);
            exit(1);
        }
-       strcpy(srcMac, argv[2]);
+       /*CID 185692 : Calling Risky Function*/
+      strncpy(srcMac, argv[2], sizeof(srcMac) - 1);
+      srcMac[sizeof(srcMac) - 1] = '\0';
    }
    else{
        /* In ARES/XB3 brlan0 has not been created when program started
