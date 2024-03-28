@@ -33,27 +33,13 @@
 #   limitations under the License.
 #######################################################################
 
-#------------------------------------------------------------------
-#   This file contains the code to initialize the board
-#------------------------------------------------------------------
-UTOPIA_PATH=/etc/utopia/service.d
-SWITCH_HANDLER=$UTOPIA_PATH/service_multinet/handle_sw.sh
-INIT_DIR=/etc/utopia/registration.d
-BINPATH="/usr/bin"
-CCSPPATH="/usr/ccsp"
-
 ls /tmp/pam_initialized* > /tmp/pam_init_status
 
-source $UTOPIA_PATH/log_capture_path.sh
+source /etc/utopia/service.d/log_capture_path.sh
 source /etc/utopia/service.d/utctx_helper.sh
 source /etc/device.properties
 
 dmesg -n 5
-
-TR69TLVFILE="/nvram/TLVData.bin"
-REVERTFLAG="/nvram/reverted"
-MAINT_START="/nvram/.FirmwareUpgradeStartTime"
-MAINT_END="/nvram/.FirmwareUpgradeEndTime"
 
 echo_t "*******************************************************************"
 echo_t "*                                                                  "
@@ -89,19 +75,8 @@ mount --bind /var/tmp/dhcp_static_hosts /etc/dhcp_static_hosts
 mount --bind /var/tmp/hosts /etc/hosts
 
 BUTTON_THRESHOLD=15
-FACTORY_RESET_KEY=factory_reset
-FACTORY_RESET_RGWIFI=y
-FACTORY_RESET_WIFI=w
 
-PSM_CUR_XML_CONFIG_FILE_NAME="/tmp/bbhm_cur_cfg.xml"
-PSM_BAK_XML_CONFIG_FILE_NAME="/nvram/bbhm_bak_cfg.xml"
-PSM_TMP_XML_CONFIG_FILE_NAME="/nvram/bbhm_tmp_cfg.xml"
-XDNS_DNSMASQ_SERVERS_CONFIG_FILE_NAME="/nvram/dnsmasq_servers.conf"
-FACTORY_RESET_REASON=false
-CUSTOMER_BOOT_CONFIG_FILE="/nvram/bootconfig_custindex"
-
-HOTSPOT_BLOB="/nvram/hotspot_blob"
-HOTSPOT_JSON="/nvram/hotspot.json"
+FACTORY_RESET_REASON="false"
 
 changeFilePermissions() {
        if [ -e "$1" ]; then
@@ -151,7 +126,7 @@ rm -f /nvram/syscfg_tmp.db_*
 
 if [ -f /nvram/syscfg.db ]; then
 
-   if [ -f $CUSTOMER_BOOT_CONFIG_FILE ]; then
+   if [ -f /nvram/bootconfig_custindex ]; then
 
       if [ -x /usr/bin/db_mig ]; then
          # Preserve value of db_migration_complete before resetting /nvram/syscfg.db
@@ -169,7 +144,7 @@ if [ -f /nvram/syscfg.db ]; then
 	   CheckAndReCreateDB
    fi
 
-   if [ -f $CUSTOMER_BOOT_CONFIG_FILE ]; then
+   if [ -f /nvram/bootconfig_custindex ]; then
       # Setting preserved value of db_migration_completed
       if [ -x /usr/bin/db_mig ] && [ "$DB_MIG_COMPLETE" = "true" ]; then
          echo_t "[utopia][init] dbmig = $DB_MIG_COMPLETE"
@@ -191,7 +166,7 @@ else
    fi
    #>>zqiu
    echo_t "[utopia][init] need to reset wifi when /nvram/syscfg.db file is not available"
-   syscfg set $FACTORY_RESET_KEY $FACTORY_RESET_WIFI
+   syscfg set factory_reset w
    syscfg commit
    #<<zqiu
    touch /nvram/.apply_partner_defaults
@@ -204,8 +179,8 @@ else
 fi
 
 # Get the values of FactoryResetSSID's from the psm xml backup file
-WIFI_FACTORY_RESET_SSID1=$(grep -ir '1.FactoryResetSSID' $PSM_BAK_XML_CONFIG_FILE_NAME | awk -F"[<>]" '{print $3}')
-WIFI_FACTORY_RESET_SSID2=$(grep -ir '2.FactoryResetSSID' $PSM_BAK_XML_CONFIG_FILE_NAME | awk -F"[<>]" '{print $3}')
+WIFI_FACTORY_RESET_SSID1=$(grep -ir '1.FactoryResetSSID' /nvram/bbhm_bak_cfg.xml | awk -F"[<>]" '{print $3}')
+WIFI_FACTORY_RESET_SSID2=$(grep -ir '2.FactoryResetSSID' /nvram/bbhm_bak_cfg.xml | awk -F"[<>]" '{print $3}')
 
 if [ -x /usr/bin/db_mig ]; then
    DB_MIG_COMPLETE=$(syscfg get db_migration_completed)
@@ -230,16 +205,17 @@ else
 fi
 
 # Set the factory reset key if it was pressed for longer than our threshold
-if test "$BUTTON_THRESHOLD" -le "$PUNIT_RESET_DURATION"; then
-   syscfg set $FACTORY_RESET_KEY $FACTORY_RESET_RGWIFI && BUTTON_FR="1"
+if [ "$PUNIT_RESET_DURATION" -gt "$BUTTON_THRESHOLD" ] ; then
+   syscfg set factory_reset y
    syscfg commit
+   BUTTON_FR="1"
 fi
 
 SYSCFG_LastRebootReason="$(syscfg get X_RDKCENTRAL-COM_LastRebootReason)"
 
 SYSCFG_FR_VAL=$SYSCFG_factory_reset
 
-if [ "$FACTORY_RESET_RGWIFI" = "$SYSCFG_FR_VAL" ]; then
+if [ "y" = "$SYSCFG_FR_VAL" ]; then
    echo_t "[utopia][init] Performing factory reset"
 
 # Remove log file first because it need get log file path from syscfg   
@@ -248,7 +224,7 @@ if [ "$FACTORY_RESET_RGWIFI" = "$SYSCFG_FR_VAL" ]; then
 
 # Remove syscfg and PSM storage files
 #mark the factory reset flag 'on'
-   FACTORY_RESET_REASON=true 
+   FACTORY_RESET_REASON="true" 
    rm -f /nvram/partners_defaults.json 
    rm -f /nvram/bootstrap.json
    rm -f /opt/secure/RFC/tr181store.json
@@ -256,13 +232,13 @@ if [ "$FACTORY_RESET_RGWIFI" = "$SYSCFG_FR_VAL" ]; then
    rm -f /nvram/Blocklist_XB3.txt
    rm -f /nvram/syscfg.db
    rm -f /tmp/syscfg.db
-   rm -f $PSM_BAK_XML_CONFIG_FILE_NAME
-   rm -f $PSM_TMP_XML_CONFIG_FILE_NAME
-   rm -f $TR69TLVFILE
-   rm -f $REVERTFLAG
-   rm -f $XDNS_DNSMASQ_SERVERS_CONFIG_FILE_NAME
-   rm -f $MAINT_START
-   rm -f $MAINT_END
+   rm -f /nvram/bbhm_bak_cfg.xml
+   rm -f /nvram/bbhm_tmp_cfg.xml
+   rm -f /nvram/TLVData.bin
+   rm -f /nvram/reverted
+   rm -f /nvram/dnsmasq_servers.conf
+   rm -f /nvram/.FirmwareUpgradeStartTime
+   rm -f /nvram/.FirmwareUpgradeEndTime
    # Remove DHCP lease file
    rm -f /nvram/dnsmasq.leases
    rm -f /nvram/server-IfaceMgr.xml
@@ -283,13 +259,8 @@ if [ "$FACTORY_RESET_RGWIFI" = "$SYSCFG_FR_VAL" ]; then
      rm -f /nvram/webconfig_db.bin     
    fi
 
-    if [ -f "$HOTSPOT_BLOB" ];then
-      rm -f "$HOTSPOT_BLOB"
-   fi
-
-    if [ -f "$HOTSPOT_JSON" ];then
-        rm -f "$HOTSPOT_JSON"
-    fi
+   rm -f /nvram/hotspot_blob
+   rm -f /nvram/hotspot.json
 
     if [ -f "/nvram/dnsmasq.vendorclass" ];then
       rm -f /nvram/dnsmasq.vendorclass
@@ -322,10 +293,10 @@ if [ "$FACTORY_RESET_RGWIFI" = "$SYSCFG_FR_VAL" ]; then
       syscfg commit
    fi
 
-elif [ "$FACTORY_RESET_WIFI" = "$SYSCFG_FR_VAL" ]; then
+elif [ "w" = "$SYSCFG_FR_VAL" ]; then
     echo_t "[utopia][init] Performing wifi reset"
     create_wifi_default
-    syscfg unset $FACTORY_RESET_KEY
+    syscfg unset factory_reset
 #<<zqiu
 fi
 
@@ -343,25 +314,25 @@ fi
 
 # In case customer index and factory reset happens at the same time,
 # syscfg_create is called for two times. So remove bootconfig_custindex file after that.
-if [ -f $CUSTOMER_BOOT_CONFIG_FILE ]; then
+if [ -f /nvram/bootconfig_custindex ]; then
     # Remove /nvram/bootconfig_custindex file. Customer specific values are already added in syscfg.
-    rm -f $CUSTOMER_BOOT_CONFIG_FILE
+    rm -f /nvram/bootconfig_custindex
 fi
 
 #CISCOXB3-6085:Removing current configuration from nvram as a part of PSM migration.
 if [ -f /nvram/bbhm_cur_cfg.xml  ]; then
-       mv /nvram/bbhm_cur_cfg.xml $PSM_CUR_XML_CONFIG_FILE_NAME
-elif [ -f $PSM_BAK_XML_CONFIG_FILE_NAME  ]; then	
-	cp -f $PSM_BAK_XML_CONFIG_FILE_NAME $PSM_CUR_XML_CONFIG_FILE_NAME
+       mv /nvram/bbhm_cur_cfg.xml /tmp/bbhm_cur_cfg.xml
+elif [ -f /nvram/bbhm_bak_cfg.xml  ]; then	
+	cp -f /nvram/bbhm_bak_cfg.xml /tmp/bbhm_cur_cfg.xml
 fi
 
 if [ -f /usr/ccsp/psm/lg_bbhm_patch.sh ]
 then
-    /usr/ccsp/psm/lg_bbhm_patch.sh $PSM_CUR_XML_CONFIG_FILE_NAME
+    /usr/ccsp/psm/lg_bbhm_patch.sh /tmp/bbhm_cur_cfg.xml
 fi
 
 #echo_t "[utopia][init] Starting system logging"
-#$UTOPIA_PATH/service_syslog.sh syslog-start
+#/etc/utopia/service.d/service_syslog.sh syslog-start
 
 # update max number of msg in queue based on system maximum queue memory.
 # This update will be used for presence detection feature.
@@ -456,15 +427,16 @@ echo $SYSCFG_nat_icmp_timeout > /proc/sys/net/netfilter/nf_conntrack_icmp_timeou
 
 echo_t "[utopia][init] Processing registration"
 # run all executables in the sysevent registration directory
-# echo_t "[utopia][init] Running registration using $INIT_DIR"
-execute_dir $INIT_DIR&
+# echo_t "[utopia][init] Running registration using /etc/utopia/registration.d"
+execute_dir /etc/utopia/registration.d &
 #init_inter_subsystem&
 
 export DBUS_SYSTEM_BUS_ADDRESS=unix:path=/var/run/dbus/system_bus_socket
 
 if [ "$BOX_TYPE" = "XB3" ];then
-	$BINPATH/dbus-daemon --config-file=$CCSPPATH/basic.conf --fork
+	/usr/bin/dbus-daemon --config-file=/usr/ccsp/basic.conf --fork
 fi
+
 #start  ntpd server on ARM
 NTP_CONF=/etc/ntp.conf
 NTP_CONF_TMP=/tmp/ntp.conf
@@ -492,9 +464,9 @@ then
 #--------Set up Radius vlan -------------------
 vconfig add l2sd0 4090
 if [ "$BOX_TYPE" = "XB3" ] || [ "$BOX_TYPE" = "MV1" ];then
-	$UTOPIA_PATH/service_multinet_exec add_radius_vlan &
+	/etc/utopia/service.d/service_multinet_exec add_radius_vlan &
 else
-	$SWITCH_HANDLER addVlan 0 4090 sw_6 
+	/etc/utopia/service.d/service_multinet/handle_sw.sh addVlan 0 4090 sw_6 
 fi
 ifconfig l2sd0.4090 192.168.251.1 netmask 255.255.255.0 up
 ip rule add from all iif l2sd0.4090 lookup erouter
@@ -503,9 +475,9 @@ ip rule add from all iif l2sd0.4090 lookup erouter
 # RDKB-15951 : Dedicated l2sd0 vlan for Mesh Bhaul
 vconfig add l2sd0 1060
 if [ "$BOX_TYPE" = "XB3" ] || [ "$BOX_TYPE" = "MV1" ];then
-        $UTOPIA_PATH/service_multinet_exec add_meshbhaul_vlan &
+        /etc/utopia/service.d/service_multinet_exec add_meshbhaul_vlan &
 else
-        $SWITCH_HANDLER addVlan 0 1060 sw_6
+        /etc/utopia/service.d/service_multinet/handle_sw.sh addVlan 0 1060 sw_6
 fi
 ifconfig l2sd0.1060 up
 ip rule add from all iif l2sd0.1060 lookup erouter
@@ -526,9 +498,9 @@ swctl -c 11 -p 5 -r 4 -b 0x007b
 
 # Creating IOT VLAN on ARM
 if [ "$BOX_TYPE" = "XB3" ] || [ "$BOX_TYPE" = "MV1" ];then
-    $UTOPIA_PATH/service_multinet_exec add_IOT_vlan &
+    /etc/utopia/service.d/service_multinet_exec add_IOT_vlan &
 else
-    $SWITCH_HANDLER addVlan 0 4090 sw_6
+    /etc/utopia/service.d/service_multinet/handle_sw.sh addVlan 0 4090 sw_6
 fi
 
 # ----------------------------------------------------------------------------
@@ -542,7 +514,7 @@ fi
 #--------MV1 Mesh Bhaul ----------------------------------------------
 
 if [ "$BOX_TYPE" = "MV1" ];then
-    $UTOPIA_PATH/service_multinet_exec create_mesh_vlan &
+    /etc/utopia/service.d/service_multinet_exec create_mesh_vlan &
 fi
 
 # ------ Creating trunk port for ext switch ports of primary LAN --------------------
@@ -680,10 +652,10 @@ if [ "$MODEL_NUM" = "DPC3939B" ] || [ "$MODEL_NUM" = "DPC3941B" ] || [ "$BOX_TYP
             ##Hence we are storing a backup and replacing it to current config upon such cases
             a=`md5sum /nvram/bbhm_cur_cfg.xml-temp`
             a=$(echo "$a" | cut -f 1 -d " ")
-            b=`md5sum $PSM_CUR_XML_CONFIG_FILE_NAME`
+            b=`md5sum /tmp/bbhm_cur_cfg.xml`
             b=$(echo "$b" | cut -f 1 -d " ")
             if [[ $a != "$b" ]]; then
-               cp /nvram/bbhm_cur_cfg.xml-temp $PSM_CUR_XML_CONFIG_FILE_NAME
+               cp /nvram/bbhm_cur_cfg.xml-temp /tmp/bbhm_cur_cfg.xml
             fi
             rm -f /nvram/bbhm_cur_cfg.xml-temp
         fi
@@ -725,7 +697,7 @@ fi
 syscfg set ntp_status 2
 
 echo_t "[utopia][init] setting Multicast MAC before any switch configs"
-$UTOPIA_PATH/service_multinet_exec set_multicast_mac &
+/etc/utopia/service.d/service_multinet_exec set_multicast_mac &
 
 if [ "$MODEL_NUM" = "DPC3939B" ] || [ "$MODEL_NUM" = "DPC3941B" ]; then
 	echo_t "[utopia][init] started dropbear process"
@@ -738,7 +710,7 @@ fi
 # If Customer index changed then remove psm db from nvram
 SYSCFG_CUST_CHANGED="$(syscfg get customer-index-changed)"
 if [ "${SYSCFG_CUST_CHANGED}" = "true" ]; then
-    rm -f $PSM_CUR_XML_CONFIG_FILE_NAME $PSM_BAK_XML_CONFIG_FILE_NAME
+    rm -f /tmp/bbhm_cur_cfg.xml /nvram/bbhm_bak_cfg.xml
     syscfg unset customer-index-changed
     syscfg commit
 fi
