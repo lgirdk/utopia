@@ -1607,14 +1607,15 @@ INT32 IGD_pii_get_lan_reserved_addr_list(IN INT32 LanDeviceIndex, OUT CHAR *rese
 
     ct = sscanf(lan.ipaddr, "%d.%d.%d.%d", &octet1, &octet2, &octet3, &last_octet);
     if (4 == ct) {
-        int first = 1;
+        /*CID 71785 : Logically Dead Code*/
+        int first = 0;
         char ipaddr[32];
         for (i = 0; i < dhcp_static_hosts_count; i++) {
             if (first) {
                 // append a comma
                 strncat(reserved_list, ",", max_list_sz);
             } else {
-                first = 0;
+                first = 1;
             }
             //RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "%s: index [%d], name [%s], host_ip [%d], mac [%s]", __FUNCTION__, i, dhcp_static_hosts[i].client_name, dhcp_static_hosts[i].host_ip, dhcp_static_hosts[i].macaddr);
             snprintf(ipaddr, sizeof(ipaddr), "%d.%d.%d.%ld", 
