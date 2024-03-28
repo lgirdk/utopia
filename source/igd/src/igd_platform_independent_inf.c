@@ -858,8 +858,8 @@ INT32 IGD_pii_add_portmapping_entry( IN INT32 WanDeviceIndex,
              * if for same internal client, update leasttime and return success
              */
             if (0 == strcmp(portmapEntry->internalClient, pmap.internal_host)) {
-
-                if (portmapEntry->description != NULL) {
+                /*CID 64891 : Array compared against zero.*/
+                if (portmapEntry->description[0] != '\0') {
                     strncpy(pmap.name, portmapEntry->description, sizeof(pmap.name));
                 }
 		
@@ -893,7 +893,8 @@ INT32 IGD_pii_add_portmapping_entry( IN INT32 WanDeviceIndex,
              *   for unique ([remote-host], external-port, protocol)
              */
             pmap.enabled = (boolean_t) portmapEntry->enabled;
-            if (portmapEntry->description != NULL) {
+            /*CID 64891 : Array compared against zero.*/
+            if (portmapEntry->description [0] != '\0') {
                 strncpy(pmap.name, portmapEntry->description, sizeof(pmap.name));
             }
             pmap.external_port = portmapEntry->externalPort;
