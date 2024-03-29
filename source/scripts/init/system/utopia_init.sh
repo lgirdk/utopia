@@ -77,6 +77,7 @@ mount --bind /var/tmp/hosts /etc/hosts
 BUTTON_THRESHOLD=15
 
 FACTORY_RESET_REASON="false"
+PUNIT_RESET_DURATION=0
 
 changeFilePermissions() {
        if [ -e "$1" ]; then
@@ -187,16 +188,13 @@ if [ -x /usr/bin/db_mig ]; then
    echo_t "[utopia][init] db_mig = $DB_MIG_COMPLETE"
 fi
 
-queries="factory_reset UpdateNvram lan_ipaddr lan_netmask ForwardSSH unit_activated lan_ifname cmdiag_ifname ecm_wan_ifname nat_udp_timeout nat_tcp_timeout nat_icmp_timeout lan_ethernet_physical_ifnames"
-get_utctx_val "$queries"
-
 # Read reset duration to check if the unit was rebooted by pressing the HW reset button
 if cat /proc/P-UNIT/status | grep -q "Reset duration from shadow register"; then
    # Note: Only new P-UNIT firmwares and Linux drivers (>= 1.1.x) support this.
    PUNIT_RESET_DURATION=`cat /proc/P-UNIT/status|grep "Reset duration from shadow register"|awk -F '[ |\.]' '{ print $9 }'`
    # Clear the Reset duration from shadow register value
    # echo "1" > /proc/P-UNIT/clr_reset_duration_shadow
-    touch /var/tmp/utopia_cleared_shadow_reg.txt
+   touch /var/tmp/utopia_cleared_shadow_reg.txt
    clean_reset_duration;
 elif cat /proc/P-UNIT/status | grep -q "Last reset duration"; then
    PUNIT_RESET_DURATION=`cat /proc/P-UNIT/status|grep "Last reset duration"|awk -F '[ |\.]' '{ print $7 }'`
@@ -205,25 +203,28 @@ else
 fi
 
 # Set the factory reset key if it was pressed for longer than our threshold
-if [ "$PUNIT_RESET_DURATION" -gt "$BUTTON_THRESHOLD" ] ; then
+if [ "$PUNIT_RESET_DURATION" -gt "$BUTTON_THRESHOLD" ]
+then
    syscfg set factory_reset y
    syscfg commit
    BUTTON_FR="1"
+   SYSCFG_FR_VAL="y"
+else
+   SYSCFG_FR_VAL="$(syscfg get factory_reset)"
 fi
 
 SYSCFG_LastRebootReason="$(syscfg get X_RDKCENTRAL-COM_LastRebootReason)"
 
-SYSCFG_FR_VAL=$SYSCFG_factory_reset
-
-if [ "y" = "$SYSCFG_FR_VAL" ]; then
+if [ "$SYSCFG_FR_VAL" = "y" ]
+then
    echo_t "[utopia][init] Performing factory reset"
 
-# Remove log file first because it need get log file path from syscfg   
+   # Remove log file first because it need get log file path from syscfg   
    /usr/sbin/log_handle.sh reset
    syscfg_destroy -f
 
-# Remove syscfg and PSM storage files
-#mark the factory reset flag 'on'
+   # Remove syscfg and PSM storage files
+   #mark the factory reset flag 'on'
    FACTORY_RESET_REASON="true" 
    if [ -e "/nvram/mwo" ]; then
       rm -rf /nvram/mwo
@@ -310,11 +311,10 @@ if [ "y" = "$SYSCFG_FR_VAL" ]; then
       syscfg commit
    fi
 
-elif [ "w" = "$SYSCFG_FR_VAL" ]; then
-    echo_t "[utopia][init] Performing wifi reset"
+elif [ "$SYSCFG_FR_VAL" = "w" ]; then
+    echo_t "[utopia][init] Performing WiFi reset"
     create_wifi_default
     syscfg unset factory_reset
-#<<zqiu
 fi
 
 # Set the wifi_factory_reset_ssid accordingly to the value fetched from the PSM backup file
@@ -365,7 +365,6 @@ fi
 
 echo $TOT_MSG_MAX > /proc/sys/fs/mqueue/msg_max
 
-
 echo_t "[utopia][init] Starting sysevent subsystem"
 #syseventd --threads 18
 syseventd
@@ -377,24 +376,22 @@ changeFilePermissions /nvram/syscfg.db 400
 
 echo "[utopia][init] SEC: Syscfg stored in /nvram/syscfg.db"
 
-#Added log to check the DHCP range corruption after system defaults applied.
-lan_ipaddr=$SYSCFG_lan_ipaddr
-lan_netmask=$SYSCFG_lan_netmask
-echo_t "[utopia][init] lan_ipaddr = $lan_ipaddr lan_netmask = $lan_netmask"
+queries="lan_ipaddr lan_netmask ForwardSSH unit_activated lan_ifname cmdiag_ifname ecm_wan_ifname nat_udp_timeout nat_tcp_timeout nat_icmp_timeout lan_ethernet_physical_ifnames"
+get_utctx_val "$queries"
 
-ForwardSSH=$SYSCFG_ForwardSSH
-Log_file="/rdklogs/logs/FirewallDebug.txt"
-if $ForwardSSH;then
-   echo "SSH: Forward SSH changed to enabled" >> $Log_file
+# Log to check the DHCP range corruption after system defaults applied
+echo_t "[utopia][init] lan_ipaddr = $SYSCFG_lan_ipaddr lan_netmask = $SYSCFG_lan_netmask"
+
+if [ "$SYSCFG_ForwardSSH" = "true" ]
+then
+    echo "SSH: Forward SSH changed to enabled" >> /rdklogs/logs/FirewallDebug.txt
 else
-   echo "SSH: Forward SSH changed to disabled" >> $Log_file
+    echo "SSH: Forward SSH changed to disabled" >> /rdklogs/logs/FirewallDebug.txt
 fi
 
-# Get the syscfg value which indicates whether unit is activated or not.
-# This value is set from network_response.sh based on the return code received.
-activated=$SYSCFG_unit_activated
-echo_t "[utopia][init] Value of unit_activated got is : $activated"
-if [ "$activated" = "1" ]
+# syscfg "unit_activated" is set from network_response.sh based on the return code received.
+echo_t "[utopia][init] Value of unit_activated got is: $SYSCFG_unit_activated"
+if [ "$SYSCFG_unit_activated" = "1" ]
 then
     echo_t "[utopia][init] Echoing network response during Reboot"
     echo 204 > /var/tmp/networkresponse.txt
@@ -402,25 +399,20 @@ fi
 
 echo_t "[utopia][init] Applying iptables settings"
 
-lan_ifname=$SYSCFG_lan_ifname
-cmdiag_ifname=$SYSCFG_cmdiag_ifname
-ecm_wan_ifname=$SYSCFG_ecm_wan_ifname
-wan_ifname=$SYSCFG_wan_ifname
-
 #disable telnet / ssh ports
-iptables -A INPUT -i "$lan_ifname" -p tcp --dport 23 -j DROP
-iptables -A INPUT -i "$lan_ifname" -p tcp --dport 22 -j DROP
-iptables -A INPUT -i "$cmdiag_ifname" -p tcp --dport 23 -j DROP
-iptables -A INPUT -i "$cmdiag_ifname" -p tcp --dport 22 -j DROP
+iptables -A INPUT -i "$SYSCFG_lan_ifname" -p tcp --dport 23 -j DROP
+iptables -A INPUT -i "$SYSCFG_lan_ifname" -p tcp --dport 22 -j DROP
+iptables -A INPUT -i "$SYSCFG_cmdiag_ifname" -p tcp --dport 23 -j DROP
+iptables -A INPUT -i "$SYSCFG_cmdiag_ifname" -p tcp --dport 22 -j DROP
 
-ip6tables -A INPUT -i "$lan_ifname" -p tcp --dport 23 -j DROP
-ip6tables -A INPUT -i "$lan_ifname" -p tcp --dport 22 -j DROP
-ip6tables -A INPUT -i "$cmdiag_ifname" -p tcp --dport 23 -j DROP
-ip6tables -A INPUT -i "$cmdiag_ifname" -p tcp --dport 22 -j DROP
+ip6tables -A INPUT -i "$SYSCFG_lan_ifname" -p tcp --dport 23 -j DROP
+ip6tables -A INPUT -i "$SYSCFG_lan_ifname" -p tcp --dport 22 -j DROP
+ip6tables -A INPUT -i "$SYSCFG_cmdiag_ifname" -p tcp --dport 23 -j DROP
+ip6tables -A INPUT -i "$SYSCFG_cmdiag_ifname" -p tcp --dport 22 -j DROP
 
 #protect from IPv6 NS flooding
-ip6tables -t mangle -A PREROUTING -i "$ecm_wan_ifname" -d ff00::/8 -p ipv6-icmp -m icmp6 --icmpv6-type 135 -j DROP
-ip6tables -t mangle -A PREROUTING -i "$wan_ifname" -d ff00::/8 -p ipv6-icmp -m icmp6 --icmpv6-type 135 -j DROP
+ip6tables -t mangle -A PREROUTING -i "$SYSCFG_ecm_wan_ifname" -d ff00::/8 -p ipv6-icmp -m icmp6 --icmpv6-type 135 -j DROP
+ip6tables -t mangle -A PREROUTING -i "$SYSCFG_wan_ifname" -d ff00::/8 -p ipv6-icmp -m icmp6 --icmpv6-type 135 -j DROP
 
 echo 60 > /proc/sys/net/netfilter/nf_conntrack_generic_timeout
 echo 120 > /proc/sys/net/netfilter/nf_conntrack_udp_timeout_stream
