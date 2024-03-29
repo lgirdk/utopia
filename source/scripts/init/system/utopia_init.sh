@@ -174,7 +174,7 @@ else
    # Put value 204 into networkresponse.txt file so that
    # all LAN services start with a configuration which will
    # redirect everything to Gateway IP.
-   # This value again will be modified from network_response.sh 
+   # This value again will be modified from network_response.sh
    echo_t "[utopia][init] Echoing network response during Factory reset"
    echo 204 > /var/tmp/networkresponse.txt
 fi
@@ -219,71 +219,63 @@ if [ "$SYSCFG_FR_VAL" = "y" ]
 then
    echo_t "[utopia][init] Performing factory reset"
 
-   # Remove log file first because it need get log file path from syscfg   
+   FACTORY_RESET_REASON="true"
+
+   # Remove log file first because it need get log file path from syscfg
    /usr/sbin/log_handle.sh reset
+
    syscfg_destroy -f
 
-   # Remove syscfg and PSM storage files
-   #mark the factory reset flag 'on'
-   FACTORY_RESET_REASON="true" 
-   rm -f /nvram/partners_defaults.json 
-   rm -f /nvram/bootstrap.json
-   rm -f /opt/secure/RFC/tr181store.json
-   rm -f /opt/secure/Blocklist_file.txt
-   rm -f /nvram/Blocklist_XB3.txt
-   rm -f /nvram/syscfg.db
-   rm -f /tmp/syscfg.db
-   rm -f /nvram/bbhm_bak_cfg.xml
-   rm -f /nvram/bbhm_tmp_cfg.xml
-   rm -f /nvram/TLVData.bin
-   rm -f /nvram/reverted
-   rm -f /nvram/dnsmasq_servers.conf
-   rm -f /nvram/.FirmwareUpgradeStartTime
-   rm -f /nvram/.FirmwareUpgradeEndTime
-   # Remove DHCP lease file
-   rm -f /nvram/dnsmasq.leases
-   rm -f /nvram/server-IfaceMgr.xml
-   rm -f /nvram/server-AddrMgr.xml
-   rm -f /nvram/server-CfgMgr.xml
-   rm -f /nvram/server-TransMgr.xml
-   rm -f /nvram/server-cache.xml
-   rm -f /nvram/server-duid
-   rm -f /nvram/.keys/*
-   if [ -f /etc/ONBOARD_LOGGING_ENABLE ]; then
-    # Remove onboard files
-    rm -f /nvram/.device_onboarded
-    rm -f /nvram/DISABLE_ONBOARD_LOGGING
-    rm -rf /nvram2/onboardlogs
-   fi
-   if [ -f /etc/WEBCONFIG_ENABLE ]; then
-   # Remove webconfig_db.bin on factory reset on all RDKB platforms
-     rm -f /nvram/webconfig_db.bin     
+   rm -f /nvram/bbhm_bak_cfg.xml \
+         /nvram/bbhm_tmp_cfg.xml \
+         /nvram/Blocklist_XB3.txt \
+         /nvram/bootstrap.json \
+         /nvram/dnsmasq.leases \
+         /nvram/dnsmasq_servers.conf \
+         /nvram/dnsmasq.vendorclass \
+         /nvram/.FirmwareUpgradeEndTime \
+         /nvram/.FirmwareUpgradeStartTime \
+         /nvram/hotspot_blob \
+         /nvram/hotspot.json \
+         /nvram/.keys/* \
+         /nvram/partners_defaults.json  \
+         /nvram/reverted \
+         /nvram/server-AddrMgr.xml \
+         /nvram/server-cache.xml \
+         /nvram/server-CfgMgr.xml \
+         /nvram/server-duid \
+         /nvram/server-IfaceMgr.xml \
+         /nvram/server-TransMgr.xml \
+         /nvram/syscfg.db \
+         /nvram/TLVData.bin \
+         /nvram/webconfig_db.bin \
+         /opt/secure/Blocklist_file.txt \
+         /opt/secure/RFC/tr181store.json
+
+   if [ -f /etc/ONBOARD_LOGGING_ENABLE ]
+   then
+      rm -f /nvram/.device_onboarded \
+            /nvram/DISABLE_ONBOARD_LOGGING \
+            /nvram2/onboardlogs
    fi
 
-   rm -f /nvram/hotspot_blob
-   rm -f /nvram/hotspot.json
+   touch /nvram/.apply_partner_defaults
 
-    if [ -f "/nvram/dnsmasq.vendorclass" ];then
-      rm -f /nvram/dnsmasq.vendorclass
-    fi
-
-     touch /nvram/.apply_partner_defaults   
-   #>>zqiu
    create_wifi_default
-   #<<zqiu
+
    echo_t "[utopia][init] Retarting syscfg using file store (/nvram/syscfg.db)"
-   touch /tmp/syscfg.db
-   touch /nvram/syscfg.db
+
+   echo -n > /tmp/syscfg.db
+   echo -n > /nvram/syscfg.db
    syscfg_create -f /tmp/syscfg.db
    if [ $? != 0 ]; then
-	   CheckAndReCreateDB
+      CheckAndReCreateDB
    fi
-   
-#>>zqiu
+
    # Put value 204 into networkresponse.txt file so that
    # all LAN services start with a configuration which will
    # redirect everything to Gateway IP.
-   # This value again will be modified from network_response.sh 
+   # This value again will be modified from network_response.sh
    echo_t "[utopia][init] Echoing network response during Factory reset"
    echo 204 > /var/tmp/networkresponse.txt
 
@@ -352,7 +344,7 @@ echo_t "[utopia][init] Starting sysevent subsystem"
 #syseventd --threads 18
 syseventd
 
-sleep 1 
+sleep 1
 echo_t "[utopia][init] Setting any unset system values to default"
 apply_system_defaults
 changeFilePermissions /nvram/syscfg.db 400
@@ -378,7 +370,7 @@ if [ "$SYSCFG_unit_activated" = "1" ]
 then
     echo_t "[utopia][init] Echoing network response during Reboot"
     echo 204 > /var/tmp/networkresponse.txt
-fi 
+fi
 
 echo_t "[utopia][init] Applying iptables settings"
 
@@ -437,7 +429,7 @@ then
 	cp $NTP_CONF $NTP_CONF_TMP
 	echo "interface ignore wildcard" >> $NTP_CONF_TMP
 	echo "interface listen $ARM_INTERFACE_IP" >> $NTP_CONF_TMP
-	ntpd -c $NTP_CONF_TMP 
+	ntpd -c $NTP_CONF_TMP
 fi
 
 # ----------------------------------------------------------------------------
