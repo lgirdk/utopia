@@ -250,6 +250,7 @@ then
          /nvram/server-TransMgr.xml \
          /nvram/steering.json \
          /nvram/syscfg.db \
+         /nvram/.t2persistentfolder/DCMresponse.txt \
          /nvram/TLVData.bin \
          /nvram/webconfig_db.bin \
          /opt/secure/Blocklist_file.txt \
