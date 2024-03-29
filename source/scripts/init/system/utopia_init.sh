@@ -402,12 +402,6 @@ echo_t "[utopia][init] Processing registration"
 execute_dir /etc/utopia/registration.d &
 #init_inter_subsystem&
 
-export DBUS_SYSTEM_BUS_ADDRESS=unix:path=/var/run/dbus/system_bus_socket
-
-if [ "$BOX_TYPE" = "XB3" ];then
-	/usr/bin/dbus-daemon --config-file=/usr/ccsp/basic.conf --fork
-fi
-
 #start  ntpd server on ARM
 NTP_CONF=/etc/ntp.conf
 NTP_CONF_TMP=/tmp/ntp.conf
