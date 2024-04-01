@@ -522,8 +522,9 @@ static int get_ia_info(struct serv_ipv6 *si6, char *config_file, ia_na_t *iana, 
         while(isblank(*p)) p++;
 		
         //fprintf(stderr, "%s -- %d !!! get configs from v6 client: %s \n", __FUNCTION__, __LINE__,p);
-
-        if (sscanf(p, "%63s %63s %s %s %s %s %s %63s %d %s %s %s %s %s", 
+        
+        /*CID 62499 : Calling Risky Function*/
+        if (sscanf(p, "%63s %45s %31s %31s %31s %31s %31s %45s %d %31s %31s %31s %31s %31s", 
                     action, iana->value.v6addr, iana->iaid, iana->t1, iana->t2, iana->pretm, iana->vldtm,
                     iapd->value.v6pref, &iapd->len, iapd->iaid, iapd->t1, iapd->t2, iapd->pretm, iapd->vldtm ) == 14) {
             fprintf(stderr, "Get the IA_NA and IA_PD info: ");
