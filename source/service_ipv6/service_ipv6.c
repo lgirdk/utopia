@@ -1776,8 +1776,10 @@ OPTIONS:
                 sysevent_get(si6->sefd, si6->setok, "ipv6_nameserver", dyn_dns, sizeof(dyn_dns));
                 if ( '\0' == dhcpv6s_pool_cfg.X_RDKCENTRAL_COM_DNSServers[ 0 ] )
                 {
-                   strcpy( dhcpv6s_pool_cfg.X_RDKCENTRAL_COM_DNSServers,dyn_dns );
+                  /*CID 67340 : Calling Risky Function*/
+                  strncpy(dhcpv6s_pool_cfg.X_RDKCENTRAL_COM_DNSServers, dyn_dns, sizeof(dhcpv6s_pool_cfg.X_RDKCENTRAL_COM_DNSServers) - 1);
                 }
+                  
             }
             if (tag_index >= NELEMS(tag_list)) continue;
 
