@@ -329,7 +329,7 @@ static int dslite_start (struct serv_dslite *sd)
     char DSLITE_AFTR[256];
     char dslite_tnl_ipv4[32];
     char dslite_tnl_ipv6[64];
-    char resolved_ipv6[64];
+    char resolved_ipv6[64] = {0};
     char gw_ipv6[64];
     struct in6_addr v6_addr;
     unsigned int dnsttl = 0;
@@ -439,8 +439,9 @@ static int dslite_start (struct serv_dslite *sd)
             char ipv6_str[INET6_ADDRSTRLEN];
 
             if (inet_ntop (AF_INET6, addrp, ipv6_str, sizeof(ipv6_str)) != NULL)
-            {
-                strcpy (resolved_ipv6, ipv6_str);
+            {   /*CID : 142881 : Calling Risky Function*/
+                strncpy(resolved_ipv6, ipv6_str, sizeof(resolved_ipv6) - 1); 
+                
             }
 
             free (addrp); /* free the memory that dslite_resolve_fqdn_to_ipv6addr had allocated */
