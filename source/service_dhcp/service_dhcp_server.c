@@ -1279,13 +1279,13 @@ void resync_to_nonvol(char *RemPools)
 	{
 		if( strncmp(CURRENT_POOLS[iter],"",1) != 0)
 		{
-			strcat(sg_buff,CURRENT_POOLS[iter]);
-		        strcat(sg_buff," ");
+			strncat(sg_buff,CURRENT_POOLS[iter],sizeof(sg_buff) - strlen(sg_buff) - 1);
+		        strncat(sg_buff," ",sizeof(sg_buff) - strlen(sg_buff) - 1);
 		}
 		if(strncmp(LOAD_POOLS[iter],"",1) != 0)
 		{
-			strcat(sg_buff,LOAD_POOLS[iter]);
-			strcat(sg_buff," ");
+			strncat(sg_buff,LOAD_POOLS[iter],sizeof(sg_buff) - strlen(sg_buff) - 1);
+			strncat(sg_buff," ",sizeof(sg_buff) - strlen(sg_buff) - 1);
 		}
 		iter++;
 	}
