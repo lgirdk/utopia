@@ -17284,6 +17284,7 @@ v6GPFirewallRuleNext:
       }
 
 /* From community: utopia/generic */
+#if defined(_PUMA6_ARM_)
       unsigned char sysevent_query[MAX_QUERY];
       unsigned char lan_prefix[MAX_QUERY];
 
@@ -17297,6 +17298,7 @@ v6GPFirewallRuleNext:
          // Block unicast LAN to WAN traffic from being sent from this bridge if the source address is not within this bridge's allocated prefix
          fprintf(fp, "-A FORWARD -i %s -o %s -m pkttype --pkt-type unicast ! -s %s -j LOG_FORWARD_DROP\n", lan_ifname, wan6_ifname, lan_prefix);
       }
+#endif
 
 #if defined(_COSA_BCM_ARM_) && (defined(_CBR_PRODUCT_REQ_) || defined(_XB6_PRODUCT_REQ_)) && !defined(_SCER11BEL_PRODUCT_REQ_) 
       if (isNatReady)

@@ -1805,6 +1805,8 @@ static int gen_dibbler_conf(struct serv_ipv6 *si6)
    /*Run scipt to config route */
 #if defined (_CBR_PRODUCT_REQ_) || defined (_BWG_PRODUCT_REQ_)
     fprintf(fp, "script \"/lib/rdk/server-notify.sh\" \n");
+#elif defined (_LG_OFW_) && !defined (_PUMA6_ARM_)
+    fprintf(fp, "script \"/etc/dibbler/dibbler-server-notify.sh\" \n");
 #endif
 
     //strict RFC compliance rfc3315 Section 13
