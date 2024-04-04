@@ -511,8 +511,29 @@ virtual_interface_ebtables_rules ()
     fi
 }
 
+wan_wait ()
+{
+   retry=0 
+   WAN_INTERFACE=erouter0
+   if [ ! -f /tmp/wan_ip_assigned_to_erouter0 ]; then 
+   while [ "30" -ge "$retry" ]
+   do 
+       sleep 1
+       retry=`expr $retry + 1` 
+       #Make sure WAN interface has an IP address before mounting to brlan0
+       WAN_IP=`ifconfig -a "$WAN_INTERFACE" | grep inet | grep -v inet6 | tr -s " " | cut -d ":" -f2 | cut -d " " -f1`
+       if [ -n "$WAN_IP" ] ; then
+          touch /tmp/wan_ip_assigned_to_erouter0
+          break
+       fi
+   done
+   fi
+}
+
 add_to_group()
 {
+
+  wan_wait
   bridge_name=`syscfg get lan_ifname`
   
   bridge_dir="/sys/class/net/$bridge_name"
@@ -546,11 +567,29 @@ add_to_group()
   echo "brctl delif $bridge_name wlan0"
   brctl delif "$bridge_name" wlan0
 
+  echo "brctl delif $bridge_name wlan1"
+  brctl delif "$bridge_name" wlan1
+  
+  bridge_curr_status=`ifconfig -a brlan0 | grep "inet addr" | cut -d ':' -f2 | cut -d ' ' -f1`
+  if [ "$bridge_curr_status" != " " ]; then
+  lan_ipaddr=`syscfg get lan_ipaddr`
+  lan_maskaddr=`ifconfig -a brlan0 | grep Mask | cut -d ':' -f4`
+  if [ "$lan_maskaddr" = "255.255.255.0" ] ; then
+      subnet=24
+  elif [ "$lan_maskaddr" = "255.0.0.0" ] ; then
+      subnet=8
+  else
+      subnet=24 
+  fi 
+  ip addr del $lan_ipaddr/$subnet dev $bridge_name
+  fi
 }
+
 del_from_group()
 {
   bridge_name=`syscfg get lan_ifname`
   brctl addif "$bridge_name" wlan0
+  brctl addif "$bridge_name" wlan1
 
   cmdiag_if=`syscfg get cmdiag_ifname`
   wan_if=`syscfg get wan_physical_ifname`
