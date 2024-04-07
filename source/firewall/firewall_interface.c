@@ -182,3 +182,32 @@ void ethwan_mso_gui_acess_rules(FILE *filter_fp,FILE *mangle_fp)
     FIREWALL_DEBUG("Entering ethwan_mso_gui_acess_rules\n");
     FIREWALL_DEBUG("Exiting ethwan_mso_gui_acess_rules\n");
 }
+
+
+/*
+ ==========================================================================
+                     DSCP rules
+ ==========================================================================
+ */
+__attribute__((weak))
+int prepare_lld_dscp_rules(FILE *mangle_fp)
+{
+    FIREWALL_DEBUG("Entering prepare_lld_dscp_rules\n");
+    FIREWALL_DEBUG("Exiting prepare_lld_dscp_rules\n");
+    return 0;
+}
+
+__attribute__((weak))
+int prepare_dscp_rules_to_prioritized_clnt(FILE *mangle_fp,int iptype)
+{
+    FIREWALL_DEBUG("Entering prepare_dscp_rules_to_prioritized_clnt\n");
+    FIREWALL_DEBUG("Exiting prepare_dscp_rules_to_prioritized_clnt\n");
+    return 0;
+}
+
+__attribute__((weak))
+void prepare_dscp_rule_for_host_mngt_traffic(FILE *mangle_fp)
+{
+    FIREWALL_DEBUG("Entering prepare_dscp_rule_for_host_mngt_traffic\n");
+    FIREWALL_DEBUG("Exiting prepare_dscp_rule_for_host_mngt_traffic\n");
+}
