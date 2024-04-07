@@ -1052,10 +1052,10 @@ fi
       echo "no-dhcp-interface=$LAN_IFNAME" >> $LOCAL_DHCP_CONF
    fi 
    #echo "$PREFIX""dhcp-range=$DHCP_START_ADDR,$DHCP_END_ADDR,$2,$DHCP_LEASE_TIME" >> $LOCAL_DHCP_CONF
-   echo "$PREFIX""dhcp-leasefile=$DHCP_LEASE_FILE" >> $LOCAL_DHCP_CONF
+   echo "dhcp-leasefile=$DHCP_LEASE_FILE" >> $LOCAL_DHCP_CONF
   # echo "$PREFIX""dhcp-script=$DHCP_ACTION_SCRIPT" >> $LOCAL_DHCP_CONF
   # echo "$PREFIX""dhcp-lease-max=$DHCP_NUM" >> $LOCAL_DHCP_CONF
-   echo "$PREFIX""dhcp-hostsfile=$DHCP_STATIC_HOSTS_FILE" >> $LOCAL_DHCP_CONF
+   echo "dhcp-hostsfile=$DHCP_STATIC_HOSTS_FILE" >> $LOCAL_DHCP_CONF
 
    if [ "$RF_CAPTIVE_PORTAL" != "true" ]
    then
@@ -1063,7 +1063,7 @@ fi
        then
             if [ $isLocalDNSOnly -eq 0 ]
             then
-               echo "$PREFIX""dhcp-optsfile=$DHCP_OPTIONS_FILE" >> $LOCAL_DHCP_CONF
+            echo "dhcp-optsfile=$DHCP_OPTIONS_FILE" >> $LOCAL_DHCP_CONF
             fi
        fi
    fi

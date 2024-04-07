@@ -1500,7 +1500,7 @@ int prepare_dhcp_conf (char *input)
 	}
   
 	//Not taking into account prefix 
-	fprintf(l_fLocal_Dhcp_ConfFile, "%sdhcp-leasefile=%s\n", l_cDns_Only_Prefix, DHCP_LEASE_FILE);
+	fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-leasefile=%s\n", DHCP_LEASE_FILE);
 	#if 0
 	//DHCP_NUM is the number of available dhcp address for the lan
 	syscfg_get(NULL, "dhcp_num", l_cDhcp_Num, sizeof(l_cDhcp_Num));
@@ -1516,13 +1516,13 @@ int prepare_dhcp_conf (char *input)
 	}
 	fprintf(l_fLocal_Dhcp_ConfFile, "%sdhcp-lease-max=%d\n", l_cDns_Only_Prefix, l_idhcp_num);
 	#endif
-	fprintf(l_fLocal_Dhcp_ConfFile, "%sdhcp-hostsfile=%s\n", l_cDns_Only_Prefix, DHCP_STATIC_HOSTS_FILE);
+	fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-hostsfile=%s\n", DHCP_STATIC_HOSTS_FILE);
 
 	if ( ( FALSE == l_bCaptivePortal_Mode) &&\
 		  ( FALSE == l_bDhcpNs_Enabled ) 
 		)
 	{
-		fprintf(l_fLocal_Dhcp_ConfFile, "%sdhcp-optsfile=%s\n", l_cDns_Only_Prefix, DHCP_OPTIONS_FILE);
+		fprintf(l_fLocal_Dhcp_ConfFile, "dhcp-optsfile=%s\n", DHCP_OPTIONS_FILE);
 	}
 //Ethernet Backhaul changes for plume pods   
 #if defined (_XB6_PRODUCT_REQ_) || defined (_HUB4_PRODUCT_REQ_)
