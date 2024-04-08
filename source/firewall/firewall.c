@@ -4249,9 +4249,10 @@ static int do_ephemeral_port_forwarding(FILE *nat_fp, FILE *filter_fp)
          char *prot;
          prot = next;
          next = token_get(prot, ',');
-         if (NULL == prot) {
-            continue;
-         }
+         /* Logically dead code */
+         // if (NULL == prot) {
+         //    continue;
+         // }
 
          char external_ip[50];
          char external_dest_port[50];
@@ -4814,9 +4815,10 @@ static int write_qos_classification_statement (FILE *fp, FILE *qos_fp, char *nam
 
       char *match = next_token;
       next_token = token_get(match, '|');
-      if (NULL == match) {
-         continue;
-      }
+      /* Logically dead code*/
+      // if (NULL == match) {
+      //    continue;
+      // }
 
       char *hook = next_token;
       char subst_hook[MAX_QUERY];
@@ -4859,7 +4861,8 @@ static int add_qos_marking_statements(FILE *fp)
    if (NULL == fp) {
       return(-1);
    }
-
+   char *filename;
+   FILE *qos_fp;
    int rc;
    char query[MAX_QUERY];
            FIREWALL_DEBUG("Entering add_qos_marking_statements\n");       
@@ -5023,8 +5026,8 @@ QoSDefinedPolicies:
          count = MAX_SYSCFG_ENTRIES;
       }
    }
-   char *filename = qos_classification_file_dir"/"qos_classification_file;
-   FILE *qos_fp = fopen(filename, "r"); 
+   filename = qos_classification_file_dir"/"qos_classification_file;
+   qos_fp = fopen(filename, "r"); 
    if (NULL != qos_fp) {
       for (idx=1 ; idx<=count ; idx++) {
          namespace[0] = '\0';
@@ -10172,9 +10175,10 @@ FirewallRuleNext:
 
             char *match = next_token;
             next_token = token_get(match, '|');
-            if (NULL == match) {
-               continue;
-            }
+            /* Logically dead code*/
+            // if (NULL == match) {
+            //    continue;
+            // }
 
 	    char subst[MAX_QUERY];
             /*
@@ -14581,6 +14585,8 @@ int prepare_ipv6_firewall(const char *fw_file)
 	FILE *mangle_fp=NULL;
 	FILE *filter_fp=NULL;
 	FILE *nat_fp=NULL;
+   char string[MAX_QUERY]={0};
+	char *strp=NULL;
     /*
     * We use 4 files to store the intermediary firewall statements.
     * One file is for raw, another is for mangle, another is for 
@@ -14746,8 +14752,6 @@ int prepare_ipv6_firewall(const char *fw_file)
 	rewind(mangle_fp);
 	rewind(nat_fp);
 	rewind(filter_fp);
-	char string[MAX_QUERY]={0};
-	char *strp=NULL;
 	/*
 	* The raw table is before conntracking and is thus expensive
 	* So we dont set it up unless we actually used it
@@ -14803,7 +14807,8 @@ clean_up_files:
 
 static void do_ipv6_filter_table(FILE *fp){
 	FIREWALL_DEBUG("Inside do_ipv6_filter_table \n");
-
+   int inf_num = 0;
+   
 #if defined(_COSA_BCM_ARM_) && (defined(_CBR_PRODUCT_REQ_) || defined(_XB6_PRODUCT_REQ_)) 
    FILE *f = NULL;
    char request[256], response[256], cm_ipv6addr[40];
@@ -15056,7 +15061,6 @@ static void do_ipv6_filter_table(FILE *fp){
    lan_telnet_ssh(fp, AF_INET6);
 
 	char Interface[MAX_NO_IPV6_INF][MAX_LEN_IPV6_INF];
-	int inf_num = 0;
     getIpv6Interfaces(Interface,&inf_num);
    if (isFirewallEnabled) {
       // Get the current WAN IPv6 interface (which differs from the IPv4 in case of tunnels)
