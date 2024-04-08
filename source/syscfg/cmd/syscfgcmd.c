@@ -141,13 +141,16 @@ int main(int argc, char **argv)
    char *name = NULL, *value = NULL, *ns = NULL;
 
    cmd_t cmdtype = get_cmd(cmd[0]);
+   /*CID 59863 : Branch Past Initialization*/
+   char val[512] = {0};  // moved declaration here
+   unsigned int out_match = 1; // moved declaration here
    switch (cmdtype) {
    case CMD_GET:
        if (argc < 2) {
            syscfg_usage();
            return 1;
        }
-       char val[512] = {0};
+       
        if (argc > 2) {  // namespace
            ns = cmd[1];
            name = cmd[2];
@@ -198,7 +201,7 @@ int main(int argc, char **argv)
            name = cmd[1];
            value = cmd[2];
        }
-       unsigned int out_match = 1;
+       
        rc = syscfg_is_match(ns, name, value, &out_match);
        if (0 == rc) {
            // printf("success\n");
