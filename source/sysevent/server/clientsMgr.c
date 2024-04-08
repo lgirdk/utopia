@@ -75,8 +75,9 @@ static int print_a_client_t(a_client_t *c)
 {
    printf("   +----------------------------------------+\n");
    printf("   | used          : %d\n", c->used);
+   /*CID : 68692 : Compared array against zero*/
    if (c->used) {
-      printf("   | name          : %s\n", c->name ? c->name : "" );
+      printf("   | name          : %s\n", c->name[0] != '\0' ? c->name : "" );
       printf("   | id            : %x\n", c->id);
       printf("   | fd            : %d\n", c->fd);
       printf("   | notifications : %d\n", c->notifications);
