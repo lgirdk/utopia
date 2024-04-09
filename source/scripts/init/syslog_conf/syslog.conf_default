@@ -23,5 +23,5 @@ local6.warning /var/log/docsis
 local5.notice /var/log/systemlog
 local4.notice /var/log/eventlog
 local0.notice /var/log/networklog
-*.=crit /nvram/log/critlog
+*.=crit /var/log/critlog
 user.* /var/log/user
