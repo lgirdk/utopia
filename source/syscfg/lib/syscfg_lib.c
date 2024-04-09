@@ -1155,7 +1155,8 @@ static int _syscfg_getall (char *buf, int bufsz)
         entry = ctx->ht[i];
         // check if space left for 'name' '=' 'value' + null char
         while (entry && len >= (HT_ENTRY_NAMESZ(ctx,entry) + HT_ENTRY_VALUESZ(ctx,entry))) {
-            len -= sprintf(buf + (bufsz - len),
+            /*CID 73563 : Calling Risky Function*/
+            len -= snprintf(buf + (bufsz - len),len,
                            "%s=%s", HT_ENTRY_NAME(ctx,entry), HT_ENTRY_VALUE(ctx,entry)) + 1;
             entry = HT_ENTRY_NEXT(ctx,entry);
         }
