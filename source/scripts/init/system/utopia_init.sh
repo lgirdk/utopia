@@ -672,6 +672,8 @@ if [ -x /usr/bin/db_mig ] && [ "$DB_MIG_COMPLETE" != "true" ]; then
     echo_t "[utopia][init] Running db_mig utility"
     /usr/bin/db_mig
     syscfg set db_migration_completed true
+    syscfg set X_RDKCENTRAL-COM_LastRebootReason "Software_upgrade_from_legacy"
+    syscfg set X_RDKCENTRAL-COM_LastRebootCounter "1"
     syscfg commit
 fi
 
