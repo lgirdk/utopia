@@ -412,7 +412,7 @@ static int dhcp_start(struct serv_wan *sw)
     if (strcmp(map_mode, "MAPT") == 0)
     {
         fprintf(stderr, "%s: Do not start dhcpv4 client when mapt is already configured\n", __FUNCTION__);
-        return -1;
+        return 0;
     }
 
     syscfg_get(NULL, "last_erouter_mode", l_cErouter_Mode, sizeof(l_cErouter_Mode));
