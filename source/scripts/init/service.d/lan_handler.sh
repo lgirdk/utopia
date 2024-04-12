@@ -502,12 +502,25 @@ case "$1" in
    ;;
 
    lan-start)
-        if [ "$RPI_SPECIFIC" = "rpi" ]; then
+        if [ "$RPI_SPECIFIC" = "rpi" ] || [ "$BOX_TYPE" = "HUB4" ] || [ "$BOX_TYPE" = "SR213" ]; then
              L3Net=`sysevent get primary_lan_l3net`
              if [ -z "$L3Net" ]; then
-                  echo_t "RDKB_SYSTEM_BOOT_UP_LOG : L3Net is null \n"
-                  L3Net=4
-                  sysevent set primary_lan_l3net $L3Net
+                 echo_t "RDKB_SYSTEM_BOOT_UP_LOG : L3Net is null"
+                     if [ "$RPI_SPECIFIC" = "rpi" ]; then
+                         L3Net=4
+                         sysevent set primary_lan_l3net $L3Net
+                     else
+                         COUNTER=1
+                         while [ $COUNTER -le 5 ]; do
+                             echo_t "RDKB_SYSTEM_BOOT_UP_LOG : L3Net is null retrying $COUNTER"
+                             sleep 1
+                             L3Net=`sysevent get primary_lan_l3net`
+                             if [ x != x$L3Net ]; then
+                                 break
+                             fi
+                             COUNTER=`expr $COUNTER + 1`
+                         done
+                     fi
              fi
         fi
         # TODO call the restart routine
