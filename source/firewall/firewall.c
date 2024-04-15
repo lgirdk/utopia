@@ -3309,6 +3309,13 @@ static int do_single_port_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, 
         snprintf(port_modifier, sizeof(port_modifier), ":%s", internal_port);
       }
 
+#if defined(SPEED_BOOST_SUPPORTED)
+      if(IsPortOverlapWithSpeedboostPortRange(atoi(external_port) , atoi(external_port) , atoi(internal_port) , atoi(internal_port) )) {
+         FIREWALL_DEBUG("do_single_port_forwarding: Skip - overlapping with Speedboost port range \n" );
+         continue;
+      }
+#endif
+
       // what is the forwarded protocol
       char prot[10];
       prot[0] = '\0';
@@ -3768,6 +3775,13 @@ static int do_port_range_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, F
          internal_port_range_size = atoi(rangesize);
          if (internal_port_range_size < 0) internal_port_range_size = 0;
       }
+
+#if defined(SPEED_BOOST_SUPPORTED)
+      if(IsPortOverlapWithSpeedboostPortRange(atoi(sdport) , atoi(edport) , atoi(toport), atoi(toport)+ internal_port_range_size)) {
+         FIREWALL_DEBUG("do_port_range_forwarding: Skip - overlapping with Speedboost port range \n" );
+         continue;
+      }
+#endif
 
       // what is the forwarded protocol
       char prot[10];
@@ -4246,6 +4260,13 @@ static int do_ephemeral_port_forwarding(FILE *nat_fp, FILE *filter_fp)
          if (NULL == dport || NULL == next) {
             continue;
          }
+
+#if defined(SPEED_BOOST_SUPPORTED)
+         if(IsPortOverlapWithSpeedboostPortRange(atoi(fromport) , atoi(fromport) , atoi(dport) , atoi(dport))) {
+            FIREWALL_DEBUG("do_ephemeral_port_forwarding: Skip - overlapping with Speedboost port range \n" );
+            continue;
+         }
+#endif
          char *prot;
          prot = next;
          next = token_get(prot, ',');
@@ -4668,13 +4689,39 @@ if(status_http_ert == 0){
    /* tohost is now a full ip address */
    snprintf(dst_str, sizeof(dst_str), "--to-destination %s ", tohost);
 
+#if defined(SPEED_BOOST_SUPPORTED)
+   char speedboostports[32] , sb_port_start[10] , sb_port_end[10], pvd_enable[8];
+   speedboostports[0]='\0';
+   sb_port_start[0]='\0';
+   sb_port_end[0]='\0';
+   pvd_enable[0]='\0';
+   int rc_sb = syscfg_get(NULL, "SpeedBoost_Port_StartV4" , sb_port_start, sizeof(sb_port_start));
+   rc_sb |= syscfg_get(NULL, "SpeedBoost_Port_EndV4" , sb_port_end, sizeof(sb_port_end));
+   if (rc_sb == 0 && atoi(sb_port_start) && atoi(sb_port_end) ) {
+      snprintf(speedboostports , sizeof(speedboostports), "%s:%s", sb_port_start, sb_port_end);
+   }
+   rc_sb = syscfg_get(NULL, "Advertisement_pvd_enable" , pvd_enable, sizeof(pvd_enable));
+#endif
+
    switch (src_type) {
       case(0):
          if (isNatReady &&
              strcmp(tohost, "0.0.0.0") != 0) { /* 0.0.0.0 stands for disable in SA-RG-MIB */
+#if defined(SPEED_BOOST_SUPPORTED)
+   if (rc_sb == 0 && speedboostports[0] != '\0' && (0 == strcmp("1", pvd_enable) || 0 == strcasecmp("true", pvd_enable))) {
+            fprintf(nat_fp, "-A prerouting_fromwan_todmz --dst %s -p tcp -m multiport ! --dports %s,%s,%s -j DNAT %s\n", natip4, Httpport, Httpsport, speedboostports, dst_str);
+
+            fprintf(nat_fp, "-A prerouting_fromwan_todmz --dst %s -p udp -m multiport ! --dports %s,%s,%s -j DNAT %s\n", natip4, Httpport, Httpsport, speedboostports, dst_str);
+   }
+   else
+   {
+#endif
             fprintf(nat_fp, "-A prerouting_fromwan_todmz --dst %s -p tcp -m multiport ! --dports %s,%s -j DNAT %s\n", natip4, Httpport, Httpsport, dst_str);
             
             fprintf(nat_fp, "-A prerouting_fromwan_todmz --dst %s -p udp -m multiport ! --dports %s,%s -j DNAT %s\n", natip4, Httpport, Httpsport, dst_str);
+#if defined(SPEED_BOOST_SUPPORTED)
+   }
+#endif
 #ifdef _ICMP_ON_DMZ_HOST_
             fprintf(nat_fp, "-A prerouting_fromwan_todmz --dst %s -p icmp  -j DNAT %s\n", natip4, dst_str);
 #endif
@@ -9463,6 +9510,17 @@ static int do_prepare_port_range_triggers(FILE *mangle_fp, FILE *filter_fp)
 
 #endif
 
+#if defined(SPEED_BOOST_SUPPORTED)
+#ifdef CONFIG_KERNEL_NF_TRIGGER_SUPPORT
+      if(IsPortOverlapWithSpeedboostPortRange(atoi(sdport) , atoi(edport) , atoi(sfport) , atoi(efport) )) {
+#else
+      if(IsPortOverlapWithSpeedboostPortRange(atoi(sdport) , atoi(edport) , 0 , 0 )) {
+#endif
+           FIREWALL_DEBUG("do_prepare_port_range_triggers: Skip - overlapping with Speedboost port range \n" );
+           continue;
+      }
+#endif
+
       if (0 == strcmp("both", prot) || 0 == strcmp("tcp", prot)) {
 #ifdef CONFIG_KERNEL_NF_TRIGGER_SUPPORT
          fprintf(nat_fp, "-A prerouting_fromlan_trigger -p tcp -m tcp --dport %s:%s -j TRIGGER --trigger-type out --trigger-proto %s --trigger-match %s:%s --trigger-relate %s:%s\n", sdport, edport, fprot, sdport, edport, sfport, efport);
@@ -13460,6 +13518,10 @@ static int prepare_enabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *na
    do_lan2wan(mangle_fp, filter_fp, nat_fp); 
    do_wan2lan(filter_fp);
    do_filter_table_general_rules(filter_fp);
+#if defined(SPEED_BOOST_SUPPORTED)
+   do_speedboost_port_rules(mangle_fp,nat_fp , 4);
+#endif
+
 #ifdef FEATURE_464XLAT
    do_xlat_rule(nat_fp);
 #endif
@@ -14661,6 +14723,9 @@ int prepare_ipv6_firewall(const char *fw_file)
         prepare_rabid_rules_v2020Q3B(filter_fp, mangle_fp, IP_V6);
 #endif
 	do_parental_control(filter_fp,nat_fp, 6);
+#if defined(SPEED_BOOST_SUPPORTED) && defined(SPEED_BOOST_SUPPORTED_V6)
+	do_speedboost_port_rules(mangle_fp,nat_fp , 6);
+#endif
         prepare_lnf_internet_rules(mangle_fp,6);
         if (isContainerEnabled) {
             do_container_allow(filter_fp, mangle_fp, nat_fp, AF_INET6);

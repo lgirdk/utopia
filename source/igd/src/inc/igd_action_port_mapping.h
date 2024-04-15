@@ -188,6 +188,23 @@ INT32 IGD_add_PortMapping(INOUT struct action_event *event);
  *      0 if successful else error code.
  ************************************************************/  
 INT32 IGD_delete_PortMapping(INOUT struct action_event *event);
+
+#if defined (SPEED_BOOST_SUPPORTED)
+ /*************************************************************************************
+ *  Function   : IGD_checkport_SpeedboostPort
+ *
+ *  Parameters :
+ *    fp       : External and internal port for UPnP mapping
+ *
+ *  Description:
+ *    check if Extenal or Internal port overlaps with Speedboot Range port
+ *
+ *  Return     :
+ *    TRUE     : Ext/Int upnp port range is overlapping with xm speedboost port ranges
+ *    FALSE    : Ext/Int upnp port range is NOT overlapping with xm speedboost port ranges
+ ************************************************************/
+INT32 IGD_checkport_SpeedboostPort(UINT16 ExternalPort, UINT16 InternalPort);
+#endif
  
 /***************************interface function end***********************/
 

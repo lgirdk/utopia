@@ -1233,6 +1233,47 @@ static int gen_zebra_conf(int sefd, token_t setok)
 #endif
                     fprintf(fp, "   ipv6 nd rdnss %s %d\n", lan_addr, rdnsslft);
 	}
+
+#if defined (SPEED_BOOST_SUPPORTED)
+
+    	if( ( inCaptivePortal != 1 ) &&  (strcmp(wan_st, "started") == 0) )
+    	{
+        	char pvd_buf[256] ;
+        	memset(pvd_buf,0,sizeof(pvd_buf));
+        	syscfg_get(NULL, "Advertisement_pvd_enable", pvd_buf, sizeof(pvd_buf));
+        	if ( 1 == atoi(pvd_buf) || (strcmp(pvd_buf,"true") == 0 ) )
+        	{
+            		fprintf(fp, "   ipv6 nd pvd_enable\n");
+            		memset(pvd_buf,0,sizeof(pvd_buf));
+            		syscfg_get(NULL, "Advertisement_pvd_hflag", pvd_buf, sizeof(pvd_buf));
+            		int hflag = atoi(pvd_buf);
+            		if ( 1 == hflag)
+            		{
+                		fprintf(fp, "   ipv6 nd pvd_hflag_enable\n");
+            		
+            			memset(pvd_buf,0,sizeof(pvd_buf));
+            			syscfg_get(NULL, "Advertisement_pvd_delay", pvd_buf, sizeof(pvd_buf));
+				if ( pvd_buf[0] != '\0' )
+					fprintf(fp, "   ipv6 nd pvd_delay %s\n", pvd_buf);
+            			
+				memset(pvd_buf,0,sizeof(pvd_buf));
+            			syscfg_get(NULL, "Advertisement_pvd_seqNum", pvd_buf, sizeof(pvd_buf));
+				if ( pvd_buf[0] != '\0' )
+					fprintf(fp, "   ipv6 nd pvd_seq_num %s\n", pvd_buf);
+			}
+			else
+			{
+                        	fprintf(fp, "   ipv6 nd pvd_delay 0\n");
+                        	fprintf(fp, "   ipv6 nd pvd_seq_num 0\n");
+			}
+
+            		memset(pvd_buf,0,sizeof(pvd_buf));
+            		syscfg_get(NULL, "Advertisement_pvd_fqdn", pvd_buf, sizeof(pvd_buf));
+                    	if(pvd_buf[0] != '\0')
+                        	fprintf(fp, "   ipv6 nd pvd_fqdn %s\n", pvd_buf);
+        	}
+    	}
+#endif
         /* static IPv6 DNS */
 #ifdef CISCO_CONFIG_DHCPV6_PREFIX_DELEGATION          
             snprintf(rec, sizeof(rec), "dhcpv6spool%d0::optionnumber", i);

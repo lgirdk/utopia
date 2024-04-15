@@ -1240,6 +1240,26 @@ static void addInSysCfgdDB (char *key, char *value)
       set_syscfg_partner_values( value,"XHS_SSIDprefix" );
       IsPSMMigrationNeeded = 1;
    }
+
+#if defined (SPEED_BOOST_SUPPORTED)
+
+   if ( 0 == strcmp ( key, "Device.RouterAdvertisement.X_RDK_PvD.FQDN") )
+   {
+      if ( 0 == IsValuePresentinSyscfgDB( "Advertisement_pvd_fqdn" ) )
+      {
+         set_syscfg_partner_values( value,"Advertisement_pvd_fqdn" );
+      }
+   }
+
+   if ( 0 == strcmp ( key, "Device.RouterAdvertisement.X_RDK_PvD.Enable") )
+   {
+      if ( 0 == IsValuePresentinSyscfgDB( "Advertisement_pvd_enable" ) )
+      {
+         set_syscfg_partner_values( value,"Advertisement_pvd_enable" );
+      }
+   }
+#endif
+
    #ifdef MTA_TR104SUPPORT
    if ( 0 == strcmp ( key, "Device.DeviceInfo.X_RDKCENTRAL-COM_RFC.Feature.TR104.Enable") )
    {
@@ -1376,6 +1396,20 @@ static void updateSysCfgdDB (char *key, char *value)
    {
          set_syscfg_partner_values( value,"AllowEthernetWAN" );
    }
+
+#if defined (SPEED_BOOST_SUPPORTED)
+
+   if ( 0 == strcmp ( key, "Device.RouterAdvertisement.X_RDK_PvD.FQDN") )
+   {
+         set_syscfg_partner_values( value,"Advertisement_pvd_fqdn" );
+   }
+
+   if ( 0 == strcmp ( key, "Device.RouterAdvertisement.X_RDK_PvD.Enable") )
+   {
+         set_syscfg_partner_values( value,"Advertisement_pvd_enable" );
+   }
+#endif
+
 #ifdef MTA_TR104SUPPORT
       if ( 0 == strcmp ( key, "Device.DeviceInfo.X_RDKCENTRAL-COM_RFC.Feature.TR104.Enable" ) )
       {
@@ -2055,6 +2089,42 @@ static int apply_partnerId_default_values (char *data, char *PartnerID)
 							APPLY_PRINT("%s - mqttport Value is NULL\n", __FUNCTION__ );
 						}
 					}
+         				#if defined (SPEED_BOOST_SUPPORTED)
+
+               				paramObjVal = cJSON_GetObjectItem(cJSON_GetObjectItem( partnerObj, "Device.RouterAdvertisement.X_RDK_PvD.FQDN"), "ActiveValue");
+					if ( paramObjVal != NULL )
+					{
+						char *adv_fdqn = NULL;
+						adv_fdqn = paramObjVal->valuestring;
+
+						if (adv_fdqn != NULL)
+						{
+							set_syscfg_partner_values(adv_fdqn,"Advertisement_pvd_fqdn");
+							adv_fdqn = NULL;
+						}
+						else
+						{
+							APPLY_PRINT("%s - adv_fdqn Value is NULL\n", __FUNCTION__ );
+						}
+					}
+               
+               				paramObjVal = cJSON_GetObjectItem(cJSON_GetObjectItem( partnerObj, "Device.RouterAdvertisement.X_RDK_PvD.Enable"), "ActiveValue");
+					if ( paramObjVal != NULL )
+					{
+						char *adv_fdqn_enable = NULL;
+						adv_fdqn_enable = paramObjVal->valuestring;
+
+						if (adv_fdqn_enable != NULL)
+						{
+							set_syscfg_partner_values(adv_fdqn_enable,"Advertisement_pvd_enable");
+							adv_fdqn_enable = NULL;
+						}
+						else
+						{
+							APPLY_PRINT("%s - adv_fdqn_enable Value is NULL\n", __FUNCTION__ );
+						}
+					}
+         				#endif
 
                                         paramObjVal = cJSON_GetObjectItem(cJSON_GetObjectItem( partnerObj, "Device.X_RDKCENTRAL-COM_Webpa.Server.URL"), "ActiveValue");
                                         if ( paramObjVal != NULL )

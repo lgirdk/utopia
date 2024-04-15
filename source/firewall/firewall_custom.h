@@ -46,7 +46,6 @@
 extern FILE *firewallfp;
 #define FW_DEBUG 1
 
-
 void do_device_based_pp_disabled_appendrule(FILE *fp, const char *ins_num, const char *lan_ifname, const char *query);
 void do_device_based_pp_disabled_ip_appendrule(FILE *fp, const char *ins_num, const char *ipAddr);
 int do_parcon_mgmt_lan2wan_pc_site_appendrule(FILE *fp);
@@ -80,6 +79,12 @@ void do_webui_rate_limit (FILE *filter_fp);
 int prepare_dscp_rules_to_prioritized_clnt(FILE* mangle_fp,int iptype);
 int prepare_lld_dscp_rules(FILE *mangle_fp);
 void prepare_dscp_rule_for_host_mngt_traffic(FILE *mangle_fp);
+
+#if defined(SPEED_BOOST_SUPPORTED)
+void do_speedboost_port_rules(FILE *mangle_fp, FILE *nat_fp , int iptype);
+int IsPortOverlapWithSpeedboostPortRange(int ExternalPort, int ExternalPortEndRange, int InternalPort , int InternalPortend);
+#endif
+
 #ifdef FW_DEBUG
 #define COMMA ,
 #define FIREWALL_DEBUG(x) firewall_log(x);

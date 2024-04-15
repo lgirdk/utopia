@@ -66,6 +66,7 @@
 #include "igd_service_wan_connect.h"
 #include "igd_action_port_mapping.h"
 #include "igd_platform_independent_inf.h"
+#include "syscfg/syscfg.h"
 
 #define ARRAY_INDEX_INVALID                     713
 #define NO_SUCH_ENTRY_IN_ARRAY              714
@@ -581,7 +582,7 @@ INT32 IGD_add_PortMapping(INOUT struct action_event *event)
         ret = IGD_GENERAL_ERROR;
         return ret;
     }
-    
+
     pIndex = (struct device_and_service_index *)(event->service->private);
     if (NULL == pIndex) {
         RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "pIndex is NULL");
@@ -647,6 +648,17 @@ INT32 IGD_add_PortMapping(INOUT struct action_event *event)
             strncpy(pii_pmEntry.description, portmapEntry.pmDescription, sizeof(pii_pmEntry.description)-1);
         }
 
+#if defined (SPEED_BOOST_SUPPORTED)
+        if( IGD_checkport_SpeedboostPort(pii_pmEntry.externalPort , pii_pmEntry.internalPort ))
+        {
+           ret = Conflict_In_MappingEntry;
+           event->request->error_code = ret;
+           strncpy(event->request->error_str, Conflict_In_MappingEntry_STR, PAL_UPNP_LINE_SIZE);
+           //printf(" IGD_checkport_SpeedboostPort : UPnP External or Internal are overlap with Speedboost range \n");
+           return ret;
+        }
+#endif
+
 	// Setting the lease time for Port Mapping entry , once lease expires rule will get deleted from iptable
 	portmapEntry.pmLeaseTime = 86400;
         pii_pmEntry.leaseTime = portmapEntry.pmLeaseTime;
@@ -663,7 +675,6 @@ INT32 IGD_add_PortMapping(INOUT struct action_event *event)
             if(ret != PAL_UPNP_E_SUCCESS)
             {
                 RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "PAL_upnp_make_action error");
-
                 event->request->error_code = ret;
                 event->request->action_result = NULL;
             }
@@ -721,6 +732,60 @@ INT32 IGD_add_PortMapping(INOUT struct action_event *event)
 
     return ret;
 }
+
+
+#if defined (SPEED_BOOST_SUPPORTED)
+/*************************************************************************************
+*  Function   : IGD_checkport_SpeedboostPort
+*
+*  Parameters :
+*    fp       : External and internal port for UPnP mapping
+*
+*  Description:
+*    check if Extenal or Internal port overlaps with Speedboot Range port
+*
+*  Return     :
+*    TRUE     : Ext/Int upnp port range is overlapping with xm speedboost port ranges
+*    FALSE    : Ext/Int upnp port range is NOT overlapping with xm speedboost port ranges
+***************************************************************************************/
+INT32 IGD_checkport_SpeedboostPort(UINT16 ExternalPort, UINT16 InternalPort)
+{
+    char pvd_enabled[8]={0};
+    char sb_port_startv4[16]={0};
+    char sb_port_endv4[16]={0};
+    char sb_port_startv6[16]={0};
+    char sb_port_endv6[16]={0};
+    memset(pvd_enabled, 0, sizeof(pvd_enabled));
+    memset(sb_port_startv4, 0, sizeof(sb_port_startv4));
+    memset(sb_port_endv4, 0, sizeof(sb_port_endv4));
+    memset(sb_port_startv6, 0, sizeof(sb_port_startv6));
+    memset(sb_port_endv6, 0, sizeof(sb_port_endv6));
+
+    int rc = syscfg_get( NULL, "Advertisement_pvd_enable" , pvd_enabled , sizeof( pvd_enabled ) ) ;
+
+    if (rc == 0 && (0 == strcmp("1", pvd_enabled) || 0 == strcasecmp("true", pvd_enabled)))
+    {
+       rc = syscfg_get( NULL, "SpeedBoost_Port_StartV4" , sb_port_startv4 , sizeof( sb_port_startv4 ) );
+       rc |= syscfg_get( NULL, "SpeedBoost_Port_EndV4" , sb_port_endv4 , sizeof( sb_port_endv4 ) );
+       rc |= syscfg_get( NULL, "SpeedBoost_Port_StartV6" , sb_port_startv6 , sizeof( sb_port_startv6 ) );
+       rc |= syscfg_get( NULL, "SpeedBoost_Port_EndV6" , sb_port_endv6 , sizeof( sb_port_endv6 ) );
+
+       if (rc == 0 && sb_port_startv4[0] != '\0' && sb_port_endv4[0] != '\0' && sb_port_startv6[0] != '\0' && sb_port_endv6[0] != '\0')
+       {
+          if ((atoi(sb_port_startv4) <= ExternalPort && ExternalPort <= atoi(sb_port_endv4)) || \
+              (atoi(sb_port_startv4) <= InternalPort && InternalPort <= atoi(sb_port_endv4)) || \
+              (atoi(sb_port_startv6) <= ExternalPort && ExternalPort <= atoi(sb_port_endv6)) || \
+              (atoi(sb_port_startv6) <= InternalPort && InternalPort <= atoi(sb_port_endv6)) )
+          {
+             RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "IGD_checkport_SpeedboostPort UPnP External or Internal port Overlaps with Speedboost ports ");
+             return TRUE;
+          }
+       }
+    }
+    return FALSE;
+}
+#endif
+
 
  /************************************************************
  * Function: IGD_delete_PortMapping

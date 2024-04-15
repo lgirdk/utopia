@@ -501,6 +501,12 @@ fi
     # Remove on factory reset, prioratized schedule pcs.bin and pcs.bin.md5 on all RDKB platforms 
     rm -f /nvram/pcs-now-priomac.dat
     rm -f /nvram/pcs-now-priomac.dat.md5
+   if [ -f /nvram/speedboost-mac.dat ]; then
+      rm -f /nvram/speedboost-mac.dat
+   fi
+   if [ -f /nvram/speedboost-mac.dat.md5 ]; then
+      rm -f /nvram/speedboost-mac.dat.md5
+   fi
 
    echo "[utopia][init] Retarting syscfg using file store ($SYSCFG_NEW_FILE)"
    touch $SYSCFG_NEW_FILE
