@@ -1200,15 +1200,6 @@ static void s_UtopiaEvent_Trigger(UtopiaContext* pUtopiaCtx)
                     {
                         ix = MAX_UTOPIA_EVENTS-1;
                     }
-                    else if(ix < 0)
-                    {
-                        ix = 0;
-                    }
-                    else
-                    {
-                        ix =ix;
-                    }
-
                     /* Set the event notification if we need to */
                     if (g_Utopia_Events[ix].pszWaitKey != 0)
                     {
