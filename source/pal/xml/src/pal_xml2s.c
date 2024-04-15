@@ -279,7 +279,9 @@ INT32 PAL_xml2s_process(IN pal_xml_top *xml_in, IN PAL_XML2S_TABLE *table, INOUT
                }//for (i=0; i<length; i++)                 
             }
 
-            PAL_xml_nodelist_free(node_list);node_list = NULL;
+            PAL_xml_nodelist_free(node_list);
+            /*CID 340356 : Unused Value*/
+            //node_list = NULL;
             
             if (ret != PAL_XML2S_E_SUCCESS)
                 break;
