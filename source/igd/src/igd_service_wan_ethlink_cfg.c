@@ -292,13 +292,14 @@ VOID IGD_service_WANEthernetLinkConfigEventHandler(IN struct upnp_device  *pdevi
 			pthread_mutex_unlock(&pservice->service_mutex);
 			return;
 		}
-	
+	    /*CID 189925 : Waiting while holding a lock*/
+		pthread_mutex_unlock(&pservice->service_mutex);
 		if(IGD_pii_get_ethernet_link_status(pIndex->wan_device_index,pIndex->wan_connection_device_index,status))
 		{
 			RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","EthernetLinkStatus get fail\n");
-			pthread_mutex_unlock(&pservice->service_mutex);
 			return;
 		}
+		pthread_mutex_lock(&pservice->service_mutex);
 		if(0!= strcmp(status, pservice->state_variables[0].value))
 		{
 			strncpy(pservice->state_variables[0].value,status, strlen(status)+1);
