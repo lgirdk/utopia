@@ -837,10 +837,20 @@ int main(int argc, char** argv){
         }
     }
 
-    if( -1 == access(FIREWALL_LOG_DIR, 0))
+    if(access(FIREWALL_LOG_DIR, F_OK) == -1)
     {
-      
-         mkdir(FIREWALL_LOG_DIR,S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+      if(mkdir(FIREWALL_LOG_DIR, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) == -1)
+      {
+        printf("Error Creating Directory");
+      }
+      else
+      {
+        printf("Directory Created Successfully");
+      }
+    }
+    else
+    {
+      printf("Directory already exists");
     }
     
     g_p_rule_tbl = NULL;
