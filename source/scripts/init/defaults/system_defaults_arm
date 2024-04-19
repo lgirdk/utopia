@@ -944,7 +944,13 @@ $$dhcpv6spool40::PrefixRangeEnd=0:0:0:00f5
 $$dhcpv6spool40::RapidEnable=1
 $$dhcpv6spool40::IANAAmount=255
 $$dhcpv6spool40::optionnumber=2
+
+$$dhcpv6spool4option0::bEnabled=1
 $$dhcpv6spool4option0::Tag=23
+$$dhcpv6spool4option0::PassthroughClient=Device.DHCPv6.Client.1.
+$$dhcpv6spool4option1::bEnabled=1
+$$dhcpv6spool4option1::Tag=24
+$$dhcpv6spool4option1::PassthroughClient=Device.DHCPv6.Client.1.
 # brlan7 end
 
 #CCSP RECOVERY MONITOR
