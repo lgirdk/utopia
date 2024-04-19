@@ -1231,7 +1231,8 @@ int prepare_dhcp_conf (char *input)
                 fprintf(g_fArmConsoleLog,"popen fgets ERROR\n");
         }
         else
-        {       sscanf(result, "%s %s %s %s",lanIP, lanNetMask, dhcpStart, dhcpEnd);
+        {   /*CID 65094 : Calling risky function*/    
+            sscanf(result, "%15s %15s %15s %15s",lanIP, lanNetMask, dhcpStart, dhcpEnd);
 
                 syscfg_set(NULL, "lan_ipaddr", lanIP);
                 syscfg_set(NULL, "lan_netmask", lanNetMask);
