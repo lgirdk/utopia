@@ -30,9 +30,7 @@ else
 libutapi_la_SOURCES += utapi_moca.c
 endif
 
-libutapi_la_CPPFLAGS = -I$(top_srcdir)/source/include -I$(top_srcdir)/source/utapi/lib \
-                       -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/dbus-1.0 \
-                       -I${PKG_CONFIG_SYSROOT_DIR}$(libdir)/dbus-1.0/include
+libutapi_la_CPPFLAGS = -I$(top_srcdir)/source/include -I$(top_srcdir)/source/utapi/lib
 
 libutapi_la_LDFLAGS = -lsecure_wrapper -ltelemetry_msgsender
 

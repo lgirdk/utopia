@@ -96,8 +96,6 @@ AC_C_INLINE
 # Checks for library functions.
 AC_FUNC_MALLOC
 
-PKG_CHECK_MODULES([DBUS],[dbus-1 >= 1.6.18])
-
 # Checks for DSLite Feature Support
 AC_ARG_ENABLE([dslite_feature_support],
 [  --enable-dslite_feature_support=val Turn on DSLite Feature, val=true or false],
