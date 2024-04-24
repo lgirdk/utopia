@@ -1,5 +1,5 @@
 bin_PROGRAMS = NetworkMonitor
-AM_CPPFLAGS = -I$(top_srcdir)/source -I$(top_srcdir)/source/include $(CPPFLAGS) $(DBUS_CFLAGS)
+AM_CPPFLAGS = -I$(top_srcdir)/source -I$(top_srcdir)/source/include $(CPPFLAGS)
 
 NetworkMonitor_SOURCES = NetworkMonitor.c
 NetworkMonitor_LDFLAGS = -lccsp_common -lsecure_wrapper
