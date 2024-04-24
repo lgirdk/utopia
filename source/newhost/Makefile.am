@@ -29,10 +29,7 @@ newhost_CPPFLAGS = -I$(top_srcdir)/source/pal/upnp/include \
                    -I$(top_srcdir)/source/pal/kernel/include \
                    -I$(top_srcdir)/source/pal/include \
                    -I$(top_srcdir)/source/pal/log/include \
-                   -I$(top_srcdir)/source/include \
-                   $(DBUS_CFLAGS)
-
-newhost_LDFLAGS = $(DBUS_LIBS)
+                   -I$(top_srcdir)/source/include
 
 newhost_LDADD = $(top_builddir)/source/syscfg/lib/libsyscfg.la \
                 $(top_builddir)/source/sysevent/lib/libsysevent.la \

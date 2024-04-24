@@ -23,9 +23,7 @@ service_wan_SOURCES = service_wan.c
 
 service_wan_CPPFLAGS = -I$(top_srcdir)/source/include \
                        -I$(top_srcdir)/source/util/utils \
-                       -I$(top_srcdir)/source/util/print_uptime \
-                       -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/dbus-1.0 \
-                       -I${PKG_CONFIG_SYSROOT_DIR}$(libdir)/dbus-1.0/include
+                       -I$(top_srcdir)/source/util/print_uptime
 
 service_wan_LDFLAGS = -lsecure_wrapper
 
