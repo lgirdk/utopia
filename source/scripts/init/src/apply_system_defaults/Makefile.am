@@ -18,9 +18,7 @@
 ##########################################################################
 
 AM_CFLAGS = -I$(top_srcdir)/source/include \
-            -I$(top_srcdir)/source/util \
-            -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/dbus-1.0 \
-	    -I${PKG_CONFIG_SYSROOT_DIR}$(libdir)/dbus-1.0/include
+            -I$(top_srcdir)/source/util
 
 AM_CFLAGS += -Wall
 
@@ -31,7 +29,7 @@ AM_LDFLAGS = $(top_builddir)/source/services/lib/libsrvmgr.la \
              $(top_builddir)/source/utapi/lib/libutapi.la \
              $(top_builddir)/source/utctx/lib/libutctx.la \
              -ltelemetry_msgsender \
-	     -lccsp_common $(DBUS_LIBS)
+	     -lccsp_common
 
 AM_CPPFLAGS = -I$(top_srcdir)/source/scripts/init/src
 

@@ -27,6 +27,6 @@ libprint_uptime_la_LDFLAGS = -ltelemetry_msgsender
 
 bin_PROGRAMS = print_uptime
 
-print_uptime_CPPFLAGS = -I$(top_srcdir)/source/include -I$(top_srcdir)/source/util/print_uptime -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/dbus-1.0 ${PKG_CONFIG_SYSROOT_DIR}$(libdir)/dbus-1.0/include
+print_uptime_CPPFLAGS = -I$(top_srcdir)/source/include -I$(top_srcdir)/source/util/print_uptime
 print_uptime_SOURCES = main.c
 print_uptime_LDADD = libprint_uptime.la

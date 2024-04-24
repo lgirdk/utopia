@@ -28,8 +28,7 @@ pmon_CPPFLAGS = -I$(top_srcdir)/source/pal/upnp/include \
                 -I$(top_srcdir)/source/pal/xml/include \
                 -I$(top_srcdir)/source/pal/kernel/include \
                 -I$(top_srcdir)/source/pal/include \
-                -I$(top_srcdir)/source/pal/log/include \
-                $(DBUS_CFLAGS)
+                -I$(top_srcdir)/source/pal/log/include
 
 pmon_LDADD = $(top_builddir)/source/services/lib/libsrvmgr.la \
              $(top_builddir)/source/sysevent/lib/libsysevent.la \

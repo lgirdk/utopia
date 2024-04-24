@@ -20,10 +20,9 @@
 bin_PROGRAMS = service_ipv6
 
 AM_CPPFLAGS = -I$(top_srcdir)/source/include \
-              -I$(top_srcdir)/source/util/utils \
-              $(DBUS_CFLAGS)
+              -I$(top_srcdir)/source/util/utils
 
-AM_LDFLAGS = -lccsp_common -lsecure_wrapper -lhal_platform $(DBUS_LIBS)
+AM_LDFLAGS = -lccsp_common -lsecure_wrapper -lhal_platform
 
 service_ipv6_SOURCES = service_ipv6.c
 

@@ -27,10 +27,7 @@ service_routed_CFLAGS = -I$(top_srcdir)/source \
                         -I$(top_srcdir)/source/include \
                         -I$(top_srcdir)/source/utctx/lib \
                         -I$(top_srcdir)/source/utapi/lib \
-                        -I$(top_srcdir)/source/util/utils \
-                        -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/dbus-1.0 \
-                        -I${PKG_CONFIG_SYSROOT_DIR}$(libdir)/dbus-1.0/include
-
+                        -I$(top_srcdir)/source/util/utils
 
 service_routed_LDADD = $(top_builddir)/source/util/utils/libutopiautil.la \
                        $(top_builddir)/source/services/lib/libsrvmgr.la \
