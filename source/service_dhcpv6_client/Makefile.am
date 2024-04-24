@@ -21,14 +21,11 @@ AM_CFLAGS = -fno-exceptions -Wall -Wextra
 
 bin_PROGRAMS = service_dhcpv6_client
 
-AM_LDFLAGS =  -lpthread -lz -lccsp_common $(DBUS_LIBS) -lsecure_wrapper
+AM_LDFLAGS =  -lpthread -lz -lccsp_common -lsecure_wrapper
 service_dhcpv6_client_SOURCES =  service_dhcpv6_client.c
 
 service_dhcpv6_client_CPPFLAGS = -I$(top_srcdir)/source/include \
-                        -I$(top_srcdir)/source/util/utils \
-                        $(DBUS_CFLAGS) \
-                        -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/dbus-1.0 \
-                        -I${PKG_CONFIG_SYSROOT_DIR}$(libdir)/dbus-1.0/include
+                        -I$(top_srcdir)/source/util/utils
 
 service_dhcpv6_client_LDADD = $(top_builddir)/source/util/utils/libutopiautil.la \
                               $(top_builddir)/source/sysevent/lib/libsysevent.la \
