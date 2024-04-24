@@ -81,6 +81,16 @@
 #include "print_uptime.h"
 #include "safec_lib_common.h"
 
+#if defined (FEATURE_RDKB_LED_MANAGER_CAPTIVE_PORTAL) || (FEATURE_RDKB_LED_MANAGER_LEGACY_WAN)
+#include <sysevent/sysevent.h>
+#define SYSEVENT_LED_STATE    "led_event"
+#define IPV4_UP_EVENT         "rdkb_ipv4_up"
+#define LIMITED_OPERATIONAL   "rdkb_limited_operational"
+#define WAN_LINK_UP	      "rdkb_wan_link_up"
+int sysevent_led_fd = -1;
+token_t sysevent_led_token;
+#endif
+
 #if defined (_PROPOSED_BUG_FIX_)
 #include <syslog.h>
 
@@ -911,6 +921,15 @@ static int wan_start(struct serv_wan *sw)
                     /* In IPv6 or dual mode, raise wan-status event here */
                    sysevent_set(sw->sefd, sw->setok, "wan-status", "starting", 0);
 
+#if defined(FEATURE_RDKB_LED_MANAGER_LEGACY_WAN)
+		   sysevent_led_fd = sysevent_open("127.0.0.1", SE_SERVER_WELL_KNOWN_PORT, SE_VERSION, "OperationalStateHandler", &sysevent_led_token);
+		   if(sysevent_led_fd != -1)
+		   {
+			   sysevent_set(sysevent_led_fd, sysevent_led_token, SYSEVENT_LED_STATE, WAN_LINK_UP, 0);
+ 			   fprintf(stderr, "%s  Sent WAN_LINK_UP event to RdkLedManager for registration \n",__func__);
+		   }
+#endif
+
 #if defined (FEATURE_RDKB_DHCP_MANAGER)
                     v_secure_system("dmcli eRT setv Device.DHCPv6.Client.1.Enable bool true");
                     //sysevent_set(sw->sefd, sw->setok, "dhcpv6_client-start", "", 0);
@@ -987,6 +1006,32 @@ static int wan_start(struct serv_wan *sw)
     sysevent_set(sw->sefd, sw->setok, "wan_service-status", "started", 0);
     sysevent_set(sw->sefd, sw->setok, "current_wan_state", "up", 0);
     sysevent_set(sw->sefd, sw->setok, "wan-status", "started", 0);
+
+#if defined (FEATURE_RDKB_LED_MANAGER_CAPTIVE_PORTAL)
+    char redirFlag[10]={0};
+    char captivePortalEnable[10]={0};
+
+    if (!syscfg_get(NULL, "redirection_flag", redirFlag, sizeof(redirFlag)) && !syscfg_get(NULL, "CaptivePortal_Enable", captivePortalEnable, sizeof(captivePortalEnable))){
+	    if (!strcmp(redirFlag,"true") && !strcmp(captivePortalEnable,"true"))
+	    {
+		    if(sysevent_led_fd != -1)
+		    {
+			    sysevent_set(sysevent_led_fd, sysevent_led_token, SYSEVENT_LED_STATE, LIMITED_OPERATIONAL, 0);
+			    fprintf(stderr, "%s  Sent LIMITED_OPERATIONAL event to RdkLedManager\n",__func__);
+		    }
+	    }
+	    else
+	    {
+		    if(sysevent_led_fd != -1)
+                    {
+                            sysevent_set(sysevent_led_fd, sysevent_led_token, SYSEVENT_LED_STATE, IPV4_UP_EVENT, 0);
+                            fprintf(stderr, "%s  Sent IPV4_UP_EVENT to RdkLedManager\n",__func__);
+                    }
+	    }
+    }
+    if (sysevent_led_fd != -1)
+	    sysevent_close(sysevent_led_fd, sysevent_led_token);
+#endif
 
     fprintf(stderr, "[%s] start firewall fully\n", PROG_NAME);
 
