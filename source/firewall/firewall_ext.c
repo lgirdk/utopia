@@ -1,5 +1,7 @@
 #ifdef RDKB_EXTENDER_ENABLED
 
+#include <sysevent/sysevent.h>
+
 #include "firewall.h"
 #include "firewall_custom.h"
 

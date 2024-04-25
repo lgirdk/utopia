@@ -51,9 +51,6 @@
 
 #include <errno.h>
 
-#include "syscfg/syscfg.h"
-#include "sysevent/sysevent.h"
-
 #include "ccsp_psm_helper.h"
 #include <ccsp_base_api.h>
 #include "ccsp_memory.h"
