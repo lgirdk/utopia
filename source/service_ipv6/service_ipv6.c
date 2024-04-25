@@ -1106,12 +1106,8 @@ static int divide_ipv6_prefix(struct serv_ipv6 *si6)
     }
     snprintf(evt_val, sizeof(evt_val), "%d", mso_prefix.len);
     sysevent_set(si6->sefd, si6->setok, "ipv6_prefix-length", evt_val, 0);
-#ifdef _LG_OFW_
-    sysevent_set(si6->sefd, si6->setok, "ipv6_pd-length", "64", 0);
-#else
     snprintf(evt_val, sizeof(evt_val), "%d", mso_prefix.len + bit_boundary);
     sysevent_set(si6->sefd, si6->setok, "ipv6_pd-length", evt_val, 0);
-#endif
 
     sysevent_set(si6->sefd, si6->setok, "ipv6_prefix-divided", "ready", 0);
 
