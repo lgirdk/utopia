@@ -57,7 +57,8 @@
 #include <linux/netfilter.h>
 #include <sys/ioctl.h>
 #include <net/if.h>
-#include "sysevent/sysevent.h"
+#include <syscfg/syscfg.h>
+#include <sysevent/sysevent.h>
 #include "secure_wrapper.h"
 #include "safec_lib_common.h"
 
