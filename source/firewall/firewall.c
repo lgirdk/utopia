@@ -351,6 +351,8 @@ NOT_DEF:
 #include <netinet/in.h>
 #include <sys/file.h>
 #include <sys/mman.h>
+#include <syscfg/syscfg.h>
+#include <sysevent/sysevent.h>
 #include "secure_wrapper.h"
 #include "util.h"
 
