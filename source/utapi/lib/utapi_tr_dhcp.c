@@ -48,7 +48,7 @@
 #include "safec_lib_common.h"
 
 #ifdef SKY_RDKB
-#define DNSMASQ_LEASE_CONFIG_FILE "/nvram/dnsmasq.leases"
+#define DNSMASQ_LEASE_CONFIG_FILE "/var/lib/misc/dnsmasq.leases"
 #define BUF_LEN 200
 #endif
 
@@ -637,7 +637,7 @@ int is_mac_addr_in_sa_list(UtopiaContext *ctx, unsigned char *pMac)
 
 #ifdef SKY_RDKB
 /*
- * RM15984: Check the given string is available in dnsmasq configuration file. (/nvram/dnsmasq.leases).
+ * RM15984: Check the given string is available in dnsmasq configuration file. (/var/lib/misc/dnsmasq.leases).
  * This is required to add the reserve static IP configuration. Before update reservation details
  * check the IP is already leased/provided from device.
  */
