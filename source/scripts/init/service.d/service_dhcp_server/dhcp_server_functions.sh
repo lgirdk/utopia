@@ -74,7 +74,7 @@ DHCP_SLOW_START_2_FILE=/etc/cron/cron.every5minute/dhcp_slow_start.sh
 DHCP_SLOW_START_3_FILE=/etc/cron/cron.every10minute/dhcp_slow_start.sh
 
 
-DHCP_LEASE_FILE=/nvram/dnsmasq.leases
+DHCP_LEASE_FILE=/var/lib/misc/dnsmasq.leases
 DHCP_ACTION_SCRIPT=/etc/utopia/service.d/service_dhcp_server/dnsmasq_dhcp.script
 # DHCP_FIRST_OCTETS will contain the first 3 octets of the lan interface
 DHCP_FIRST_OCTETS=0.0.0
