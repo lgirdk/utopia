@@ -24,8 +24,8 @@
 
 source /etc/device.properties
 
-DHCP_LEASE_FILE_ARM="/nvram/dnsmasq.leases"
-DHCP_LEASE_FILE_ATOM="/nvram/dnsmasq.leases"
+DHCP_LEASE_FILE_ARM="/var/lib/misc/dnsmasq.leases"
+DHCP_LEASE_FILE_ATOM="/var/lib/misc/dnsmasq.leases"
 DHCP_LEASE_FILE_ATOM_TMP="/tmp/dnsmasq.leases"
 PEER_COMM_ID="/tmp/elxrretyt.swr"
 if [ ! -f /usr/bin/GetConfigFile ];then

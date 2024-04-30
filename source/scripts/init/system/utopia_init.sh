@@ -316,6 +316,13 @@ then
     /usr/ccsp/psm/lg_bbhm_patch.sh /tmp/bbhm_cur_cfg.xml
 fi
 
+if [ -s /nvram/dnsmasq.leases ] ; then
+   cp -f /nvram/dnsmasq.leases /var/lib/misc/dnsmasq.leases
+fi
+if [ -s /nvram/dnsmasq.options ] ; then
+   cp -f /nvram/dnsmasq.options /var/lib/misc/dnsmasq.options
+fi
+
 #echo_t "[utopia][init] Starting system logging"
 #/etc/utopia/service.d/service_syslog.sh syslog-start
 
