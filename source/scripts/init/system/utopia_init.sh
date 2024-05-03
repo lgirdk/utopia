@@ -525,12 +525,22 @@ ip rule add from all iif br106 lookup erouter
 
 # Check and set factory-reset as reboot reason 
 if [ "$FACTORY_RESET_REASON" = "true" ]; then
-   echo_t "[utopia][init] Detected last reboot reason as factory-reset"
-   if [ -e "/usr/bin/onboarding_log" ]; then
-       /usr/bin/onboarding_log "[utopia][init] Detected last reboot reason as factory-reset"
+   if [ -f /nvram/.image_upgrade_and_FR_done ] && [ "$BOX_TYPE" = "VNTXER5" ]; then
+       echo "[utopia][init] Detected last reboot reason as FirmwareDownloadAndFactoryReset"
+       if [ -e "/usr/bin/onboarding_log" ]; then
+           /usr/bin/onboarding_log "[utopia][init] Detected last reboot reason as FirmwareDownloadAndFactoryReset"
+       fi
+       syscfg set X_RDKCENTRAL-COM_LastRebootReason "FirmwareDownloadAndFactoryReset"
+       syscfg set X_RDKCENTRAL-COM_LastRebootCounter "1"
+       rm -f /nvram/.image_upgrade_and_FR_done
+   else
+       echo_t "[utopia][init] Detected last reboot reason as factory-reset"
+       if [ -e "/usr/bin/onboarding_log" ]; then
+          /usr/bin/onboarding_log "[utopia][init] Detected last reboot reason as factory-reset"
+       fi
+       syscfg set X_RDKCENTRAL-COM_LastRebootReason "factory-reset"
+       syscfg set X_RDKCENTRAL-COM_LastRebootCounter "1"
    fi
-   syscfg set X_RDKCENTRAL-COM_LastRebootReason "factory-reset"
-   syscfg set X_RDKCENTRAL-COM_LastRebootCounter "1"
 else
    rebootReason=`syscfg get X_RDKCENTRAL-COM_LastRebootReason`
    rebootCounter=`syscfg get X_RDKCENTRAL-COM_LastRebootCounter`
