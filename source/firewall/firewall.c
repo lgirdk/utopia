@@ -12561,15 +12561,10 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(filter_fp, "-I FORWARD -m conntrack --ctdir reply -m connbytes --connbytes 0:15 --connbytes-dir reply --connbytes-mode packets -j GWMETA --dis-pp\n");
 #endif
 
-#if (defined(_COSA_BCM_ARM_) || defined(_PLATFORM_TURRIS_)) && !defined(_CBR_PRODUCT_REQ_)
+#if (defined(_COSA_BCM_ARM_) || defined(_PLATFORM_TURRIS_))
    fprintf(filter_fp, "-I FORWARD -d 192.168.100.1/32 -i %s -j DROP\n", lan_ifname);
-   fprintf(filter_fp, "-I FORWARD -d 172.31.0.0/16 -i %s -j DROP\n", lan_ifname);
-#endif
-
-#if defined(_CBR_PRODUCT_REQ_)
-   fprintf(filter_fp, "-I lan2self -d 172.31.0.0/16 -j DROP\n");
-   fprintf(filter_fp, "-I lan2self -d 192.168.100.1/32 -j DROP\n");
-   fprintf(filter_fp, "-A FORWARD -s 172.31.255.0/24 -j DROP\n");
+   fprintf(filter_fp, "-I FORWARD -d 172.31.255.0/24 -j DROP\n");
+   fprintf(filter_fp, "-I INPUT -d 172.31.255.0/24 -i %s -j DROP\n", lan_ifname);
 #endif
 
 //SKYH4-6700 - [MAP-T] To prevent Denial of service due to sufficient TCP SYN`s causing resource exhaustion.
@@ -13954,6 +13949,8 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
            fprintf(filter_fp, "-A FORWARD -i %s -o privbr -p tcp -m multiport --dport 22,23,80,443 -j DROP\n",LNF_IF_NAME);
        #endif
        fprintf(filter_fp, "-A INPUT -p tcp -i privbr --match multiport  --dport 80,443 -j ACCEPT\n");
+       fprintf(filter_fp, "-I FORWARD -d 172.31.255.0/24 -j DROP\n");
+       fprintf(filter_fp, "-I INPUT -d 172.31.255.0/24 -i %s -j DROP\n", cmdiag_ifname);
    #endif
    fprintf(filter_fp,"-A INPUT -p tcp --match multiport  --dport 80,443 -j DROP\n");
    int ret = 0;
