@@ -300,6 +300,14 @@ fi
       rm -f /nvram/webconfig_db.bin
    fi
 
+   if [ -f /nvram/rfc.json ]; then
+      rm -f /nvram/rfc.json
+   fi
+
+   if [ -f /opt/secure/RFC/.RFC_SSHWhiteList.list ]; then
+      rm -f /opt/secure/RFC/.RFC_SSHWhiteList.list
+   fi
+
    #Needs to increment factory reset count during PIN method
    #If GUI FR reboot reason will come as factory-reset and reboot counter should be 1. so we don't need to increment
    if [ "$rebCounter" != "1" ] ; then

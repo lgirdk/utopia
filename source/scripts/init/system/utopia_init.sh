@@ -336,6 +336,14 @@ fi
       rm -f /nvram/dnsmasq.vendorclass
     fi
 
+    if [ -f /nvram/rfc.json ]; then
+      rm -f /nvram/rfc.json
+    fi
+
+    if [ -f /opt/secure/RFC/.RFC_SSHWhiteList.list ]; then
+       rm -f /opt/secure/RFC/.RFC_SSHWhiteList.list
+    fi
+
    # Remove lxy L2 dir
    LOG_FILE=/rdklogs/logs/lxy.log
    echo_t "[FR] Removing lxy L2 Dir" >> $LOG_FILE
