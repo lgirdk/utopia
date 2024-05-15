@@ -637,6 +637,12 @@ echo " Last Reboot Reason is $rebootReason" >> /dev/console
 
 if [ "$BOX_TYPE" = "MV3" ]
 then
+	rebootCounter=$(syscfg get X_RDKCENTRAL-COM_LastRebootCounter)
+	if [ "$rebootCounter" = "0" ]
+	then
+		rebootReason="unknown"
+		syscfg set X_RDKCENTRAL-COM_LastRebootReason "$rebootReason"
+	fi
 	/usr/bin/logger -p local0.crit -t NETWORK "$(date +'%a %b %d %T %Y') CPE Reboot because of - $rebootReason"
 fi
 
