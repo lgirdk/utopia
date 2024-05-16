@@ -69,7 +69,7 @@ if [ -f /etc/mount-utils/getConfigFile.sh ];then
      . /etc/mount-utils/getConfigFile.sh
 fi
 
-if [  "$MANUFACTURE" = "Technicolor" ];then
+if ([  "$MANUFACTURE" = "Technicolor" ] || [ "$MODEL_NUM" = "SG417DBCT" ]) ;then
    ip_to_hex() {
        printf '%02x' ${1//./ }
    }
@@ -131,7 +131,7 @@ do_start() {
 	CMINTERFACE=$WAN_INTERFACE
     fi
 
-    if  [ "$MANUFACTURE" = "Technicolor" ]; then
+    if  ([ "$MANUFACTURE" = "Technicolor" ] || [ "$MODEL_NUM" = "SG417DBCT" ]) ; then
         # Please refere TCCBR-1607 for architectural information
         CM_IPV4=""
         #getting the IPV4 address for V4 CM SSH packets
@@ -193,7 +193,7 @@ do_start() {
    # /etc/init.d/dropbear start
    #dropbear -r /etc/rsa_key.priv
    #dropbear -E -s -b /etc/sshbanner.txt -s -a -p [$CM_IP]:22
-   if  [ "$MANUFACTURE" != "Technicolor" ]; then
+   if  ([ "$MANUFACTURE" != "Technicolor" ] || [ "$MODEL_NUM" = "SG417DBCT" ]) ; then
        if [ -z "$CM_IP" ]
        then
           #wan0 should be in v4
@@ -223,7 +223,7 @@ do_start() {
       echo_t "utopia: dropbear could not be started on erouter0 IPv6 interface."
     fi
    else
-       if  [ "$MANUFACTURE" = "Technicolor" ]; then
+       if  ([ "$MANUFACTURE" = "Technicolor" ] || [ "$MODEL_NUM" = "SG417DBCT" ]) ; then
 	  echo dropbear -E -s -K 60 -b /etc/sshbanner.txt ${commandString} -r ${DROPBEAR_PARAMS_1} -r ${DROPBEAR_PARAMS_2} -a -P ${PID_FILE}
           dropbear -E -s -b /etc/sshbanner.txt $commandString -r $DROPBEAR_PARAMS_1 -r $DROPBEAR_PARAMS_2 -a -P $PID_FILE -K 60 2>>$CONSOLEFILE
        else
