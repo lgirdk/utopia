@@ -15243,6 +15243,12 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
       }
    }
 
+   if (isBrlanStaticEnabled)
+   {
+      _write_sysctl_file("/proc/sys/net/ipv4/ipfrag_high_thresh", DEFAULT_FRAG_HIGH_THRESH_VALUE);
+      _write_sysctl_file("/proc/sys/net/ipv4/ipfrag_low_thresh", DEFAULT_FRAG_LOW_THRESH_VALUE);
+   }
+
 #if defined(_COSA_BCM_ARM_) && (defined(_CBR_PRODUCT_REQ_) || defined(_XB6_PRODUCT_REQ_)) 
    if (isBridgeMode)
    {
