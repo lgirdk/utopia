@@ -2289,7 +2289,7 @@ static int substitute(char *in_str, char *out_str, const int size, char *from, c
  *    A pointer to out_str on success
  *    Otherwise NULL
  * Notes:
- *   Currently we handle $WAN_IPADDR, $WAN_IFNAME, $LAN_IFNAME, $LAN_IPADDR, $LAN_NETMASK
+ *   Currently we handle $WAN_IPADDR, $WAN_VMB_IPADDR, $WAN_IFNAME, $LAN_IFNAME, $LAN_IPADDR, $LAN_NETMASK
  *                       $ACCEPT $DROP $REJECT and 
  *   QoS classes $HIGH, $MEDIUM, $NORMAL, $LOW
  */
@@ -2307,6 +2307,13 @@ static char *make_substitutions(char *in_str, char *out_str, const int size)
           in_str_p += strlen(token);
           if (0 == strcmp(token, "$WAN_IPADDR")) {
              out_str_p += snprintf(out_str_p, out_str_end-out_str_p, "%s", current_wan_ipaddr);
+#ifdef VMB_MODE
+          } else if (0 == strcmp(token, "$WAN_VMB_IPADDR")) {
+             if (vmb_framed_route_ip_bits == 32 && vmb_framed_route_ip.s_addr)
+                out_str_p += snprintf(out_str_p, out_str_end-out_str_p, "%s", inet_ntoa(vmb_framed_route_ip));
+             else
+                out_str_p += snprintf(out_str_p, out_str_end-out_str_p, "%s", current_wan_ipaddr);
+#endif
           } else if (0 == strcmp(token, "$WAN_IFNAME")) {
              out_str_p += snprintf(out_str_p, out_str_end-out_str_p, "%s", current_wan_ifname);
           } else if (0 == strcmp(token, "$LAN_IFNAME")) {
@@ -3713,6 +3720,7 @@ static int do_single_port_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, 
    int  rc;
    int  count;
    int nat_swapped = 0;
+   const char *forwarding_chain_name = "prerouting_fromwan";
 #ifndef INTEL_PUMA7
    char *tmp = NULL;
 #endif
@@ -3744,7 +3752,20 @@ static int do_single_port_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, 
    /* If rip is enabled and erouter has static IP then swap the NAT IP. */
    char temp_natip4[20];
    memcpy(temp_natip4, natip4, sizeof(temp_natip4));
+#ifdef VMB_MODE
+   if (vmb_framed_route_ip_bits == 32 && vmb_framed_route_ip.s_addr)
+   {
+      nat_swapped = 1;
+      strcpy(natip4, inet_ntoa(vmb_framed_route_ip));
+      forwarding_chain_name = "prerouting_fromvmb";
+   }
+   else
+   {
+      nat_swapped = get_erouter_static_ip(natip4, sizeof(natip4));
+   }
+#else
    nat_swapped = get_erouter_static_ip(natip4, sizeof(natip4));
+#endif
 
    syscfg_get("CosaNAT", "port_forward_enabled", query, sizeof(query));
    if ((query[0] != '\0') && (atoi(query) != 0))
@@ -3909,7 +3930,7 @@ static int do_single_port_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, 
     if ( (0 == strcmp("both", prot) || 0 == strcmp("tcp", prot)))
 	  {
 	     if (isNatReady) {
-            fprintf(nat_fp, "-A prerouting_fromwan -p tcp -m tcp -d %s --dport %s -j DNAT --to-destination %s%s\n", natip4, external_port, toip, port_modifier);
+            fprintf(nat_fp, "-A %s -p tcp -m tcp -d %s --dport %s -j DNAT --to-destination %s%s\n", forwarding_chain_name, natip4, external_port, toip, port_modifier);
          }
 
 #if defined (FEATURE_MAPT) || defined (FEATURE_SUPPORT_MAPT_NAT46)
@@ -4002,7 +4023,7 @@ static int do_single_port_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, 
       if ((0 == strcmp("both", prot) || 0 == strcmp("udp", prot)))	
 	  {
 		 if (isNatReady) {
-            fprintf(nat_fp, "-A prerouting_fromwan -p udp -m udp -d %s --dport %s -j DNAT --to-destination %s%s\n", natip4, external_port, toip, port_modifier);
+            fprintf(nat_fp, "-A %s -p udp -m udp -d %s --dport %s -j DNAT --to-destination %s%s\n", forwarding_chain_name, natip4, external_port, toip, port_modifier);
          }
 #if defined (FEATURE_MAPT) || defined (FEATURE_SUPPORT_MAPT_NAT46)
          if(isMAPTReady)
@@ -4147,6 +4168,7 @@ static int do_port_range_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, F
 #endif
    BOOL varyingPortRange = TRUE; // LGI ADD
    int nat_swapped = 0;
+   const char *forwarding_chain_name = "prerouting_fromwan";
 
 #ifdef CISCO_CONFIG_TRUE_STATIC_IP 
 
@@ -4174,7 +4196,20 @@ static int do_port_range_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, F
    /* If rip is enabled and erouter has static IP then swap the NAT IP. */
    char temp_natip4[20];
    memcpy(temp_natip4, natip4, sizeof(temp_natip4));
+#ifdef VMB_MODE
+   if (vmb_framed_route_ip_bits == 32 && vmb_framed_route_ip.s_addr)
+   {
+      nat_swapped = 1;
+      strcpy(natip4, inet_ntoa(vmb_framed_route_ip));
+      forwarding_chain_name = "prerouting_fromvmb";
+   }
+   else
+   {
+      nat_swapped = get_erouter_static_ip(natip4, sizeof(natip4));
+   }
+#else
    nat_swapped = get_erouter_static_ip(natip4, sizeof(natip4));
+#endif
 
    syscfg_get("CosaNAT", "port_forward_enabled", query, sizeof(query));
    if ((query[0] != '\0') && (atoi(query) != 0))
@@ -4452,12 +4487,12 @@ static int do_port_range_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, F
                 for(num = atoi(sdport); num <= atoi(edport); num++)
                 {
 
-                    fprintf(nat_fp, "-A prerouting_fromwan -p tcp -m tcp -d %s --dport %d -j DNAT --to-destination %s:%d\n", natip4, num, toip, internalPortCnt++);
+                    fprintf(nat_fp, "-A %s -p tcp -m tcp -d %s --dport %d -j DNAT --to-destination %s:%d\n", forwarding_chain_name, natip4, num, toip, internalPortCnt++);
                 }
             }
             else
             {      // LGI ADD - END
-            fprintf(nat_fp, "-A prerouting_fromwan -p tcp -m tcp -d %s --dport %s:%s -j DNAT --to-destination %s%s\n", natip4, sdport, edport, toip, target_internal_port);
+            fprintf(nat_fp, "-A %s -p tcp -m tcp -d %s --dport %s:%s -j DNAT --to-destination %s%s\n", forwarding_chain_name, natip4, sdport, edport, toip, target_internal_port);
             }      // LGI ADD
          }
 
@@ -4572,12 +4607,12 @@ static int do_port_range_forwarding(FILE *nat_fp, FILE *filter_fp, int iptype, F
                 internalPortCnt = internal_port;
                 for(num = atoi(sdport); num <= atoi(edport); num++)
                 {
-                    fprintf(nat_fp, "-A prerouting_fromwan -p udp -m udp -d %s --dport %d -j DNAT --to-destination %s:%d\n", natip4, num, toip, internalPortCnt++);
+                    fprintf(nat_fp, "-A %s -p udp -m udp -d %s --dport %d -j DNAT --to-destination %s:%d\n", forwarding_chain_name, natip4, num, toip, internalPortCnt++);
                 }
             }
             else
             { // LGI ADD - END
-            fprintf(nat_fp,  "-A prerouting_fromwan -p udp -m udp -d %s --dport %s:%s -j DNAT --to-destination %s%s\n", natip4, sdport, edport, toip, target_internal_port);
+            fprintf(nat_fp,  "-A %s -p udp -m udp -d %s --dport %s:%s -j DNAT --to-destination %s%s\n", forwarding_chain_name, natip4, sdport, edport, toip, target_internal_port);
             } // LGI ADD
          }
 
@@ -13058,6 +13093,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
 
    fprintf(nat_fp, ":%s - [0:0]\n", "postrouting_towan");
 #ifdef VMB_MODE
+   fprintf(nat_fp, ":%s - [0:0]\n", "prerouting_fromvmb");
    fprintf(nat_fp, ":%s - [0:0]\n", "postrouting_tovmb");
 #endif /* VMB_MODE */
    fprintf(nat_fp, ":%s - [0:0]\n", "postrouting_tolan");
@@ -13135,6 +13171,9 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    else // Add erouter0 prerouting_fromwan chain for 'Dual Stack' line only
 #endif //FEATURE_MAPT
    fprintf(nat_fp, "-A PREROUTING -i %s -j prerouting_fromwan\n", current_wan_ifname);
+#ifdef VMB_MODE
+   fprintf(nat_fp, "-A PREROUTING -i vmb0 -j prerouting_fromvmb\n");
+#endif
    prepare_multinet_prerouting_nat(nat_fp);
 #ifdef CONFIG_BUILD_TRIGGER
 #ifdef CONFIG_KERNEL_NF_TRIGGER_SUPPORT
@@ -13726,6 +13765,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(filter_fp, "-A FORWARD -i %s -o %s -j wan2lan\n", current_wan_ifname, lan_ifname);
    fprintf(filter_fp, "-A FORWARD -i %s -o %s -j lan2wan\n", lan_ifname, current_wan_ifname);
 #ifdef VMB_MODE
+   fprintf(filter_fp, "-A FORWARD -i %s -o vmb0 -j lan2wan\n", lan_ifname);
    fprintf(filter_fp, "-A FORWARD -o vmb0 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss 1418\n");
    fprintf(filter_fp, "-A FORWARD -i vmb0 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss 1418\n");
 #endif /* VMB_MODE */
@@ -15061,6 +15101,7 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    fprintf(nat_fp, ":%s ACCEPT [0:0]\n", "OUTPUT");
    fprintf(nat_fp, ":%s - [0:0]\n", "postrouting_towan");
 #ifdef VMB_MODE
+   fprintf(nat_fp, ":%s - [0:0]\n", "prerouting_fromvmb");
    fprintf(nat_fp, ":%s - [0:0]\n", "postrouting_tovmb");
 #endif /* VMB_MODE */
 
