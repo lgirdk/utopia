@@ -246,7 +246,13 @@ service_start ()
 	  #monitor cosa_start_rem triggered state in case its not triggered on 
 	  #bootup even after 10 minutes then we have to trigger this via cron
       addCron "2,12,22,32,42,52 * * * * /usr/ccsp/tad/selfheal_cosa_start_rem.sh"
-	
+
+   # Adding RemotePortUsage script if it is enabled
+   REMOTE_PORT_USAGE=`syscfg get TrackRemotePortUsage`
+   if [ "$REMOTE_PORT_USAGE" != "NULL" ]; then
+      interval=$(echo "$REMOTE_PORT_USAGE" | cut -d';' -f1)
+      echo "*/$interval * * * * /usr/ccsp/tad/remote_port_usage.sh" >> $CRONTAB_FILE
+   fi
 
 	#This variable is to check RFC ETHWAN Mode Enabled/Disabled from syscfg DB
 	rfc_ethwan_status=""

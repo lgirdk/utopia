@@ -1321,3 +1321,6 @@ $SWDLDirectEnable=false
 #DeviceType default value
 $DeviceType=TEST
 
+#TrackRemotePortUsage default value
+$TrackRemotePortUsage=NULL
+

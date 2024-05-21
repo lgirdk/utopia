@@ -1481,3 +1481,6 @@ $NoSpeedBoost_Port_StartV4=50000
 $NoSpeedBoost_Port_EndV4=65000
 $NoSpeedBoost_Port_StartV6=50000
 $NoSpeedBoost_Port_EndV6=65000
+
+#TrackRemotePortUsage default value
+$TrackRemotePortUsage=NULL
