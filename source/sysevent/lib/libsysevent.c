@@ -3334,12 +3334,17 @@ int sysevent_set_data (const int fd, const token_t token, const char *name, cons
 unsigned int sysevent_get_binmsg_maxsize()
 {
     FILE *fp = fopen(SE_MAX_MSG_DATA_SIZE_READ_FILE,"r");
-    if (NULL != fp) {
+    if (NULL != fp) 
+    {
         unsigned int value = 0;
         if (fscanf(fp, "%u",&value) <= 0)
+        {
             printf("read error of %s \n",SE_MAX_MSG_DATA_SIZE_READ_FILE); //CID -160978
+            fclose(fp);
+            return SE_MAX_MSG_DATA_SIZE + 1024;
+        }
         fclose(fp);
-        if (value != 0)
+        if (value > 0)
         {    
             return value + 1024 /* additional 1k is headermsg*/;
         }
