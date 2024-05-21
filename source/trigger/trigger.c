@@ -56,6 +56,12 @@
 #include "breakpad_wrapper.h"
 #endif
 
+#ifdef VMB_MODE
+#define WAN_IPADDR "$WAN_VMB_IPADDR"
+#else
+#define WAN_IPADDR "$WAN_IPADDR"
+#endif
+
 #define TRIGGER_QUEUE 22 // the netfilter queue THIS MUST BE UNIQUE IN THE SYSTEM
 static struct nfq_handle*   nfq_h;
 static struct nfq_q_handle* trigger_q;
@@ -244,7 +250,7 @@ static int start_forwarding(const int id)
        * dnat rule
        */
       snprintf(rule, sizeof(rule),
-               " -A PREROUTING -p tcp -m tcp -d $WAN_IPADDR --dport %d:%d -j DNAT --to-destination %s\n",
+               " -A PREROUTING -p tcp -m tcp -d " WAN_IPADDR " --dport %d:%d -j DNAT --to-destination %s\n",
                (trigger_info[idx]).low_port, (trigger_info[idx]).high_port, dnat);
 
       if (NULL == (trigger_info[idx]).tcp_rule) {
@@ -313,7 +319,7 @@ static int start_forwarding(const int id)
        * dnat rule
        */
       snprintf(rule, sizeof(rule),
-               " -A PREROUTING -p udp -m udp -d $WAN_IPADDR --dport %d:%d -j DNAT --to-destination %s\n",
+               " -A PREROUTING -p udp -m udp -d " WAN_IPADDR " --dport %d:%d -j DNAT --to-destination %s\n",
                (trigger_info[idx]).low_port, (trigger_info[idx]).high_port, dnat);
 
       if (NULL == (trigger_info[idx]).udp_rule) {
