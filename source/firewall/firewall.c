@@ -15603,7 +15603,16 @@ v6GPFirewallRuleNext:
 #ifdef _COSA_FOR_BCI_
          /* adding forward rule for PD traffic */
          fprintf(fp, "-A FORWARD -s %s -i %s -j ACCEPT\n", prefix, lan_ifname);
-         fprintf(fp, "-A FORWARD -d %s -o %s -j ACCEPT\n", prefix, lan_ifname);
+         if (strncasecmp(firewall_levelv6, "Custom", strlen("Custom")) == 0)
+         {
+            if(isMulticastBlockedV6 || isP2pBlockedV6 || isPingBlockedV6 || isIdentBlockedV6 || isHttpBlockedV6)
+            {
+               fprintf(fp, "-A FORWARD -d %s -o %s -j wan2lan\n", prefix, lan_ifname);
+            }
+            else{
+               fprintf(fp, "-A FORWARD -d %s -o %s -j ACCEPT\n", prefix, lan_ifname);
+            }
+         }
 #endif
          fprintf(fp, "-A FORWARD ! -s %s -i %s -j LOG_FORWARD_DROP\n", prefix, lan_ifname);
          fprintf(fp, "-A FORWARD -s %s -i %s -j LOG_FORWARD_DROP\n", prefix, wan6_ifname);
