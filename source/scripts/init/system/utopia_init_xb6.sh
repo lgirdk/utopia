@@ -758,6 +758,7 @@ elif [ -f /nvram/restore_reboot ]; then
      syscfg set X_RDKCENTRAL-COM_LastRebootCounter "1"
      
      if [ "$BOX_TYPE" == "TCCBR" ];then
+	syscfg set CodeBigFirstEnabled false
          if [ -f /nvram/bbhm_bak_cfg.xml-temp ]; then
               ##Work around: TCCBR-4087 Restored saved configuration is not restoring wan Static IP.
               ##after untar the new bbhm current config is overrriden/corrupted at times.
