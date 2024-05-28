@@ -15584,8 +15584,8 @@ v6GPFirewallRuleNext:
       fprintf(fp, "-A FORWARD -s ec00::/10  -j LOG_FORWARD_DROP\n");
       fprintf(fp, "-A FORWARD -d ec00::/10  -j LOG_FORWARD_DROP\n");
       // Block all packet whose source or destination is IPv4 compatible address
-      fprintf(fp, "-A FORWARD -s 0::/4  -j LOG_FORWARD_DROP\n");
-      fprintf(fp, "-A FORWARD -d 0::/4  -j LOG_FORWARD_DROP\n");
+      fprintf(fp, "-A FORWARD -s 0::/96  -j LOG_FORWARD_DROP\n");
+      fprintf(fp, "-A FORWARD -d 0::/96  -j LOG_FORWARD_DROP\n");
 
       // Basic RPF check on the egress & ingress traffic
       char prefix[129];
