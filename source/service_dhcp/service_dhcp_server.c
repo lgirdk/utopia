@@ -1562,6 +1562,8 @@ void lan_status_change(char *input)
 	sysevent_get(g_iSyseventfd, g_tSysevent_token, "lan-status", l_cLan_Status, sizeof(l_cLan_Status));
 	fprintf(stderr, "SERVICE DHCP : Inside lan status change with lan-status:%s\n", l_cLan_Status);
    	fprintf(stderr, "SERVICE DHCP : Current lan status is:%s\n", l_cLan_Status);
+
+	sysevent_set(g_iSyseventfd, g_tSysevent_token, "lan_status-dhcp", "started", 0);
     
 	syscfg_get(NULL, "dhcp_server_enabled", l_cDhcp_Server_Enabled, sizeof(l_cDhcp_Server_Enabled));
 	if (!strncmp(l_cDhcp_Server_Enabled, "0", 1))
@@ -1587,7 +1589,6 @@ void lan_status_change(char *input)
 	}
     else
 	{
-    	sysevent_set(g_iSyseventfd, g_tSysevent_token, "lan_status-dhcp", "started", 0);
 		if (NULL == input)
 		{
 	        fprintf(stderr, "SERVICE DHCP :  Call start DHCP server from lan status change with NULL\n");
