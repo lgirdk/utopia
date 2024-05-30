@@ -9913,15 +9913,20 @@ static int do_lan2wan_misc(FILE *filter_fp)
         else if (strcmp(query,"ACCEPT") == 0) {
             fprintf(filter_fp, "-A lan2wan_misc -p tcp --dport 1723  -j ACCEPT\n");
         }
-
-        syscfg_get("blockssl", "result", query, sizeof(query));
-        if (strcmp(query,"DROP") == 0) {
-            fprintf(filter_fp, "-A lan2wan_misc -p udp --dport 443  -j DROP\n");
-            fprintf(filter_fp, "-A lan2wan_misc -p tcp --dport 443  -j DROP\n");
-        }
-        else if(strcmp(query,"ACCEPT") == 0) {
-            fprintf(filter_fp, "-A lan2wan_misc -p udp --dport 443  -j ACCEPT\n");
-            fprintf(filter_fp, "-A lan2wan_misc -p tcp --dport 443  -j ACCEPT\n");
+        char sites_enabled[MAX_QUERY];
+        sites_enabled[0] = '\0';
+        syscfg_get(NULL, "managedsites_enabled", sites_enabled, sizeof(sites_enabled));
+        if (sites_enabled[0] != '\0' && sites_enabled[0] == '0') // managed site list enabled
+        {
+            syscfg_get("blockssl", "result", query, sizeof(query));
+            if (strcmp(query,"DROP") == 0) {
+                fprintf(filter_fp, "-A lan2wan_misc -p udp --dport 443  -j DROP\n");
+                fprintf(filter_fp, "-A lan2wan_misc -p tcp --dport 443  -j DROP\n");
+            }
+            else if(strcmp(query,"ACCEPT") == 0) {
+                fprintf(filter_fp, "-A lan2wan_misc -p udp --dport 443  -j ACCEPT\n");
+                fprintf(filter_fp, "-A lan2wan_misc -p tcp --dport 443  -j ACCEPT\n");
+            }
         }
     }
 #endif
@@ -15971,15 +15976,21 @@ v6GPFirewallRuleNext:
         fprintf(fp, "-A lan2wan_misc_ipv6 -p udp --dport 500  -j ACCEPT\n");
         fprintf(fp, "-A lan2wan_misc_ipv6 -p udp --dport 4500  -j ACCEPT\n");
     }
-    queryv6[0] = '\0';
+    char sites_enabled[MAX_QUERY];
+    sites_enabled[0] = '\0';
+    syscfg_get(NULL, "managedsites_enabled", sites_enabled, sizeof(sites_enabled));
+    if (sites_enabled[0] != '\0' && sites_enabled[0] == '0') // managed site list enabled
+    {
+        queryv6[0] = '\0';
 
-    if((0 == syscfg_get(NULL, "blockssl::result", queryv6, sizeof(queryv6))) && strcmp(queryv6,"DROP") == 0){
-        fprintf(fp, "-A lan2wan_misc_ipv6 -p udp --dport 443  -j DROP\n");
-        fprintf(fp, "-A lan2wan_misc_ipv6 -p tcp --dport 443  -j DROP\n");
-    }
-    else if(strcmp(queryv6,"ACCEPT") == 0){
-        fprintf(fp, "-A lan2wan_misc_ipv6 -p udp --dport 443  -j ACCEPT\n");
-        fprintf(fp, "-A lan2wan_misc_ipv6 -p tcp --dport 443  -j ACCEPT\n");
+        if((0 == syscfg_get(NULL, "blockssl::result", queryv6, sizeof(queryv6))) && strcmp(queryv6,"DROP") == 0){
+            fprintf(fp, "-A lan2wan_misc_ipv6 -p udp --dport 443  -j DROP\n");
+            fprintf(fp, "-A lan2wan_misc_ipv6 -p tcp --dport 443  -j DROP\n");
+        }
+        else if(strcmp(queryv6,"ACCEPT") == 0){
+            fprintf(fp, "-A lan2wan_misc_ipv6 -p udp --dport 443  -j ACCEPT\n");
+            fprintf(fp, "-A lan2wan_misc_ipv6 -p tcp --dport 443  -j ACCEPT\n");
+        }
     }
     queryv6[0] = '\0';
 
