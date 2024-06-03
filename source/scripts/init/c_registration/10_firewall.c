@@ -54,7 +54,9 @@ const char* SERVICE_CUSTOM_EVENTS[] = {
                                         "firewall_trigger_monitor-start|/etc/utopia/service.d/service_firewall/trigger_monitor.sh|NULL|"TUPLE_FLAG_EVENT,
                                         "firewall_newhost_monitor-start|/etc/utopia/service.d/service_firewall/newhost_monitor.sh|"ACTION_FLAG_NOT_THREADSAFE"|"TUPLE_FLAG_EVENT,
                                         "syslog_rotated|/etc/utopia/service.d/service_firewall/newhost_monitor.sh|NULL|"TUPLE_FLAG_EVENT,
+#if !defined (MULTILAN_FEATURE)
                                         "ipv6_prefix|"SERVICE_DEFAULT_HANDLER,
+#endif
                                         "current_wan_ipv6_interface|"SERVICE_DEFAULT_HANDLER,
                                         "ipv6_wan0_dhcp_solicNodeAddr|"SERVICE_DEFAULT_HANDLER,
                                         "ipv6_erouter0_dhcp_solicNodeAddr|"SERVICE_DEFAULT_HANDLER,

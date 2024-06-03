@@ -2052,7 +2052,13 @@ static int serv_ipv6_start(struct serv_ipv6 *si6)
     }
 #ifdef MULTILAN_FEATURE
     /* Restart firewall to apply ip6tables rules*/
-    sysevent_set(si6->sefd, si6->setok, "firewall-restart", NULL, 0);
+    char prev_pref[128] = {0};
+    sysevent_get(si6->sefd, si6->setok, "ipv6_prefix_bkup", prev_pref, sizeof(prev_pref));
+    if ( strcmp(prev_pref, si6->mso_prefix) != 0 )
+    {
+        sysevent_set(si6->sefd, si6->setok, "ipv6_prefix_bkup", si6->mso_prefix, 0);
+        sysevent_set(si6->sefd, si6->setok, "firewall-restart", NULL, 0);
+    }
 #endif
 
     sysevent_set(si6->sefd, si6->setok, "service_ipv6-status", "started", 0);
