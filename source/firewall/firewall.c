@@ -961,7 +961,7 @@ static int do_block_ports(FILE *filter_fp);
 static int isInRFCaptivePortal();
 
 
-#if defined(_WNXL11BWL_PRODUCT_REQ_) || defined (_SCER11BEL_PRODUCT_REQ_)
+#if defined(_WNXL11BWL_PRODUCT_REQ_) 
 void  proxy_dns(FILE *nat_fp,int family);
 
 void get_iface_ipaddr_ula(const char* ifname,char* ipaddr, int max_ip_size);
@@ -5707,7 +5707,7 @@ static int do_lan2self_by_wanip(FILE *filter_fp, int family)
    fprintf(filter_fp, "-A lan2self_by_wanip -s %s/24 -d 192.168.101.1/32 -j xlog_drop_lan2self\n", lan_ipaddr);
    fprintf(filter_fp, "-A lan2self_by_wanip -s %s/24 -d 169.254.101.1/32 -j xlog_drop_lan2self\n", lan_ipaddr);
    //<<
-#if defined(_WNXL11BWL_PRODUCT_REQ_) || defined (_SCER11BEL_PRODUCT_REQ_)
+#if defined(_WNXL11BWL_PRODUCT_REQ_) 
    fprintf(filter_fp, "-A lan2self_by_wanip -s %s/24 -d 169.254.70.254/32 -j xlog_drop_lan2self\n", lan_ipaddr);
    fprintf(filter_fp, "-A lan2self_by_wanip -s %s/24 -d 169.254.71.254/32 -j xlog_drop_lan2self\n", lan_ipaddr);
 #else
@@ -9790,7 +9790,7 @@ static int do_multinet_lan2wan_disable (FILE *filter_fp)
 static void do_lan2wan_disable(FILE *filter_fp)
 {
    FIREWALL_DEBUG("Entering do_lan2wan_disable\n");
-#if defined (_WNXL11BWL_PRODUCT_REQ_) || defined (_SCER11BEL_PRODUCT_REQ_)
+#if defined (_WNXL11BWL_PRODUCT_REQ_) 
    fprintf(filter_fp, "-A lan2wan_disable -d 169.254.70.0/16 -j DROP\n");
    fprintf(filter_fp, "-A lan2wan_disable -s 169.254.70.0/16 -j DROP\n");
 #else
@@ -11157,7 +11157,7 @@ static int prepare_multinet_filter_forward (FILE *filter_fp)
     fprintf(filter_fp, "-A INPUT -i br403 -m pkttype ! --pkt-type unicast -j ACCEPT\n");
     fprintf(filter_fp, "-A INPUT -i brebhaul -d 169.254.85.0/24 -j ACCEPT\n");
     fprintf(filter_fp, "-A INPUT -i brebhaul -m pkttype ! --pkt-type unicast -j ACCEPT\n");
-#elif defined(_WNXL11BWL_PRODUCT_REQ_) || defined (_SCER11BEL_PRODUCT_REQ_)
+#elif defined(_WNXL11BWL_PRODUCT_REQ_) 
     fprintf(filter_fp, "-A INPUT -i brlan112 -d 169.254.70.0/24 -j ACCEPT\n");
     fprintf(filter_fp, "-A INPUT -i brlan112 -m pkttype ! --pkt-type unicast -j ACCEPT\n");
     fprintf(filter_fp, "-A INPUT -i brlan113 -d 169.254.71.0/24 -j ACCEPT\n");
@@ -11966,7 +11966,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    redirect_dns_to_extender(nat_fp,AF_INET);
 #endif 
 
-#if defined(_WNXL11BWL_PRODUCT_REQ_) || defined (_SCER11BEL_PRODUCT_REQ_)
+#if defined(_WNXL11BWL_PRODUCT_REQ_) 
    proxy_dns(nat_fp,AF_INET);
 #endif
 
@@ -13225,7 +13225,7 @@ static void prepare_idm_firewall(FILE * filter_fp)
 }
 #endif
 
-#if defined(_WNXL11BWL_PRODUCT_REQ_) || defined (_SCER11BEL_PRODUCT_REQ_)
+#if defined(_WNXL11BWL_PRODUCT_REQ_) 
 void get_iface_ipaddr_ula(const char* ifname,char* ipaddr, int max_ip_size)
 {
    char prefix[128] = {0};
@@ -14480,7 +14480,7 @@ static void do_ipv6_nat_table(FILE* fp)
       redirect_dns_to_extender(fp,AF_INET6);
 #endif 
 
-#if defined(_WNXL11BWL_PRODUCT_REQ_) || defined (_SCER11BEL_PRODUCT_REQ_)
+#if defined(_WNXL11BWL_PRODUCT_REQ_) 
    proxy_dns(fp,AF_INET6);
 #endif
 
@@ -15257,7 +15257,7 @@ static void do_ipv6_filter_table(FILE *fp){
        * exclude primary lan*/
       prepare_ipv6_multinet(fp);
     #endif
-    #if !defined(_XER5_PRODUCT_REQ_) //wan0 is not applicable for XER5
+    #if !defined(_XER5_PRODUCT_REQ_) && !defined (_SCER11BEL_PRODUCT_REQ_) //wan0 is not applicable for XER5
       /* not allow ping wan0 from brlan0 */
       int i;
       for(i = 0; i < ecm_wan_ipv6_num; i++){

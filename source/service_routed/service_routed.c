@@ -92,7 +92,7 @@ static const char* const service_routed_component_id = "ccsp.routed";
 static void* bus_handle = NULL;
 #endif
 
-#if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_) && !defined (_SCER11BEL_PRODUCT_REQ_))
+#if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_))
 #define LAN_BRIDGE "brlan0"
 #define PSM_LANMANAGEMENTENTRY_LAN_IPV6_ENABLE "dmsb.lanmanagemententry.lanipv6enable"
 #define PSM_LANMANAGEMENTENTRY_LAN_ULA_ENABLE  "dmsb.lanmanagemententry.lanulaenable"
@@ -226,7 +226,7 @@ static int dbusInit( void )
 
 #endif
 
-#if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_) && !defined (_SCER11BEL_PRODUCT_REQ_))
+#if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_))
 
 static int getLanIpv6Info(int *ipv6_enable, int *ula_enable)
 {
@@ -469,7 +469,7 @@ static int route_set(struct serv_routed *sr)
     }
 #endif
 
-#if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_) && !defined (_SCER11BEL_PRODUCT_REQ_))
+#if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_))
     /*Clean 'iif brlan0 table erouter' if exist already*/
     v_secure_system("ip -6 rule del iif brlan0 table erouter");
 #endif
@@ -563,7 +563,7 @@ static int route_unset(struct serv_routed *sr)
         v_secure_system("ip -6 rule del iif %s table erouter", lan_if);
     }
 
-#elif defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_) && !defined (_SCER11BEL_PRODUCT_REQ_))
+#elif defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_))
     vsystem("ip -6 rule del iif brlan0 table erouter");
     if (vsystem("ip -6 route del default dev %s table erouter", wanIface) != 0) {
         return -1;
@@ -737,7 +737,7 @@ static int gen_zebra_conf(int sefd, token_t setok)
     char evt_name[64] = {0};
 #endif
     int  StaticDNSServersEnabled = 0;
-#if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_) && !defined (_SCER11BEL_PRODUCT_REQ_))
+#if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_))
     char lan_addr_prefix[64] = {0};
 #endif
     char wan_st[16] = {0};
@@ -747,7 +747,7 @@ static int gen_zebra_conf(int sefd, token_t setok)
     int deviceMode = 0;
     #endif
 #endif
-#if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_) && !defined (_SCER11BEL_PRODUCT_REQ_))
+#if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_))
     char server_type[16] = {0};
     char prev_valid_lft[16] = {0};
     int result = 0;
@@ -848,7 +848,7 @@ static int gen_zebra_conf(int sefd, token_t setok)
     else
     {
     #endif     
-        #if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_) && !defined (_SCER11BEL_PRODUCT_REQ_))
+        #if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_))
             sysevent_get(sefd, setok, "ipv6_prefix", prefix, sizeof(prefix));
         #else
             sysevent_get(sefd, setok, "lan_prefix", prefix, sizeof(prefix));
@@ -858,7 +858,7 @@ static int gen_zebra_conf(int sefd, token_t setok)
 
     if (gModeSwitched == ULA_IPV6)
     {
-        #if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_) && !defined (_SCER11BEL_PRODUCT_REQ_))
+        #if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_))
             sysevent_get(sefd, setok, "ipv6_prefix", last_broadcasted_prefix, sizeof(last_broadcasted_prefix));
         #else
             sysevent_get(sefd, setok, "lan_prefix", last_broadcasted_prefix, sizeof(last_broadcasted_prefix));
@@ -870,7 +870,7 @@ static int gen_zebra_conf(int sefd, token_t setok)
     }
     #endif
     sysevent_get(sefd, setok, "previous_ipv6_prefix", orig_prefix, sizeof(orig_prefix));
-#if !defined (_HUB4_PRODUCT_REQ_) || defined (_WNXL11BWL_PRODUCT_REQ_) || defined (_SCER11BEL_PRODUCT_REQ_)
+#if !defined (_HUB4_PRODUCT_REQ_) || defined (_WNXL11BWL_PRODUCT_REQ_)
 
     sysevent_get(sefd, setok, "current_lan_ipv6address", lan_addr, sizeof(lan_addr));
 #else
@@ -982,7 +982,7 @@ static int gen_zebra_conf(int sefd, token_t setok)
 #if defined(_COSA_FOR_BCI_)
     if ((strlen(prefix) || strlen(orig_prefix)) && bEnabled)
 #else
-#if !defined (_HUB4_PRODUCT_REQ_) || defined (_WNXL11BWL_PRODUCT_REQ_) || defined (_SCER11BEL_PRODUCT_REQ_)
+#if !defined (_HUB4_PRODUCT_REQ_) || defined (_WNXL11BWL_PRODUCT_REQ_)
     if (strlen(prefix) || strlen(orig_prefix))
 #else
     if (strlen(prefix) || strlen(orig_prefix) || strlen(lan_addr_prefix))
@@ -991,7 +991,7 @@ static int gen_zebra_conf(int sefd, token_t setok)
 	{
 		char val_DNSServersEnabled[ 32 ];
 
-#if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_) && !defined (_SCER11BEL_PRODUCT_REQ_))
+#if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_))
         syscfg_get(NULL, "dhcpv6s00::servertype", server_type, sizeof(server_type));
         if (strncmp(server_type, "1", 1) == 0) {
             syscfg_set(NULL, "router_managed_flag", "1");
@@ -1003,7 +1003,7 @@ static int gen_zebra_conf(int sefd, token_t setok)
 #endif
         fprintf(fp, "interface %s\n", lan_if);
         fprintf(fp, "   no ipv6 nd suppress-ra\n");
-#if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_) && !defined (_SCER11BEL_PRODUCT_REQ_))
+#if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_))
         if(strlen(orig_prefix)) { //SKYH4-1765: we add only the latest prefix data to zebra.conf.
             fprintf(fp, "   ipv6 nd prefix %s %s 0\n", orig_prefix, prev_valid_lft); //Previous prefix with '0' as the preferred time value
 
@@ -1094,14 +1094,14 @@ static int gen_zebra_conf(int sefd, token_t setok)
                 fprintf(fp, "   ipv6 nd ra-interval 30\n"); //Set ra-interval to default 30 secs as per Erouter Specs.
             }
 #else
-#if !defined (_HUB4_PRODUCT_REQ_) || defined (_WNXL11BWL_PRODUCT_REQ_) || defined (_SCER11BEL_PRODUCT_REQ_)
+#if !defined (_HUB4_PRODUCT_REQ_) || defined (_WNXL11BWL_PRODUCT_REQ_)
         fprintf(fp, "   ipv6 nd ra-interval 3\n");
 #else
         fprintf(fp, "   ipv6 nd ra-interval 180\n");
 #endif //_HUB4_PRODUCT_REQ_
 #endif
 
-#if !defined (_HUB4_PRODUCT_REQ_) || defined (_WNXL11BWL_PRODUCT_REQ_) || defined (_SCER11BEL_PRODUCT_REQ_)
+#if !defined (_HUB4_PRODUCT_REQ_) || defined (_WNXL11BWL_PRODUCT_REQ_)
 #ifdef WAN_FAILOVER_SUPPORTED
 #ifdef FEATURE_RDKB_CONFIGURABLE_WAN_INTERFACE
                 if(strcmp(current_wan_ifname, mesh_wan_ifname ) == 0)
@@ -1135,7 +1135,7 @@ static int gen_zebra_conf(int sefd, token_t setok)
         syscfg_get(NULL, "router_managed_flag", m_flag, sizeof(m_flag));
         if (strcmp(m_flag, "1") == 0)
             fprintf(fp, "   ipv6 nd managed-config-flag\n");
-#if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_) && !defined (_SCER11BEL_PRODUCT_REQ_))
+#if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_))
             else if (strcmp(m_flag, "0") == 0)
                 fprintf(fp, "   no ipv6 nd managed-config-flag\n");
 #endif
@@ -1143,7 +1143,7 @@ static int gen_zebra_conf(int sefd, token_t setok)
         syscfg_get(NULL, "router_other_flag", o_flag, sizeof(o_flag));
         if (strcmp(o_flag, "1") == 0)
             fprintf(fp, "   ipv6 nd other-config-flag\n");
-#if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_) && !defined (_SCER11BEL_PRODUCT_REQ_))
+#if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_))
             else if (strcmp(o_flag, "0") == 0)
                 fprintf(fp, "   no ipv6 nd other-config-flag\n");
 #endif
@@ -1229,7 +1229,7 @@ static int gen_zebra_conf(int sefd, token_t setok)
 		( StaticDNSServersEnabled != 1 )
 	  )
 	{
-#if !defined (_HUB4_PRODUCT_REQ_) || defined (_WNXL11BWL_PRODUCT_REQ_) || defined (_SCER11BEL_PRODUCT_REQ_)
+#if !defined (_HUB4_PRODUCT_REQ_) || defined (_WNXL11BWL_PRODUCT_REQ_)
 		if (strlen(lan_addr))
 #else
                 if (strlen(lan_addr) && ula_enable)
@@ -1321,7 +1321,7 @@ static int gen_zebra_conf(int sefd, token_t setok)
 			if( 1 == StaticDNSServersEnabled )
 			{
 				memset( name_servs, 0, sizeof( name_servs ) );
-#if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_) && !defined (_SCER11BEL_PRODUCT_REQ_))
+#if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_))
 				/* RDKB-50535 send ULA address as DNS address only when lan UNA is enabled */
 				if (ula_enable)
 #endif
@@ -1331,7 +1331,7 @@ static int gen_zebra_conf(int sefd, token_t setok)
 																			   __LINE__,
 																			   StaticDNSServersEnabled,
 																			   name_servs );
-#if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_) && !defined (_SCER11BEL_PRODUCT_REQ_))
+#if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_))
                                 if (!strncmp(l_cSecWebUI_Enabled, "true", 4) && !ula_enable)
 #else
 				if (!strncmp(l_cSecWebUI_Enabled, "true", 4))
@@ -1377,7 +1377,7 @@ static int gen_zebra_conf(int sefd, token_t setok)
 			for (start = name_servs; (tok = strtok_r(start, " ", &sp)); start = NULL)
 			{
 			// Modifying rdnss value to fix the zebra config.
-#if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_) && !defined (_SCER11BEL_PRODUCT_REQ_))
+#if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_))
                         if (0 == strncmp(lan_addr, tok, strlen(lan_addr)))
                         {
                             fprintf(fp, "   ipv6 nd rdnss %s %d\n", tok, rdnsslft);
@@ -1704,7 +1704,7 @@ static int radv_start(struct serv_routed *sr)
     }
 #endif
 
-#if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_) && !defined (_SCER11BEL_PRODUCT_REQ_))
+#if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_))
     int result;
     int ipv6_enable;
     int ula_enable;
@@ -1738,7 +1738,7 @@ static int radv_start(struct serv_routed *sr)
         return -1;
     }
 #endif
-#if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_) && !defined (_SCER11BEL_PRODUCT_REQ_))
+#if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_))
     result = getLanIpv6Info(&ipv6_enable, &ula_enable);
     if(result != 0) {
         fprintf(logfptr, "getLanIpv6Info failed");
@@ -1765,7 +1765,7 @@ static int radv_start(struct serv_routed *sr)
         return -1;
     }
 
-#if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_) && !defined (_SCER11BEL_PRODUCT_REQ_))
+#if defined (_HUB4_PRODUCT_REQ_) && (!defined (_WNXL11BWL_PRODUCT_REQ_))
     /*
      *   signal zebra to update configuration
      */
@@ -1816,7 +1816,7 @@ static int rip_start(struct serv_routed *sr)
 #endif
     if (!serv_can_start(sr->sefd, sr->setok, "rip"))
         return -1;
-#if !defined (_HUB4_PRODUCT_REQ_) || defined (_WNXL11BWL_PRODUCT_REQ_) || defined (_SCER11BEL_PRODUCT_REQ_)
+#if !defined (_HUB4_PRODUCT_REQ_) || defined (_WNXL11BWL_PRODUCT_REQ_)
     if (!sr->lan_ready || !sr->wan_ready) {
         fprintf(logfptr, "%s: LAN or WAN is not ready !\n", __FUNCTION__);
         return -1;
@@ -1896,7 +1896,7 @@ static int rip_restart(struct serv_routed *sr)
 
 static int serv_routed_start(struct serv_routed *sr)
 {
-#if !defined (_HUB4_PRODUCT_REQ_) || defined (_WNXL11BWL_PRODUCT_REQ_) || defined (_SCER11BEL_PRODUCT_REQ_)
+#if !defined (_HUB4_PRODUCT_REQ_) || defined (_WNXL11BWL_PRODUCT_REQ_)
     char rtmod[16];
     char prefix[64];
 #endif
@@ -1909,7 +1909,7 @@ static int serv_routed_start(struct serv_routed *sr)
         fprintf(logfptr, "%s: LAN is not ready !\n", __FUNCTION__);
         return -1;
     }
-#if !defined (_HUB4_PRODUCT_REQ_) || defined (_WNXL11BWL_PRODUCT_REQ_) || defined (_SCER11BEL_PRODUCT_REQ_)
+#if !defined (_HUB4_PRODUCT_REQ_) || defined (_WNXL11BWL_PRODUCT_REQ_)
     syscfg_get(NULL, "last_erouter_mode", rtmod, sizeof(rtmod));
     if (atoi(rtmod) != 2) { /* IPv4-only or Dual-Stack */
         if (!sr->wan_ready) {
