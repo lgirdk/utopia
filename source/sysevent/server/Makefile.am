@@ -22,14 +22,14 @@ AM_CFLAGS += -DSET_REPLY_REQUIRED
 AM_CFLAGS += -DUSE_SYSCFG
 AM_CFLAGS += -DSE_SERVER_CODE_DEBUG
 AM_CFLAGS += -DREDIRECT_CODE_DEBUG
-AM_CFLAGS += $(PTHREAD_CFLAGS)
+AM_CFLAGS += -pthread
 
 ACLOCAL_AMFLAGS = -I m4
 
 AM_LDFLAGS = $(top_builddir)/source/sysevent/lib/libsysevent.la \
              $(top_builddir)/source/syscfg/lib/libsyscfg.la \
              $(top_builddir)/source/ulog/libulog.la \
-             $(PTHREAD_LIBS)
+             -pthread
 
 bin_PROGRAMS = syseventd
 
