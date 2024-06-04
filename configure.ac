@@ -96,8 +96,6 @@ AC_C_INLINE
 # Checks for library functions.
 AC_FUNC_MALLOC
 
-AX_PTHREAD
-
 PKG_CHECK_MODULES([DBUS],[dbus-1 >= 1.6.18])
 
 # Checks for DSLite Feature Support

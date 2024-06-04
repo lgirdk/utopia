@@ -17,7 +17,7 @@
 # limitations under the License.
 ##########################################################################
 AM_CFLAGS =
-AM_CFLAGS += $(PTHREAD_CFLAGS)
+AM_CFLAGS += -pthread
 
 ACLOCAL_AMFLAGS = -I m4
 
@@ -25,4 +25,4 @@ bin_PROGRAMS = rpcclient
 
 rpcclient_SOURCES = command.c rpc_specification_client.c rpc_specification_clnt.c rpc_specification_xdr.c
 
-rpcclient_LDFLAGS = $(PTHREAD_LIBS)
+rpcclient_LDFLAGS = -pthread

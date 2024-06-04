@@ -17,9 +17,9 @@
 # limitations under the License.
 ##########################################################################
 AM_CFLAGS = -D_GNU_SOURCE
-AM_CFLAGS += $(PTHREAD_CFLAGS)
+AM_CFLAGS += -pthread
 AM_CPPFLAGS = -I$(top_srcdir)/source/include -I$(top_srcdir)/source/util/utils $(DBUS_CFLAGS)
-AM_LDFLAGS = -lccsp_common -lsecure_wrapper -lnetfilter_queue -lnfnetlink $(DBUS_LIBS) $(PTHREAD_LIBS) -lrt
+AM_LDFLAGS = -lccsp_common -lsecure_wrapper -lnetfilter_queue -lnfnetlink $(DBUS_LIBS) -pthread -lrt
 
 bin_PROGRAMS = firewall nfq_handler
 

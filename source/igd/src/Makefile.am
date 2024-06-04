@@ -20,7 +20,7 @@ AM_CFLAGS =
 AM_CFLAGS += -D_LINUX
 AM_CFLAGS += -DPAL_ULOG
 AM_CFLAGS += -DCONFIG_VENDOR_MODEL=\"\"
-AM_CFLAGS += $(PTHREAD_CFLAGS)
+AM_CFLAGS += -pthread
 
 ACLOCAL_AMFLAGS = -I m4
 
@@ -37,7 +37,7 @@ IGD_CPPFLAGS = -I$(top_srcdir)/source/pal/upnp/include \
                -I$(top_srcdir)/source/include \
                -I$(top_srcdir)/source/include/utapi
 
-IGD_LDFLAGS = -lthreadutil -Bdynamic -lupnp -lrdkloggers $(PTHREAD_LIBS)
+IGD_LDFLAGS = -lthreadutil -Bdynamic -lupnp -lrdkloggers -pthread
 
 IGD_LDADD = $(top_builddir)/source/services/lib/libsrvmgr.la \
             $(top_builddir)/source/sysevent/lib/libsysevent.la \
