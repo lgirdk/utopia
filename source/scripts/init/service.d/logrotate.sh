@@ -72,7 +72,7 @@ if [ $dir -gt $VARLOG_DIR_THRESHOLD ]; then
     file_list=`ls /var/log/`
     for file in $file_list
       do
-        if [ "$file" != "kernel" ] && [ "$file" != "user" ] && [ "$file" != "kernel.log" ] && [ "$file" != "user.log" ];  then
+        if [ "$file" != "kernel" ] && [ "$file" != "user" ] && [ "$file" != "kernel.log" ] && [ "$file" != "user.log" ] && [ "$file" != "networklog" ] && [ "$file" != "gponlog" ] && [ "$file" != "critlog" ];  then
             if [ "$file" == "dibbler" ];  then
                     cat /dev/null > /var/log/dibbler/dibbler-client.log
                     cat /dev/null > /var/log/dibbler/dibbler-server.log
