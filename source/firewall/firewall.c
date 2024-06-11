@@ -12070,6 +12070,9 @@ static int prepare_multinet_filter_forward (FILE *filter_fp)
 #ifdef MULTILAN_FEATURE
         fprintf(filter_fp, "-A FORWARD -i %s -o %s -j lan2wan\n", net_resp, current_wan_ifname);
         fprintf(filter_fp, "-A FORWARD -i %s -o %s -j wan2lan\n", current_wan_ifname, net_resp);
+#ifdef VMB_MODE
+        fprintf(filter_fp, "-A FORWARD -i %s -o vmb0 -j lan2wan\n", net_resp);
+#endif
 #else
         fprintf(filter_fp, "-A FORWARD -i %s -o %s -j ACCEPT\n", net_resp, current_wan_ifname);
         fprintf(filter_fp, "-A FORWARD -i %s -o %s -j ACCEPT\n", current_wan_ifname, net_resp);
