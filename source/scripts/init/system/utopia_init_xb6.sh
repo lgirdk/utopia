@@ -405,6 +405,16 @@ else
    echo "SSH: Forward SSH changed to disabled" >> $Log_file
 fi
 
+#IGMP PROXY Disbaling on migration
+IGMP_MIGRATE="`syscfg get igmp_migrate`"
+if [ -z "$IGMP_MIGRATE" ]; then
+  echo "Disabling igmp proxy " >> $Log_file
+  syscfg set igmpproxy_enabled "0"
+  syscfg commit
+  syscfg set igmp_migrate "1"
+  syscfg commit
+fi
+
 # Set the factory reset key if it was pressed for longer than our threshold
 if test "$BUTTON_THRESHOLD" -le "$PUNIT_RESET_DURATION"; then
    syscfg set $FACTORY_RESET_KEY $FACTORY_RESET_RGWIFI && BUTTON_FR="1"

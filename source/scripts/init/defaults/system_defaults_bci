@@ -514,7 +514,8 @@ $ntp_cityindex=0
 $auto_dst=1
 
 # IGMP Proxy
-$igmpproxy_enabled=1
+$igmpproxy_enabled=0
+$igmp_migrate=0
 
 # MLD Proxy
 $mldproxy_enabled=1
