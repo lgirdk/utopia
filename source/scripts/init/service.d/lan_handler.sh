@@ -245,7 +245,7 @@ case "$1" in
                     execute_dir /etc/utopia/post.d/
                 fi
 
-	   elif [ x"ready" != x`sysevent get start-misc` -a "$MANUFACTURE" = "Technicolor" ]; then
+	elif [ x"ready" != x`sysevent get start-misc` ] && ( [ "$MANUFACTURE" = "Technicolor" ] || [ "$MANUFACTURE" = "Sercomm" ] ) ; then
                #TCH XBx/TCCBR based startup post.d scripts which includes Firewall restart and dhcp start.
                sysevent set lan-status started
                firewall
@@ -349,8 +349,8 @@ case "$1" in
 		echo_t "THE INSTANT=$INST"
 		echo_t "THE INSTANT=$INST"
         #(use a simpler test than this -- but Hacky, since it assumes everything we want is not XB3!!)if [ "$BOX_TYPE" = "TCCBR" ] || [ "$BOX_TYPE" = "XB6" -a "$MANUFACTURE" = "Technicolor" ] || [ "$BOX_TYPE" = "XB7" -a "$MANUFACTURE" = "Technicolor" ] ; then
-        if [ "$BOX_TYPE" != "XB3" -a "$MANUFACTURE" = "Technicolor" ] || [ "$BOX_TYPE" = "rpi" ] ; then
-                	COUNTER=1
+	if ( [ "$BOX_TYPE" != "XB3" ] && ( [ "$MANUFACTURE" = "Technicolor" ] || [ "$MANUFACTURE" = "Sercomm" ] ) )  || [ "$BOX_TYPE" = "rpi" ] ; then
+                	COUNTER=
 			while [ $COUNTER -lt 10 ]; do
 				echo_t "RDKB_SYSTEM_BOOT_UP_LOG : INST returned null , retrying $COUNTER"
 				INST=`psmcli get dmsb.MultiLAN.PrimaryLAN_l3net`
