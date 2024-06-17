@@ -11451,8 +11451,8 @@ static void prepare_ipv4_dns_filter(FILE *filter_fp, char* chain)
       {
          return;
       }
-      fprintf(filter_fp, "-A ipv4_dns_filter -p udp --sport 53 -j NFQUEUE --queue-num 47 --queue-bypass\n");
-      fprintf(filter_fp, "-A ipv4_dns_filter -p tcp --sport 53 -j NFQUEUE --queue-num 47 --queue-bypass\n");
+      fprintf(filter_fp, "-A ipv4_dns_filter -p udp --sport 53 ! -o lo -j NFQUEUE --queue-num 47 --queue-bypass\n");
+      fprintf(filter_fp, "-A ipv4_dns_filter -p tcp --sport 53 ! -o lo -j NFQUEUE --queue-num 47 --queue-bypass\n");
    }
 }
 
