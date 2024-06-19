@@ -4099,6 +4099,16 @@ int Utopia_CheckPortRange(UtopiaContext *ctx, int new_rule_id, int new_start, in
         return FALSE;
     }
 
+    /* check port triggering trigger port */
+    utopia[0] = UtopiaValue_Firewall_PRTCount;
+    utopia[1] = UtopiaValue_PRT_Enabled;
+    utopia[2] = UtopiaValue_PRT_TriggerProtocol;
+    utopia[3] = UtopiaValue_PRT_TriggerRange;
+    utopia[4] = UtopiaValue_PortRangeTrigger;
+    if(_check_port_range(ctx, new_rule_id, new_start, new_end, new_protocol, utopia, is_trigger)){
+        return FALSE;
+    }
+
     /* check port filtering destination port */
     char *protocol = s_EnumToStr(g_ProtocolMap, new_protocol);
     if (_check_port_filter_range(ctx, new_rule_id, new_start, new_end, protocol,0)){
@@ -4165,6 +4175,17 @@ int Utopia_CheckPortFilterRange(UtopiaContext *ctx, int new_rule_id, int new_sta
     utopia[1] = UtopiaValue_PRT_Enabled;
     utopia[2] = UtopiaValue_PRT_ForwardProtocol;
     utopia[3] = UtopiaValue_PRT_ForwardRange;
+    utopia[4] = UtopiaValue_PortRangeTrigger;
+    if(_check_port_range(ctx, new_rule_id, new_start, new_end, protocol, utopia, 0))
+    {
+        return FALSE;
+    }
+
+    /* check port triggering trigger port */
+    utopia[0] = UtopiaValue_Firewall_PRTCount;
+    utopia[1] = UtopiaValue_PRT_Enabled;
+    utopia[2] = UtopiaValue_PRT_TriggerProtocol;
+    utopia[3] = UtopiaValue_PRT_TriggerRange;
     utopia[4] = UtopiaValue_PortRangeTrigger;
     if(_check_port_range(ctx, new_rule_id, new_start, new_end, protocol, utopia, 0))
     {
