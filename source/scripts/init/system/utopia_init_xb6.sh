@@ -75,6 +75,7 @@ TR69KEYS="/nvram/.keys"
 REVERTFLAG="/nvram/reverted"
 MAINT_START="/nvram/.FirmwareUpgradeStartTime"
 MAINT_END="/nvram/.FirmwareUpgradeEndTime"
+MQTT_URL_MIGRATEDFILE="/nvram/.mqtturl_migrated"
 # determine the distro type (GAP or GNP)
 #distro not used
 #if [ -n "$(grep TPG /etc/drg_version.txt)" ]; then
@@ -804,6 +805,14 @@ else
    fi
 fi
 syscfg commit
+
+#Removing mqtt broker url entry only on first software_upgrade. 
+#Default value which is empty URL will be populated from partners_defaults.json
+if [ ! -f $MQTT_URL_MIGRATEDFILE ]; then
+        touch $MQTT_URL_MIGRATEDFILE
+        sed -i '/Device.X_RDK_MQTT.BrokerURL/d' $PSM_BAK_XML_CONFIG_FILE_NAME
+        echo "[utopia][init] Created /nvram/.mqtturl_migrated file, deleted broker url entry from psm DB on initial software upgrade."
+fi
 
 #CISCOXB3-6085:Removing current configuration from nvram as a part of PSM migration.
 if [ -f /nvram/bbhm_cur_cfg.xml  ]; then
