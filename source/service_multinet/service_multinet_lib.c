@@ -291,8 +291,8 @@ static void nethelper_bridgeCreate (char *brname)
               // Link local is not available to blranX interfaces as autoconf is disabled
               // Enable autoconf, before making the bridge up
               "echo 1 > /proc/sys/net/ipv6/conf/%s/autoconf; "
-              "ifconfig %s up",
-              brname, brname, brname);
+              "ifconfig %s %s up",
+              brname, brname, brname, strcmp(brname, "brlan0") ? "" : "promisc");
 
     MNET_DEBUG("SYSTEM CALL: \"%s\"\n" COMMA cmdBuff)
     system(cmdBuff);
