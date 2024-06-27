@@ -374,15 +374,11 @@ uncompress()
     $RD_LOCK "$TAR" -c "$UNCOMPRESS_CMD" "$TAR" 
 }
 
-V_FW_LOG_FILE_PATH=`sysevent get FW_LOG_FILE_PATH_V2`
-if [ -z $V_FW_LOG_FILE_PATH ]
-then
-    V_FW_LOG_FILE_PATH=`syscfg get FW_LOG_FILE_PATH`
-fi
+V_FW_LOG_FILE_PATH="/nvram/log/firewall"
 
 V_EVT_LOG_FILE="$(get_log_file EVT_LOG_FILE_V2 eventlog)"
 V_SYS_LOG_FILE="$(get_log_file SYS_LOG_FILE_V2 systemlog)"
-if [ -z $V_FW_LOG_FILE_PATH ] || [ -z $V_EVT_LOG_FILE ] || [ -z $V_FW_LOG_FILE_PATH ]
+if [ -z $V_EVT_LOG_FILE ]
 then
     exit 0;
 fi
