@@ -43,8 +43,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
-#include "syscfg/syscfg.h"
-#include "sysevent/sysevent.h"
 #include "autoconf.h"
 #include "safec_lib_common.h"
 #define _XOPEN_SOURCE
@@ -70,8 +68,7 @@
 #define IPT_NAT_COUNT_CMD "iptables -t nat -L -n -v "
 #define IP6T_COUNT_CMD "ip6tables -L -n -v "
 #define IP6T_NAT_COUNT_CMD "ip6tables -t nat -L -n -v "
-//#define FIREWALL_LOG_DIR "/nvram/log/firewall"
-char FIREWALL_LOG_DIR[50];
+#define FIREWALL_LOG_DIR "/nvram/log/firewall"
 #define LOCK_FILE_NAME "/tmp/.fw_lock"
 #define ORG_LOG_NAME_1  "/var/log/kernel"
 #define ORG_LOG_NAME_2  "/var/log/kernel.0"
@@ -783,34 +780,10 @@ int main(int argc, char** argv){
     char *iptables_flage = "";
     int i=0;
     char *fFlag = "w";
-    int            sysevent_fd = -1;
-    char          *sysevent_name = "GenFWLog";
-    token_t        sysevent_token;
-    unsigned short sysevent_port;
-    char           sysevent_ip[19];
     errno_t        safec_rc = -1;
 
     t=time(NULL);
     g_ptime=localtime(&t);
-
-    snprintf(sysevent_ip, sizeof(sysevent_ip), "127.0.0.1");
-    sysevent_port = SE_SERVER_WELL_KNOWN_PORT;
-    sysevent_fd =  sysevent_open(sysevent_ip, sysevent_port, SE_VERSION, sysevent_name, &sysevent_token);
-    if(sysevent_fd  < 0){
-        printf("GenFWLog: Init sysevent error\n");
-        exit(1);
-    }
-     
-    memset(FIREWALL_LOG_DIR, 0, sizeof(FIREWALL_LOG_DIR));
-    sysevent_get(sysevent_fd, sysevent_token, "FW_LOG_FILE_PATH_V2", FIREWALL_LOG_DIR, sizeof(FIREWALL_LOG_DIR));
-    if(FIREWALL_LOG_DIR[0] == '\0' ){
-        syscfg_get(NULL, "FW_LOG_FILE_PATH", FIREWALL_LOG_DIR, sizeof(FIREWALL_LOG_DIR));
-        if(FIREWALL_LOG_DIR[0] == '\0' ){
-           printf("Not get fw log path\n");
-           exit(1);
-        }
-    }
-    sysevent_close(sysevent_fd, sysevent_token);
 
     if(argc == 2 && !strcmp(argv[1], "-nz")){
         /* Don't clear iptables count */
