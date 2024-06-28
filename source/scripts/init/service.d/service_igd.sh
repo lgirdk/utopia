@@ -50,6 +50,7 @@ SELF_NAME="`basename $0`"
 
 #IGD=/usr/sbin/IGD
 IGD=IGD
+IGD_TMP_DIR="/var/IGD"
 UPNP_TMP=/var/tmp/upnp.ttl
 PRIVATE_LAN_IF="brlan0"
 
@@ -152,7 +153,7 @@ handle_ipv4_status() {
 service_start() {
 
 #    killall IGD
-#    rm -rf /var/IGD
+#    rm -rf ${IGD_TMP_DIR}
 # 
 #    # start IGD daemon
     if [ "1" = "$SYSCFG_upnp_igd_enabled" -a x`sysevent get ${SERVICE_NAME}-status` = x"stopped" ] ; then
@@ -160,8 +161,8 @@ service_start() {
         UPNP_TTL=`syscfg get upnp_igd_advr_ttl`
         touch $UPNP_TMP
         echo "$UPNP_TTL" > $UPNP_TMP
-#        mkdir -p /var/IGD
-#        (cd /var/IGD; ln -sf /etc/IGD/* .)
+#        mkdir -p ${IGD_TMP_DIR}
+#        (cd ${IGD_TMP_DIR}; ln -sf /etc/IGD/* .)
 #        $IGD `sysevent get current_lan_ipaddr` &
 #    fi
         resync_upnp
@@ -178,7 +179,7 @@ service_stop () {
         handle_ipv4_status $net $IF_DOWN
    done
    
-   rm -rf /var/IGD/IGDdevicedesc_*.xml
+   rm -rf ${IGD_TMP_DIR}/IGDdevicedesc_*.xml
 
    sysevent set ${SERVICE_NAME}-errinfo
    sysevent set ${SERVICE_NAME}-status "stopped"
@@ -190,11 +191,10 @@ init_once () {
 #        UPNP_TTL=`syscfg get upnp_igd_advr_ttl`
 #        touch $UPNP_TMP
 #        echo "$UPNP_TTL" > $UPNP_TMP
-    IGD_DIR="/var/IGD"
-    if [ ! -d "$IGD_DIR" ]; then
-        mkdir -p /var/IGD
-        (cd /var/IGD; ln -sf /etc/IGD/* .)
-	    chmod 0755 /var/IGD/
+    if [ ! -d ${IGD_TMP_DIR} ]; then
+        mkdir -p ${IGD_TMP_DIR}
+        (cd ${IGD_TMP_DIR}; ln -sf /etc/IGD/* .)
+	    chmod 0755 ${IGD_TMP_DIR}
     fi
 #    fi
 }

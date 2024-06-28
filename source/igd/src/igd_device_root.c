@@ -199,7 +199,7 @@ LOCAL INT32 _igd_root_device_init(VOID)
 	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","\nRoot Device UUID:%s\n",IGD_device.udn);
 
         /* CID 64826: Unchecked return value from library */
-	ret = mkdir("/var/IGD",0755);
+	ret = mkdir(DEFAULT_WEB_DIR,0755);
         if(ret !=0 && errno != EEXIST) {
 	   RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","Failed to Create IGD directory.\n");
 	   return -1;
