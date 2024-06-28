@@ -68,7 +68,7 @@
 #define IPT_NAT_COUNT_CMD "iptables -t nat -L -n -v "
 #define IP6T_COUNT_CMD "ip6tables -L -n -v "
 #define IP6T_NAT_COUNT_CMD "ip6tables -t nat -L -n -v "
-#define FIREWALL_LOG_DIR "/nvram/log/firewall"
+#define FIREWALL_LOG_DIR "/var/log"
 #define LOCK_FILE_NAME "/tmp/.fw_lock"
 #define ORG_LOG_NAME_1  "/var/log/kernel"
 #define ORG_LOG_NAME_2  "/var/log/kernel.0"
