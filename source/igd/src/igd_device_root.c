@@ -388,8 +388,15 @@ main( IN INT32 argc,
 			exit(0);
 		}
 
-		do {
+		do
+                {
 			  receivedsignal = _igd_root_device_registerAndgetsignal( );
+                          if ( receivedsignal == -1)
+                          {
+                            RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "Failed to register and get signal. Trying again...\n");
+                            
+                          }
+                            
 			  RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","Received signal is %d\n", receivedsignal);
 
 			  /*
@@ -434,9 +441,17 @@ LOCAL INT32 _igd_root_device_registerAndgetsignal( VOID )
 	sigaddset( &signaltocatch, 10 ); 
 	sigaddset( &signaltocatch, 2 );	 
 	
-	pthread_sigmask( SIG_SETMASK, &signaltocatch, NULL );
+	if(pthread_sigmask( SIG_SETMASK, &signaltocatch, NULL )!=0)
+	{    
+		RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "Failed to set signal mask");
+		return -1;
+	}
 
-	sigwait( &signaltocatch, &receivedsignal );
+	if(sigwait( &signaltocatch, &receivedsignal )!=0)
+	{   
+		RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD", "Failed to wait for signal");
+		return -1;
+	}
 
 	return receivedsignal;
 }
