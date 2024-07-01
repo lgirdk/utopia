@@ -501,8 +501,10 @@ void prepare_dhcp_options_wan_dns()
 	}		
 
         char relay_enable[32];
+        char dns_v4_proxy_enable[32];
 
         syscfg_get(NULL, "dns_relay_enable", relay_enable, sizeof(relay_enable));
+        syscfg_get(NULL, "dns_v4_proxy_enable", dns_v4_proxy_enable, sizeof(dns_v4_proxy_enable));
 
     //OFW-297 and OFW-620: use brlanX interface ip address as dns server when modem is offline or dns relay is enabled
     do {
@@ -550,7 +552,7 @@ void prepare_dhcp_options_wan_dns()
         }
         l_cNs[0] = 0;
 
-        if ((strcmp(g_rl_cWanStatus, "stopped") != 0) && (strcmp(relay_enable, "1") != 0))
+        if ((strcmp(g_rl_cWanStatus, "stopped") != 0) && (strcmp(relay_enable, "1") != 0) && (strcmp(dns_v4_proxy_enable, "1") != 0))
         {
             char l_cDnsOverride[8];
             char dns_override_mode[8];
