@@ -11794,9 +11794,9 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    /*
     * raw
     */
-   fprintf(raw_fp, "%s\n", "*raw");
-   fprintf(raw_fp, "%s\n", ":PREROUTING ACCEPT [0:0]");
-   fprintf(raw_fp, "%s\n", ":OUTPUT ACCEPT [0:0]");
+   fprintf(raw_fp, "*raw\n");
+   fprintf(raw_fp, ":%s ACCEPT [0:0]\n", "PREROUTING");
+   fprintf(raw_fp, ":%s ACCEPT [0:0]\n", "OUTPUT");
    fprintf(raw_fp, ":%s - [0:0]\n", "xlog_drop_lanattack");
    fprintf(raw_fp, ":%s - [0:0]\n", "prerouting_ephemeral");
    fprintf(raw_fp, ":%s - [0:0]\n", "output_ephemeral");
@@ -11835,10 +11835,10 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    /*
     * mangle
     */
-   fprintf(mangle_fp, "%s\n", "*mangle");
-   fprintf(mangle_fp, "%s\n", ":PREROUTING ACCEPT [0:0]");
-   fprintf(mangle_fp, "%s\n", ":POSTROUTING ACCEPT [0:0]");
-   fprintf(mangle_fp, "%s\n", ":OUTPUT ACCEPT [0:0]");
+   fprintf(mangle_fp, "*mangle\n");
+   fprintf(mangle_fp, ":%s ACCEPT [0:0]\n", "PREROUTING");
+   fprintf(mangle_fp, ":%s ACCEPT [0:0]\n", "POSTROUTING");
+   fprintf(mangle_fp, ":%s ACCEPT [0:0]\n", "OUTPUT");
 #ifdef CONFIG_BUILD_TRIGGER
 #ifndef CONFIG_KERNEL_NF_TRIGGER_SUPPORT
    fprintf(mangle_fp, ":%s - [0:0]\n", "prerouting_trigger");
@@ -11889,10 +11889,10 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    /*
     * nat
     */
-   fprintf(nat_fp, "%s\n", "*nat");
-   fprintf(nat_fp, "%s\n", ":PREROUTING ACCEPT [0:0]");
-   fprintf(nat_fp, "%s\n", ":POSTROUTING ACCEPT [0:0]");
-   fprintf(nat_fp, "%s\n", ":OUTPUT ACCEPT [0:0]");
+   fprintf(nat_fp, "*nat\n");
+   fprintf(nat_fp, ":%s ACCEPT [0:0]\n", "PREROUTING");
+   fprintf(nat_fp, ":%s ACCEPT [0:0]\n", "POSTROUTING");
+   fprintf(nat_fp, ":%s ACCEPT [0:0]\n", "OUTPUT");
 
 #if defined(FEATURE_SUPPORT_RADIUSGREYLIST) && (defined(_COSA_INTEL_XB3_ARM_) || defined(_XB6_PRODUCT_REQ_) && !defined(_XB7_PRODUCT_REQ_))
     /*
@@ -12107,10 +12107,10 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    /*
     * filter
     */
-   fprintf(filter_fp, "%s\n", "*filter");
-   fprintf(filter_fp, "%s\n", ":INPUT DROP [0:0]");
-   fprintf(filter_fp, "%s\n", ":FORWARD ACCEPT [0:0]");
-   fprintf(filter_fp, "%s\n", ":OUTPUT ACCEPT [0:0]");
+   fprintf(filter_fp, "*filter\n");
+   fprintf(filter_fp, ":%s DROP [0:0]\n", "INPUT");
+   fprintf(filter_fp, ":%s ACCEPT [0:0]\n", "FORWARD");
+   fprintf(filter_fp, ":%s ACCEPT [0:0]\n", "OUTPUT");
 
 #if !(defined(_COSA_INTEL_XB3_ARM_) || defined(_COSA_BCM_MIPS_))
     prepare_rabid_rules(filter_fp, mangle_fp, IP_V4);
@@ -13637,10 +13637,10 @@ static int prepare_enabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *na
          }
          fprintf(filter_fp, "-I FORWARD -o %s -m state --state INVALID -j DROP\n",current_wan_ifname);
    #endif
-   fprintf(raw_fp, "%s\n", "COMMIT");
-   fprintf(mangle_fp, "%s\n", "COMMIT");
-   fprintf(nat_fp, "%s\n", "COMMIT");
-   fprintf(filter_fp, "%s\n", "COMMIT");
+   fprintf(raw_fp, "COMMIT\n");
+   fprintf(mangle_fp, "COMMIT\n");
+   fprintf(nat_fp, "COMMIT\n");
+   fprintf(filter_fp, "COMMIT\n");
    FIREWALL_DEBUG("Exiting prepare_enabled_ipv4_firewall \n"); 
    return(0);
 }
@@ -13660,9 +13660,9 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
     * raw
     */
    FIREWALL_DEBUG("Entering prepare_disabled_ipv4_firewall \n"); 
-   fprintf(raw_fp, "%s\n", "*raw");
-   fprintf(raw_fp, "%s\n", ":PREROUTING ACCEPT [0:0]");
-   fprintf(raw_fp, "%s\n", ":OUTPUT ACCEPT [0:0]");
+   fprintf(raw_fp, "*raw\n");
+   fprintf(raw_fp, ":%s ACCEPT [0:0]\n", "PREROUTING");
+   fprintf(raw_fp, ":%s ACCEPT [0:0]\n", "OUTPUT");
 #ifdef INTEL_PUMA7
    do_raw_table_puma7(raw_fp);
 #endif
@@ -13671,15 +13671,15 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    do_raw_table_staticip(raw_fp);
 #endif
 
-   fprintf(raw_fp, "%s\n", "COMMIT");
+   fprintf(raw_fp, "COMMIT\n");
 
    /*
     * mangle
     */
-   fprintf(mangle_fp, "%s\n", "*mangle");
-   fprintf(mangle_fp, "%s\n", ":PREROUTING ACCEPT [0:0]");
-   fprintf(mangle_fp, "%s\n", ":POSTROUTING ACCEPT [0:0]");
-   fprintf(mangle_fp, "%s\n", ":OUTPUT ACCEPT [0:0]");
+   fprintf(mangle_fp, "*mangle\n");
+   fprintf(mangle_fp, ":%s ACCEPT [0:0]\n", "PREROUTING");
+   fprintf(mangle_fp, ":%s ACCEPT [0:0]\n", "POSTROUTING");
+   fprintf(mangle_fp, ":%s ACCEPT [0:0]\n", "OUTPUT");
 #ifdef CONFIG_BUILD_TRIGGER
 #ifndef CONFIG_KERNEL_NF_TRIGGER_SUPPORT
    fprintf(mangle_fp, ":%s - [0:0]\n", "prerouting_trigger");
@@ -13723,10 +13723,10 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    /*
     * nat
     */
-   fprintf(nat_fp, "%s\n", "*nat");
-   fprintf(nat_fp, "%s\n", ":PREROUTING ACCEPT [0:0]");
-   fprintf(nat_fp, "%s\n", ":POSTROUTING ACCEPT [0:0]");
-   fprintf(nat_fp, "%s\n", ":OUTPUT ACCEPT [0:0]");
+   fprintf(nat_fp, "*nat\n");
+   fprintf(nat_fp, ":%s ACCEPT [0:0]\n", "PREROUTING");
+   fprintf(nat_fp, ":%s ACCEPT [0:0]\n", "POSTROUTING");
+   fprintf(nat_fp, ":%s ACCEPT [0:0]\n", "OUTPUT");
    fprintf(nat_fp, ":%s - [0:0]\n", "postrouting_towan");
 #if defined (FEATURE_SUPPORT_MAPT_NAT46)
    if (isMAPTReady)
@@ -13759,14 +13759,14 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
        do_mapt_rules_v4(nat_fp, filter_fp, mangle_fp);
 #endif
   
-   fprintf(nat_fp, "%s\n", "COMMIT");
-   fprintf(mangle_fp, "%s\n", "COMMIT");
+   fprintf(nat_fp, "COMMIT\n");
+   fprintf(mangle_fp, "COMMIT\n");
 
    /*
     * filter
     */
-   fprintf(filter_fp, "%s\n", "*filter");
-   fprintf(filter_fp, "%s\n", ":INPUT ACCEPT [0:0]");
+   fprintf(filter_fp, "*filter\n");
+   fprintf(filter_fp, ":%s ACCEPT [0:0]\n", "INPUT");
    fprintf(filter_fp, ":%s - [0:0]\n", "wan2self_mgmt");
    fprintf(filter_fp, ":%s - [0:0]\n", "lan2self_mgmt");
    fprintf(filter_fp, ":%s - [0:0]\n", "xlog_drop_wan2self");
@@ -13955,8 +13955,8 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
 #ifdef _COSA_INTEL_XB3_ARM_
    fprintf(filter_fp, "-A OUTPUT -p icmp -m icmp --icmp-type 3 -j DROP\n");
 #endif
-   fprintf(filter_fp, "%s\n", ":FORWARD ACCEPT [0:0]");
-   fprintf(filter_fp, "%s\n", ":OUTPUT ACCEPT [0:0]");
+   fprintf(filter_fp, ":%s ACCEPT [0:0]\n", "FORWARD");
+   fprintf(filter_fp, ":%s ACCEPT [0:0]\n", "OUTPUT");
    // Rate limiting the webui-access lan side
    lan_access_set_proto(filter_fp, "80",cmdiag_ifname);
    lan_access_set_proto(filter_fp, "443",cmdiag_ifname);
@@ -14004,7 +14004,7 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
        fprintf(filter_fp,"-A INPUT -p tcp --dport 8181 -j DROP\n");
    }
    
-   fprintf(filter_fp, "%s\n", "COMMIT");
+   fprintf(filter_fp, "COMMIT\n");
  FIREWALL_DEBUG("Exiting prepare_disabled_ipv4_firewall \n"); 
    return(0);
 }
@@ -14161,44 +14161,44 @@ static int prepare_stopped_ipv4_firewall(FILE *file_fp)
     * raw
     */
 #ifdef NOTDEF
-   fprintf(file_fp, "%s\n", "*raw");
-   fprintf(file_fp, "%s\n", ":PREROUTING ACCEPT [0:0]");
-   fprintf(file_fp, "%s\n", ":OUTPUT ACCEPT [0:0]");
-   fprintf(file_fp, "%s\n", "COMMIT");
+   fprintf(file_fp, "*raw\n");
+   fprintf(file_fp, ":%s ACCEPT [0:0]\n", "PREROUTING");
+   fprintf(file_fp, ":%s ACCEPT [0:0]\n", "OUTPUT");
+   fprintf(file_fp, "COMMIT\n");
 #endif
 
    /*
     * mangle
     */
-   fprintf(file_fp, "%s\n", "*mangle");
-   fprintf(file_fp, "%s\n", ":PREROUTING ACCEPT [0:0]");
-   fprintf(file_fp, "%s\n", ":POSTROUTING ACCEPT [0:0]");
-   fprintf(file_fp, "%s\n", ":OUTPUT ACCEPT [0:0]");
-   fprintf(file_fp, "%s\n", "COMMIT");
+   fprintf(file_fp, "*mangle\n");
+   fprintf(file_fp, ":%s ACCEPT [0:0]\n", "PREROUTING");
+   fprintf(file_fp, ":%s ACCEPT [0:0]\n", "POSTROUTING");
+   fprintf(file_fp, ":%s ACCEPT [0:0]\n", "OUTPUT");
+   fprintf(file_fp, "COMMIT\n");
 
    /*
     * nat
     */
-   fprintf(file_fp, "%s\n", "*nat");
-   fprintf(file_fp, "%s\n", ":PREROUTING ACCEPT [0:0]");
-   fprintf(file_fp, "%s\n", ":POSTROUTING ACCEPT [0:0]");
-   fprintf(file_fp, "%s\n", ":OUTPUT ACCEPT [0:0]");
-   fprintf(file_fp, "%s\n", "COMMIT");
+   fprintf(file_fp, "*nat\n");
+   fprintf(file_fp, ":%s ACCEPT [0:0]\n", "PREROUTING");
+   fprintf(file_fp, ":%s ACCEPT [0:0]\n", "POSTROUTING");
+   fprintf(file_fp, ":%s ACCEPT [0:0]\n", "OUTPUT");
+   fprintf(file_fp, "COMMIT\n");
 
    /*
     * filter
     */
-   fprintf(file_fp, "%s\n", "*filter");
-   fprintf(file_fp, "%s\n", ":INPUT ACCEPT [0:0]");
-   fprintf(file_fp, "%s\n", ":FORWARD ACCEPT [0:0]");
-   fprintf(file_fp, "%s\n", ":OUTPUT ACCEPT [0:0]");
+   fprintf(file_fp, "*filter\n");
+   fprintf(file_fp, ":%s ACCEPT [0:0]\n", "INPUT");
+   fprintf(file_fp, ":%s ACCEPT [0:0]\n", "FORWARD");
+   fprintf(file_fp, ":%s ACCEPT [0:0]\n", "OUTPUT");
 
    //Comment out to disable telnet/ssh in stopped firewall
    //fprintf(file_fp, ":lan2self_mgmt - [0:0]\n");
    //fprintf(file_fp, "-A INPUT -j lan2self_mgmt\n");
    //lan_telnet_ssh(file_fp, AF_INET);
 
-   fprintf(file_fp, "%s\n", "COMMIT");
+   fprintf(file_fp, "COMMIT\n");
  FIREWALL_DEBUG("Exiting prepare_stopped_ipv4_firewall \n"); 
    return(0);
 }
