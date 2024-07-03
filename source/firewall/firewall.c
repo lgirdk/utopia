@@ -13030,6 +13030,8 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
 #endif
 #ifdef VMB_MODE
    fprintf(mangle_fp, "-A OUTPUT -j MARK --set-mark 0x2000/0x2000\n");
+   fprintf(mangle_fp, "-A PREROUTING -i vmb0 -j CONNMARK --set-mark 0x4000/0x4000\n");
+   fprintf(mangle_fp, "-A OUTPUT -m connmark --mark 0x4000/0x4000 -j MARK --set-mark 0x4000/0x4000\n");
 #endif /* VMB_MODE */
    /*
     * nat
