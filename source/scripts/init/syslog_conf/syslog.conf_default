@@ -25,3 +25,4 @@ local4.notice /var/log/eventlog
 local0.notice /var/log/networklog
 *.=crit /var/log/critlog
 user.* /var/log/user
+daemon.* /rdklogs/logs/daemonlog.txt
