@@ -15106,7 +15106,8 @@ static void do_ipv6_filter_table(FILE *fp){
     fprintf(fp, "-A LOG_FORWARD_DROP -j DROP\n");
 #endif
    fprintf(fp, ":%s - [0:0]\n", "PING_FLOOD");
-   fprintf(fp, "-A PING_FLOOD -m limit --limit 10/sec -j ACCEPT\n");
+   fprintf(fp, "-A PING_FLOOD -m limit --limit 5/sec  --limit-burst 60 -j ACCEPT\n");
+   fprintf(fp, "-A PING_FLOOD -m limit --limit 1/minute -j LOG --log-level %d --log-prefix \"UTOPIA: IPv6 PING FLOOD Drop\"\n",syslog_level);
    fprintf(fp, "-A PING_FLOOD -j DROP\n");
 
 #ifdef MULTILAN_FEATURE
@@ -15244,16 +15245,13 @@ static void do_ipv6_filter_table(FILE *fp){
 		}
 	  }
 
-      if ( (isPingBlockedV6 && strncasecmp(firewall_levelv6, "Custom", strlen("Custom")) == 0)
-              || strncasecmp(firewall_levelv6, "High", strlen("High")) == 0
-              || strncasecmp(firewall_levelv6, "Medium", strlen("Medium")) == 0 
-              || (isWanPingDisableV6 == 1) )
+      if (isWanPingDisableV6 == 1)
       {
           fprintf(fp, "-A INPUT -i %s -p icmpv6 -m icmp6 --icmpv6-type 128 -j DROP\n", current_wan_ifname); // Echo request
           fprintf(fp, "-A INPUT -i %s -p icmpv6 -m icmp6 --icmpv6-type 129 -m state --state NEW,INVALID,RELATED -j DROP\n", current_wan_ifname); // Echo reply
 
       }
-      else if(strncasecmp(firewall_levelv6, "Low", strlen("Low")) == 0 || (isWanPingDisableV6 == 0)) 
+      else if (strncasecmp(firewall_levelv6, "None", strlen("None")) != 0 && (isWanPingDisableV6 == 0))
       {
       #if defined(CONFIG_CCSP_DROP_ICMP_PING)
           fprintf(fp, "-A INPUT -i %s -p icmpv6 -m icmp6 --icmpv6-type 128 -j DROP\n", current_wan_ifname); // Echo request
