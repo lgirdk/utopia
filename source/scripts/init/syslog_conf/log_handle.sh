@@ -383,7 +383,7 @@ uncompress()
     $RD_LOCK "$TAR" $UNCOMPRESS_CMD "$TAR"
 }
 
-V_FW_LOG_FILE_PATH="/var/log"
+V_FW_LOG_FILE_PATH="/var/log/firewall"
 
 V_EVT_LOG_FILE="$(get_log_file EVT_LOG_FILE_V2 eventlog)"
 V_SYS_LOG_FILE="$(get_log_file SYS_LOG_FILE_V2 systemlog)"
