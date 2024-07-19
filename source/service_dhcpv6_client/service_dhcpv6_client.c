@@ -360,7 +360,7 @@ void register_sysevent_handler(char *service_name, char *event_name, char *handl
         sysevent_setnotification(g_iSyseventfd, g_tSysevent_token, l_sEvent_Name,  &l_sAsyncID);
     }
 
-    snprintf(l_cAsyncId, sizeof(l_cAsyncId), "%d %d", l_sAsyncID.action_id, l_sAsyncID.trigger_id);
+    snprintf(l_cAsyncId, sizeof(l_cAsyncId), "0x%x 0x%x", l_sAsyncID.action_id, l_sAsyncID.trigger_id);
     snprintf(l_sAsyncSysevent, sizeof(l_sAsyncSysevent), "%s_%s_asyncid", service_name, l_sEvent_Name);
     sysevent_set(g_iSyseventfd, g_tSysevent_token, l_sAsyncSysevent, l_cAsyncId, 0);
 
