@@ -531,10 +531,12 @@ else
 
    # Check and set last reboot reason for Power-On Reset ( Broadcom specific )
    if [ -f /proc/device-tree/bolt/reset-list ]; then
-      if [ "$(cat /proc/device-tree/bolt/reset-list)" = "power_on" ]; then
-         syscfg set X_RDKCENTRAL-COM_LastRebootReason "HW or Power-On Reset"
-         syscfg set X_RDKCENTRAL-COM_LastRebootCounter "1"
-      fi
+      case $(cat /proc/device-tree/bolt/reset-list) in
+         "power_on"|"main_chip_input,power_on"|"power_on,main_chip_input")
+            syscfg set X_RDKCENTRAL-COM_LastRebootReason "HW or Power-On Reset"
+            syscfg set X_RDKCENTRAL-COM_LastRebootCounter "1"
+            ;;
+      esac
    fi
 
       if [ "`cat /proc/P-UNIT/status|grep "Last reset origin"|awk '{ print $9 }'`" == "RESET_ORIGIN_HW" ]; then
