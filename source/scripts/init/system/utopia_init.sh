@@ -686,6 +686,8 @@ if [ "${SYSCFG_CUST_CHANGED}" = "true" ]; then
     syscfg commit
 fi
 
+REBOOT_REASON_FILE="/nvram/reboot_reason"
+
 if [ -x /usr/bin/db_mig ] && [ "$DB_MIG_COMPLETE" != "true" ]; then
     echo_t "[utopia][init] Running db_mig utility"
     /usr/bin/db_mig
@@ -693,6 +695,14 @@ if [ -x /usr/bin/db_mig ] && [ "$DB_MIG_COMPLETE" != "true" ]; then
     syscfg set X_RDKCENTRAL-COM_LastRebootReason "Software_upgrade_from_legacy"
     syscfg set X_RDKCENTRAL-COM_LastRebootCounter "1"
     syscfg commit
+
+elif [ -e $REBOOT_REASON_FILE ]; then
+    rebootReason=$(cat $REBOOT_REASON_FILE)
+    echo_t "[utopia][init] Last reboot reason set as $rebootReason"
+    syscfg set X_RDKCENTRAL-COM_LastRebootReason "$rebootReason"
+    syscfg set X_RDKCENTRAL-COM_LastRebootCounter "1"
+    syscfg commit
+    rm -f $REBOOT_REASON_FILE
 fi
 
 if [ "$BOX_TYPE" = "MV1" ]; then
