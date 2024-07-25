@@ -247,7 +247,7 @@ int main(int argc, char **argv)
            if (0 == syscfg_getall(buf, SYSCFG_SZ, &sz)) {
                char *p = buf;
                while(sz > 0) {
-                   len = printf(p);
+                   len = printf("%s",p);
                    printf("\n");
                    p = p + len + 1;
                    sz -= len + 1;
