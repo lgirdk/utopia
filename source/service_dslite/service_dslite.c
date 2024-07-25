@@ -433,6 +433,10 @@ static int dslite_start (struct serv_dslite *sd)
     else /* domain format, need to do DNS resolution */
     {
         struct in6_addr *addrp = dslite_resolve_fqdn_to_ipv6addr (DSLITE_AFTR, &dnsttl, buf);
+        char *next_dns = NULL;
+        while (!addrp && (next_dns = strtok(NULL, " "))){
+            addrp = dslite_resolve_fqdn_to_ipv6addr (DSLITE_AFTR, &dnsttl, next_dns);
+        }
 
         if (addrp)
         {
