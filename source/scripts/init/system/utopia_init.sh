@@ -114,11 +114,19 @@ FACTORY_RESET_REASON=false
 
 HOTSPOT_BLOB="/nvram/hotspot_blob"
 HOTSPOT_JSON="/nvram/hotspot.json"
+
+ENCRYPT_SYSCFG=false
+if [ "$MODEL_NUM" = "VTER11QEL" ]; then
+   ENCRYPT_SYSCFG=true
+fi
+
 if [ -d $SYSCFG_ENCRYPTED_PATH ]; then
        if [ ! -d $SYSCFG_PERSISTENT_PATH ]; then
                echo "$SYSCFG_PERSISTENT_PATH path not available creating directory and touching $SYSCFG_NEW_FILE file"
                mkdir $SYSCFG_PERSISTENT_PATH
-               touch $SYSCFG_NEW_FILE
+               if [ "$ENCRYPT_SYSCFG" = false ] ; then
+                  touch $SYSCFG_NEW_FILE
+               fi
        fi
 fi
 
@@ -158,32 +166,62 @@ CheckAndReCreateDB()
 	fi 
 }
 
-echo_t "[utopia][init] Starting syscfg using file store ($SYSCFG_BKUP_FILE)"
-if [ -f $SYSCFG_BKUP_FILE ]; then
-   cp $SYSCFG_BKUP_FILE $SYSCFG_FILE
-   syscfg_create -f $SYSCFG_FILE
-   if [ $? != 0 ]; then
-	   CheckAndReCreateDB
+if [ "$ENCRYPT_SYSCFG" = false ] ; then
+   echo_t "[utopia][init] Starting syscfg using file store ($SYSCFG_BKUP_FILE)"
+   if [ -f $SYSCFG_BKUP_FILE ]; then
+      cp $SYSCFG_BKUP_FILE $SYSCFG_FILE
+      syscfg_create -f $SYSCFG_FILE
+      if [ $? != 0 ]; then
+         CheckAndReCreateDB
+      fi
+   else
+      echo -n > $SYSCFG_FILE
+      echo -n > $SYSCFG_BKUP_FILE
+      syscfg_create -f $SYSCFG_FILE
+      if [ $? != 0 ]; then
+         CheckAndReCreateDB
+      fi
+      #>>zqiu
+      echo_t "[utopia][init] need to reset wifi when($SYSCFG_BKUP_FILE) and ($SYSCFG_NEW_FILE) files are not available"
+      syscfg set $FACTORY_RESET_KEY $FACTORY_RESET_WIFI
+      syscfg commit
+      #<<zqiu
+      touch /nvram/.apply_partner_defaults
+      # Put value 204 into networkresponse.txt file so that
+      # all LAN services start with a configuration which will
+      # redirect everything to Gateway IP.
+      # This value again will be modified from network_response.sh 
+      echo_t "[utopia][init] Echoing network response during Factory reset"
+      echo 204 > /var/tmp/networkresponse.txt
    fi
 else
-   echo -n > $SYSCFG_FILE
-   echo -n > $SYSCFG_BKUP_FILE
-   syscfg_create -f $SYSCFG_FILE
-   if [ $? != 0 ]; then
-        CheckAndReCreateDB
+   echo_t "[utopia][init] Starting syscfg using file store ($SYSCFG_NEW_FILE)"
+   if [ -f $SYSCFG_NEW_FILE ]; then
+      cp $SYSCFG_NEW_FILE $SYSCFG_FILE
+      syscfg_create -f $SYSCFG_FILE
+      if [ $? != 0 ]; then
+         CheckAndReCreateDB
+      fi
+   else
+      echo -n > $SYSCFG_FILE
+      echo -n > $SYSCFG_NEW_FILE
+      syscfg_create -f $SYSCFG_FILE
+      if [ $? != 0 ]; then
+         CheckAndReCreateDB
+      fi
+      #>>zqiu
+      echo_t "[utopia][init] need to reset wifi when($SYSCFG_NEW_FILE) files is not available"
+      syscfg set $FACTORY_RESET_KEY $FACTORY_RESET_WIFI
+      syscfg commit
+      #<<zqiu
+      touch /nvram/.apply_partner_defaults
+      # Put value 204 into networkresponse.txt file so that
+      # all LAN services start with a configuration which will
+      # redirect everything to Gateway IP.
+      # This value again will be modified from network_response.sh 
+      echo_t "[utopia][init] Echoing network response during Factory reset"
+      echo 204 > /var/tmp/networkresponse.txt
    fi
-   #>>zqiu
-   echo_t "[utopia][init] need to reset wifi when($SYSCFG_BKUP_FILE) and ($SYSCFG_NEW_FILE) files are not available"
-   syscfg set $FACTORY_RESET_KEY $FACTORY_RESET_WIFI
-   syscfg commit
-   #<<zqiu
-   touch /nvram/.apply_partner_defaults
-   # Put value 204 into networkresponse.txt file so that
-   # all LAN services start with a configuration which will
-   # redirect everything to Gateway IP.
-   # This value again will be modified from network_response.sh 
-   echo_t "[utopia][init] Echoing network response during Factory reset"
-   echo 204 > /var/tmp/networkresponse.txt
 fi
 
 SYSCFG_LAN_DOMAIN=`syscfg get lan_domain` 
@@ -200,8 +238,14 @@ fi
 if [ -f $SYSCFG_NEW_BKUP_FILE ];then
 	rm -rf $SYSCFG_NEW_BKUP_FILE
 fi
-if [ -f $SYSCFG_NEW_FILE ];then
-	rm -rf $SYSCFG_NEW_FILE
+if [ "$ENCRYPT_SYSCFG" = false ] ; then
+   if [ -f $SYSCFG_NEW_FILE ];then
+      rm -rf $SYSCFG_NEW_FILE
+   fi
+else
+   if [ -f $SYSCFG_BKUP_FILE ]; then
+         rm -rf $SYSCFG_BKUP_FILE
+   fi
 fi
 
 # Read reset duration to check if the unit was rebooted by pressing the HW reset button
@@ -306,9 +350,15 @@ fi
    #>>zqiu
    create_wifi_default
    #<<zqiu
-   echo_t "[utopia][init] Retarting syscfg using file store ($SYSCFG_BKUP_FILE)"
+   if [ "$ENCRYPT_SYSCFG" = false ] ; then
+      echo_t "[utopia][init] Retarting syscfg using file store ($SYSCFG_BKUP_FILE)"
+      touch $SYSCFG_BKUP_FILE
+   else
+      echo_t "[utopia][init] Retarting syscfg using file store ($SYSCFG_NEW_FILE)"
+      touch $SYSCFG_NEW_FILE
+   fi
    touch $SYSCFG_FILE
-   touch $SYSCFG_BKUP_FILE
+   
    syscfg_create -f $SYSCFG_FILE
    if [ $? != 0 ]; then
 	   CheckAndReCreateDB
@@ -376,8 +426,14 @@ sleep 1
 echo_t "[utopia][init] Setting any unset system values to default"
 apply_system_defaults
 changeFilePermissions $SYSCFG_BKUP_FILE 400
+if [ "$ENCRYPT_SYSCFG" = false ] ; then
+   echo "[utopia][init] SEC: Syscfg stored in $SYSCFG_BKUP_FILE"
+else
+   changeFilePermissions $SYSCFG_NEW_FILE 400
+   echo "[utopia][init] SEC: Syscfg stored in $SYSCFG_NEW_FILE"
+fi
 
-echo "[utopia][init] SEC: Syscfg stored in $SYSCFG_BKUP_FILE"
+
 syscfg unset UpdateNvram
 syscfg commit
 syscfg unset NonRootSupport
@@ -703,4 +759,5 @@ if [ "$MODEL_NUM" = "DPC3939B" ] || [ "$MODEL_NUM" = "DPC3941B" ]; then
 	echo_t "[utopia][init] started dropbear process"
 	/etc/utopia/service.d/service_sshd.sh sshd-start &
 fi
+
 
