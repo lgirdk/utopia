@@ -695,6 +695,7 @@ if [ -x /usr/bin/db_mig ] && [ "$DB_MIG_COMPLETE" != "true" ]; then
     syscfg set X_RDKCENTRAL-COM_LastRebootReason "Software_upgrade_from_legacy"
     syscfg set X_RDKCENTRAL-COM_LastRebootCounter "1"
     syscfg commit
+    rm -f $REBOOT_REASON_FILE
 
 elif [ -e $REBOOT_REASON_FILE ]; then
     rebootReason=$(cat $REBOOT_REASON_FILE)
