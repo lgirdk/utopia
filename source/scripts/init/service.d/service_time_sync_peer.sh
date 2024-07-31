@@ -19,10 +19,7 @@
 #######################################################################################
 
 source /etc/log_timestamp.sh    # define 'echo_t' ASAP!
-
-if [ -f /etc/device.properties ]; then
-	source /etc/device.properties
-fi
+source /etc/device.properties
 
 if [ -f /etc/utopia/service.d/device_time_sync_peer_wrapper.sh ]; then
 	source /etc/utopia/service.d/device_time_sync_peer_wrapper.sh

@@ -42,11 +42,9 @@ source /etc/utopia/service.d/ulog_functions.sh
 source /etc/utopia/service.d/log_capture_path.sh
 source /etc/utopia/service.d/event_handler_functions.sh
 source /lib/rdk/t2Shared_api.sh
+source /etc/device.properties
 
 SERVICE_NAME="forwarding"
-if [ -f /etc/device.properties ]; then
-    source /etc/device.properties
-fi
 
 RPI_SPECIFIC="$BOX_TYPE"
 PID="($$)"

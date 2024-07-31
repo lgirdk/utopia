@@ -34,10 +34,7 @@
 #   limitations under the License.
 #######################################################################
 
-if [ -f /etc/device.properties ]
-then
-	. /etc/device.properties
-fi
+. /etc/device.properties
 
 #source /etc/utopia/service.d/log_env_var.sh
 source /etc/utopia/service.d/log_capture_path.sh
