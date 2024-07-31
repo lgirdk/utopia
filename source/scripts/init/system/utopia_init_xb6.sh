@@ -62,11 +62,7 @@ echo "*                                                                  "
 echo "*******************************************************************"
 
 source /etc/utopia/service.d/log_capture_path.sh
-
-if [ -f /etc/device.properties ]
-then
-    source /etc/device.properties
-fi
+source /etc/device.properties
 
 dmesg -n 5
 

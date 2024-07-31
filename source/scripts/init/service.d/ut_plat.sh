@@ -31,10 +31,9 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #######################################################################
-if [ -f /etc/device.properties ]
-then
-     source /etc/device.properties
-fi
+
+source /etc/device.properties
+
 UTOPIAROOT=/etc/utopia/service.d
 SERVICEROOT=$UTOPIAROOT/service_${SERVICE_NAME}
 THIS=$UTOPIAROOT/service_${SERVICE_NAME}.sh

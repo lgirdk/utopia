@@ -22,10 +22,7 @@
 #This script is used to sync the dhcp lease file from ARM to ATOM
 #------------------------------------------------
 
-if [ -f /etc/device.properties ]
-then
-    source /etc/device.properties
-fi
+source /etc/device.properties
 
 DHCP_LEASE_FILE_ARM="/nvram/dnsmasq.leases"
 DHCP_LEASE_FILE_ATOM="/nvram/dnsmasq.leases"

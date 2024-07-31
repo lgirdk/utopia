@@ -30,12 +30,7 @@ LOG_SYNC_BACK_UP_REBOOT_PATH="/nvram2/logs/"
 
 . /etc/device.properties
 
-if [ -f /etc/os-release ] || [ -f /etc/device.properties ]; then
-      LOG_FOLDER="/rdklogs"
-else
-      LOG_FOLDER="/var/tmp"
-fi
-
+LOG_FOLDER="/rdklogs"
 LOG_UPLOAD_FOLDER="/nvram"
 RDK_LOGGER_PATH="/rdklogger"
 LOG_PATH="$LOG_FOLDER/logs/"
@@ -120,18 +115,14 @@ HTTP_CODE="/tmp/curl_httpcode"
 S3_URL="https://ssr.ccp.xcal.tv/cgi-bin/rdkb_snmp.cgi"
 WAITINGFORUPLOAD="$LOG_UPLOAD_FOLDER/waitingforupload"
 
-
-if [ -f /etc/os-release ] || [ -f /etc/device.properties ]; then
-      MAXSIZE=1536
-else
-      MAXSIZE=524288
-fi
 MAXLINESIZE=2
 
 #Devices that have more nvram size can override default upload threshold (1.5MB) through device.properties
 if [ -n "$LOG_UPLOAD_THRESHOLD" ]
 then
 	MAXSIZE=$LOG_UPLOAD_THRESHOLD
+else
+	MAXSIZE=1536
 fi    
 
 if [ -z $LOG_PATH ]; then

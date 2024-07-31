@@ -41,10 +41,7 @@ source /etc/utopia/service.d/ulog_functions.sh
 source /etc/utopia/service.d/log_capture_path.sh
 source /etc/log_timestamp.sh    # define 'echo_t' ASAP!
 source /etc/waninfo.sh
-
-if [ -f /etc/device.properties ]; then
-	. /etc/device.properties
-fi
+source /etc/device.properties
 
 SERVICE_NAME="ntpd"
 SELF_NAME="`basename "$0"`"
