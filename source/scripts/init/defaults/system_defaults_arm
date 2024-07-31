@@ -1527,6 +1527,7 @@ $NoSpeedBoost_Port_EndV6=65000
 $TrackRemotePortUsage=NULL
 
 $$led_brightness=50
+$led_auto_brightness=true
 $LedUSErrorTimer=30
 $LedDSErrorTimer=120
 $LedRegistrationErrorTimer=30
