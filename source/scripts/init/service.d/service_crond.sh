@@ -49,14 +49,10 @@ source /etc/utopia/service.d/log_capture_path.sh
 if [ -f /lib/rdk/utils.sh ];then
      . /lib/rdk/utils.sh
 fi
-if [ -f /etc/device.properties ]
-then
-    source /etc/device.properties
-fi
+source /etc/device.properties
 
 SERVICE_NAME="crond"
 SELF_NAME="`basename "$0"`"
-#BOX_TYPE=`cat /etc/device.properties | grep BOX_TYPE  | cut -f2 -d=`
 
 service_start () 
 {
@@ -200,8 +196,7 @@ service_start ()
       fi
 
       # Logging current chain mask value of 2G - runs on 1st minute of every 12th hour - only for 3941 box
-      MODEL="`grep MODEL_NUM /etc/device.properties | cut -d "=" -f2`"
-      if [ -n "$(echo "$MODEL" | grep 3941)" ]; then
+      if [ -n "$(echo "$MODEL_NUM" | grep 3941)" ]; then
          echo "1 */12 * * *  rpcclient 169.254.101.2 \"/etc/ath/CurrentChainMask_Logging.sh\"" >> $CRONTAB_FILE
       fi
 

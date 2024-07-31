@@ -40,10 +40,7 @@
 source /lib/rdk/t2Shared_api.sh
 source /etc/utopia/service.d/ulog_functions.sh
 source /etc/utopia/service.d/log_capture_path.sh
-
-if [ -f /etc/device.properties ]; then
-	. /etc/device.properties
-fi
+source /etc/device.properties
 
 SERVICE_NAME="CcspXdnsSsp"
 

@@ -54,12 +54,7 @@ SERVICE_NAME="ipv4"
 source /etc/utopia/service.d/ulog_functions.sh
 source /etc/utopia/service.d/ut_plat.sh
 source /etc/utopia/service.d/log_capture_path.sh
-
-if [ -f /etc/device.properties ]
-then
-    source /etc/device.properties
-fi
-
+source /etc/device.properties
 
 STATIC_IPV4SUBNET=""
 STATIC_IPV4ADDR=""
@@ -90,7 +85,6 @@ handle_l2_status () {
 
 	echo_t "service_ipv4 PARTIAL_STATUS:${PARTIAL_STATUS} READY_STATUS:${READY_STATUS}"
 
-    BOX_TYPE=`cat /etc/device.properties | grep BOX_TYPE | cut -f2 -d=`
     echo_t "Box Type is $BOX_TYPE"
 
     if [ x${PARTIAL_STATUS} = x${3} -o x${READY_STATUS} = x${3} ] && [ x1 = x`sysevent get ${L2SERVICE_NAME}_$2-${L2_LOCAL_READY_PARAM}` ]; then
@@ -153,7 +147,6 @@ handle_l2_status () {
     #l2 down
         sysevent set ${SERVICE_NAME}_${1}-status pending
         if [ x = x$3 -o x$STOPPED_STATUS = x$3 ] && [ x != x$4 ] ; then
-        #    BOX_TYPE=`cat /etc/device.properties | grep BOX_TYPE | cut -f2 -d=`
             BRIDGE_MODE=`sysevent get bridge_mode`
             if [ "$BOX_TYPE" = "XB3" ] && [ "$BRIDGE_MODE" = "0" ]; then
                 echo "In Router mode:brlan0 initialization is done in PSM & brlan1 initialization is done in cosa_start_rem.sh"

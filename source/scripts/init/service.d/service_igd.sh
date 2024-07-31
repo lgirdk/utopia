@@ -40,11 +40,7 @@
 SERVICE_NAME="igd"
 source /etc/utopia/service.d/ulog_functions.sh
 source /etc/utopia/service.d/ut_plat.sh
-
-if [ -f /etc/device.properties ]
-then
-    source /etc/device.properties
-fi
+source /etc/device.properties
 
 SELF_NAME="`basename $0`"
 

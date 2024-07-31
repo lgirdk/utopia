@@ -33,12 +33,7 @@
 #   limitations under the License.
 #######################################################################
     
-
-if [ -f /etc/device.properties ]
-then
-    source /etc/device.properties
-fi
-
+source /etc/device.properties
 source /lib/rdk/t2Shared_api.sh
 source /etc/waninfo.sh
 

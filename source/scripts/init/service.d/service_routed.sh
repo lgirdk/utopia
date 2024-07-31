@@ -39,10 +39,7 @@
 # $1 is the calling event (current_wan_state  current_lan_state  ipv6_prefix)
 #------------------------------------------------------------------
 
-if [ -f /etc/device.properties ]
-then
-    source /etc/device.properties
-fi
+source /etc/device.properties
 
 SERVICE_NAME="routed"
 
