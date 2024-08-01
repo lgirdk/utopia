@@ -1439,10 +1439,16 @@ static int UtopiaTransact_Set(UtopiaContext* pUtopiaCtx, UtopiaValue ixUtopia, c
 static int s_UtopiaTransact_GetAll(UtopiaContext* pUtopiaCtx, char* pszBuffer, unsigned int ccbBuf)
 {
     char* pPtr;
-    char pState[UTOPIA_STATE_SIZE];
+    char* pState = malloc(UTOPIA_STATE_SIZE);
     int iSize;
     UtopiaTransact_Node* pNode;
     errno_t rc = -1;
+
+    if(pState == NULL) 
+    {
+        UTCTX_LOG_ERR1("%s: Memory allocation failed\n", __FUNCTION__);
+        return 0;
+    }
 
     /* Zero out the buffer */
     memset(pszBuffer, 0, ccbBuf);
@@ -1461,6 +1467,7 @@ static int s_UtopiaTransact_GetAll(UtopiaContext* pUtopiaCtx, char* pszBuffer, u
         /* Make sure there's enough room in the buffer */
         if ((strlen(pNode->pszKey) + strlen(pNode->pszValue) + (pNode->pszNamespace == 0 ? 0 : strlen(pNode->pszNamespace) + 2) + 3) > ccbBuf)
         {
+            free(pState);
             return 0;
         }
 
@@ -1470,6 +1477,7 @@ static int s_UtopiaTransact_GetAll(UtopiaContext* pUtopiaCtx, char* pszBuffer, u
             if(rc < EOK)
             {
                 ERR_CHK(rc);
+                free(pState);
                 return 0;
             }
             j = rc;
@@ -1480,6 +1488,7 @@ static int s_UtopiaTransact_GetAll(UtopiaContext* pUtopiaCtx, char* pszBuffer, u
             if(rc < EOK)
             {
                 ERR_CHK(rc);
+                free(pState);
                 return 0;
             }
             j = rc;
@@ -1492,6 +1501,7 @@ static int s_UtopiaTransact_GetAll(UtopiaContext* pUtopiaCtx, char* pszBuffer, u
     /* Next, call syscfg get all */
     if (SysCfg_GetAll(pState, sizeof(pState), &iSize) == 0)
     {
+        free(pState);
         return 0;
     }
 
@@ -1535,6 +1545,7 @@ static int s_UtopiaTransact_GetAll(UtopiaContext* pUtopiaCtx, char* pszBuffer, u
                 /* Make sure there's enough room in the buffer */
                 if ((strlen(pszKey) + strlen(pszValue) + (pszNamespace == 0 ? 0 : strlen(pszNamespace) + 2) + 3) > ccbBuf)
                 {
+                    free(pState);
                     return 0;
                 }
 
@@ -1544,6 +1555,7 @@ static int s_UtopiaTransact_GetAll(UtopiaContext* pUtopiaCtx, char* pszBuffer, u
                     if(rc < EOK)
                     {
                         ERR_CHK(rc);
+                        free(pState);
                         return 0;
                     }
                     j = rc;
@@ -1554,6 +1566,7 @@ static int s_UtopiaTransact_GetAll(UtopiaContext* pUtopiaCtx, char* pszBuffer, u
                     if(rc < EOK)
                     {
                         ERR_CHK(rc);
+                        free(pState);
                         return 0;
                     }
                     j = rc;
@@ -1568,6 +1581,7 @@ static int s_UtopiaTransact_GetAll(UtopiaContext* pUtopiaCtx, char* pszBuffer, u
         pPtr = pPtr + iLen + 1;
         iSize -= iLen + 1;
     }
+    free(pState);
     return 1;
 }
 
