@@ -4133,7 +4133,7 @@ int Utopia_CheckPortTriggerRange(UtopiaContext *ctx, int new_rule_id, int new_st
 
 int Utopia_CheckPortFilterRange(UtopiaContext *ctx, int new_rule_id, int new_start, int new_end, char *new_protocol, int is_filter)
 {
-    if (_check_port_filter_range(ctx, new_rule_id, new_start, new_end, new_protocol, is_filter))
+    if (is_filter == 0 && _check_port_filter_range(ctx, new_rule_id, new_start, new_end, new_protocol, is_filter))
     {
         return FALSE;
     }
