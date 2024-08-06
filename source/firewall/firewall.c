@@ -815,6 +815,14 @@ static BOOL isEponEnable = FALSE;
 static BOOL isDefHttpPortUsed = FALSE ;
 static BOOL isDefHttpsPortUsed = FALSE ;
 
+#if defined(SPEED_BOOST_SUPPORTED)
+static char speedboostports[32];
+static BOOL isPvDEnable = FALSE;
+#if defined(SPEED_BOOST_SUPPORTED_V6)
+static char speedboostportsv6[32];
+#endif
+#endif
+
 /*
  * For timed internet access rules we use cron 
  */
@@ -3028,6 +3036,36 @@ static int prepare_globals_from_configuration(void)
     }
 #endif
 
+   #if defined(SPEED_BOOST_SUPPORTED)
+   {
+      char sb_port_start[10] , sb_port_end[10] , pvd_enable[8];
+      speedboostports[0]='\0';
+      sb_port_start[0]='\0';
+      sb_port_end[0]='\0';
+      pvd_enable[0]='\0';
+      int rc_sb = syscfg_get(NULL, "SpeedBoost_Port_StartV4" , sb_port_start, sizeof(sb_port_start));
+      rc_sb |= syscfg_get(NULL, "SpeedBoost_Port_EndV4" , sb_port_end, sizeof(sb_port_end));
+      if (rc_sb == 0 && atoi(sb_port_start) && atoi(sb_port_end) ) {
+         snprintf(speedboostports , sizeof(speedboostports), "%s:%s", sb_port_start, sb_port_end);
+      }
+      #if defined(SPEED_BOOST_SUPPORTED_V6)
+      speedboostportsv6[0]='\0';
+      rc_sb = syscfg_get(NULL, "SpeedBoost_Port_StartV6" , sb_port_start, sizeof(sb_port_start));
+      rc_sb |= syscfg_get(NULL, "SpeedBoost_Port_EndV6" , sb_port_end, sizeof(sb_port_end));
+      if (rc_sb == 0 && atoi(sb_port_start) && atoi(sb_port_end) ) {
+         snprintf(speedboostportsv6 , sizeof(speedboostportsv6), "%s:%s", sb_port_start, sb_port_end);
+      }
+      #endif
+      rc_sb = syscfg_get(NULL, "Advertisement_pvd_enable" , pvd_enable, sizeof(pvd_enable));
+      if (rc_sb == 0 && (0 == strcmp("1", pvd_enable) || 0 == strcasecmp("true", pvd_enable))) {
+         isPvDEnable=TRUE;
+      }
+      else {
+         isPvDEnable=FALSE;
+      }
+   }
+   #endif
+
     FIREWALL_DEBUG("Exiting prepare_globals_from_configuration\n");       
    return(0);
 }
@@ -4689,26 +4727,12 @@ if(status_http_ert == 0){
    /* tohost is now a full ip address */
    snprintf(dst_str, sizeof(dst_str), "--to-destination %s ", tohost);
 
-#if defined(SPEED_BOOST_SUPPORTED)
-   char speedboostports[32] , sb_port_start[10] , sb_port_end[10], pvd_enable[8];
-   speedboostports[0]='\0';
-   sb_port_start[0]='\0';
-   sb_port_end[0]='\0';
-   pvd_enable[0]='\0';
-   int rc_sb = syscfg_get(NULL, "SpeedBoost_Port_StartV4" , sb_port_start, sizeof(sb_port_start));
-   rc_sb |= syscfg_get(NULL, "SpeedBoost_Port_EndV4" , sb_port_end, sizeof(sb_port_end));
-   if (rc_sb == 0 && atoi(sb_port_start) && atoi(sb_port_end) ) {
-      snprintf(speedboostports , sizeof(speedboostports), "%s:%s", sb_port_start, sb_port_end);
-   }
-   rc_sb = syscfg_get(NULL, "Advertisement_pvd_enable" , pvd_enable, sizeof(pvd_enable));
-#endif
-
    switch (src_type) {
       case(0):
          if (isNatReady &&
              strcmp(tohost, "0.0.0.0") != 0) { /* 0.0.0.0 stands for disable in SA-RG-MIB */
 #if defined(SPEED_BOOST_SUPPORTED)
-   if (rc_sb == 0 && speedboostports[0] != '\0' && (0 == strcmp("1", pvd_enable) || 0 == strcasecmp("true", pvd_enable))) {
+   if (speedboostports[0] != '\0' && (isPvDEnable)) {
             fprintf(nat_fp, "-A prerouting_fromwan_todmz --dst %s -p tcp -m multiport ! --dports %s,%s,%s -j DNAT %s\n", natip4, Httpport, Httpsport, speedboostports, dst_str);
 
             fprintf(nat_fp, "-A prerouting_fromwan_todmz --dst %s -p udp -m multiport ! --dports %s,%s,%s -j DNAT %s\n", natip4, Httpport, Httpsport, speedboostports, dst_str);
@@ -14526,6 +14550,13 @@ static void do_ipv6_nat_table(FILE* fp)
        if (!syscfg_get(NULL, "dmz_dst_ip_addrv6", ipv6host, sizeof(ipv6host))) {
 			rc = IsValidIPv6Addr(ipv6host);
 			  if(rc != 0 && strlen(current_wan_ipv6[0]) > 0) {
+           #if defined(SPEED_BOOST_SUPPORTED_V6)
+           if (speedboostportsv6[0] != '\0' && (isPvDEnable)) {
+              fprintf(fp, "-A PREROUTING -i %s -d %s -p tcp -m multiport ! --dports %s -j DNAT --to-destination %s \n", wan6_ifname, (char *)current_wan_ipv6, speedboostportsv6 , ipv6host);
+              fprintf(fp, "-A PREROUTING -i %s -d %s -p udp -m multiport ! --dports %s -j DNAT --to-destination %s \n", wan6_ifname, (char *)current_wan_ipv6, speedboostportsv6 , ipv6host);
+           }
+           else
+           #endif
 				  fprintf(fp, "-A PREROUTING -i %s -d %s -j DNAT --to-destination %s \n", wan6_ifname, (char *)current_wan_ipv6, ipv6host);
 			}
 		}
@@ -15812,6 +15843,13 @@ v6GPFirewallRuleNext:
           if (!syscfg_get(NULL, "dmz_dst_ip_addrv6", ipv6host, sizeof(ipv6host))) {
 			  rc = IsValidIPv6Addr(ipv6host);
 			  if(rc != 0){
+           #if defined(SPEED_BOOST_SUPPORTED_V6)
+           if (speedboostportsv6[0] != '\0' && (isPvDEnable)) {
+               fprintf(fp, "-A wan2lan -d %s -p tcp -m multiport ! --dports %s -j ACCEPT\n", ipv6host , speedboostportsv6);
+               fprintf(fp, "-A wan2lan -d %s -p udp -m multiport ! --dports %s -j ACCEPT\n", ipv6host , speedboostportsv6);
+           }
+           else
+           #endif
 				  fprintf(fp, "-A wan2lan -d %s -j ACCEPT\n", ipv6host);
 			  }
 			}
