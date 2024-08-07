@@ -198,7 +198,7 @@ int prepare_lld_dscp_rules(FILE *mangle_fp)
 }
 
 __attribute__((weak))
-int prepare_dscp_rules_to_prioritized_clnt(FILE *mangle_fp,int iptype)
+int prepare_dscp_rules_to_prioritized_clnt(FILE *mangle_fp)
 {
     FIREWALL_DEBUG("Entering prepare_dscp_rules_to_prioritized_clnt\n");
     FIREWALL_DEBUG("Exiting prepare_dscp_rules_to_prioritized_clnt\n");
