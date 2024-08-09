@@ -451,7 +451,16 @@ virtual_interface_ebtables_rules ()
 {
     CMDIAG_IF=`syscfg get cmdiag_ifname`
     CMDIAG_MAC=`cat /sys/class/net/"${CMDIAG_IF}"/address`   
-    EROUTER_MAC=`cat /sys/class/net/erouter0/address`
+    for iface in eth0 erouter0; do
+        if [ -e /sys/class/net/$iface/address ]; then
+            EROUTER_MAC=$(cat /sys/class/net/$iface/address)
+            [ -n "$EROUTER_MAC" ] && break
+        fi
+    done
+    # Optional: handle the case where no MAC address was found
+    if [ -z "$EROUTER_MAC" ]; then
+        echo "No valid MAC address found for eth0, or erouter0."
+    fi
     BRIDGE_NAME=`syscfg get lan_ifname`
     LAN_IP=`syscfg get lan_ipaddr`
      if [ "$1" = "enable" ] ; then
