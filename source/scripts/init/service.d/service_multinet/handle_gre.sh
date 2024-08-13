@@ -505,7 +505,7 @@ update_bridge_config () {
             continue
         fi
 
-    if [ "$BOX_TYPE" != "VNTXER5" ] && [ "$BOX_TYPE" != "SCER11BEL" ]; then
+    if [ "$BOX_TYPE" != "SCER11BEL" ]; then
         br_snoop_rule="`sysevent setunique GeneralPurposeFirewallRule " -A FORWARD -o $br -p udp --dport=67:68 -j NFQUEUE --queue-bypass --queue-num $[$br]"`"
         sysevent set gre_${inst}_${br}_snoop_rule "$br_snoop_rule"
     fi
@@ -902,7 +902,7 @@ case "$1" in
             if [ "$BOX_TYPE" = "XF3" ] ; then
             sleep 5
             fi
-	    if [ "$BOX_TYPE" != "VNTXER5" ] && [ "$BOX_TYPE" != "SCER11BEL" ]; then
+	    if [ "$BOX_TYPE" != "SCER11BEL" ]; then
 		    arpFWrule=`sysevent setunique GeneralPurposeFirewallRule " -I OUTPUT -o $WAN_IF -p icmp --icmp-type 3 -j NFQUEUE --queue-bypass --queue-num $ARP_NFQUEUE"`
 		    sysevent set ${inst}_arp_queue_rule "$arpFWrule" > /dev/null
 	    fi
