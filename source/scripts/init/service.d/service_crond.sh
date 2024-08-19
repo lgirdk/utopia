@@ -127,6 +127,11 @@ service_start ()
         echo "*/10 * * * *   /etc/idm/idm_recovery.sh" >> $CRONTAB_FILE
      fi
 
+     if [ "$BOX_TYPE" == "VNTXER5" ]; then
+        #run thermal monitoring script every 5 minutes
+        echo "*/5 * * * *   /etc/get_XER5_thermal.sh" >> $CRONTAB_FILE
+     fi
+
       num1=$RANDOM
       num2=$RANDOM
       rand1=`expr "$num1" % 60`
