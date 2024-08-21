@@ -341,6 +341,8 @@ static int serv_ddns_init(struct serv_ddns *sdd)
     char command[256];
     int ret = 0;
     int v6only = 0;
+    char wan_status[8];
+    int erouter_mode = -1;
 
     sdd->client.status = CLIENT_ERROR;
     sdd->client.lasterror = DNS_ERROR;
@@ -351,14 +353,25 @@ static int serv_ddns_init(struct serv_ddns *sdd)
         return -1;
     }
 
+    sysevent_get(sdd->sefd, sdd->setok, "wan-status", wan_status, sizeof(wan_status));
     strcpy(sdd->wan_conf.wan_ipaddr, "0.0.0.0");
     sysevent_get(sdd->sefd, sdd->setok, "current_wan_ipaddr", sdd->wan_conf.wan_ipaddr, sizeof(sdd->wan_conf.wan_ipaddr));
     syscfg_get(NULL, "dslite_enable", command, sizeof(command));
     sdd->wan_conf.dslite_enable = atoi(command);
     syscfg_get(NULL, "last_erouter_mode", command, sizeof(command));
-    if (atoi(command) == 2) {
+    erouter_mode = (command[0] != 0) ? atoi(command) : -1;
+    if (erouter_mode == 2) 
+    {
         v6only = 1;
     }
+    else if (erouter_mode == 3 &&
+            strcmp(sdd->wan_conf.wan_ipaddr, "0.0.0.0") == 0 &&
+            strcmp(wan_status, "started") == 0) 
+    {
+        fprintf(stderr, "%s FAILED because wan ipv4 addr is empty and wan-status is started  \n", __FUNCTION__);
+        return -1;
+    }
+
     syscfg_get(NULL, "dynamic_dns_enable", command, sizeof(command));
     sdd->ddns_enable = atoi(command);
     syscfg_get("arddnsclient_1", "Server", command, sizeof(command));
