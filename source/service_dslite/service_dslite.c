@@ -526,7 +526,7 @@ static int dslite_start (struct serv_dslite *sd)
     sysevent_set (sd->sefd, sd->setok, "current_wan_ipaddr", "0.0.0.0", 0);
 
     //Setup the IPv4-in-IPv6 tunnel
-    vsystem ("ip -6 tunnel add " TNL_NETDEVNAME " mode ip4ip6 remote %s local %s dev " ER_NETDEVNAME " encaplimit none", resolved_ipv6, gw_ipv6);
+    vsystem ("ip -6 tunnel add " TNL_NETDEVNAME " mode ip4ip6 remote %s local %s dev " ER_NETDEVNAME " encaplimit none tos inherit", resolved_ipv6, gw_ipv6);
 
     //Enabling AutoConf for ip4ip6 interface
     sysctl_iface_set ("/proc/sys/net/ipv6/conf/%s/autoconf", TNL_NETDEVNAME, "1");
