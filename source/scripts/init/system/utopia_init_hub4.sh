@@ -127,6 +127,7 @@ FACTORY_RESET_REASON=false
 FR_COUNT_FILE=/nvram/.factory_reset_count
 HOTSPOT_BLOB="/nvram/hotspot_blob"
 HOTSPOT_JSON="/nvram/hotspot.json"
+MWO_PATH="/nvram/mwo"
 
 if [ -d $SYSCFG_ENCRYPTED_PATH ]; then
     if [ ! -d $SYSCFG_PERSISTENT_PATH ]; then
@@ -233,6 +234,15 @@ fi
 
 #mark the factory reset flag 'on'
    FACTORY_RESET_REASON=true 
+   if [ -e "$MWO_PATH" ]; then
+      rm -rf $MWO_PATH
+   fi
+   if [ -f /nvram/steering.json ]; then
+      rm -f /nvram/steering.json
+   fi
+   if [ -f /nvram/device_profile.json ]; then
+      rm -f /nvram/device_profile.json
+   fi
    rm -f /nvram/.keys/*
    rm -f /nvram/ble-enabled
    touch /nvram/.apply_partner_defaults

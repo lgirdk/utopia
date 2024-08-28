@@ -114,6 +114,7 @@ FACTORY_RESET_REASON=false
 
 HOTSPOT_BLOB="/nvram/hotspot_blob"
 HOTSPOT_JSON="/nvram/hotspot.json"
+MWO_PATH="/nvram/mwo"
 
 ENCRYPT_SYSCFG=false
 if [ "$MODEL_NUM" = "VTER11QEL" ]; then
@@ -284,6 +285,15 @@ fi
 # Remove syscfg and PSM storage files
 #mark the factory reset flag 'on'
    FACTORY_RESET_REASON=true 
+   if [ -e "$MWO_PATH" ]; then
+      rm -rf $MWO_PATH
+   fi
+   if [ -f /nvram/steering.json ]; then
+      rm -f /nvram/steering.json
+   fi
+   if [ -f /nvram/device_profile.json ]; then
+      rm -f /nvram/device_profile.json
+   fi
    rm -f /nvram/partners_defaults.json 
    rm -f /nvram/bootstrap.json
    rm -f /opt/secure/RFC/tr181store.json
