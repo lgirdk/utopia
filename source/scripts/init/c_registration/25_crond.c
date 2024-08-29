@@ -49,13 +49,6 @@ const char* SERVICE_CUSTOM_EVENTS[] = { "ntpclient-status|/etc/utopia/service.d/
 
 
 void srv_register(void) {
-   FILE *fp = fopen("/etc/cron/cron.allow", "w");
-   if (NULL != fp) {
-      // prepare the crond.allow file
-      fprintf(fp, "root\n");
-      fprintf(fp, "firewall\n");
-      fclose(fp);
-   }
    sm_register(SERVICE_NAME, SERVICE_DEFAULT_HANDLER, SERVICE_CUSTOM_EVENTS);
 
    // we also want to start crond here so do so
