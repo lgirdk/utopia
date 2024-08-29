@@ -3775,7 +3775,7 @@ int Utopia_DelPortTriggerByRuleId (UtopiaContext *ctx, int rule_id)
 
 #define PORT_OVER_RANGE(n_s, n_e, s, e) ((((n_s) > (e)) || ((n_e) < (s))) ? 0 : 1)
 
-static int _check_port_range( UtopiaContext *ctx, int new_rule_id, int new_start, int new_end, int new_protocol, UtopiaValue utopia[5], int is_trigger)
+int _check_port_range( UtopiaContext *ctx, int new_rule_id, int new_start, int new_end, int new_protocol, UtopiaValue utopia[5], int is_trigger)
 {
     char tokenbuf[256];
     int count;
@@ -3831,7 +3831,7 @@ static int _check_port_range( UtopiaContext *ctx, int new_rule_id, int new_start
     return 0;
 }
 
-static int _check_single_port_range( UtopiaContext *ctx, int new_rule_id, int new_start, int new_end, int new_protocol, UtopiaValue utopia[5], int is_trigger)
+int _check_single_port_range( UtopiaContext *ctx, int new_rule_id, int new_start, int new_end, int new_protocol, UtopiaValue utopia[5], int is_trigger)
 {
     char tokenbuf[256];
     int count;
