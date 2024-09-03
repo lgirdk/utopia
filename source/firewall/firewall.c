@@ -1517,7 +1517,7 @@ BOOL isMAPTSet(void)
     }
 
 #ifdef FEATURE_MAPT_DEBUG
-    LOG_PRINT_MAIN(">>>>>mapt_config_value<<<<<:%s",mapt_config_value);
+    LOG_PRINT_MAIN("mapt_config_value:%s",mapt_config_value);
 #endif        
     /*  Check mapt config flag is SET*/
     if (strncmp(mapt_config_value,SET, 3) == 0)
