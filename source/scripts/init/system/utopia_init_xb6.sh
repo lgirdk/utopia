@@ -519,6 +519,14 @@ fi
       rm -f /nvram/speedboost-mac.dat.md5
    fi
 
+   if [ -f /nvram/rfc.json ]; then
+    rm -f /nvram/rfc.json
+   fi
+
+   if [ -f /opt/secure/RFC/.RFC_SSHWhiteList.list ]; then
+      rm -f /opt/secure/RFC/.RFC_SSHWhiteList.list
+   fi
+
    echo "[utopia][init] Retarting syscfg using file store ($SYSCFG_NEW_FILE)"
    touch $SYSCFG_NEW_FILE
    touch $SYSCFG_FILE
