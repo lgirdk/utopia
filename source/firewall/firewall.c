@@ -12397,6 +12397,7 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    ret =  syscfg_get(NULL, "mgmt_wan_httpsaccess", tmpQuery, sizeof(tmpQuery));
    if ((ret == 0) && atoi(tmpQuery) == 1)
    {
+       fprintf(filter_fp,"-A INPUT -i  brlan0 -p tcp --dport 8181 -j ACCEPT\n");
        fprintf(filter_fp,"-A INPUT -p tcp ! -i %s --dport 8181 -j DROP\n",current_wan_ifname);
    }
    else
@@ -14011,6 +14012,7 @@ static int prepare_disabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *n
    ret =  syscfg_get(NULL, "mgmt_wan_httpsaccess", tmpQuery, sizeof(tmpQuery));
    if ((ret == 0) && atoi(tmpQuery) == 1)
    {
+       fprintf(filter_fp,"-A INPUT -i  brlan0 -p tcp --dport 8181 -j ACCEPT\n");
        fprintf(filter_fp,"-A INPUT -p tcp ! -i %s --dport 8181 -j DROP\n",current_wan_ifname);
    }
    else
@@ -15105,6 +15107,7 @@ static void do_ipv6_filter_table(FILE *fp){
    retval =  syscfg_get(NULL, "mgmt_wan_httpsaccess", tmpsysQuery, sizeof(tmpsysQuery));
    if ((retval == 0) && atoi(tmpsysQuery) == 1)
    {
+      fprintf(fp,"-A INPUT -i  brlan0 -p tcp --dport 8181 -j ACCEPT\n");
       fprintf(fp,"-A INPUT -p tcp ! -i %s --dport 8181 -j DROP\n",current_wan_ifname);
    }
    else
