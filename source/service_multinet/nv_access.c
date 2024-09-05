@@ -49,7 +49,7 @@
 #if defined(ENABLE_ETH_WAN) || defined(AUTOWAN_ENABLE)
 #include "ccsp_hal_ethsw.h"
 #endif
-#ifdef MULTILAN_FEATURE
+#if !defined (NO_MOCA_FEATURE_SUPPORT) && defined(MULTILAN_FEATURE)
 char* typeStrings[] = {
     "SW", "Gre", "Link", "Eth", "WiFi", "Moca"
 };
@@ -389,8 +389,8 @@ int nv_get_members(PL2Net net, PMember memberList, int numMembers)
     int   actualNumMembers = 0,
 		  i,
 		  rc;
+#if !defined (NO_MOCA_FEATURE_SUPPORT) && defined(MULTILAN_FEATURE)
     int   HomeIsolation_en = 0;
-#if defined(MULTILAN_FEATURE)
     int   iterator = 0;
     bool  skipMocaIsoInterface = false;
 #endif

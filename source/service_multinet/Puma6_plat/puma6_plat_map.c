@@ -148,7 +148,9 @@ static PlatformPort accessSwPortList[] = {
     {(void*)(extSwIDs + 1), ENTITY_ESW, halList + HAL_ESW, 0}, //SW port 2
     {(void*)(extSwIDs + 2), ENTITY_ESW, halList + HAL_ESW, 0}, //SW port 3
     {(void*)(extSwIDs + 3), ENTITY_ESW, halList + HAL_ESW, 0}, //SW port 4
+#if !defined (NO_MOCA_FEATURE_SUPPORT)
     {(void*)(intSwIDs + 2), ENTITY_ISW, halList + HAL_ISW, 0},  // MOCA
+#endif
     {(void*)(extraPorts + 0), ENTITY_ESW, halList + HAL_ESW, 0}, //extra sw port
     {(void*)(extraPorts + 1), ENTITY_ESW, halList + HAL_ESW, 0}, //extra sw port
     {(void*)(extraPorts + 2), ENTITY_ESW, halList + HAL_ESW, 0}, //extra sw port
@@ -213,8 +215,9 @@ int mapToPlat(PNetInterface iface) {
 	    iface->map = accessSwPortList + (portIndex - 1);
 	else
 	    iface->map = NULL;
+#if !defined (NO_MOCA_FEATURE_SUPPORT)
     } else if (!strcmp("Moca", iface->type->name)) {
-        
+#endif
     } else if (!strcmp("Gre", iface->type->name)) {
         sscanf(iface->name, "gretap%d", &portIndex);
         iface->map = grePortList + portIndex;

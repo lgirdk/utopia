@@ -71,7 +71,9 @@ extern unsigned int countSetBits(int byte);
 extern void subnet(char *ipv4Addr, 
                    char *ipv4Subnet, char *subnet);
 extern void get_device_props();
+#if !defined (NO_MOCA_FEATURE_SUPPORT)
 extern void get_dateanduptime(char *buffer, int *uptime);
+#endif
 extern FILE* g_fArmConsoleLog; //Global file pointer declaration
 
 //=======================
@@ -1474,8 +1476,10 @@ void load_static_l3 (int l3_inst)
 	int l_iRet_Val;
 	BOOL l_bApplyConfig_Res;
 #ifndef MODEM_ONLY_SUPPORT
+#if !defined (NO_MOCA_FEATURE_SUPPORT)
         int uptime = 0;
 	char buffer[64] = { 0 };
+#endif
 #endif
 
 	snprintf(l_cPsm_Parameter, sizeof(l_cPsm_Parameter), "dmsb.l3net.%d.V4Addr", l3_inst);
@@ -1551,7 +1555,6 @@ void load_static_l3 (int l3_inst)
 #endif
 
 #if defined CONFIG_SYSTEM_MOCA
-#if !defined (_HUB4_PRODUCT_REQ_) && !defined(_SR300_PRODUCT_REQ_)
                         get_dateanduptime(buffer,&uptime);
 			OnboardLog("RDKB_FIREWALL_RESTART:%d\n",uptime);
 			if (4 == l3_inst)
@@ -1580,7 +1583,6 @@ void load_static_l3 (int l3_inst)
 				
 	
 			}
-#endif
 #endif
         }   
 	}	

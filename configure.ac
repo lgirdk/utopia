@@ -130,6 +130,18 @@ AC_CONFIG_FILES([
    source/service_dhcpv6_client/Makefile
 ])] )
 
+AC_ARG_ENABLE([no_moca_support],
+             AS_HELP_STRING([--enable-no_moca_support],[enable no moca support (default is no)]),
+             [
+              case "${enableval}" in
+               yes) disable_moca_support=true ;;
+               no) disable_moca_support=false ;;
+               *) AC_MSG_ERROR([bad value ${enableval} for --enable-no_moca_support]);;
+              esac
+             ],
+             [echo "no_moca_support is disabled"])
+AM_CONDITIONAL([NO_MOCA_SUPPORT], [test x"$disable_moca_support" = x"true"])
+
 FEATURE_RDKB_EXTENDER=no
 AC_ARG_ENABLE([extender],
         AS_HELP_STRING([--enable-extender],[enable extender]),
@@ -182,6 +194,7 @@ AM_COND_IF( [DDNS_BINARY_CLIENT_SUPPORT], [
 AC_CONFIG_FILES([
    source/service_ddns/Makefile
 ])] )
+
 
 AC_CONFIG_FILES(
 	Makefile
