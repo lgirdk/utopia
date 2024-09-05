@@ -1485,3 +1485,7 @@ $NoSpeedBoost_Port_EndV6=65000
 
 #TrackRemotePortUsage default value
 $TrackRemotePortUsage=NULL
+
+#Remote Debugger default Value
+$RemoteDebuggerEnabled=false
+$RemoteDebuggerIssueType=NULL
