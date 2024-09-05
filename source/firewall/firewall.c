@@ -16586,10 +16586,17 @@ static int service_start ()
 
    sysevent_set(sysevent_fd, sysevent_token, "firewall-status", "starting", 0);
    ulogf(ULOG_FIREWALL, UL_INFO, "starting %s service", service_name);
-      	FIREWALL_DEBUG("starting %s service\n" COMMA service_name);
+   FIREWALL_DEBUG("starting %s service\n" COMMA service_name);
    /*  ipv4 */
    prepare_ipv4_firewall(filename1);
+
+   FIREWALL_DEBUG("iptables-restore for ipv4 starts\n");
+#ifdef _HUB4_PRODUCT_REQ_
    v_secure_system("iptables-restore -c  < /tmp/.ipt 2> /tmp/.ipv4table_error");
+#else
+   v_secure_system("iptables-restore -w 10 -c  < /tmp/.ipt 2> /tmp/.ipv4table_error");
+#endif
+   FIREWALL_DEBUG("iptables-restore for ipv4 ends\n");
 
    //if (!isFirewallEnabled) {
    //   unlink(filename1);
@@ -16597,7 +16604,13 @@ static int service_start ()
 
    /* ipv6 */
    prepare_ipv6_firewall(filename2);
+   FIREWALL_DEBUG("iptables-restore for ipv6 starts\n");
+#ifdef _HUB4_PRODUCT_REQ_
    v_secure_system("ip6tables-restore < /tmp/.ipt_v6 2> /tmp/.ipv6table_error");
+#else
+   v_secure_system("ip6tables-restore -w 10 < /tmp/.ipt_v6 2> /tmp/.ipv6table_error");
+#endif
+   FIREWALL_DEBUG("iptables-restore for ipv6 ends\n");
 
    #ifdef _PLATFORM_RASPBERRYPI_
        /* Apply Mac Filtering rules for RPI-Device */
@@ -16698,8 +16711,14 @@ static int service_stop ()
    v_secure_system("iptables -t mangle -F");
    v_secure_system("iptables -t raw -F");
 
+   FIREWALL_DEBUG("iptables-restore starts\n");
+#ifdef _HUB4_PRODUCT_REQ_
    v_secure_system("iptables-restore -c  < /tmp/.ipt");
-
+#else
+   v_secure_system("iptables-restore -w 10 -c  < /tmp/.ipt");
+#endif
+   FIREWALL_DEBUG("iptables-restore ends\n");
+  
    sysevent_set(sysevent_fd, sysevent_token, "firewall-status", "stopped", 0);
    ulogf(ULOG_FIREWALL, UL_INFO, "stopped %s service", service_name);
    	FIREWALL_DEBUG("stopped %s service\n" COMMA service_name);
