@@ -705,7 +705,8 @@ if [ -x /usr/bin/db_mig ] && [ "$DB_MIG_COMPLETE" != "true" ]; then
     rm -f $REBOOT_REASON_FILE
 
 elif [ -e $REBOOT_REASON_FILE ]; then
-    rebootReason=$(cat $REBOOT_REASON_FILE)
+    # Some platforms include a timestamp in the reboot reason file, e.g. "[%Y-%m-%dT%H:%M] <reason>"
+    rebootReason=$(sed 's/\[.*\] //' < $REBOOT_REASON_FILE)
     echo_t "[utopia][init] Last reboot reason set as $rebootReason"
     syscfg set X_RDKCENTRAL-COM_LastRebootReason "$rebootReason"
     syscfg set X_RDKCENTRAL-COM_LastRebootCounter "1"
