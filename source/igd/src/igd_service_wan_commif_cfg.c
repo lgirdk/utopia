@@ -327,13 +327,16 @@ VOID IGD_service_WANCommonInterfaceConfigEventHandler(IN struct upnp_device  *pd
 			pthread_mutex_unlock(&pservice->service_mutex);
 			return;
 		}
+		/*CID 189926 : Waiting while holding a lock*/
+		pthread_mutex_unlock(&pservice->service_mutex);
+
 
 		if(IGD_pii_get_common_link_properties(pIndex->wan_device_index,type,up,down,status))
 		{
 			RDK_LOG(RDK_LOG_INFO, "LOG.RDK.IGD","CommonLinkProperties get fail\n");
-			pthread_mutex_unlock(&pservice->service_mutex);
 			return;
 		}
+		pthread_mutex_lock(&pservice->service_mutex);
 
 		if(0!= strcmp(status, pservice->state_variables[PhysicalLinkStatus_index].value))
 		{
@@ -588,13 +591,14 @@ VOID IGD_WANCommonInterfaceConfig_eventvariables_init(struct upnp_service *ps)
         return;
     }
 
-    pthread_mutex_lock(&ps->service_mutex);
+    /*CID 189922 : Waiting while holding a lock*/
 
     if (IGD_pii_get_common_link_properties(0, type, up, down, status)){
         RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.IGD","CommonLinkProperties get fail\n");
-        pthread_mutex_unlock(&ps->service_mutex);
+       //pthread_mutex_unlock(&ps->service_mutex);
         return;
     }
+	pthread_mutex_lock(&ps->service_mutex);
 
     strncpy(ps->event_variables[0].value, status, strlen(status)+1);
 
