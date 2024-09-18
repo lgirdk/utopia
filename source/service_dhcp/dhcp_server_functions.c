@@ -2121,11 +2121,11 @@ int prepare_dhcp_conf (char *input, void *bus_handle)
 		prepare_static_dns_urls( l_fLocal_Dhcp_ConfFile );
 	}
 		
+
+	fclose(l_fLocal_Dhcp_ConfFile);
 	char buf[128];
 	snprintf(buf, sizeof(buf), "sh /etc/utopia/service.d/service_cloudui/redirect_whitelist.sh %s", l_cLocalDhcpConf);
 	system(buf);
-
-	fclose(l_fLocal_Dhcp_ConfFile);
     copy_file(l_cLocalDhcpConf, DHCP_CONF);
 	remove_file(l_cLocalDhcpConf);
 	fprintf(stderr, "DHCP SERVER : Completed preparing DHCP configuration\n");
