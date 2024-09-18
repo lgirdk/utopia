@@ -563,7 +563,7 @@ static char *json_file_parse (char *path)
 	len = ftell( fileRead );
 	fseek( fileRead, 0, SEEK_SET );
 
-	APPLY_PRINT("%s-%d : Total File Length :%d \n", __FUNCTION__, __LINE__, len );
+	APPLY_PRINT("%s-%d : %s Total File Length :%d \n", __FUNCTION__, __LINE__, path, len );
 
 	if( len > 0 )
  	{
@@ -1469,6 +1469,13 @@ static int init_bootstrap_json (char *partner_nvram_obj, char *partner_etc_obj, 
          key = param->string;
          cJSON * value_obj = cJSON_GetObjectItem(subitem_etc, key);
 
+         if (!strncmp(key, "no_apply_system_default", 23))
+         {
+            APPLY_PRINT("%s - Skipping no_apply_system_default\n", __FUNCTION__);
+            param = param->next;
+            continue;
+         }
+
          if (!strncmp(key, "override", 8))
          {
             param = param->next;
@@ -1599,11 +1606,13 @@ static int compare_partner_json_param (char *partner_nvram_bs_obj, char *partner
    cJSON * subitem_etc = cJSON_GetObjectItem(root_etc_json,PartnerID);
    cJSON * subitem_nvram_bs = cJSON_GetObjectItem(root_nvram_bs_json,PartnerID);
    cJSON * overrideObj = NULL;
+   cJSON * notApplyObj = NULL;
    char *key=NULL, *value=NULL;
    char devModel[20] = "\0";
 
    GetDevicePropertiesEntry (devModel, sizeof(devModel), "MODEL_NUM");
    overrideObj = cJSON_GetObjectItem (cJSON_GetObjectItem(subitem_etc, "override"), devModel);
+   notApplyObj = cJSON_GetObjectItem (cJSON_GetObjectItem(subitem_etc, "no_apply_system_default"), devModel);
 
    if( subitem_etc )
    {
@@ -1612,6 +1621,13 @@ static int compare_partner_json_param (char *partner_nvram_bs_obj, char *partner
       {
          key = param->string;
          cJSON * value_obj = cJSON_GetObjectItem(subitem_etc, key);
+
+         if (!strncmp(key, "no_apply_system_default", 23))
+         {
+            APPLY_PRINT("%s - Skipping no_apply_system_default\n", __FUNCTION__);
+            param = param->next;
+            continue;
+         }
 
          if (!strncmp(key, "override", 8))
          {
@@ -1698,7 +1714,7 @@ static int compare_partner_json_param (char *partner_nvram_bs_obj, char *partner
          if nvram has more entries, we may need to check what was
          removed from etc in current release.
       */
-      int subitem_etc_count = cJSON_GetArraySize(subitem_etc) - !(!overrideObj);
+      int subitem_etc_count = cJSON_GetArraySize(subitem_etc) - !(!overrideObj) - !(!notApplyObj);
       int subitem_nvram_bs_count = cJSON_GetArraySize(subitem_nvram_bs);
       int iCount = 0;
       if ( subitem_etc_count < subitem_nvram_bs_count)
