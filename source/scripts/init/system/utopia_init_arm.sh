@@ -199,6 +199,7 @@ PSM_BAK_XML_CONFIG_FILE_NAME="$SYSCFG_MOUNT/bbhm_bak_cfg.xml"
 PSM_TMP_XML_CONFIG_FILE_NAME="$SYSCFG_MOUNT/bbhm_tmp_cfg.xml"  
 HOTSPOT_BLOB="/nvram/hotspot_blob"
 HOTSPOT_JSON="/nvram/hotspot.json"
+MWO_PATH="/nvram/mwo"
 
 CheckAndReCreateDB()
 {
@@ -294,7 +295,15 @@ fi
 # Remove log file first because it need get log file path from syscfg   
    /fss/gw/usr/sbin/log_handle.sh reset
    echo -e "\n" | syscfg_destroy 
-
+   if [ -e "$MWO_PATH" ]; then
+      rm -rf $MWO_PATH
+   fi
+   if [ -f /nvram/steering.json ]; then
+      rm -f /nvram/steering.json
+   fi
+   if [ -f /nvram/device_profile.json ]; then
+      rm -f /nvram/device_profile.json
+   fi
    rm -f /nvram/partners_defaults.json
    rm -f /nvram/bootstrap.json
    rm -f /opt/secure/RFC/tr181store.json

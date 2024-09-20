@@ -257,6 +257,7 @@ XDNS_DNSMASQ_SERVERS_CONFIG_FILE_NAME="$SYSCFG_MOUNT/dnsmasq_servers.conf"
 FACTORY_RESET_REASON=false
 HOTSPOT_BLOB="/nvram/hotspot_blob"
 HOTSPOT_JSON="/nvram/hotspot.json"
+MWO_PATH="/nvram/mwo"
 
 if [ -d $SYSCFG_ENCRYPTED_PATH ]; then
        if [ ! -d $SYSCFG_PERSISTENT_PATH ]; then
@@ -437,7 +438,16 @@ fi
 # Remove syscfg and PSM storage files
 
 #mark the factory reset flag 'on'
-   FACTORY_RESET_REASON=true 
+   FACTORY_RESET_REASON=true
+   if [ -e "$MWO_PATH" ]; then
+      rm -rf $MWO_PATH
+   fi
+   if [ -f /nvram/steering.json ]; then
+      rm -f /nvram/steering.json
+   fi
+   if [ -f /nvram/device_profile.json ]; then
+      rm -f /nvram/device_profile.json
+   fi
    rm -f /nvram/.keys/*
    rm -f /nvram/ble-enabled
    touch /nvram/.apply_partner_defaults
