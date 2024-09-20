@@ -1297,6 +1297,7 @@ static int get_and_fill_env_data (ipc_dhcpv4_data_t *dhcpv4_data, udhcpc_script_
     else
     {
         OnboardLog("[%s-%d] dhcp state is not available in dhcp ack \n",  __FUNCTION__,__LINE__);
+        return -1;
     }
 
     if ((strcmp(pinfo->input_option, "bound") == 0) || (strcmp(pinfo->input_option, "renew") == 0) || (strcmp(pinfo->input_option, "invalid_lease") == 0))
