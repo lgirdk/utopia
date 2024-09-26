@@ -790,7 +790,7 @@ static int get_active_lanif(struct serv_ipv6 *si6, unsigned int insts[], unsigne
         for(idx = 0; (idx < l3net_count) && (i < max_active_if_count); idx++) {
             snprintf(psm_param, sizeof(psm_param), "%s%d.%s", L3_DM_PREFIX , l3net_ins[idx], "Enable");
             l_iRet_Val = PSM_VALUE_GET_STRING(psm_param, psm_get);
-            if((l_iRet_Val == CCSP_SUCCESS) && (psm_get != NULL) && ((strcmp(psm_get, "true") == 0) || (strcmp(psm_get, "1") == 0))) {
+            if((l_iRet_Val == CCSP_SUCCESS) && (psm_get != NULL) && ((strcasecmp(psm_get, "true") == 0) || (strcmp(psm_get, "1") == 0))) {
                 Ansc_FreeMemory_Callback(psm_get);
                 psm_get = NULL;
             } else {
