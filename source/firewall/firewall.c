@@ -13547,7 +13547,10 @@ static int prepare_enabled_ipv4_firewall(FILE *raw_fp, FILE *mangle_fp, FILE *na
    do_wan2lan(filter_fp);
    do_filter_table_general_rules(filter_fp);
 #if defined(SPEED_BOOST_SUPPORTED)
-   do_speedboost_port_rules(mangle_fp,nat_fp , 4);
+WAN_FAILOVER_SUPPORT_CHECK
+   if(isWanServiceReady)
+	do_speedboost_port_rules(mangle_fp,nat_fp , 4);
+WAN_FAILOVER_SUPPORT_CHECk_END
 #endif
 
 #ifdef FEATURE_464XLAT
@@ -14761,7 +14764,10 @@ int prepare_ipv6_firewall(const char *fw_file)
 #endif
 	do_parental_control(filter_fp,nat_fp, 6);
 #if defined(SPEED_BOOST_SUPPORTED) && defined(SPEED_BOOST_SUPPORTED_V6)
-	do_speedboost_port_rules(mangle_fp,nat_fp , 6);
+	WAN_FAILOVER_SUPPORT_CHECK
+	if(isWanServiceReady)
+		do_speedboost_port_rules(mangle_fp,nat_fp , 6);
+	WAN_FAILOVER_SUPPORT_CHECk_END
 #endif
         prepare_lnf_internet_rules(mangle_fp,6);
         if (isContainerEnabled) {
