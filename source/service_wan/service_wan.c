@@ -1133,6 +1133,7 @@ static int wan_start(struct serv_wan *sw)
         }
 
         sysinfo(&si);
+	print_uptime("Waninit_complete", NULL, NULL);
         snprintf(uptime, sizeof(uptime), "%ld", si.uptime);
         OnboardLog("Wan_init_complete:%s\n",uptime);
         t2_event_d("btime_waninit_split", (int) si.uptime);
