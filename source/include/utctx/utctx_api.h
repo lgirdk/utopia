@@ -470,6 +470,7 @@ typedef enum _UtopiaValue
     UtopiaValue_NTP_Status,
     UtopiaValue_Device_FirstuseDate,
     /*MoCA Intf*/
+#if !defined (NO_MOCA_FEATURE_SUPPORT)
     UtopiaValue_Moca_Enable,
     UtopiaValue_Moca_Alias,
     UtopiaValue_Moca_PreferredNC,
@@ -479,6 +480,7 @@ typedef enum _UtopiaValue
     UtopiaValue_Moca_TxPowerLimit,
     UtopiaValue_Moca_PwrCntlPhyTarget,
     UtopiaValue_Moca_BeaconPwrLimit,
+#endif
     UtopiaValue_WLAN_Alias,
     UtopiaValue_WLAN_Network_Mode,
     UtopiaValue_WLAN_AutoChannelCycle,
@@ -982,7 +984,9 @@ typedef enum _Utopia_Event
     Utopia_Event_RIP_Restart = 0x10000,
     Utopia_Event_Syslog_Restart = 0x20000,
     Utopia_Event_QoS_Restart = 0x40000,
+#if !defined (NO_MOCA_FEATURE_SUPPORT)
     Utopia_Event_MoCA_Restart = 0x80000,
+#endif
     Utopia_Event_DSLite_Restart = 0x100000,
     Utopia_Event__LAST__ = 0x200000
 } Utopia_Event;

@@ -212,7 +212,9 @@ static PlatformPort nsgmii1Port = {(void*)"nsgmii1", ENTITY_NP, halList + HAL_LI
 static PlatformPort nrgmii2Port = {(void*)"nrgmii2", ENTITY_NP, halList + HAL_LINUX, 0};
 static PlatformPort nrgmii3Port = {(void*)"nrgmii3", ENTITY_NP, halList + HAL_LINUX, 0};
 static PlatformPort brWanPort = {(void*)"lbr0", ENTITY_NP, halList + HAL_LINUX, 0};
+#if !defined (NO_MOCA_FEATURE_SUPPORT)
 static PlatformPort mocaPort = {(void*)"nmoca0", ENTITY_NP, halList + HAL_LINUX, 0};
+#endif
 static PlatformPort lanMgmt = {(void*)"llan0", ENTITY_NP, halList + HAL_LINUX, 0};
 
 //Public platform specific implementation
@@ -245,8 +247,10 @@ int mapToPlat(PNetInterface iface) {
           ) {
             iface->map = accessSwPortList + (portIndex - 1);
         }
+#if !defined (NO_MOCA_FEATURE_SUPPORT)
     } else if (!strcmp("Moca", iface->type->name)) {
         iface->map = &mocaPort;
+#endif
     } else if (!strcmp("Gre", iface->type->name)) {
         if(sscanf(iface->name, "gretap%d", &portIndex) > 0) {
             iface->map = grePortList + portIndex;
@@ -298,8 +302,10 @@ PPlatformPort plat_mapFromString(char* portIdString) {
         return  (grePortList + portIndex);
     } else if (strstr(portIdString, "lbr0")) {
         return &brWanPort;
+#if !defined (NO_MOCA_FEATURE_SUPPORT)
     } else if (strstr(portIdString, "nmoca0")) {
         return &mocaPort;
+#endif
     } else if (strstr(portIdString, "nsgmii0")) {
         return &nsgmii0Port;
     } else if (strstr(portIdString, "nsgmii1")) {

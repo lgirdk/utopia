@@ -166,13 +166,14 @@ static int configure_vpid(char * ifname, bool create)
     void * data = (void *)&interface_param;
     unsigned int cmd;
 
+#if !defined (NO_MOCA_FEATURE_SUPPORT)
     /* Do not create or delete VPID for MoCA interfaces */
     if ( strstr( ifname, "moca" ) )
     {
         MNET_DEBUG("Skipping VPID create/delete for MoCA interface.\n");
         return 0;
     }
-
+#endif
     /* Populate the structures needed for the ioctl */
     if (create)
     {

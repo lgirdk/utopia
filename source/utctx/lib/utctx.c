@@ -136,7 +136,9 @@ static struct
     /* Utopia_Event_RIP_Restart */         { "ripd-restart",         0, 0, 0 },
     /* Utopia_Event_Syslog_Restart */      { "syslog-restart",          0, 0, 0 },
     /* Utopia_Event_QoS_Restart */         { "qos-restart",             0, 0, 0 },
+#if !defined (NO_MOCA_FEATURE_SUPPORT)
     /* Utopia_Event_MoCA_Restart */        { "desired_moca_link_state", 0, 0, 0 },
+#endif
     /* Utopia_Event__LAST__ */             { 0,                      0, 0, 0 }
 };
 
@@ -621,6 +623,7 @@ static struct
     { Utopia_Type_Config, Utopia_Event__NONE__, Utopia_Static__NONE__, Utopia_For__NONE__, 0, "device_first_use_date", UtopiaValue__UNKNOWN__ },     /* UtopiaValue_Device_FirstuseDate*/
 
  /*MoCA Intf*/
+#if !defined (NO_MOCA_FEATURE_SUPPORT)
     { Utopia_Type_Config, Utopia_Event__NONE__, Utopia_Static__NONE__, Utopia_For__NONE__, 1, "moca_Enable", UtopiaValue__UNKNOWN__ },     /* UtopiaValue_Moca_Enable */
     { Utopia_Type_Config, Utopia_Event__NONE__, Utopia_Static__NONE__, Utopia_For__NONE__, 1, "moca_Alias", UtopiaValue__UNKNOWN__ },     /* UtopiaValue_Moca_Alias */
     { Utopia_Type_Config, Utopia_Event__NONE__, Utopia_Static__NONE__, Utopia_For__NONE__, 1, "PreferredNC", UtopiaValue__UNKNOWN__ },     /* UtopiaValue_Moca_PreferredNC */
@@ -630,7 +633,7 @@ static struct
     { Utopia_Type_Config, Utopia_Event__NONE__, Utopia_Static__NONE__, Utopia_For__NONE__, 1, "TxPowerLimit", UtopiaValue__UNKNOWN__ },     /* UtopiaValue_Moca_TxPowerLimit */
     { Utopia_Type_Config, Utopia_Event__NONE__, Utopia_Static__NONE__, Utopia_For__NONE__, 1, "PowerCntlPhyTarget", UtopiaValue__UNKNOWN__ },     /* UtopiaValue_Moca_PwrCntlPhyTarget */
     { Utopia_Type_Config, Utopia_Event__NONE__, Utopia_Static__NONE__, Utopia_For__NONE__, 1, "BeaconPowerLimit", UtopiaValue__UNKNOWN__ },     /* UtopiaValue_Moca_BeaconPwrLimit */
-  
+#endif
     { Utopia_Type_NamedConfig, Utopia_Event__NONE__, Utopia_Static__NONE__, Utopia_Name_For_Key, 1, "%s_alias",           UtopiaValue__UNKNOWN__ }, /* UtopiaValue_WLAN_Alias*/
     { Utopia_Type_NamedConfig, Utopia_Event__NONE__, Utopia_Static__NONE__, Utopia_Name_For_Key, 1, "%s_network_mode",           UtopiaValue__UNKNOWN__ }, /* UtopiaValue_WLAN_Network_Mode*/
     { Utopia_Type_NamedConfig, Utopia_Event__NONE__, Utopia_Static__NONE__, Utopia_Name_For_Key, 1, "%s_autochannel_cycle",           UtopiaValue__UNKNOWN__ }, /* UtopiaValue_WLAN_AutoChannelCycle*/

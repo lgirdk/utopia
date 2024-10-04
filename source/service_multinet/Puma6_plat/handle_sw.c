@@ -30,7 +30,9 @@
 #include "safec_lib_common.h"
 #include "secure_wrapper.h"
 
+#if !defined (NO_MOCA_FEATURE_SUPPORT)
 #define MOCACTL 	"/usr/sbin/mocactl"
+#endif
 #define IPC_VLAN	500	
 #define RADIUS_VLAN	4090	
 #define MESHBHAUL_VLAN	1060	
@@ -88,6 +90,7 @@ void sw_remove_member(char *from_member, char *to_remove_mem)
    	strncpy(from_member, l_cTemp, (strlen(l_cTemp)+1));  
 }
 
+#if !defined (NO_MOCA_FEATURE_SUPPORT)
 //handle_moca is a function for configuring MOCA port
 void handle_moca(int vlan_id, int *tagged, int add)
 {
@@ -247,7 +250,7 @@ void handle_moca(int vlan_id, int *tagged, int add)
         }	
 	}
 }
-
+#endif
 void execSwCtl(char *port, int vlan_id, int tagged, int add)
 {
 	int command = 0, command_ven = 4, command_def = 34, l_iCmd_Rem = 1; 
@@ -262,6 +265,7 @@ void execSwCtl(char *port, int vlan_id, int tagged, int add)
 		l_iPort = 2;
     else if (!strncmp("sw_4", port, 4))
 		l_iPort = 3;
+#if !defined (NO_MOCA_FEATURE_SUPPORT)
     else if (!strncmp("sw_5", port, 4))
     {
 		handle_moca(vlan_id, &tagged, add ? ADD: DELETE); //sw_5 is a MOCA port
@@ -271,6 +275,7 @@ void execSwCtl(char *port, int vlan_id, int tagged, int add)
 		l_iPort = 3;
 		l_iCmd_Rem = 17;
     }
+#endif
     else
     {
         printf("It should not come here for port:%s\n", port);
@@ -578,10 +583,12 @@ void delVlan(int net_id, int vlan_id, char *ports_add)
 				sw_remove_member(l_cAtom_Vid_Ports, l_cPort);	
 			else if (1 == l_iExt_Port)
 				sw_remove_member(l_cExt_Vid_Ports, l_cPort);	
+#if !defined (NO_MOCA_FEATURE_SUPPORT)
 			else if (!strncmp(l_cPort, "sw_5", 4))
 			{
                 printf("Removing MOCA port:%s\n", l_cPort);
 			}
+#endif
 			else
 			{
 				printf("It shouldnt come here for port:%s\n", l_cPort);

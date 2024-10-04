@@ -12217,7 +12217,9 @@ static int prepare_subtables(FILE *raw_fp, FILE *mangle_fp, FILE *nat_fp, FILE *
    fprintf(filter_fp, ":%s - [0:0]\n", "lan2self_plugins");
    fprintf(filter_fp, ":%s - [0:0]\n", "self2lan");
    fprintf(filter_fp, ":%s - [0:0]\n", "self2lan_plugins");
+#if !defined (NO_MOCA_FEATURE_SUPPORT)
    fprintf(filter_fp, ":%s - [0:0]\n", "moca_isolation");
+#endif
    //>>DOS
 #ifdef _COSA_INTEL_XB3_ARM_
    fprintf(filter_fp, ":%s - [0:0]\n", "wandosattack");
